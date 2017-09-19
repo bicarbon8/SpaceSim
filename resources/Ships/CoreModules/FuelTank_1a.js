@@ -1,6 +1,6 @@
 var SpaceSim = SpaceSim || {};
 SpaceSim.Ships = SpaceSim.Ships || {};
-SpaceSim.Ships.FuelTank_1a = function() {
+SpaceSim.Ships.CoreModules.FuelTank_1a = function() {
   var options = {
     maxCapacity: 4,
     mass: 1,
@@ -11,7 +11,7 @@ SpaceSim.Ships.FuelTank_1a = function() {
     powerDraw: 0, // in megaWatts
     heatGenerated: 0 // in degrees Celcius
   };
-  SpaceSim.Ships.FuelTank.call(this, options);
+  SpaceSim.Ships.CoreModules.FuelTank.call(this, options);
 };
-SpaceSim.Ships.FuelTank_1a.prototype = Object.create(SpaceSim.Ships.Module.prototype);
-SpaceSim.Ships.FuelTank_1a.prototype.constructor = SpaceSim.Ships.FuelTank_1a;
+SpaceSim.Ships.CoreModules.FuelTank_1a.prototype = Object.create(SpaceSim.Ships.CoreModules.FuelTank.prototype);
+SpaceSim.Ships.CoreModules.FuelTank_1a.prototype.constructor = SpaceSim.Ships.CoreModules.FuelTank_1a;

@@ -41,6 +41,14 @@ SpaceSim.Ships.Ikitomi.Spider = function() {
     rightThrustMultiplier: 0.5
   };
   SpaceSim.Ships.Ship.call(this, options);
+
+  // assign default core modules
+  this.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generator_1a());
+  this.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters_1a());
+  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCore_1a());
+  this.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport_1a());
+  this.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitor_1a());
+  this.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTank_1a());
 };
 SpaceSim.Ships.Ikitomi.Spider.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
 SpaceSim.Ships.Ikitomi.Spider.prototype.constructor = SpaceSim.Ships.Ikitomi.Spider;

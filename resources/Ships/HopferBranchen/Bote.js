@@ -19,7 +19,7 @@ SpaceSim.Ships.HopferBranchen.Bote = function() {
       warpCoreMaxSize: 1,
       lifeSupportMaxSize: 1,
       capacitorMaxSize: 1,
-      fuelTankMaxSize: 1
+      fuelTankMaxSize: 2
     },
     weaponModules: {
       smallCount: 1,

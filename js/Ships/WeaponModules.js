@@ -5,16 +5,16 @@ SpaceSim.Ships.WeaponModules = function(options) {
   this.mediumCount = options.mediumCount || 0;
   this.largeCount = options.largeCount || 0;
 
-  this.smallModules = [this.smallCount];
-  this.mediumModules = [this.mediumCount];
-  this.largeModules = [this.largeCount];
+  this.smallModules = [];
+  this.mediumModules = [];
+  this.largeModules = [];
 };
 SpaceSim.Ships.WeaponSizes = {
   small: 1,
   medium: 2,
   large: 3
 };
-SpaceSim.Ships.DefenseModules.prototype.getTotalMass = function() {
+SpaceSim.Ships.WeaponModules.prototype.getTotalMass = function() {
   var totalMass = 0;
   this.smallModules.forEach(function(sModule) {
     totalMass += sModule.mass;

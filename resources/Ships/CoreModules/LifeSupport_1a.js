@@ -1,7 +1,7 @@
 var SpaceSim = SpaceSim || {};
 SpaceSim.Ships = SpaceSim.Ships || {};
 SpaceSim.Ships.CoreModules = SpaceSim.Ships.CoreModules || {};
-SpaceSim.Ships.CoreModules.LifeSupport = function() {
+SpaceSim.Ships.CoreModules.LifeSupport_1a = function() {
   var options = {
     time: 2, // minutes
     mass: 1,

@@ -36,4 +36,5 @@ SpaceSim.Ships.Ship.prototype.getTotalMass = function() {
       this.defenseModules.getTotalMass() +
       this.utilityModules.getTotalMass() +
       this.weaponModules.getTotalMass();
+  return totalMass;
 };

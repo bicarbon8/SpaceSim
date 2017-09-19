@@ -20,13 +20,19 @@ SpaceSim.Ships.CoreModules = function(options) {
   this.fuelTank = null;
 };
 SpaceSim.Ships.CoreModules.prototype.getTotalMass = function() {
-  var totalMass = this.fuelTank.mass +
-      this.fuelTank.currentAmount +
-      this.generator.mass +
-      this.thrusters.mass +
-      this.warpCore.mass +
-      this.lifeSupport.mass +
-      this.capacitor.mass;
+  var totalMass = 0;
+
+  if (this.fuelTank) {
+    totalMass += this.fuelTank.mass + // mass of the housing
+                 this.fuelTank.currentAmount; // mass of the fuel
+  }
+  if (this.generator) { totalMass += this.generator.mass; }
+  if (this.thrusters) { totalMass += this.thrusters.mass; }
+  if (this.warpCore) { totalMass += this.warpCore.mass; }
+  if (this.lifeSupport) { totalMass += this.lifeSupport.mass; }
+  if (this.capacitor) { totalMass += this.capacitor.mass; }
+
+  return totalMass;
 };
 SpaceSim.Ships.CoreModules.prototype.updateGenerator = function(generator) {
   if (generator && generator.size > this.generatorMaxSize) {
