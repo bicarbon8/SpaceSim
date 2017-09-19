@@ -31,7 +31,7 @@ SpaceSim.Ships.CoreModules.WarpCore.prototype.getJumpRange = function(mass) {
  */
 SpaceSim.Ships.CoreModules.WarpCore.prototype.getFuelNeededForJump = function(mass, distance) {
   var maxDistance = this.getJumpRange(mass);
-  if (maxDistance <= distance) {
+  if (maxDistance < distance) {
     return Infinity;
   }
   var fuel = this.maximumFuel * Math.sinh(distance / maxDistance);

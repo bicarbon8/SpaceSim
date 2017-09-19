@@ -10,14 +10,14 @@ SpaceSim.Ships.Manufacturers.HopferBranchen.Bote = function() {
   var options = {
     name: "Bote",
     mass: 10, // in tonnes
-    size: 17,
+    size: 20,
     heatResistance: 15, // lazer weapon, ship overheating and star proximity resistance: 100% is immune to heat
     impactResistance: 15, // collisions, bullets / shrapnel resistance: 100% is immune to impacts
     cost: 25000,
     coreModules: {
       generatorMaxSize: 1,
       thrustersMaxSize: 1,
-      warpCoreMaxSize: 1,
+      warpCoreMaxSize: 2,
       lifeSupportMaxSize: 1,
       capacitorMaxSize: 1,
       fuelTankMaxSize: 2
@@ -31,7 +31,7 @@ SpaceSim.Ships.Manufacturers.HopferBranchen.Bote = function() {
       size: 1
     },
     utilityModules: {
-      size: 8
+      size: 10
     },
     pitchMultiplier: 0.5, // half of max thrust
     yawMultiplier: 0.5,
@@ -48,10 +48,10 @@ SpaceSim.Ships.Manufacturers.HopferBranchen.Bote = function() {
   // assign default core modules
   this.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generators.Size1.Class1());
   this.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1());
-  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCores.Size1.Class1());
+  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCores.Size1.E);
   this.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport.Size1.Class1());
   this.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1());
-  this.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTanks.Size1.Class1());
+  this.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTanks.Size1.E());
 };
 SpaceSim.Ships.Manufacturers.HopferBranchen.Bote.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
 SpaceSim.Ships.Manufacturers.HopferBranchen.Bote.prototype.constructor = SpaceSim.Ships.Manufacturers.HopferBranchen.Bote;

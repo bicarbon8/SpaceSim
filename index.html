@@ -18,11 +18,13 @@
     <script src="js/Ships/WeaponModules/Weapon.js" type="text/javascript"></script>
 
     <script src="resources/Ships/CoreModules/Capacitors/Size1/Class1.js" type="text/javascript"></script>
-    <script src="resources/Ships/CoreModules/FuelTanks/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/FuelTanks/Size1_FuelTanks.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/FuelTanks/Size2_FuelTanks.js" type="text/javascript"></script>
     <script src="resources/Ships/CoreModules/Generators/Size1/Class1.js" type="text/javascript"></script>
     <script src="resources/Ships/CoreModules/LifeSupport/Size1/Class1.js" type="text/javascript"></script>
     <script src="resources/Ships/CoreModules/Thrusters/Size1/Class1.js" type="text/javascript"></script>
-    <script src="resources/Ships/CoreModules/WarpCores/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/WarpCores/Size1_WarpCores.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/WarpCores/Size2_WarpCores.js" type="text/javascript"></script>
     <script src="resources/Ships/DefenseModules/HullPlating/Size1/Class1.js" type="text/javascript"></script>
     <script src="resources/Ships/UtilityModules/CargoHolds/Size1/Class1.js" type="text/javascript"></script>
 
@@ -42,6 +44,14 @@
       var spiderFuelMaxJump = spider.coreModules.warpCore.getFuelNeededForJump(spiderMass, spiderRange);
       document.write("Spider - mass: " + spiderMass + " || jump range: " + spiderRange + " || fuel for max jump: " + spiderFuelMaxJump + "<br />");
       document.write("Spider - power consumed: " + spider.coreModules.getTotalPowerConsumed() + " / " + spider.coreModules.generator.power + " MW || heat: " + spider.coreModules.getTotalHeat() + " / 100&#176; C<br />");
+
+      bote.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTanks.Size2.A());
+      bote.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCores.Size2.E());
+      boteMass = bote.getTotalMass();
+      boteRange = bote.coreModules.warpCore.getJumpRange(boteMass);
+      boteFuelMaxJump = bote.coreModules.warpCore.getFuelNeededForJump(boteMass, boteRange);
+      document.write("Bote - mass: " + boteMass + " || jump range: " + boteRange + " || fuel for max jump: " + boteFuelMaxJump + "<br />");
+      document.write("Bote - power consumed: " + bote.coreModules.getTotalPowerConsumed() + " / " + bote.coreModules.generator.power + " MW || heat: " + bote.coreModules.getTotalHeat() + " / 100&#176; C<br />");
     </script>
   </head>
   <body>
