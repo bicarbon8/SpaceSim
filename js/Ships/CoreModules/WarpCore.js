@@ -16,11 +16,13 @@ SpaceSim.Ships.CoreModules.WarpCore.prototype.constructor = SpaceSim.Ships.CoreM
  * based on the current module's ratings
  */
 SpaceSim.Ships.CoreModules.WarpCore.prototype.getJumpRange = function(mass) {
-  if (mass > this.maximumMass) {
+  if (mass >= this.maximumMass) {
     return 0; // too heavy to jump
   }
-  var leeway = 1 - (mass / this.maximumMass); // for Max Mass of 100 and Current Mass of 90 that would leave a 10% leeway
-  return this.maximumRange * leeway;
+  var range = this.maximumRange * Math.acos(mass / this.maximumMass);
+  if (range > this.maximumRange) { range = this.maximumRange; }
+  if (range < 0) { range = 0; }
+  return range;
 };
 
 /**
@@ -29,10 +31,11 @@ SpaceSim.Ships.CoreModules.WarpCore.prototype.getJumpRange = function(mass) {
  */
 SpaceSim.Ships.CoreModules.WarpCore.prototype.getFuelNeededForJump = function(mass, distance) {
   var maxDistance = this.getJumpRange(mass);
-  if (maxDistance < distance) {
+  if (maxDistance <= distance) {
     return Infinity;
   }
-  // what % of maximum are we going?
-  var percent = distance / maxDistance;
-  return this.maximumFuel * percent;
+  var fuel = this.maximumFuel * Math.sinh(distance / maxDistance);
+  if (fuel < 0) { fuel = 0; }
+  if (fuel > this.maximumFuel) { fuel = this.maximumFuel; }
+  return fuel;
 };

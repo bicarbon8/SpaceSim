@@ -7,7 +7,7 @@ SpaceSim.Ships.CoreModules.WarpCores.Size1.Class1 = function() {
   var options = {
     maximumMass: 40, // tonnes
     maximumFuel: 3, // tonnes
-    maximumRange: 30, // lightyears at 0 mass
+    maximumRange: 15, // lightyears at 0 mass
     mass: 5,
     size: 1,
     heatResistance: 0,
