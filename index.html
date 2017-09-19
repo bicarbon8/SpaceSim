@@ -17,17 +17,30 @@
     <script src="js/Ships/UtilityModules/CargoHold.js" type="text/javascript"></script>
     <script src="js/Ships/WeaponModules/Weapon.js" type="text/javascript"></script>
 
-    <script src="resources/Ships/CoreModules/Capacitor_1a.js" type="text/javascript"></script>
-    <script src="resources/Ships/CoreModules/FuelTank_1a.js" type="text/javascript"></script>
-    <script src="resources/Ships/CoreModules/Generator_1a.js" type="text/javascript"></script>
-    <script src="resources/Ships/CoreModules/LifeSupport_1a.js" type="text/javascript"></script>
-    <script src="resources/Ships/CoreModules/Thrusters_1a.js" type="text/javascript"></script>
-    <script src="resources/Ships/CoreModules/WarpCore_1a.js" type="text/javascript"></script>
-    <script src="resources/Ships/DefenseModules/HullPlating_1a.js" type="text/javascript"></script>
-    <script src="resources/Ships/UtilityModules/CargoHold_1a.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/Capacitors/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/FuelTanks/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/Generators/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/LifeSupport/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/Thrusters/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/CoreModules/WarpCores/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/DefenseModules/HullPlating/Size1/Class1.js" type="text/javascript"></script>
+    <script src="resources/Ships/UtilityModules/CargoHolds/Size1/Class1.js" type="text/javascript"></script>
 
-    <script src="resources/Ships/HopferBranchen/Bote.js" type="text/javascript"></script>
-    <script src="resources/Ships/Ikitomi/Spider.js" type="text/javascript"></script>
+    <script src="resources/Ships/Manufacturers/HopferBranchen/Bote.js" type="text/javascript"></script>
+    <script src="resources/Ships/Manufacturers/Ikitomi/Spider.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      var bote = new SpaceSim.Ships.Manufacturers.HopferBranchen.Bote();
+      var spider = new SpaceSim.Ships.Manufacturers.Ikitomi.Spider();
+
+      var boteMass = bote.getTotalMass();
+      var boteRange = bote.coreModules.warpCore.getJumpRange(boteMass);
+      var boteFuelMaxJump = bote.coreModules.warpCore.getFuelNeededForJump(boteMass, boteRange);
+      console.log("Bote - mass: " + boteMass + " || jump range: " + boteRange + " || fuel for max jump: " + boteFuelMaxJump);
+      var spiderMass = spider.getTotalMass();
+      var spiderRange = spider.coreModules.warpCore.getJumpRange(spiderMass);
+      var spiderFuelMaxJump = spider.coreModules.warpCore.getFuelNeededForJump(spiderMass, spiderRange);
+      console.log("Spider - mass: " + spiderMass + " || jump range: " + spiderRange + " || fuel for max jump: " + spiderFuelMaxJump);
+    </script>
   </head>
   <body>
 

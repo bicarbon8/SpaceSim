@@ -1,13 +1,14 @@
 var SpaceSim = SpaceSim || {};
 SpaceSim.Ships = SpaceSim.Ships || {};
-SpaceSim.Ships.Ikitomi = SpaceSim.Ships.Ikitomi || {};
+SpaceSim.Ships.Manufacturers = SpaceSim.Ships.Manufacturers || {};
+SpaceSim.Ships.Manufacturers.Ikitomi = SpaceSim.Ships.Manufacturers.Ikitomi || {};
 /**
  * a highly maneuverable, small fighter
  */
-SpaceSim.Ships.Ikitomi.Spider = function() {
+SpaceSim.Ships.Manufacturers.Ikitomi.Spider = function() {
   var options = {
     mass: 8, // in tonnes
-    size: 15,
+    size: 17,
     heatResistance: 0, // lazer weapon, ship overheating and star proximity resistance: 100% is immune to heat
     impactResistance: 0, // collisions, bullets / shrapnel resistance: 100% is immune to impacts
     cost: 50000,
@@ -43,12 +44,12 @@ SpaceSim.Ships.Ikitomi.Spider = function() {
   SpaceSim.Ships.Ship.call(this, options);
 
   // assign default core modules
-  this.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generator_1a());
-  this.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters_1a());
-  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCore_1a());
-  this.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport_1a());
-  this.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitor_1a());
-  this.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTank_1a());
+  this.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generators.Size1.Class1());
+  this.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1());
+  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCores.Size1.Class1());
+  this.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport.Size1.Class1());
+  this.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1());
+  this.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTanks.Size1.Class1());
 };
-SpaceSim.Ships.Ikitomi.Spider.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
-SpaceSim.Ships.Ikitomi.Spider.prototype.constructor = SpaceSim.Ships.Ikitomi.Spider;
+SpaceSim.Ships.Manufacturers.Ikitomi.Spider.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
+SpaceSim.Ships.Manufacturers.Ikitomi.Spider.prototype.constructor = SpaceSim.Ships.Manufacturers.Ikitomi.Spider;

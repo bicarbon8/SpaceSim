@@ -1,7 +1,9 @@
 var SpaceSim = SpaceSim || {};
 SpaceSim.Ships = SpaceSim.Ships || {};
 SpaceSim.Ships.CoreModules = SpaceSim.Ships.CoreModules || {};
-SpaceSim.Ships.CoreModules.Generator_1a = function() {
+SpaceSim.Ships.CoreModules.Generators = SpaceSim.Ships.CoreModules.Generators || {};
+SpaceSim.Ships.CoreModules.Generators.Size1 = SpaceSim.Ships.CoreModules.Generators.Size1 || {};
+SpaceSim.Ships.CoreModules.Generators.Size1.Class1 = function() {
   var options = {
     power: 100, // MegaWatts
     heatEfficiency: 0.1, // how much heat generated per MegaWatt produced; 100% means no heat
@@ -16,5 +18,5 @@ SpaceSim.Ships.CoreModules.Generator_1a = function() {
   };
   SpaceSim.Ships.CoreModules.Generator.call(this, options);
 };
-SpaceSim.Ships.CoreModules.Generator_1a.prototype = Object.create(SpaceSim.Ships.CoreModules.Generator.prototype);
-SpaceSim.Ships.CoreModules.Generator_1a.prototype.constructor = SpaceSim.Ships.CoreModules.Generator_1a;
+SpaceSim.Ships.CoreModules.Generators.Size1.Class1.prototype = Object.create(SpaceSim.Ships.CoreModules.Generator.prototype);
+SpaceSim.Ships.CoreModules.Generators.Size1.Class1.prototype.constructor = SpaceSim.Ships.CoreModules.Generators.Size1.Class1;

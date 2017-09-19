@@ -1,10 +1,12 @@
 var SpaceSim = SpaceSim || {};
 SpaceSim.Ships = SpaceSim.Ships || {};
 SpaceSim.Ships.UtilityModules = SpaceSim.Ships.UtilityModules || {};
+SpaceSim.Ships.UtilityModules.CargoHolds = SpaceSim.Ships.UtilityModules.CargoHolds || {};
+SpaceSim.Ships.UtilityModules.CargoHolds.Size1 = SpaceSim.Ships.UtilityModules.CargoHolds.Size1 || {};
 /**
  * this is the smallest and worst performing CargoHold you can buy
  */
-SpaceSim.Ships.UtilityModules.CargoHold_1a = function() {
+SpaceSim.Ships.UtilityModules.CargoHolds.Size1.Class1 = function() {
   var options = {
     mass: 1, // in tonnes
     size: 1,
@@ -17,5 +19,5 @@ SpaceSim.Ships.UtilityModules.CargoHold_1a = function() {
   };
   SpaceSim.Ships.UtilityModules.CargoHold.call(this, options);
 };
-SpaceSim.Ships.UtilityModules.CargoHold_1a.prototype = Object.create(SpaceSim.Ships.UtilityModules.CargoHold.prototype);
-SpaceSim.Ships.UtilityModules.CargoHold_1a.prototype.constructor = SpaceSim.Ships.UtilityModules.CargoHold_1a;
+SpaceSim.Ships.UtilityModules.CargoHolds.Size1.Class1.prototype = Object.create(SpaceSim.Ships.UtilityModules.CargoHold.prototype);
+SpaceSim.Ships.UtilityModules.CargoHolds.Size1.Class1.prototype.constructor = SpaceSim.Ships.UtilityModules.CargoHolds.Size1.Class1;

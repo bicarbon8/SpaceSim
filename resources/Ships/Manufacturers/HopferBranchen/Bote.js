@@ -1,15 +1,16 @@
 var SpaceSim = SpaceSim || {};
 SpaceSim.Ships = SpaceSim.Ships || {};
-SpaceSim.Ships.HopferBranchen = SpaceSim.Ships.HopferBranchen || {};
+SpaceSim.Ships.Manufacturers = SpaceSim.Ships.Manufacturers || {};
+SpaceSim.Ships.Manufacturers.HopferBranchen = SpaceSim.Ships.Manufacturers.HopferBranchen || {};
 /**
  * the bicycle messenger equivalent of spaceships... minimal weapons, but
  * extremely small and maneuverable so it can get in and around quickly.
  */
-SpaceSim.Ships.HopferBranchen.Bote = function() {
+SpaceSim.Ships.Manufacturers.HopferBranchen.Bote = function() {
   var options = {
     name: "Bote",
     mass: 10, // in tonnes
-    size: 15,
+    size: 17,
     heatResistance: 15, // lazer weapon, ship overheating and star proximity resistance: 100% is immune to heat
     impactResistance: 15, // collisions, bullets / shrapnel resistance: 100% is immune to impacts
     cost: 25000,
@@ -45,12 +46,12 @@ SpaceSim.Ships.HopferBranchen.Bote = function() {
   SpaceSim.Ships.Ship.call(this, options);
 
   // assign default core modules
-  this.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generator_1a());
-  this.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters_1a());
-  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCore_1a());
-  this.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport_1a());
-  this.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitor_1a());
-  this.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTank_1a());
+  this.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generators.Size1.Class1());
+  this.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1());
+  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCores.Size1.Class1());
+  this.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport.Size1.Class1());
+  this.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1());
+  this.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTanks.Size1.Class1());
 };
-SpaceSim.Ships.HopferBranchen.Bote.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
-SpaceSim.Ships.HopferBranchen.Bote.prototype.constructor = SpaceSim.Ships.HopferBranchen.Bote;
+SpaceSim.Ships.Manufacturers.HopferBranchen.Bote.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
+SpaceSim.Ships.Manufacturers.HopferBranchen.Bote.prototype.constructor = SpaceSim.Ships.Manufacturers.HopferBranchen.Bote;
