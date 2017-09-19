@@ -11,8 +11,10 @@ SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1 = function() {
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
-    powerDraw: 30, // in megaWatts
-    heatGenerated: 10 // in degrees Celcius
+    powerDraw: 10, // in megaWatts
+    activePowerDraw: 30,
+    heatGenerated: 5, // in degrees Celcius
+    activeHeatGenerated: 10
   };
   SpaceSim.Ships.CoreModules.Thrusters.call(this, options);
 };

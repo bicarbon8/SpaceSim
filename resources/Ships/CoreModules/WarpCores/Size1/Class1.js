@@ -13,8 +13,10 @@ SpaceSim.Ships.CoreModules.WarpCores.Size1.Class1 = function() {
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
-    powerDraw: 40, // in megaWatts
-    heatGenerated: 15 // in degrees Celcius
+    powerDraw: 10, // in megaWatts
+    activePowerDraw: 40,
+    heatGenerated: 15, // in degrees Celcius
+    activeHeatGenerated: 30
   };
   SpaceSim.Ships.CoreModules.WarpCore.call(this, options);
 };

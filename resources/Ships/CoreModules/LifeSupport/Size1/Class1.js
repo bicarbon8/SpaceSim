@@ -12,7 +12,9 @@ SpaceSim.Ships.CoreModules.LifeSupport.Size1.Class1 = function() {
     impactResistance: 0,
     cost: 100,
     powerDraw: 5, // in megaWatts
-    heatGenerated: 3 // in degrees Celcius
+    activePowerDraw: 5,
+    heatGenerated: 3, // in degrees Celcius
+    activeHeatGenerated: 3
   };
   SpaceSim.Ships.CoreModules.LifeSupport.call(this, options);
 };

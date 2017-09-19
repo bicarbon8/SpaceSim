@@ -17,7 +17,9 @@ SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1 = function() {
     impactResistance: 0,
     cost: 100,
     powerDraw: 10, // in megaWatts
-    heatGenerated: 10 // in degrees Celcius
+    activePowerDraw: 0,
+    heatGenerated: 5, // degrees Celcius
+    activeHeatGenerated: 30
   };
   SpaceSim.Ships.CoreModules.Capacitor.call(this, options);
 };

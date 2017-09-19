@@ -3,18 +3,24 @@ SpaceSim.Ships = SpaceSim.Ships || {};
 SpaceSim.Ships.CoreModules = SpaceSim.Ships.CoreModules || {};
 SpaceSim.Ships.CoreModules.Generators = SpaceSim.Ships.CoreModules.Generators || {};
 SpaceSim.Ships.CoreModules.Generators.Size1 = SpaceSim.Ships.CoreModules.Generators.Size1 || {};
+/**
+ * The worst performing and lowest output generator available
+ */
 SpaceSim.Ships.CoreModules.Generators.Size1.Class1 = function() {
   var options = {
-    power: 100, // MegaWatts
-    heatEfficiency: 0.1, // how much heat generated per MegaWatt produced; 100% means no heat
-    fuelEfficiency: 0.1, // how much fuel consumed per MegaWatt produced; 100% means no fuel (impossible)
+    // generator
+    heatEfficiency: 0, // 100% heat at max power consumption
+    fuelEfficiency: 0, // 1 tonne of fuel per hour at max power consumption
+    // powered module
     mass: 3,
     size: 1,
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
-    powerDraw: 0, // in megaWatts
-    heatGenerated: 0 // in degrees Celcius
+    powerDraw: -100, // produces power in megaWatts
+    activePowerDraw: -100, // same
+    heatGenerated: 100, // degrees Celcius; at max usage it likely will overheat ship
+    activeHeatGenerated: 100 // same
   };
   SpaceSim.Ships.CoreModules.Generator.call(this, options);
 };

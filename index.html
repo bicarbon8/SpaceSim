@@ -36,10 +36,12 @@
       var boteRange = bote.coreModules.warpCore.getJumpRange(boteMass);
       var boteFuelMaxJump = bote.coreModules.warpCore.getFuelNeededForJump(boteMass, boteRange);
       console.log("Bote - mass: " + boteMass + " || jump range: " + boteRange + " || fuel for max jump: " + boteFuelMaxJump);
+      console.log("Bote - power consumed: " + bote.coreModules.getTotalPowerConsumed() + " || heat: " + bote.coreModules.getTotalHeat());
       var spiderMass = spider.getTotalMass();
       var spiderRange = spider.coreModules.warpCore.getJumpRange(spiderMass);
       var spiderFuelMaxJump = spider.coreModules.warpCore.getFuelNeededForJump(spiderMass, spiderRange);
       console.log("Spider - mass: " + spiderMass + " || jump range: " + spiderRange + " || fuel for max jump: " + spiderFuelMaxJump);
+      console.log("Spider - power consumed: " + spider.coreModules.getTotalPowerConsumed() + " || heat: " + spider.coreModules.getTotalHeat());
     </script>
   </head>
   <body>

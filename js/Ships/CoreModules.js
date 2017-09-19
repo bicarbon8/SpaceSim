@@ -34,6 +34,32 @@ SpaceSim.Ships.CoreModules.prototype.getTotalMass = function() {
 
   return totalMass;
 };
+SpaceSim.Ships.CoreModules.prototype.getTotalHeat = function() {
+  var totalHeat = 0; // percent
+
+  if (this.fuelTank && this.fuelTank.enabled) { totalHeat += (this.fuelTank.active) ? this.fuelTank.activeHeatGenerated : this.fuelTank.heatGenerated; }
+  if (this.thrusters && this.thrusters.enabled) { totalHeat += (this.thrusters.active) ? this.thrusters.activeHeatGenerated : this.thrusters.heatGenerated; }
+  if (this.warpCore && this.warpCore.enabled) { totalHeat += (this.warpCore.active) ? this.warpCore.activeHeatGenerated : this.warpCore.heatGenerated; }
+  if (this.lifeSupport && this.lifeSupport.enabled) { totalHeat += (this.lifeSupport.active) ? this.lifeSupport.activeHeatGenerated : this.lifeSupport.heatGenerated; }
+  if (this.capacitor && this.capacitor.enabled) { totalHeat += (this.capacitor.active) ? this.capacitor.activeHeatGenerated : this.capacitor.heatGenerated; }
+  if (this.generator) {
+    totalHeat += this.generator.getHeatGeneratedByUsage(this.getTotalPowerConsumed());
+  }
+
+  return totalHeat;
+};
+SpaceSim.Ships.CoreModules.prototype.getTotalPowerConsumed = function() {
+  var totalPower = 0; // MegaWatts
+
+  if (this.fuelTank && this.fuelTank.enabled) { totalPower += (this.fuelTank.active) ? this.fuelTank.activePowerDraw : this.fuelTank.powerDraw; }
+  if (this.thrusters && this.thrusters.enabled) { totalPower += (this.thrusters.active) ? this.thrusters.activePowerDraw : this.thrusters.powerDraw; }
+  if (this.warpCore && this.warpCore.enabled) { totalPower += (this.warpCore.active) ? this.warpCore.activePowerDraw : this.warpCore.powerDraw; }
+  if (this.lifeSupport && this.lifeSupport.enabled) { totalPower += (this.lifeSupport.active) ? this.lifeSupport.activePowerDraw : this.lifeSupport.powerDraw; }
+  if (this.capacitor && this.capacitor.enabled) { totalPower += (this.capacitor.active) ? this.capacitor.activePowerDraw : this.capacitor.powerDraw; }
+  // leave off generator as it produces, not consumes power
+
+  return totalPower;
+};
 SpaceSim.Ships.CoreModules.prototype.updateGenerator = function(generator) {
   if (generator && generator.size > this.generatorMaxSize) {
     throw "ship cannot equip a Generator larger than: " + this.generatorMaxSize;
