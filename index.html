@@ -35,13 +35,13 @@
       var boteMass = bote.getTotalMass();
       var boteRange = bote.coreModules.warpCore.getJumpRange(boteMass);
       var boteFuelMaxJump = bote.coreModules.warpCore.getFuelNeededForJump(boteMass, boteRange);
-      console.log("Bote - mass: " + boteMass + " || jump range: " + boteRange + " || fuel for max jump: " + boteFuelMaxJump);
-      console.log("Bote - power consumed: " + bote.coreModules.getTotalPowerConsumed() + " || heat: " + bote.coreModules.getTotalHeat());
+      document.write("Bote - mass: " + boteMass + " || jump range: " + boteRange + " || fuel for max jump: " + boteFuelMaxJump + "<br />");
+      document.write("Bote - power consumed: " + bote.coreModules.getTotalPowerConsumed() + " / " + bote.coreModules.generator.power + " MW || heat: " + bote.coreModules.getTotalHeat() + " / 100&#176; C<br />");
       var spiderMass = spider.getTotalMass();
       var spiderRange = spider.coreModules.warpCore.getJumpRange(spiderMass);
       var spiderFuelMaxJump = spider.coreModules.warpCore.getFuelNeededForJump(spiderMass, spiderRange);
-      console.log("Spider - mass: " + spiderMass + " || jump range: " + spiderRange + " || fuel for max jump: " + spiderFuelMaxJump);
-      console.log("Spider - power consumed: " + spider.coreModules.getTotalPowerConsumed() + " || heat: " + spider.coreModules.getTotalHeat());
+      document.write("Spider - mass: " + spiderMass + " || jump range: " + spiderRange + " || fuel for max jump: " + spiderFuelMaxJump + "<br />");
+      document.write("Spider - power consumed: " + spider.coreModules.getTotalPowerConsumed() + " / " + spider.coreModules.generator.power + " MW || heat: " + spider.coreModules.getTotalHeat() + " / 100&#176; C<br />");
     </script>
   </head>
   <body>

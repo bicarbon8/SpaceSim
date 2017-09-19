@@ -50,3 +50,27 @@ SpaceSim.Ships.WeaponModules.prototype.add = function(weapon) {
     moduleArray.push(weapon);
   }
 };
+SpaceSim.Ships.WeaponModules.prototype.getTotalHeat = function() {
+  var totalHeat = 0; // degrees Celcius
+
+  this.smallModules.forEach(function(sModule) {
+    if (sModule.enabled) { totalHeat += (sModule.active) ? sModule.activeHeatGenerated : sModule.heatGenerated; }
+  });
+  this.mediumModules.forEach(function(mModule) {
+    if (mModule.enabled) { totalHeat += (mModule.active) ? mModule.activeHeatGenerated : mModule.heatGenerated; }
+  });
+  this.largeModules.forEach(function(lModule) {
+    if (lModule.enabled) { totalHeat += (lModule.active) ? lModule.activeHeatGenerated : lModule.heatGenerated; }
+  });
+
+  return totalHeat;
+};
+SpaceSim.Ships.WeaponModules.prototype.getTotalPowerConsumed = function() {
+  var totalPower = 0; // MegaWatts
+
+  this.modules.forEach(function(module) {
+    if (module.enabled) { totalPower += (module.active) ? module.activePowerDraw : module.powerDraw; }
+  });
+
+  return totalPower;
+};

@@ -35,7 +35,7 @@ SpaceSim.Ships.CoreModules.prototype.getTotalMass = function() {
   return totalMass;
 };
 SpaceSim.Ships.CoreModules.prototype.getTotalHeat = function() {
-  var totalHeat = 0; // percent
+  var totalHeat = 0; // degrees Celcius
 
   if (this.fuelTank && this.fuelTank.enabled) { totalHeat += (this.fuelTank.active) ? this.fuelTank.activeHeatGenerated : this.fuelTank.heatGenerated; }
   if (this.thrusters && this.thrusters.enabled) { totalHeat += (this.thrusters.active) ? this.thrusters.activeHeatGenerated : this.thrusters.heatGenerated; }
