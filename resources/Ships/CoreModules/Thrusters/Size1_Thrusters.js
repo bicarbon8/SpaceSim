@@ -3,7 +3,7 @@ SpaceSim.Ships = SpaceSim.Ships || {};
 SpaceSim.Ships.CoreModules = SpaceSim.Ships.CoreModules || {};
 SpaceSim.Ships.CoreModules.Thrusters = SpaceSim.Ships.CoreModules.Thrusters || {};
 SpaceSim.Ships.CoreModules.Thrusters.Size1 = SpaceSim.Ships.CoreModules.Thrusters.Size1 || {};
-SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1 = function() {
+SpaceSim.Ships.CoreModules.Thrusters.Size1.E = function() {
   var options = {
     thrust: 100, // kN
     mass: 5,
@@ -18,5 +18,5 @@ SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1 = function() {
   };
   SpaceSim.Ships.CoreModules.Thrusters.call(this, options);
 };
-SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1.prototype = Object.create(SpaceSim.Ships.CoreModules.Thrusters.prototype);
-SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1.prototype.constructor = SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1;
+SpaceSim.Ships.CoreModules.Thrusters.Size1.E.prototype = Object.create(SpaceSim.Ships.CoreModules.Thrusters.prototype);
+SpaceSim.Ships.CoreModules.Thrusters.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.Thrusters.Size1.E;

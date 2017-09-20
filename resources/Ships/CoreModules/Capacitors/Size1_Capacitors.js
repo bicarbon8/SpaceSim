@@ -6,7 +6,7 @@ SpaceSim.Ships.CoreModules.Capacitors.Size1 = SpaceSim.Ships.CoreModules.Capacit
 /**
  * this is the smallest and worst performing Capacitor you can buy
  */
-SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1 = function() {
+SpaceSim.Ships.CoreModules.Capacitors.Size1.E = function() {
   var options = {
     boostPower: 1,
     boostTime: 10, // seconds
@@ -23,5 +23,5 @@ SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1 = function() {
   };
   SpaceSim.Ships.CoreModules.Capacitor.call(this, options);
 };
-SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1.prototype = Object.create(SpaceSim.Ships.PoweredModule.prototype);
-SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1.prototype.constructor = SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1;
+SpaceSim.Ships.CoreModules.Capacitors.Size1.E.prototype = Object.create(SpaceSim.Ships.PoweredModule.prototype);
+SpaceSim.Ships.CoreModules.Capacitors.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.Capacitors.Size1.E;

@@ -3,7 +3,7 @@ SpaceSim.Ships = SpaceSim.Ships || {};
 SpaceSim.Ships.DefenseModules = SpaceSim.Ships.DefenseModules || {};
 SpaceSim.Ships.DefenseModules.HullPlating = SpaceSim.Ships.DefenseModules.HullPlating || {};
 SpaceSim.Ships.DefenseModules.HullPlating.Size1 = SpaceSim.Ships.DefenseModules.HullPlating.Size1 || {};
-SpaceSim.Ships.DefenseModules.HullPlating.Size1.Class1 = function() {
+SpaceSim.Ships.DefenseModules.HullPlating.Size1.E = function() {
   var options = {
     mass: 10, // in tonnes
     size: 1,
@@ -15,5 +15,5 @@ SpaceSim.Ships.DefenseModules.HullPlating.Size1.Class1 = function() {
   };
   SpaceSim.Ships.DefenseModules.HullPlating.call(this, options);
 };
-SpaceSim.Ships.DefenseModules.HullPlating.Size1.Class1.prototype = Object.create(SpaceSim.Ships.DefenseModules.HullPlating.prototype);
-SpaceSim.Ships.DefenseModules.HullPlating.Size1.Class1.prototype.constructor = SpaceSim.Ships.DefenseModules.HullPlating.Size1.Class1;
+SpaceSim.Ships.DefenseModules.HullPlating.Size1.E.prototype = Object.create(SpaceSim.Ships.DefenseModules.HullPlating.prototype);
+SpaceSim.Ships.DefenseModules.HullPlating.Size1.E.prototype.constructor = SpaceSim.Ships.DefenseModules.HullPlating.Size1.E;

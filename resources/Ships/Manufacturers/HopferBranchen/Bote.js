@@ -46,12 +46,15 @@ SpaceSim.Ships.Manufacturers.HopferBranchen.Bote = function() {
   SpaceSim.Ships.Ship.call(this, options);
 
   // assign default core modules
-  this.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generators.Size1.Class1());
-  this.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters.Size1.Class1());
-  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCores.Size1.E);
-  this.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport.Size1.Class1());
-  this.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitors.Size1.Class1());
+  this.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generators.Size1.E());
+  this.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters.Size1.E());
+  this.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCores.Size1.E());
+  this.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport.Size1.E());
+  this.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitors.Size1.E());
   this.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTanks.Size1.E());
+
+  // assign default utility modules
+  this.utilityModules.add(new SpaceSim.Ships.UtilityModules.CargoHolds.Size5.E()); // fill half with cargo storage
 };
 SpaceSim.Ships.Manufacturers.HopferBranchen.Bote.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
 SpaceSim.Ships.Manufacturers.HopferBranchen.Bote.prototype.constructor = SpaceSim.Ships.Manufacturers.HopferBranchen.Bote;

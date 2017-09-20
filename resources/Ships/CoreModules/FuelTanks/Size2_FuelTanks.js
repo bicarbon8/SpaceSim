@@ -47,10 +47,10 @@ SpaceSim.Ships.CoreModules.FuelTanks.Size2.A = function() {
     heatResistance: 0,
     impactResistance: 0,
     cost: 2500,
-    powerDraw: 10, // in MegaWatts
-    activePowerDraw: 10, // in MegaWatts
-    heatGenerated: 5, // in degrees Celcius
-    activeHeatGenerated: 5
+    powerDraw: 5, // in MegaWatts
+    activePowerDraw: 5, // in MegaWatts
+    heatGenerated: 2, // in degrees Celcius
+    activeHeatGenerated: 2
   };
   SpaceSim.Ships.CoreModules.FuelTank.call(this, options);
 };

@@ -6,7 +6,7 @@ SpaceSim.Ships.CoreModules.Generators.Size1 = SpaceSim.Ships.CoreModules.Generat
 /**
  * The worst performing and lowest output generator available
  */
-SpaceSim.Ships.CoreModules.Generators.Size1.Class1 = function() {
+SpaceSim.Ships.CoreModules.Generators.Size1.E = function() {
   var options = {
     // generator
     heatEfficiency: 0, // 100% heat at max power consumption
@@ -24,5 +24,5 @@ SpaceSim.Ships.CoreModules.Generators.Size1.Class1 = function() {
   };
   SpaceSim.Ships.CoreModules.Generator.call(this, options);
 };
-SpaceSim.Ships.CoreModules.Generators.Size1.Class1.prototype = Object.create(SpaceSim.Ships.CoreModules.Generator.prototype);
-SpaceSim.Ships.CoreModules.Generators.Size1.Class1.prototype.constructor = SpaceSim.Ships.CoreModules.Generators.Size1.Class1;
+SpaceSim.Ships.CoreModules.Generators.Size1.E.prototype = Object.create(SpaceSim.Ships.CoreModules.Generator.prototype);
+SpaceSim.Ships.CoreModules.Generators.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.Generators.Size1.E;

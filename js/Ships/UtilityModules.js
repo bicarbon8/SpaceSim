@@ -30,3 +30,8 @@ SpaceSim.Ships.UtilityModules.prototype.getTotalPowerConsumed = function() {
 
   return totalPower;
 };
+SpaceSim.Ships.UtilityModules.prototype.add = function(module) {
+  if (this.modules.length < this.size) {
+    this.modules.push(module);
+  }
+};
