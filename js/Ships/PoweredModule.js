@@ -11,6 +11,7 @@ SpaceSim.Ships.PoweredModule = function(options) {
   this.description = options.description || null;
   this.mass = options.mass || 0; // in tonnes
   this.size = options.size || 0;
+  this.class = options.class || 0;
   this.heatResistance = options.heatResistance || 0; // lazer weapon, ship overheating and star proximity resistance: 100% is immune to heat
   this.impactResistance = options.impactResistance || 0; // collisions, bullets / shrapnel resistance: 100% is immune to impacts
   this.cost = options.cost || 0;

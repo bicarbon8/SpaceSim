@@ -8,6 +8,7 @@ SpaceSim.Ships.CoreModules.Thrusters.Size1.E = function() {
     thrust: 100, // kN
     mass: 5,
     size: 1,
+    class: "E",
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
@@ -20,3 +21,4 @@ SpaceSim.Ships.CoreModules.Thrusters.Size1.E = function() {
 };
 SpaceSim.Ships.CoreModules.Thrusters.Size1.E.prototype = Object.create(SpaceSim.Ships.CoreModules.Thrusters.prototype);
 SpaceSim.Ships.CoreModules.Thrusters.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.Thrusters.Size1.E;
+SpaceSim.coreModules.thrusters.push(new SpaceSim.Ships.CoreModules.Thrusters.Size1.E());

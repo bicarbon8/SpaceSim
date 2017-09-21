@@ -7,6 +7,7 @@ SpaceSim.Ships.DefenseModules.HullPlating.Size1.E = function() {
   var options = {
     mass: 10, // in tonnes
     size: 1,
+    class: "E",
     heatResistance: 1, // lazer weapon, ship overheating and star proximity resistance: 100% is immune to heat
     impactResistance: 1, // collisions, bullets / shrapnel resistance: 100% is immune to impacts
     cost: 1000,
@@ -17,3 +18,4 @@ SpaceSim.Ships.DefenseModules.HullPlating.Size1.E = function() {
 };
 SpaceSim.Ships.DefenseModules.HullPlating.Size1.E.prototype = Object.create(SpaceSim.Ships.DefenseModules.HullPlating.prototype);
 SpaceSim.Ships.DefenseModules.HullPlating.Size1.E.prototype.constructor = SpaceSim.Ships.DefenseModules.HullPlating.Size1.E;
+SpaceSim.defenseModules.hullPlatings.push(new SpaceSim.Ships.DefenseModules.HullPlating.Size1.E());

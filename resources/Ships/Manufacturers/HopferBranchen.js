@@ -9,6 +9,7 @@ SpaceSim.Ships.Manufacturers.HopferBranchen = SpaceSim.Ships.Manufacturers.Hopfe
 SpaceSim.Ships.Manufacturers.HopferBranchen.Bote = function() {
   var options = {
     name: "Bote",
+    manufacturer: "Hopfer Branchen",
     mass: 10, // in tonnes
     size: 20,
     heatResistance: 15, // lazer weapon, ship overheating and star proximity resistance: 100% is immune to heat
@@ -58,3 +59,4 @@ SpaceSim.Ships.Manufacturers.HopferBranchen.Bote = function() {
 };
 SpaceSim.Ships.Manufacturers.HopferBranchen.Bote.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
 SpaceSim.Ships.Manufacturers.HopferBranchen.Bote.prototype.constructor = SpaceSim.Ships.Manufacturers.HopferBranchen.Bote;
+SpaceSim.ships.push(new SpaceSim.Ships.Manufacturers.HopferBranchen.Bote());

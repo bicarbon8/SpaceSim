@@ -9,6 +9,8 @@
 
     <link rel="stylesheet" href="spacesim.css">
 
+    <script src="js/SpaceSim.js"></script>
+
     <script src="js/Ships/PoweredModule.js"></script>
     <script src="js/Ships/CoreModules.js"></script>
     <script src="js/Ships/DefenseModules.js"></script>
@@ -26,22 +28,17 @@
     <script src="js/Ships/UtilityModules/CargoHold.js"></script>
     <script src="js/Ships/WeaponModules/Weapon.js"></script>
 
-    <script src="resources/Ships/CoreModules/Capacitors/Size1_Capacitors.js"></script>
-    <script src="resources/Ships/CoreModules/FuelTanks/Size1_FuelTanks.js"></script>
-    <script src="resources/Ships/CoreModules/FuelTanks/Size2_FuelTanks.js"></script>
-    <script src="resources/Ships/CoreModules/Generators/Size1_Generators.js"></script>
-    <script src="resources/Ships/CoreModules/LifeSupport/Size1_LifeSupport.js"></script>
-    <script src="resources/Ships/CoreModules/Thrusters/Size1_Thrusters.js"></script>
-    <script src="resources/Ships/CoreModules/WarpCores/Size1_WarpCores.js"></script>
-    <script src="resources/Ships/CoreModules/WarpCores/Size2_WarpCores.js"></script>
-    <script src="resources/Ships/DefenseModules/HullPlating/Size1_HullPlatings.js"></script>
-    <script src="resources/Ships/UtilityModules/CargoHolds/Size1_CargoHolds.js"></script>
-    <script src="resources/Ships/UtilityModules/CargoHolds/Size5_CargoHolds.js"></script>
+    <script src="resources/Ships/CoreModules/Capacitors.js"></script>
+    <script src="resources/Ships/CoreModules/FuelTanks.js"></script>
+    <script src="resources/Ships/CoreModules/Generators.js"></script>
+    <script src="resources/Ships/CoreModules/LifeSupports.js"></script>
+    <script src="resources/Ships/CoreModules/Thrusters.js"></script>
+    <script src="resources/Ships/CoreModules/WarpCores.js"></script>
+    <script src="resources/Ships/DefenseModules/HullPlatings.js"></script>
+    <script src="resources/Ships/UtilityModules/CargoHolds.js"></script>
 
-    <script src="resources/Ships/Manufacturers/HopferBranchen/Bote.js"></script>
-    <script src="resources/Ships/Manufacturers/Ikitomi/Spider.js"></script>
-
-    <script src="js/SpaceSim.js"></script>
+    <script src="resources/Ships/Manufacturers/HopferBranchen.js"></script>
+    <script src="resources/Ships/Manufacturers/Ikitomi.js"></script>
 
     <script type="text/javascript">
       function displayStats(ship) {
@@ -55,13 +52,7 @@
       var bote = new SpaceSim.Ships.Manufacturers.HopferBranchen.Bote();
       var spider = new SpaceSim.Ships.Manufacturers.Ikitomi.Spider();
 
-      // displayStats(bote);
-      // displayStats(spider);
-      //
-      // bote.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTanks.Size2.A());
-      // bote.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCores.Size1.A());
-      //
-      // displayStats(bote);
+
     </script>
   </head>
   <body style="background-color: #000;">
@@ -79,7 +70,6 @@
                         <div class="dropdown-menu bg-dark" aria-labelledby="shipDropdownMenuButton">
                           <h4 class="dropdown-header text-light">Hopfer Branchen</h4>
                           <button type="button" class="btn btn-block btn-outline-warning">Bote</button>
-                          <button type="button" class="btn btn-block btn-outline-warning">Bote Heavy</button>
                           <h4 class="dropdown-header text-light">Ikitomi</h4>
                           <button type="button" class="btn btn-block btn-outline-warning">Spider</button>
                         </div>
@@ -114,7 +104,7 @@
                           </button>
                           <div class="dropdown-menu bg-dark">
                             <table class="table table-sm table-hover">
-                              <tbody>
+                              <tbody id="capacitorTableBody">
                                 <tr>
                                   <td><button type="button" class="btn btn-outline-warning">1A</button></td>
                                   <td><button type="button" class="btn btn-outline-warning" disabled>1B</button></td>
@@ -133,7 +123,7 @@
                             </table>
                           </div>
                         </div>
-                        <button type="button" class="btn btn-outline-warning">n/a</button>
+                        <button id="installedCapacitor" type="button" class="btn btn-outline-warning">1E</button>
                       </div>
                     </li>
                   </ul>
@@ -150,9 +140,9 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <td>31</td>
-                      <td>5.23</td>
-                      <td>3</td>
+                      <td><span id="shipMass">31</span></td>
+                      <td><span id="shipJumpRange">5.23</span> <small><i>(of <span id="maxJumpRange">10</span> max)</i></small></td>
+                      <td><span id="shipJumpFuel">3</span> <small><i>(of <span id="maxFuel">4</span> max)</i></small></td>
                     </tr>
                   </tbody>
                 </table>
@@ -165,8 +155,8 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <td>55</td>
-                      <td>74</td>
+                      <td><span id="shipPower">55</span> <small><i>(of <span id="maxPower">100</span> max)</i></small></td>
+                      <td><span id="shipHeat">74</span> <small><i>(of <span id="maxHeat">100<span> max)</i></small></td>
                     </tr>
                   </tbody>
                 </table>

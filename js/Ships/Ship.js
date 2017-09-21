@@ -3,6 +3,8 @@ SpaceSim.Ships = SpaceSim.Ships || {};
 SpaceSim.Ships.Ship = function(options) {
   SpaceSim.Ships.PoweredModule.call(this, options);
 
+  this.manufacterer = options.manufacturer || null;
+
   this.coreModules = new SpaceSim.Ships.CoreModules(options.coreModules);
   this.weaponModules = new SpaceSim.Ships.WeaponModules(options.weaponModules);
   this.defenseModules = new SpaceSim.Ships.DefenseModules(options.defenseModules);

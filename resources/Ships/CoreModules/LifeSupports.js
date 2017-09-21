@@ -8,6 +8,7 @@ SpaceSim.Ships.CoreModules.LifeSupport.Size1.E = function() {
     time: 2, // minutes
     mass: 1,
     size: 1,
+    class: "E",
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
@@ -20,3 +21,4 @@ SpaceSim.Ships.CoreModules.LifeSupport.Size1.E = function() {
 };
 SpaceSim.Ships.CoreModules.LifeSupport.Size1.E.prototype = Object.create(SpaceSim.Ships.CoreModules.LifeSupport.prototype);
 SpaceSim.Ships.CoreModules.LifeSupport.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.LifeSupport.Size1.E;
+SpaceSim.coreModules.lifeSupports.push(new SpaceSim.Ships.CoreModules.LifeSupport.Size1.E());

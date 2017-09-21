@@ -10,6 +10,7 @@ SpaceSim.Ships.CoreModules.WarpCores.Size1.E = function() {
     maximumRange: 5, // lightyears at 0 mass
     mass: 5,
     size: 1,
+    class: "E",
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
@@ -22,6 +23,7 @@ SpaceSim.Ships.CoreModules.WarpCores.Size1.E = function() {
 };
 SpaceSim.Ships.CoreModules.WarpCores.Size1.E.prototype = Object.create(SpaceSim.Ships.CoreModules.WarpCore.prototype);
 SpaceSim.Ships.CoreModules.WarpCores.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.WarpCores.Size1.E;
+SpaceSim.coreModules.warpCores.push(new SpaceSim.Ships.CoreModules.WarpCores.Size1.E());
 
 SpaceSim.Ships.CoreModules.WarpCores.Size1.C = function() {
   var options = {
@@ -30,6 +32,7 @@ SpaceSim.Ships.CoreModules.WarpCores.Size1.C = function() {
     maximumRange: 5, // lightyears at 0 mass
     mass: 7,
     size: 1,
+    class: "C",
     heatResistance: 0,
     impactResistance: 0,
     cost: 250,
@@ -42,6 +45,7 @@ SpaceSim.Ships.CoreModules.WarpCores.Size1.C = function() {
 };
 SpaceSim.Ships.CoreModules.WarpCores.Size1.C.prototype = Object.create(SpaceSim.Ships.CoreModules.WarpCore.prototype);
 SpaceSim.Ships.CoreModules.WarpCores.Size1.C.prototype.constructor = SpaceSim.Ships.CoreModules.WarpCores.Size1.C;
+SpaceSim.coreModules.warpCores.push(new SpaceSim.Ships.CoreModules.WarpCores.Size1.C());
 
 SpaceSim.Ships.CoreModules.WarpCores.Size1.A = function() {
   var options = {
@@ -50,6 +54,7 @@ SpaceSim.Ships.CoreModules.WarpCores.Size1.A = function() {
     maximumRange: 7, // lightyears at 0 mass
     mass: 5,
     size: 1,
+    class: "A",
     heatResistance: 0,
     impactResistance: 0,
     cost: 1000,
@@ -62,3 +67,27 @@ SpaceSim.Ships.CoreModules.WarpCores.Size1.A = function() {
 };
 SpaceSim.Ships.CoreModules.WarpCores.Size1.A.prototype = Object.create(SpaceSim.Ships.CoreModules.WarpCore.prototype);
 SpaceSim.Ships.CoreModules.WarpCores.Size1.A.prototype.constructor = SpaceSim.Ships.CoreModules.WarpCores.Size1.A;
+SpaceSim.coreModules.warpCores.push(new SpaceSim.Ships.CoreModules.WarpCores.Size1.A());
+
+SpaceSim.Ships.CoreModules.WarpCores.Size2 = SpaceSim.Ships.CoreModules.WarpCores.Size2 || {};
+SpaceSim.Ships.CoreModules.WarpCores.Size2.E = function() {
+  var options = {
+    maximumMass: 100, // tonnes
+    maximumFuel: 10, // tonnes
+    maximumRange: 10, // lightyears at 0 mass
+    mass: 10,
+    size: 2,
+    class: "E",
+    heatResistance: 0,
+    impactResistance: 0,
+    cost: 1000,
+    powerDraw: 25, // in megaWatts
+    activePowerDraw: 60,
+    heatGenerated: 25, // in degrees Celcius
+    activeHeatGenerated: 45
+  };
+  SpaceSim.Ships.CoreModules.WarpCore.call(this, options);
+};
+SpaceSim.Ships.CoreModules.WarpCores.Size2.E.prototype = Object.create(SpaceSim.Ships.CoreModules.WarpCore.prototype);
+SpaceSim.Ships.CoreModules.WarpCores.Size2.E.prototype.constructor = SpaceSim.Ships.CoreModules.WarpCores.Size2.E;
+SpaceSim.coreModules.warpCores.push(new SpaceSim.Ships.CoreModules.WarpCores.Size2.E());

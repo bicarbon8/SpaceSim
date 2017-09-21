@@ -14,6 +14,7 @@ SpaceSim.Ships.CoreModules.Generators.Size1.E = function() {
     // powered module
     mass: 3,
     size: 1,
+    class: "E",
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
@@ -26,3 +27,4 @@ SpaceSim.Ships.CoreModules.Generators.Size1.E = function() {
 };
 SpaceSim.Ships.CoreModules.Generators.Size1.E.prototype = Object.create(SpaceSim.Ships.CoreModules.Generator.prototype);
 SpaceSim.Ships.CoreModules.Generators.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.Generators.Size1.E;
+SpaceSim.coreModules.generators.push(new SpaceSim.Ships.CoreModules.Generators.Size1.E());

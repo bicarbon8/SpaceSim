@@ -13,6 +13,7 @@ SpaceSim.Ships.CoreModules.Capacitors.Size1.E = function() {
     rechargeTime: 60, // seconds
     mass: 2,
     size: 1,
+    class: "E",
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
@@ -25,3 +26,4 @@ SpaceSim.Ships.CoreModules.Capacitors.Size1.E = function() {
 };
 SpaceSim.Ships.CoreModules.Capacitors.Size1.E.prototype = Object.create(SpaceSim.Ships.PoweredModule.prototype);
 SpaceSim.Ships.CoreModules.Capacitors.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.Capacitors.Size1.E;
+SpaceSim.coreModules.capacitors.push(new SpaceSim.Ships.CoreModules.Capacitors.Size1.E());

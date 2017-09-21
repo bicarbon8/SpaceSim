@@ -8,6 +8,7 @@ SpaceSim.Ships.Manufacturers.Ikitomi = SpaceSim.Ships.Manufacturers.Ikitomi || {
 SpaceSim.Ships.Manufacturers.Ikitomi.Spider = function() {
   var options = {
     name: "Spider",
+    manufacturer: "Ikitomi",
     mass: 8, // in tonnes
     size: 17,
     heatResistance: 0, // lazer weapon, ship overheating and star proximity resistance: 100% is immune to heat
@@ -54,3 +55,4 @@ SpaceSim.Ships.Manufacturers.Ikitomi.Spider = function() {
 };
 SpaceSim.Ships.Manufacturers.Ikitomi.Spider.prototype = Object.create(SpaceSim.Ships.Ship.prototype);
 SpaceSim.Ships.Manufacturers.Ikitomi.Spider.prototype.constructor = SpaceSim.Ships.Manufacturers.Ikitomi.Spider;
+SpaceSim.ships.push(new SpaceSim.Ships.Manufacturers.Ikitomi.Spider());
