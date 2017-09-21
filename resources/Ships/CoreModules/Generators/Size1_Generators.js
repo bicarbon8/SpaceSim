@@ -17,8 +17,8 @@ SpaceSim.Ships.CoreModules.Generators.Size1.E = function() {
     heatResistance: 0,
     impactResistance: 0,
     cost: 100,
-    powerDraw: -100, // produces power in megaWatts
-    activePowerDraw: -100, // same
+    powerDraw: -50, // produces power in megaWatts
+    activePowerDraw: -50, // same
     heatGenerated: 100, // degrees Celcius; at max usage it likely will overheat ship
     activeHeatGenerated: 100 // same
   };

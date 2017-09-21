@@ -1,8 +1,7 @@
 "strict mode";
-var SpaceSim = {
-  currentSystem: null,
-  currentShip: null,
-  loadSystem: function (systemName) {
+var SpaceSim = SpaceSim || {};
+SpaceSim.currentSystem = null;
+SpaceSim.currentShip = null;
+SpaceSim.loadSystem = function (systemName) {
 
-  }
 };

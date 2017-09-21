@@ -7,7 +7,7 @@ SpaceSim.Ships.CoreModules.WarpCores.Size2.E = function() {
   var options = {
     maximumMass: 100, // tonnes
     maximumFuel: 10, // tonnes
-    maximumRange: 30, // lightyears at 0 mass
+    maximumRange: 10, // lightyears at 0 mass
     mass: 10,
     size: 2,
     heatResistance: 0,
