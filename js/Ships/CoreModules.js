@@ -2,22 +2,22 @@ var SpaceSim = SpaceSim || {};
 SpaceSim.Ships = SpaceSim.Ships || {};
 SpaceSim.Ships.CoreModules = function(options) {
   this.generatorMaxSize = options.generatorMaxSize || 0;
-  this.generator = null;
+  this.generator = options.generator || null;
 
   this.thrustersMaxSize = options.thrustersMaxSize || 0;
-  this.thrusters = null;
+  this.thrusters = options.thrusters || null;
 
   this.warpCoreMaxSize = options.warpCoreMaxSize || 0;
-  this.warpCore = null;
+  this.warpCore = options.warpCore || null;
 
   this.lifeSupportMaxSize = options.lifeSupportMaxSize || 0;
-  this.lifeSupport = null;
+  this.lifeSupport = options.lifeSupport || null;
 
   this.capacitorMaxSize = options.capacitorMaxSize || 0;
-  this.capacitor = null;
+  this.capacitor = options.capacitor || null;
 
   this.fuelTankMaxSize = options.fuelTankMaxSize || 0;
-  this.fuelTank = null;
+  this.fuelTank = options.fuelTank || null;
 };
 SpaceSim.Ships.CoreModules.prototype.getTotalMass = function() {
   var totalMass = 0;

@@ -1,29 +1,18 @@
 var SpaceSim = SpaceSim || {};
-SpaceSim.Ships = SpaceSim.Ships || {};
-SpaceSim.Ships.CoreModules = SpaceSim.Ships.CoreModules || {};
-SpaceSim.Ships.CoreModules.Capacitors = SpaceSim.Ships.CoreModules.Capacitors || {};
-SpaceSim.Ships.CoreModules.Capacitors.Size1 = SpaceSim.Ships.CoreModules.Capacitors.Size1 || {};
-/**
- * this is the smallest and worst performing Capacitor you can buy
- */
-SpaceSim.Ships.CoreModules.Capacitors.Size1.E = function() {
-  var options = {
-    boostPower: 1,
-    boostTime: 10, // seconds
-    rechargeTime: 60, // seconds
-    mass: 2,
-    size: 1,
-    class: "E",
-    heatResistance: 0,
-    impactResistance: 0,
-    cost: 100,
-    powerDraw: 10, // in megaWatts
-    activePowerDraw: 0,
-    heatGenerated: 5, // degrees Celcius
-    activeHeatGenerated: 30
-  };
-  SpaceSim.Ships.CoreModules.Capacitor.call(this, options);
-};
-SpaceSim.Ships.CoreModules.Capacitors.Size1.E.prototype = Object.create(SpaceSim.Ships.PoweredModule.prototype);
-SpaceSim.Ships.CoreModules.Capacitors.Size1.E.prototype.constructor = SpaceSim.Ships.CoreModules.Capacitors.Size1.E;
-SpaceSim.coreModules.capacitors.push(new SpaceSim.Ships.CoreModules.Capacitors.Size1.E());
+SpaceSim.coreModules = SpaceSim.coreModules || {};
+SpaceSim.coreModules.capacitors = SpaceSim.coreModules.capacitors || [];
+SpaceSim.coreModules.capacitors.push({
+  boostPower: 1,
+  boostTime: 10, // seconds
+  rechargeTime: 60, // seconds
+  mass: 2,
+  size: 1,
+  class: "E",
+  heatResistance: 0,
+  impactResistance: 0,
+  cost: 100,
+  powerDraw: 10, // in megaWatts
+  activePowerDraw: 0,
+  heatGenerated: 5, // degrees Celcius
+  activeHeatGenerated: 30
+});

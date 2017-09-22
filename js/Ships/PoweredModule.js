@@ -36,3 +36,13 @@ SpaceSim.Ships.PoweredModule.prototype.setEnabled = function(enabled) {
 SpaceSim.Ships.PoweredModule.prototype.setActive = function(active) {
   this.active = active;
 };
+
+SpaceSim.Ships.PoweredModule.prototype.getOptions = function() {
+  var options = {};
+  for (var property in this) {
+    if (this.hasOwnProperty(property)) {
+      options[property] = this[property];
+    }
+  }
+  return options;
+};

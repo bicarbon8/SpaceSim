@@ -34,6 +34,11 @@ SpaceSim.Ships.Ship.prototype.getTotalHeat = function() {
       this.coreModules.generator.getHeatGeneratedByUsage(this.weaponModules.getTotalPowerConsumed());
 
   // TODO: add heat from nearby objects (stars, gas giants, etc.)
+
+  // reduce values by Ship's heatResistance
+  totalHeat = totalHeat - (totalHeat * this.heatResistance);
+
+  return totalHeat;
 };
 SpaceSim.Ships.Ship.prototype.getTotalMass = function() {
   // add up mass of ship + hull + currentFuel + all modules

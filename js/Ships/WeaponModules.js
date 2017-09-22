@@ -68,8 +68,14 @@ SpaceSim.Ships.WeaponModules.prototype.getTotalHeat = function() {
 SpaceSim.Ships.WeaponModules.prototype.getTotalPowerConsumed = function() {
   var totalPower = 0; // MegaWatts
 
-  this.modules.forEach(function(module) {
-    if (module.enabled) { totalPower += (module.active) ? module.activePowerDraw : module.powerDraw; }
+  this.smallModules.forEach(function(sModule) {
+    if (sModule.enabled) { totalPower += (sModule.active) ? sModule.activePowerDraw : sModule.powerDraw; }
+  });
+  this.mediumModules.forEach(function(mModule) {
+    if (mModule.enabled) { totalHeat += (mModule.active) ? mModule.activePowerDraw : mModule.powerDraw; }
+  });
+  this.largeModules.forEach(function(lModule) {
+    if (lModule.enabled) { totalHeat += (lModule.active) ? lModule.activePowerDraw : lModule.powerDraw; }
   });
 
   return totalPower;
