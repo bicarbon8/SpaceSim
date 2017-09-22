@@ -78,7 +78,7 @@
                           </table>
                         </div>
                       </div>
-                      <button id="installedCapacitor" type="button" class="btn btn-outline-warning">n/a</button>
+                      <button id="installedCapacitor" type="button" class="btn btn-warning">n/a</button>
                     </div>
                   </li>
                   <li class="list-group-item bg-dark">
@@ -94,7 +94,7 @@
                           </table>
                         </div>
                       </div>
-                      <button id="installedFuelTank" type="button" class="btn btn-outline-warning">n/a</button>
+                      <button id="installedFuelTank" type="button" class="btn btn-warning">n/a</button>
                     </div>
                   </li>
                   <li class="list-group-item bg-dark">
@@ -110,7 +110,7 @@
                           </table>
                         </div>
                       </div>
-                      <button id="installedGenerator" type="button" class="btn btn-outline-warning">n/a</button>
+                      <button id="installedGenerator" type="button" class="btn btn-warning">n/a</button>
                     </div>
                   </li>
                   <li class="list-group-item bg-dark">
@@ -126,7 +126,7 @@
                           </table>
                         </div>
                       </div>
-                      <button id="installedLifeSupport" type="button" class="btn btn-outline-warning">n/a</button>
+                      <button id="installedLifeSupport" type="button" class="btn btn-warning">n/a</button>
                     </div>
                   </li>
                   <li class="list-group-item bg-dark">
@@ -142,7 +142,7 @@
                           </table>
                         </div>
                       </div>
-                      <button id="installedThrusters" type="button" class="btn btn-outline-warning">n/a</button>
+                      <button id="installedThrusters" type="button" class="btn btn-warning">n/a</button>
                     </div>
                   </li>
                   <li class="list-group-item bg-dark">
@@ -158,7 +158,7 @@
                           </table>
                         </div>
                       </div>
-                      <button id="installedWarpCore" type="button" class="btn btn-outline-warning">n/a</button>
+                      <button id="installedWarpCore" type="button" class="btn btn-warning">n/a</button>
                     </div>
                   </li>
                 </ul>
@@ -250,13 +250,12 @@
           document.querySelector('#maxJumpRange').innerText = cm.warpCore.maximumRange;
           document.querySelector('#shipJumpFuel').innerText = (isNaN(shipFuelMaxJump)) ? NaN : shipFuelMaxJump.toFixed(2);
           document.querySelector('#maxFuel').innerText = cm.warpCore.maximumFuel;
-          document.querySelector('#maxFuel').innerText = cm.warpCore.maximumFuel;
 
           document.querySelector('#shipPower').innerText = cm.getTotalPowerConsumed()
           document.querySelector('#shipPower').innerText = cm.getTotalPowerConsumed()
           document.querySelector('#maxPower').innerText = cm.generator.power;
           document.querySelector('#maxPower').innerText = cm.generator.power;
-          document.querySelector('#shipHeat').innerText = currentShip.getTotalHeat();
+          document.querySelector('#shipHeat').innerText = (isNaN(currentShip.getTotalHeat())) ? NaN : currentShip.getTotalHeat().toFixed(2);
           document.querySelector('#maxHeat').innerText = 100;
         }
       }
@@ -364,6 +363,7 @@
         populateThrustersList();
         populateWarpCoreList();
 
+        /** update ship modules **/
         $('#capacitorTableBody button:not([disabled])').click(function() {
           var sizeClassStr = $(this).attr('sizeClass');
           var sizeClass = JSON.parse(sizeClassStr);
@@ -398,6 +398,79 @@
           var sizeClassStr = $(this).attr('sizeClass');
           var sizeClass = JSON.parse(sizeClassStr);
           currentShip.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCore(SpaceSim.getCoreModule('warpCore', sizeClass.size, sizeClass.class)));
+          displayStats();
+        });
+
+        /** disable ship module **/
+        $('#installedCapacitor').click(function() {
+          var el = $(this);
+          if (el.hasClass('btn-warning')) {
+            // disable module
+            el.removeClass('btn-warning');
+            el.addClass('btn-outline-warning');
+            currentShip.coreModules.capacitor.setEnabled(false);
+          } else {
+            el.removeClass('btn-outline-warning');
+            el.addClass('btn-warning');
+            currentShip.coreModules.capacitor.setEnabled(true);
+          }
+          displayStats();
+        });
+        $('#installedFuelTank').click(function() {
+          var el = $(this);
+          if (el.hasClass('btn-warning')) {
+            // disable module
+            el.removeClass('btn-warning');
+            el.addClass('btn-outline-warning');
+            currentShip.coreModules.fuelTank.setEnabled(false);
+          } else {
+            el.removeClass('btn-outline-warning');
+            el.addClass('btn-warning');
+            currentShip.coreModules.fuelTank.setEnabled(true);
+          }
+          displayStats();
+        });
+        // generator cannot be disabled
+        $('#installedLifeSupport').click(function() {
+          var el = $(this);
+          if (el.hasClass('btn-warning')) {
+            // disable module
+            el.removeClass('btn-warning');
+            el.addClass('btn-outline-warning');
+            currentShip.coreModules.lifeSupport.setEnabled(false);
+          } else {
+            el.removeClass('btn-outline-warning');
+            el.addClass('btn-warning');
+            currentShip.coreModules.lifeSupport.setEnabled(true);
+          }
+          displayStats();
+        });
+        $('#installedThrusters').click(function() {
+          var el = $(this);
+          if (el.hasClass('btn-warning')) {
+            // disable module
+            el.removeClass('btn-warning');
+            el.addClass('btn-outline-warning');
+            currentShip.coreModules.thrusters.setEnabled(false);
+          } else {
+            el.removeClass('btn-outline-warning');
+            el.addClass('btn-warning');
+            currentShip.coreModules.thrusters.setEnabled(true);
+          }
+          displayStats();
+        });
+        $('#installedWarpCore').click(function() {
+          var el = $(this);
+          if (el.hasClass('btn-warning')) {
+            // disable module
+            el.removeClass('btn-warning');
+            el.addClass('btn-outline-warning');
+            currentShip.coreModules.warpCore.setEnabled(false);
+          } else {
+            el.removeClass('btn-outline-warning');
+            el.addClass('btn-warning');
+            currentShip.coreModules.warpCore.setEnabled(true);
+          }
           displayStats();
         });
       });
