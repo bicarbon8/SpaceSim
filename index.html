@@ -42,111 +42,178 @@
   </head>
   <body style="background-color: #000;">
     <div class="container-fluid">
-      <div id="headerMenu" class="card text-white bg-dark mb-3">
-        <div class="card-header">
-          <div class="container-fluid">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="container-fluid">
-                  <div class="row">
-                    <div class="col-xs-2">
-                      <div class="dropdown">
-                        <button id="shipList" type="button" class="btn btn-outline-warning btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                        <div id="shipDropdownList" class="dropdown-menu bg-dark" aria-labelledby="shipDropdownMenuButton"></div>
-                      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div id="headerMenu" class="card text-white bg-dark mb-3">
+            <div class="card-header">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-xs-2">
+                    <div class="dropdown">
+                      <button id="shipList" type="button" class="btn btn-outline-warning dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                      <div id="shipDropdownList" class="dropdown-menu bg-dark" aria-labelledby="shipDropdownMenuButton"></div>
                     </div>
-                    <div class="col-xs-1"> &nbsp; </div>
-                    <div class="col-xs-9">
-                      <h5 id="shipName">[Ship name here]</h5>
-                    </div>
+                  </div>
+                  <div class="col-xs-1"> &nbsp; </div>
+                  <div class="col-xs-9">
+                    <h5 id="shipName">[Ship name here]</h5>
                   </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <h5>Statistics &amp; Characteristics</h5>
+            </div>
+            <div class="card-body">
+              <div class="card bg-dark">
+                <div class="card-header"><h5>Core Modules</h5></div>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item bg-dark">
+                    <div class="btn-group btn-block" role="group">
+                      <button id="capacitorMaxSize" type="button" class="btn btn-warning">n/a</button>
+                      <div class="btn-group btn-block" role="group">
+                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Select: <i>Capacitor</i>
+                        </button>
+                        <div class="dropdown-menu bg-dark">
+                          <table class="table table-sm table-hover">
+                            <tbody id="capacitorTableBody"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <button id="installedCapacitor" type="button" class="btn btn-outline-warning">n/a</button>
+                    </div>
+                  </li>
+                  <li class="list-group-item bg-dark">
+                    <div class="btn-group btn-block" role="group">
+                      <button id="fuelTankMaxSize" type="button" class="btn btn-warning">n/a</button>
+                      <div class="btn-group btn-block" role="group">
+                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Select: <i>Fuel Tank</i>
+                        </button>
+                        <div class="dropdown-menu bg-dark">
+                          <table class="table table-sm table-hover">
+                            <tbody id="fuelTankTableBody"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <button id="installedFuelTank" type="button" class="btn btn-outline-warning">n/a</button>
+                    </div>
+                  </li>
+                  <li class="list-group-item bg-dark">
+                    <div class="btn-group btn-block" role="group">
+                      <button id="generatorMaxSize" type="button" class="btn btn-warning">n/a</button>
+                      <div class="btn-group btn-block" role="group">
+                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Select: <i>Generator</i>
+                        </button>
+                        <div class="dropdown-menu bg-dark">
+                          <table class="table table-sm table-hover">
+                            <tbody id="generatorTableBody"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <button id="installedGenerator" type="button" class="btn btn-outline-warning">n/a</button>
+                    </div>
+                  </li>
+                  <li class="list-group-item bg-dark">
+                    <div class="btn-group btn-block" role="group">
+                      <button id="lifeSupportMaxSize" type="button" class="btn btn-warning">n/a</button>
+                      <div class="btn-group btn-block" role="group">
+                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Select: <i>Life Support</i>
+                        </button>
+                        <div class="dropdown-menu bg-dark">
+                          <table class="table table-sm table-hover">
+                            <tbody id="lifeSupportTableBody"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <button id="installedLifeSupport" type="button" class="btn btn-outline-warning">n/a</button>
+                    </div>
+                  </li>
+                  <li class="list-group-item bg-dark">
+                    <div class="btn-group btn-block" role="group">
+                      <button id="thrustersMaxSize" type="button" class="btn btn-warning">n/a</button>
+                      <div class="btn-group btn-block" role="group">
+                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Select: <i>Thrusters</i>
+                        </button>
+                        <div class="dropdown-menu bg-dark">
+                          <table class="table table-sm table-hover">
+                            <tbody id="thrustersTableBody"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <button id="installedThrusters" type="button" class="btn btn-outline-warning">n/a</button>
+                    </div>
+                  </li>
+                  <li class="list-group-item bg-dark">
+                    <div class="btn-group btn-block" role="group">
+                      <button id="warpCoreMaxSize" type="button" class="btn btn-warning">n/a</button>
+                      <div class="btn-group btn-block" role="group">
+                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          Select: <i>Warp Core</i>
+                        </button>
+                        <div class="dropdown-menu bg-dark">
+                          <table class="table table-sm table-hover">
+                            <tbody id="warpCoreTableBody"></tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <button id="installedWarpCore" type="button" class="btn btn-outline-warning">n/a</button>
+                    </div>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
-        <div class="card-body">
-          <div class="container-fluid">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="card bg-dark">
-                  <div class="card-header"><h5>Core Modules</h5></div>
-                  <ul class="list-group list-group-flush">
-                    <li class="list-group-item bg-dark">
-                      <div class="btn-group btn-block" role="group">
-                        <button id="capacitorMaxSize" type="button" class="btn btn-warning">n/a</button>
-                        <div class="btn-group btn-block" role="group">
-                          <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Select: <i>Capacitor</i>
-                          </button>
-                          <div class="dropdown-menu bg-dark">
-                            <table class="table table-sm table-hover">
-                              <tbody id="capacitorTableBody"></tbody>
-                            </table>
-                          </div>
-                        </div>
-                        <button id="installedCapacitor" type="button" class="btn btn-outline-warning">n/a</button>
-                      </div>
-                    </li>
-                    <li class="list-group-item bg-dark">
-                      <div class="btn-group btn-block" role="group">
-                        <button id="fuelTankMaxSize" type="button" class="btn btn-warning">n/a</button>
-                        <div class="btn-group btn-block" role="group">
-                          <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Select: <i>Fuel Tank</i>
-                          </button>
-                          <div class="dropdown-menu bg-dark">
-                            <table class="table table-sm table-hover">
-                              <tbody id="fuelTankTableBody"></tbody>
-                            </table>
-                          </div>
-                        </div>
-                        <button id="installedFuelTank" type="button" class="btn btn-outline-warning">n/a</button>
-                      </div>
-                    </li>
-                  </ul>
+        <div class="col-md-6">
+          <div id="headerMenu" class="card text-white bg-dark mb-3">
+            <div class="card-header">
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-md-12">
+                    <h5>Statistics &amp; Characteristics</h5>
+                  </div>
                 </div>
               </div>
-              <div class="col-md-6">
-                <table class="table table-sm table-hover">
-                  <thead>
-                    <tr>
-                      <td>Mass <small><i>(tonnes)</i></small></td>
-                      <td>Jump Range <small><i>(lightyears)</i></small></td>
-                      <td>Fuel for max jump <small><i>(tonnes)</i></small></td>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><span id="shipMass">n/a</span></td>
-                      <td><span id="shipJumpRange">n/a</span> <small><i>(of <span id="maxJumpRange">n/a</span> max)</i></small></td>
-                      <td><span id="shipJumpFuel">n/a</span> <small><i>(of <span id="maxFuel">n/a</span> max)</i></small></td>
-                    </tr>
-                  </tbody>
-                </table>
-                <table class="table table-sm table-hover">
-                  <thead>
-                    <tr>
-                      <td>Power Consumed <small><i>(MegaWatts)</i></small></td>
-                      <td>Heat Generated <small><i>(Degrees Celcius)</i></small></td>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><span id="shipPower">n/a</span> <small><i>(of <span id="maxPower">n/a</span> max)</i></small></td>
-                      <td><span id="shipHeat">n/a</span> <small><i>(of <span id="maxHeat">n/a</span> max)</i></small></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+            </div>
+            <div class="card-body">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <td>Mass <small><i>(tonnes)</i></small></td>
+                    <td>Jump Range <small><i>(lightyears)</i></small></td>
+                    <td>Fuel for max jump <small><i>(tonnes)</i></small></td>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span id="shipMass">n/a</span></td>
+                    <td><span id="shipJumpRange">n/a</span> <small><i>(of <span id="maxJumpRange">n/a</span> max)</i></small></td>
+                    <td><span id="shipJumpFuel">n/a</span> <small><i>(of <span id="maxFuel">n/a</span> max)</i></small></td>
+                  </tr>
+                </tbody>
+              </table>
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <td>Power Consumed <small><i>(MegaWatts)</i></small></td>
+                    <td>Heat Generated <small><i>(Degrees Celcius)</i></small></td>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span id="shipPower">n/a</span> <small><i>(of <span id="maxPower">n/a</span> max)</i></small></td>
+                    <td><span id="shipHeat">n/a</span> <small><i>(of <span id="maxHeat">n/a</span> max)</i></small></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-      </span>
+      </div>
     </div>
+
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1" crossorigin="anonymous"></script>
@@ -155,18 +222,40 @@
 
       function displayStats() {
         if (currentShip) {
+          document.querySelector('#shipName').innerText = currentShip.manufacturer + ': ' + currentShip.name;
+
+          // update Module Sizes
+          var cm = currentShip.coreModules;
+          document.querySelector('#capacitorMaxSize').innerText = cm.capacitorMaxSize;
+          document.querySelector('#fuelTankMaxSize').innerText = cm.fuelTankMaxSize;
+          document.querySelector('#generatorMaxSize').innerText = cm.generatorMaxSize;
+          document.querySelector('#lifeSupportMaxSize').innerText = cm.lifeSupportMaxSize;
+          document.querySelector('#thrustersMaxSize').innerText = cm.thrustersMaxSize;
+          document.querySelector('#warpCoreMaxSize').innerText = cm.warpCoreMaxSize;
+
+          document.querySelector('#installedCapacitor').innerText = cm.capacitor.size + cm.capacitor.class;
+          document.querySelector('#installedFuelTank').innerText = cm.fuelTank.size + cm.fuelTank.class;
+          document.querySelector('#installedGenerator').innerText = cm.generator.size + cm.generator.class;
+          document.querySelector('#installedLifeSupport').innerText = cm.lifeSupport.size + cm.lifeSupport.class;
+          document.querySelector('#installedThrusters').innerText = cm.thrusters.size + cm.thrusters.class;
+          document.querySelector('#installedWarpCore').innerText = cm.warpCore.size + cm.warpCore.class;
+
           var shipMass = currentShip.getTotalMass();
-          var shipRange = currentShip.coreModules.warpCore.getJumpRange(shipMass);
-          var shipFuelMaxJump = currentShip.coreModules.warpCore.getFuelNeededForJump(shipMass, shipRange);
+          var shipRange = cm.warpCore.getJumpRange(shipMass);
+          var shipFuelMaxJump = cm.warpCore.getFuelNeededForJump(shipMass, shipRange);
 
           document.querySelector('#shipMass').innerText = shipMass;
           document.querySelector('#shipJumpRange').innerText = (isNaN(shipRange)) ? NaN : shipRange.toFixed(2);
-          document.querySelector('#maxJumpRange').innerText = currentShip.coreModules.warpCore.maximumRange;
+          document.querySelector('#maxJumpRange').innerText = cm.warpCore.maximumRange;
+          document.querySelector('#maxJumpRange').innerText = cm.warpCore.maximumRange;
           document.querySelector('#shipJumpFuel').innerText = (isNaN(shipFuelMaxJump)) ? NaN : shipFuelMaxJump.toFixed(2);
-          document.querySelector('#maxFuel').innerText = currentShip.coreModules.warpCore.maximumFuel;
+          document.querySelector('#maxFuel').innerText = cm.warpCore.maximumFuel;
+          document.querySelector('#maxFuel').innerText = cm.warpCore.maximumFuel;
 
-          document.querySelector('#shipPower').innerText = currentShip.coreModules.getTotalPowerConsumed()
-          document.querySelector('#maxPower').innerText = currentShip.coreModules.generator.power;
+          document.querySelector('#shipPower').innerText = cm.getTotalPowerConsumed()
+          document.querySelector('#shipPower').innerText = cm.getTotalPowerConsumed()
+          document.querySelector('#maxPower').innerText = cm.generator.power;
+          document.querySelector('#maxPower').innerText = cm.generator.power;
           document.querySelector('#shipHeat').innerText = currentShip.getTotalHeat();
           document.querySelector('#maxHeat').innerText = 100;
         }
@@ -175,6 +264,7 @@
       function setShip(shipName) {
         var newShip = SpaceSim.getShip(shipName);
         currentShip = newShip;
+
         displayStats();
       }
 
@@ -216,10 +306,11 @@
                 break;
               }
             }
+            var sizeClass = size + '' + moduleClasses[j];
             if (availableModuleExists) {
-              htmlToAppend += '<td><button type="button" class="btn btn-outline-warning">' + size + moduleClasses[j] + '</button></td>';
+              htmlToAppend += '<td><button sizeclass=\'' + JSON.stringify({'size':size,'class':moduleClasses[j]}) + '\' type="button" class="btn btn-outline-warning">' + sizeClass + '</button></td>';
             } else {
-              htmlToAppend += '<td><button type="button" class="btn btn-outline-light disabled" disabled>' + size + moduleClasses[j] + '</button></td>';
+              htmlToAppend += '<td><button type="button" class="btn btn-outline-light disabled" disabled>' + sizeClass + '</button></td>';
             }
           }
           htmlToAppend += '</tr>';
@@ -230,6 +321,7 @@
       function populateCapacitorList() {
         var tableBody = document.querySelector('#capacitorTableBody');
         var available = SpaceSim.coreModules.capacitors;
+        var available = SpaceSim.coreModules.capacitors;
         populateModuleList(tableBody, available);
       }
 
@@ -239,10 +331,75 @@
         populateModuleList(tableBody, available);
       }
 
+      function populateGeneratorList() {
+        var tableBody = document.querySelector('#generatorTableBody');
+        var available = SpaceSim.coreModules.generators;
+        populateModuleList(tableBody, available);
+      }
+
+      function populateLifeSupportList() {
+        var tableBody = document.querySelector('#lifeSupportTableBody');
+        var available = SpaceSim.coreModules.lifeSupports;
+        populateModuleList(tableBody, available);
+      }
+
+      function populateThrustersList() {
+        var tableBody = document.querySelector('#thrustersTableBody');
+        var available = SpaceSim.coreModules.thrusters;
+        populateModuleList(tableBody, available);
+      }
+
+      function populateWarpCoreList() {
+        var tableBody = document.querySelector('#warpCoreTableBody');
+        var available = SpaceSim.coreModules.warpCores;
+        populateModuleList(tableBody, available);
+      }
+
       $(function() {
         populateShipList();
         populateCapacitorList();
         populateFuelTankList();
+        populateGeneratorList();
+        populateLifeSupportList();
+        populateThrustersList();
+        populateWarpCoreList();
+
+        $('#capacitorTableBody button:not([disabled])').click(function() {
+          var sizeClassStr = $(this).attr('sizeClass');
+          var sizeClass = JSON.parse(sizeClassStr);
+          currentShip.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitor(SpaceSim.getCoreModule('capacitor', sizeClass.size, sizeClass.class)));
+          displayStats();
+        });
+        $('#fuelTankTableBody button:not([disabled])').click(function() {
+          var sizeClassStr = $(this).attr('sizeClass');
+          var sizeClass = JSON.parse(sizeClassStr);
+          currentShip.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTank(SpaceSim.getCoreModule('fuelTank', sizeClass.size, sizeClass.class)));
+          displayStats();
+        });
+        $('#generatorTableBody button:not([disabled])').click(function() {
+          var sizeClassStr = $(this).attr('sizeClass');
+          var sizeClass = JSON.parse(sizeClassStr);
+          currentShip.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generator(SpaceSim.getCoreModule('generator', sizeClass.size, sizeClass.class)));
+          displayStats();
+        });
+        $('#lifeSupportTableBody button:not([disabled])').click(function() {
+          var sizeClassStr = $(this).attr('sizeClass');
+          var sizeClass = JSON.parse(sizeClassStr);
+          currentShip.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport(SpaceSim.getCoreModule('lifeSupport', sizeClass.size, sizeClass.class)));
+          displayStats();
+        });
+        $('#thrustersTableBody button:not([disabled])').click(function() {
+          var sizeClassStr = $(this).attr('sizeClass');
+          var sizeClass = JSON.parse(sizeClassStr);
+          currentShip.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters(SpaceSim.getCoreModule('thrusters', sizeClass.size, sizeClass.class)));
+          displayStats();
+        });
+        $('#warpCoreTableBody button:not([disabled])').click(function() {
+          var sizeClassStr = $(this).attr('sizeClass');
+          var sizeClass = JSON.parse(sizeClassStr);
+          currentShip.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCore(SpaceSim.getCoreModule('warpCore', sizeClass.size, sizeClass.class)));
+          displayStats();
+        });
       });
     </script>
   </body>

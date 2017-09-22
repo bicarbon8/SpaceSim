@@ -17,13 +17,13 @@ SpaceSim.ships.push({
     thrustersMaxSize: 1,
     thrusters: SpaceSim.getCoreModule('thrusters', 1, 'E'),
     warpCoreMaxSize: 2,
-    warpCore: SpaceSim.getCoreModule('warpCore', 1, 'E'),
+    warpCore: SpaceSim.getCoreModule('warpCore', 2, 'E'),
     lifeSupportMaxSize: 1,
     lifeSupport: SpaceSim.getCoreModule('lifeSupport', 1, 'E'),
     capacitorMaxSize: 1,
     capacitor: SpaceSim.getCoreModule('capacitor', 1, 'E'),
     fuelTankMaxSize: 2,
-    fuelTank: SpaceSim.getCoreModule('fuelTank', 1, 'E')
+    fuelTank: SpaceSim.getCoreModule('fuelTank', 2, 'E')
   },
   weaponModules: {
     smallCount: 1,
