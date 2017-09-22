@@ -260,10 +260,19 @@
         }
       }
 
+      function resetModules() {
+        $('#installedCapacitor').removeClass('btn-outline-warning').addClass('btn-warning');
+        $('#installedFuelTank').removeClass('btn-outline-warning').addClass('btn-warning');
+        $('#installedGenerator').removeClass('btn-outline-warning').addClass('btn-warning');
+        $('#installedLifeSupport').removeClass('btn-outline-warning').addClass('btn-warning');
+        $('#installedThrusters').removeClass('btn-outline-warning').addClass('btn-warning');
+        $('#installedWarpCore').removeClass('btn-outline-warning').addClass('btn-warning');
+      }
+
       function setShip(shipName) {
         var newShip = SpaceSim.getShip(shipName);
         currentShip = newShip;
-
+        resetModules();
         displayStats();
       }
 
