@@ -19,7 +19,7 @@ SpaceSim.Ships.CoreModules.WarpCore.prototype.getJumpRange = function(mass) {
   if (mass >= this.maximumMass) {
     return 0; // too heavy to jump
   }
-  var range = this.maximumRange * Math.acos(mass / this.maximumMass);
+  var range = this.maximumRange - (this.maximumRange * Math.pow(mass / this.maximumMass, 4));
   if (range > this.maximumRange) { range = this.maximumRange; }
   if (range < 0) { range = 0; }
   return range;
@@ -31,10 +31,10 @@ SpaceSim.Ships.CoreModules.WarpCore.prototype.getJumpRange = function(mass) {
  */
 SpaceSim.Ships.CoreModules.WarpCore.prototype.getFuelNeededForJump = function(mass, distance) {
   var maxDistance = this.getJumpRange(mass);
-  if (maxDistance < distance) {
+  if (distance > maxDistance) {
     return Infinity;
   }
-  var fuel = this.maximumFuel * Math.sinh(distance / maxDistance);
+  var fuel = this.maximumFuel * Math.pow(distance / maxDistance, 1/4);
   if (fuel < 0) { fuel = 0; }
   if (fuel > this.maximumFuel) { fuel = this.maximumFuel; }
   return fuel;
