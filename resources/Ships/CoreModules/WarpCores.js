@@ -20,8 +20,8 @@ SpaceSim.coreModules.warpCores.push({
 
 SpaceSim.coreModules.warpCores.push({
   maximumMass: 70, // tonnes
-  maximumFuel: 6, // tonnes
-  maximumRange: 5, // lightyears at 0 mass
+  maximumFuel: 4, // tonnes
+  maximumRange: 10, // lightyears at 0 mass
   mass: 7,
   size: 1,
   class: 'C',
@@ -36,8 +36,8 @@ SpaceSim.coreModules.warpCores.push({
 
 SpaceSim.coreModules.warpCores.push({
   maximumMass: 70, // tonnes
-  maximumFuel: 6, // tonnes
-  maximumRange: 7, // lightyears at 0 mass
+  maximumFuel: 5, // tonnes
+  maximumRange: 15, // lightyears at 0 mass
   mass: 5,
   size: 1,
   class: 'A',
@@ -53,16 +53,48 @@ SpaceSim.coreModules.warpCores.push({
 /** Size 2 **/
 SpaceSim.coreModules.warpCores.push({
   maximumMass: 100, // tonnes
-  maximumFuel: 10, // tonnes
+  maximumFuel: 8, // tonnes
   maximumRange: 10, // lightyears at 0 mass
   mass: 10,
   size: 2,
   class: "E",
   heatResistance: 0,
   impactResistance: 0,
-  cost: 1000,
+  cost: 2500,
   powerDraw: 25, // in megaWatts
   activePowerDraw: 60,
   heatGenerated: 25, // in degrees Celcius
+  activeHeatGenerated: 45
+});
+
+SpaceSim.coreModules.warpCores.push({
+  maximumMass: 150, // tonnes
+  maximumFuel: 9, // tonnes
+  maximumRange: 15, // lightyears at 0 mass
+  mass: 15,
+  size: 2,
+  class: "C",
+  heatResistance: 0,
+  impactResistance: 0,
+  cost: 5000,
+  powerDraw: 35, // in megaWatts
+  activePowerDraw: 70,
+  heatGenerated: 30, // in degrees Celcius
+  activeHeatGenerated: 55
+});
+
+SpaceSim.coreModules.warpCores.push({
+  maximumMass: 100, // tonnes
+  maximumFuel: 10, // tonnes
+  maximumRange: 20, // lightyears at 0 mass
+  mass: 12,
+  size: 2,
+  class: "A",
+  heatResistance: 0,
+  impactResistance: 0,
+  cost: 10000,
+  powerDraw: 35, // in megaWatts
+  activePowerDraw: 65,
+  heatGenerated: 20, // in degrees Celcius
   activeHeatGenerated: 45
 });

@@ -31,7 +31,7 @@ SpaceSim.coreModules.fuelTanks.push({
 });
 
 SpaceSim.coreModules.fuelTanks.push({
-  maxCapacity: 8,
+  maxCapacity: 7,
   mass: 1,
   size: 1,
   class: "A",
