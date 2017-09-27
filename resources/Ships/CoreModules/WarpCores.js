@@ -2,7 +2,10 @@ var SpaceSim = SpaceSim || {};
 SpaceSim.coreModules = SpaceSim.coreModules || {};
 SpaceSim.coreModules.warpCores = SpaceSim.coreModules.warpCores || [];
 /** Size 1 **/
-SpaceSim.coreModules.warpCores.push({
+SpaceSim.addModule({
+  name: 'Warp Core',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.WarpCore,
   maximumMass: 50, // tonnes
   maximumFuel: 3, // tonnes
   maximumRange: 5, // lightyears at 0 mass
@@ -18,7 +21,10 @@ SpaceSim.coreModules.warpCores.push({
   activeHeatGenerated: 30
 });
 
-SpaceSim.coreModules.warpCores.push({
+SpaceSim.addModule({
+  name: 'Warp Core',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.WarpCore,
   maximumMass: 70, // tonnes
   maximumFuel: 4, // tonnes
   maximumRange: 10, // lightyears at 0 mass
@@ -34,7 +40,10 @@ SpaceSim.coreModules.warpCores.push({
   activeHeatGenerated: 40
 });
 
-SpaceSim.coreModules.warpCores.push({
+SpaceSim.addModule({
+  name: 'Warp Core',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.WarpCore,
   maximumMass: 70, // tonnes
   maximumFuel: 5, // tonnes
   maximumRange: 15, // lightyears at 0 mass
@@ -51,7 +60,10 @@ SpaceSim.coreModules.warpCores.push({
 });
 
 /** Size 2 **/
-SpaceSim.coreModules.warpCores.push({
+SpaceSim.addModule({
+  name: 'Warp Core',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.WarpCore,
   maximumMass: 100, // tonnes
   maximumFuel: 8, // tonnes
   maximumRange: 10, // lightyears at 0 mass
@@ -67,7 +79,10 @@ SpaceSim.coreModules.warpCores.push({
   activeHeatGenerated: 45
 });
 
-SpaceSim.coreModules.warpCores.push({
+SpaceSim.addModule({
+  name: 'Warp Core',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.WarpCore,
   maximumMass: 150, // tonnes
   maximumFuel: 9, // tonnes
   maximumRange: 15, // lightyears at 0 mass
@@ -83,7 +98,10 @@ SpaceSim.coreModules.warpCores.push({
   activeHeatGenerated: 55
 });
 
-SpaceSim.coreModules.warpCores.push({
+SpaceSim.addModule({
+  name: 'Warp Core',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.WarpCore,
   maximumMass: 100, // tonnes
   maximumFuel: 10, // tonnes
   maximumRange: 20, // lightyears at 0 mass

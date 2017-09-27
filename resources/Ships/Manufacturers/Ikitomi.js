@@ -1,12 +1,10 @@
 var SpaceSim = SpaceSim || {};
-SpaceSim.Ships = SpaceSim.Ships || {};
-SpaceSim.Ships.Manufacturers = SpaceSim.Ships.Manufacturers || {};
-SpaceSim.Ships.Manufacturers.Ikitomi = SpaceSim.Ships.Manufacturers.Ikitomi || {};
 /**
  * a highly maneuverable, small fighter
  */
-SpaceSim.ships.push({
+SpaceSim.addModule({
   name: "Spider",
+  type: SpaceSim.ModuleTypes.Ship,
   manufacturer: "Ikitomi",
   mass: 8, // in tonnes
   size: 17,
@@ -15,17 +13,17 @@ SpaceSim.ships.push({
   cost: 50000,
   coreModules: {
     generatorMaxSize: 1,
-    generator: SpaceSim.getCoreModule('generator', 1, 'E'),
+    generator: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Generator, 1, 'E'),
     thrustersMaxSize: 2,
-    thrusters: SpaceSim.getCoreModule('thrusters', 1, 'E'),
+    thrusters: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Thrusters, 1, 'E'),
     warpCoreMaxSize: 1,
-    warpCore: SpaceSim.getCoreModule('warpCore', 1, 'E'),
+    warpCore: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.WarpCore, 1, 'E'),
     lifeSupportMaxSize: 1,
-    lifeSupport: SpaceSim.getCoreModule('lifeSupport', 1, 'E'),
+    lifeSupport: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.LifeSupport, 1, 'E'),
     capacitorMaxSize: 3,
-    capacitor: SpaceSim.getCoreModule('capacitor', 1, 'E'),
+    capacitor: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Capacitor, 1, 'E'),
     fuelTankMaxSize: 1,
-    fuelTank: SpaceSim.getCoreModule('fuelTank', 1, 'E')
+    fuelTank: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.FuelTank, 1, 'E')
   },
   weaponModules: {
     smallCount: 2,

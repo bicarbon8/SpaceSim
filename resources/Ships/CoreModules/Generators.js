@@ -4,7 +4,10 @@ SpaceSim.coreModules.generators = SpaceSim.coreModules.generators || [];
 /**
  * The worst performing and lowest output generator available
  */
-SpaceSim.coreModules.generators.push({
+SpaceSim.addModule({
+  name: 'Generator',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.Generator,
   // generator
   heatEfficiency: 0, // 100% heat at max power consumption
   fuelEfficiency: 0, // 1 tonne of fuel per hour at max power consumption
@@ -21,7 +24,10 @@ SpaceSim.coreModules.generators.push({
   activeHeatGenerated: 100 // same
 });
 
-SpaceSim.coreModules.generators.push({
+SpaceSim.addModule({
+  name: 'Generator',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.Generator,
   // generator
   heatEfficiency: 0, // 100% heat at max power consumption
   fuelEfficiency: 0, // 1 tonne of fuel per hour at max power consumption
@@ -38,7 +44,10 @@ SpaceSim.coreModules.generators.push({
   activeHeatGenerated: 95 // same
 });
 
-SpaceSim.coreModules.generators.push({
+SpaceSim.addModule({
+  name: 'Generator',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.Generator,
   // generator
   heatEfficiency: 0, // 100% heat at max power consumption
   fuelEfficiency: 0, // 1 tonne of fuel per hour at max power consumption
@@ -55,7 +64,10 @@ SpaceSim.coreModules.generators.push({
   activeHeatGenerated: 95 // same
 });
 
-SpaceSim.coreModules.generators.push({
+SpaceSim.addModule({
+  name: 'Generator',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.Generator,
   // generator
   heatEfficiency: 0, // 100% heat at max power consumption
   fuelEfficiency: 0, // 1 tonne of fuel per hour at max power consumption

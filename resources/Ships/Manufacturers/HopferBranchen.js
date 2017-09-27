@@ -3,8 +3,9 @@ var SpaceSim = SpaceSim || {};
  * the bicycle messenger equivalent of spaceships... minimal weapons, but
  * extremely small and maneuverable so it can get in and around quickly.
  */
-SpaceSim.ships.push({
+SpaceSim.addModule({
   name: "Bote",
+  type: SpaceSim.ModuleTypes.Ship,
   manufacturer: "Hopfer Branchen",
   mass: 10, // in tonnes
   size: 12,
@@ -13,17 +14,17 @@ SpaceSim.ships.push({
   cost: 25000,
   coreModules: {
     generatorMaxSize: 1,
-    generator: SpaceSim.getCoreModule('generator', 1, 'E'),
+    generator: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Generator, 1, 'E'),
     thrustersMaxSize: 1,
-    thrusters: SpaceSim.getCoreModule('thrusters', 1, 'E'),
+    thrusters: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Thrusters, 1, 'E'),
     warpCoreMaxSize: 2,
-    warpCore: SpaceSim.getCoreModule('warpCore', 2, 'E'),
+    warpCore: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.WarpCore, 2, 'E'),
     lifeSupportMaxSize: 1,
-    lifeSupport: SpaceSim.getCoreModule('lifeSupport', 1, 'E'),
+    lifeSupport: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.LifeSupport, 1, 'E'),
     capacitorMaxSize: 1,
-    capacitor: SpaceSim.getCoreModule('capacitor', 1, 'E'),
+    capacitor: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Capacitor, 1, 'E'),
     fuelTankMaxSize: 2,
-    fuelTank: SpaceSim.getCoreModule('fuelTank', 2, 'E')
+    fuelTank: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.FuelTank, 2, 'E')
   },
   weaponModules: {
     smallCount: 1,
@@ -35,7 +36,7 @@ SpaceSim.ships.push({
   },
   utilityModules: {
     size: 2,
-    modules: [SpaceSim.getUtilityModule('cargoHold', 1, 'E')]
+    modules: [SpaceSim.getUtilityModule(SpaceSim.ModuleSubTypes.CargoHold, 1, 'E')]
   },
   pitchMultiplier: 0.5, // half of max thrust
   yawMultiplier: 0.5,
@@ -51,8 +52,9 @@ SpaceSim.ships.push({
 /**
  * a small, but capable cargo carrier
  */
-SpaceSim.ships.push({
+SpaceSim.addModule({
   name: "Frachtschiff",
+  type: SpaceSim.ModuleTypes.Ship,
   manufacturer: "Hopfer Branchen",
   mass: 20, // in tonnes
   size: 20,
@@ -61,17 +63,17 @@ SpaceSim.ships.push({
   cost: 50000,
   coreModules: {
     generatorMaxSize: 2,
-    generator: SpaceSim.getCoreModule('generator', 2, 'E'),
+    generator: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Generator, 2, 'E'),
     thrustersMaxSize: 2,
-    thrusters: SpaceSim.getCoreModule('thrusters', 2, 'E'),
+    thrusters: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Thrusters, 2, 'E'),
     warpCoreMaxSize: 2,
-    warpCore: SpaceSim.getCoreModule('warpCore', 2, 'E'),
+    warpCore: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.WarpCore, 2, 'E'),
     lifeSupportMaxSize: 1,
-    lifeSupport: SpaceSim.getCoreModule('lifeSupport', 1, 'E'),
+    lifeSupport: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.LifeSupport, 1, 'E'),
     capacitorMaxSize: 1,
-    capacitor: SpaceSim.getCoreModule('capacitor', 1, 'E'),
+    capacitor: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Capacitor, 1, 'E'),
     fuelTankMaxSize: 2,
-    fuelTank: SpaceSim.getCoreModule('fuelTank', 2, 'E')
+    fuelTank: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.FuelTank, 2, 'E')
   },
   weaponModules: {
     smallCount: 1,
@@ -83,7 +85,7 @@ SpaceSim.ships.push({
   },
   utilityModules: {
     size: 8,
-    modules: [SpaceSim.getUtilityModule('cargoHold', 5, 'E')]
+    modules: [SpaceSim.getUtilityModule(SpaceSim.ModuleSubTypes.CargoHold, 5, 'E')]
   },
   pitchMultiplier: 0.5, // half of max thrust
   yawMultiplier: 0.5,

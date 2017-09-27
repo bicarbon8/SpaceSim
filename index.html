@@ -181,7 +181,14 @@
                             <thead>
                               <tr>
                                 <td>
-                                  <button id="addUtilityModuleButton" type="button" class="btn btn-outline-warning btn-block" disabled>Add Module</button>
+                                  <button id="addUtilityModuleButton" type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>
+                                    Add Module
+                                  </button>
+                                  <div class="dropdown-menu bg-dark">
+                                    <table class="table table-sm table-hover bg-dark">
+                                      <tbody id="utilitiesDropdownTableBody"></tbody>
+                                    </table>
+                                  </div>
                                 </td>
                               </tr>
                             </thead>

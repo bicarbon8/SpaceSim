@@ -2,8 +2,10 @@ var SpaceSim = SpaceSim || {};
 SpaceSim.utilityModules = SpaceSim.utilityModules || {};
 SpaceSim.utilityModules.cargoHolds = SpaceSim.utilityModules.cargoHolds || [];
 /** Size 1 **/
-SpaceSim.utilityModules.cargoHolds.push({
+SpaceSim.addModule({
   name: 'Cargo Hold',
+  type: SpaceSim.ModuleTypes.Utility,
+  subType: SpaceSim.ModuleSubTypes.CargoHold,
   mass: 1, // in tonnes
   size: 1,
   class: "E",
@@ -16,8 +18,10 @@ SpaceSim.utilityModules.cargoHolds.push({
   heatGenerated: 0
 });
 
-SpaceSim.utilityModules.cargoHolds.push({
+SpaceSim.addModule({
   name: 'Cargo Hold',
+  type: SpaceSim.ModuleTypes.Utility,
+  subType: SpaceSim.ModuleSubTypes.CargoHold,
   mass: 2, // in tonnes
   size: 1,
   class: "C",
@@ -30,8 +34,10 @@ SpaceSim.utilityModules.cargoHolds.push({
   heatGenerated: 5
 });
 
-SpaceSim.utilityModules.cargoHolds.push({
+SpaceSim.addModule({
   name: 'Cargo Hold',
+  type: SpaceSim.ModuleTypes.Utility,
+  subType: SpaceSim.ModuleSubTypes.CargoHold,
   mass: 1, // in tonnes
   size: 1,
   capacity: 3, // equal to amount of cargo that can be held in tonnes
@@ -44,8 +50,10 @@ SpaceSim.utilityModules.cargoHolds.push({
 });
 
 /** Size 2 **/
-SpaceSim.utilityModules.cargoHolds.push({
+SpaceSim.addModule({
   name: 'Cargo Hold',
+  type: SpaceSim.ModuleTypes.Utility,
+  subType: SpaceSim.ModuleSubTypes.CargoHold,
   mass: 2, // in tonnes
   size: 2,
   class: "E",
@@ -59,8 +67,10 @@ SpaceSim.utilityModules.cargoHolds.push({
 });
 
 /** Size 5 **/
-SpaceSim.utilityModules.cargoHolds.push({
+SpaceSim.addModule({
   name: 'Cargo Hold',
+  type: SpaceSim.ModuleTypes.Utility,
+  subType: SpaceSim.ModuleSubTypes.CargoHold,
   mass: 5, // in tonnes
   size: 5,
   class: "E",
@@ -73,8 +83,10 @@ SpaceSim.utilityModules.cargoHolds.push({
   heatGenerated: 0
 });
 
-SpaceSim.utilityModules.cargoHolds.push({
+SpaceSim.addModule({
   name: 'Cargo Hold',
+  type: SpaceSim.ModuleTypes.Utility,
+  subType: SpaceSim.ModuleSubTypes.CargoHold,
   mass: 10, // in tonnes
   size: 5,
   class: "C",
@@ -87,8 +99,10 @@ SpaceSim.utilityModules.cargoHolds.push({
   heatGenerated: 10
 });
 
-SpaceSim.utilityModules.cargoHolds.push({
+SpaceSim.addModule({
   name: 'Cargo Hold',
+  type: SpaceSim.ModuleTypes.Utility,
+  subType: SpaceSim.ModuleSubTypes.CargoHold,
   mass: 1, // in tonnes
   size: 5,
   class: "A",

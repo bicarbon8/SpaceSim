@@ -2,7 +2,10 @@ var SpaceSim = SpaceSim || {};
 SpaceSim.coreModules = SpaceSim.coreModules || {};
 SpaceSim.coreModules.fuelTanks = SpaceSim.coreModules.fuelTanks || [];
 /** Size 1 **/
-SpaceSim.coreModules.fuelTanks.push({
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
   maxCapacity: 4,
   mass: 1,
   size: 1,
@@ -16,7 +19,10 @@ SpaceSim.coreModules.fuelTanks.push({
   activeHeatGenerated: 0
 });
 
-SpaceSim.coreModules.fuelTanks.push({
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
   maxCapacity: 6,
   mass: 2,
   size: 1,
@@ -30,7 +36,10 @@ SpaceSim.coreModules.fuelTanks.push({
   activeHeatGenerated: 1
 });
 
-SpaceSim.coreModules.fuelTanks.push({
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
   maxCapacity: 7,
   mass: 1,
   size: 1,
@@ -45,7 +54,10 @@ SpaceSim.coreModules.fuelTanks.push({
 });
 
 /** Size 2 **/
-SpaceSim.coreModules.fuelTanks.push({
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
   maxCapacity: 8,
   mass: 2,
   size: 2,
@@ -59,7 +71,10 @@ SpaceSim.coreModules.fuelTanks.push({
   activeHeatGenerated: 0
 });
 
-SpaceSim.coreModules.fuelTanks.push({
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
   maxCapacity: 12,
   mass: 4,
   size: 2,
@@ -73,7 +88,10 @@ SpaceSim.coreModules.fuelTanks.push({
   activeHeatGenerated: 5
 });
 
-SpaceSim.coreModules.fuelTanks.push({
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
   maxCapacity: 16,
   mass: 3,
   size: 2,

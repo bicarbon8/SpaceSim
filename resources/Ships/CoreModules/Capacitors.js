@@ -1,7 +1,8 @@
 var SpaceSim = SpaceSim || {};
-SpaceSim.coreModules = SpaceSim.coreModules || {};
-SpaceSim.coreModules.capacitors = SpaceSim.coreModules.capacitors || [];
-SpaceSim.coreModules.capacitors.push({
+SpaceSim.addModule({
+  name: 'Capacitor',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.Capacitor,
   boostPower: 1,
   boostTime: 10, // seconds
   rechargeTime: 60, // seconds
