@@ -54,3 +54,20 @@ SpaceSim.coreModules.generators.push({
   heatGenerated: 95, // degrees Celcius; at max usage it likely will overheat ship
   activeHeatGenerated: 95 // same
 });
+
+SpaceSim.coreModules.generators.push({
+  // generator
+  heatEfficiency: 0, // 100% heat at max power consumption
+  fuelEfficiency: 0, // 1 tonne of fuel per hour at max power consumption
+  // powered module
+  mass: 6,
+  size: 2,
+  class: "E",
+  heatResistance: 0,
+  impactResistance: 0,
+  cost: 500,
+  powerDraw: -100, // produces power in megaWatts
+  activePowerDraw: -100, // same
+  heatGenerated: 100, // degrees Celcius; at max usage it likely will overheat ship
+  activeHeatGenerated: 100 // same
+});

@@ -11,6 +11,8 @@
 
     <script src="js/SpaceSim.js"></script>
 
+    <script src="js/Utilities/RNG.js"></script>
+
     <script src="js/Ships/PoweredModule.js"></script>
     <script src="js/Ships/CoreModules.js"></script>
     <script src="js/Ships/DefenseModules.js"></script>
@@ -62,106 +64,141 @@
               </div>
             </div>
             <div class="card-body">
-              <div class="card bg-dark">
-                <div class="card-header"><h5>Core Modules</h5></div>
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item bg-dark">
-                    <div class="btn-group btn-block" role="group">
-                      <button id="capacitorMaxSize" type="button" class="btn btn-warning">n/a</button>
-                      <div class="btn-group btn-block" role="group">
-                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          Select: <i>Capacitor</i>
-                        </button>
-                        <div class="dropdown-menu bg-dark">
-                          <table class="table table-sm table-hover">
-                            <tbody id="capacitorTableBody"></tbody>
-                          </table>
-                        </div>
-                      </div>
-                      <button id="installedCapacitor" type="button" class="btn btn-warning">n/a</button>
+              <div class="container-fluid">
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="card bg-dark">
+                      <div class="card-header"><h5>Core Modules</h5></div>
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-dark">
+                          <div class="btn-group btn-block" role="group">
+                            <button id="capacitorMaxSize" type="button" class="btn btn-warning">n/a</button>
+                            <div class="btn-group btn-block" role="group">
+                              <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select: <i>Capacitor</i>
+                              </button>
+                              <div class="dropdown-menu bg-dark">
+                                <table class="table table-sm table-hover">
+                                  <tbody id="capacitorTableBody"></tbody>
+                                </table>
+                              </div>
+                            </div>
+                            <button id="installedCapacitor" type="button" class="btn btn-warning">n/a</button>
+                          </div>
+                        </li>
+                        <li class="list-group-item bg-dark">
+                          <div class="btn-group btn-block" role="group">
+                            <button id="fuelTankMaxSize" type="button" class="btn btn-warning">n/a</button>
+                            <div class="btn-group btn-block" role="group">
+                              <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select: <i>Fuel Tank</i>
+                              </button>
+                              <div class="dropdown-menu bg-dark">
+                                <table class="table table-sm table-hover">
+                                  <tbody id="fuelTankTableBody"></tbody>
+                                </table>
+                              </div>
+                            </div>
+                            <button id="installedFuelTank" type="button" class="btn btn-warning">n/a</button>
+                          </div>
+                        </li>
+                        <li class="list-group-item bg-dark">
+                          <div class="btn-group btn-block" role="group">
+                            <button id="generatorMaxSize" type="button" class="btn btn-warning">n/a</button>
+                            <div class="btn-group btn-block" role="group">
+                              <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select: <i>Generator</i>
+                              </button>
+                              <div class="dropdown-menu bg-dark">
+                                <table class="table table-sm table-hover">
+                                  <tbody id="generatorTableBody"></tbody>
+                                </table>
+                              </div>
+                            </div>
+                            <button id="installedGenerator" type="button" class="btn btn-warning">n/a</button>
+                          </div>
+                        </li>
+                        <li class="list-group-item bg-dark">
+                          <div class="btn-group btn-block" role="group">
+                            <button id="lifeSupportMaxSize" type="button" class="btn btn-warning">n/a</button>
+                            <div class="btn-group btn-block" role="group">
+                              <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select: <i>Life Support</i>
+                              </button>
+                              <div class="dropdown-menu bg-dark">
+                                <table class="table table-sm table-hover">
+                                  <tbody id="lifeSupportTableBody"></tbody>
+                                </table>
+                              </div>
+                            </div>
+                            <button id="installedLifeSupport" type="button" class="btn btn-warning">n/a</button>
+                          </div>
+                        </li>
+                        <li class="list-group-item bg-dark">
+                          <div class="btn-group btn-block" role="group">
+                            <button id="thrustersMaxSize" type="button" class="btn btn-warning">n/a</button>
+                            <div class="btn-group btn-block" role="group">
+                              <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select: <i>Thrusters</i>
+                              </button>
+                              <div class="dropdown-menu bg-dark">
+                                <table class="table table-sm table-hover">
+                                  <tbody id="thrustersTableBody"></tbody>
+                                </table>
+                              </div>
+                            </div>
+                            <button id="installedThrusters" type="button" class="btn btn-warning">n/a</button>
+                          </div>
+                        </li>
+                        <li class="list-group-item bg-dark">
+                          <div class="btn-group btn-block" role="group">
+                            <button id="warpCoreMaxSize" type="button" class="btn btn-warning">n/a</button>
+                            <div class="btn-group btn-block" role="group">
+                              <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Select: <i>Warp Core</i>
+                              </button>
+                              <div class="dropdown-menu bg-dark">
+                                <table class="table table-sm table-hover">
+                                  <tbody id="warpCoreTableBody"></tbody>
+                                </table>
+                              </div>
+                            </div>
+                            <button id="installedWarpCore" type="button" class="btn btn-warning">n/a</button>
+                          </div>
+                        </li>
+                      </ul>
                     </div>
-                  </li>
-                  <li class="list-group-item bg-dark">
-                    <div class="btn-group btn-block" role="group">
-                      <button id="fuelTankMaxSize" type="button" class="btn btn-warning">n/a</button>
-                      <div class="btn-group btn-block" role="group">
-                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          Select: <i>Fuel Tank</i>
-                        </button>
-                        <div class="dropdown-menu bg-dark">
+                  </div>
+                </div>
+                <div class="row">&nbsp;</div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="card bg-dark">
+                      <div class="card-header"><h5>Utility Modules</h5></div>
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-dark">
                           <table class="table table-sm table-hover">
-                            <tbody id="fuelTankTableBody"></tbody>
+                            <thead>
+                              <tr>
+                                <td>
+                                  <button id="addUtilityModuleButton" type="button" class="btn btn-outline-warning btn-block" disabled>Add Module</button>
+                                </td>
+                              </tr>
+                            </thead>
+                            <tbody id="utilitiesTableBody"></tbody>
+                            <tfooter>
+                              <tr>
+                                <td>
+                                  <div id="utilitiesAvailableSpace" class="btn-group btn-group-justified" role="group"></div>
+                                </td>
+                              </tr>
+                            </tfooter>
                           </table>
-                        </div>
-                      </div>
-                      <button id="installedFuelTank" type="button" class="btn btn-warning">n/a</button>
+                        </li>
+                      </ul>
                     </div>
-                  </li>
-                  <li class="list-group-item bg-dark">
-                    <div class="btn-group btn-block" role="group">
-                      <button id="generatorMaxSize" type="button" class="btn btn-warning">n/a</button>
-                      <div class="btn-group btn-block" role="group">
-                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          Select: <i>Generator</i>
-                        </button>
-                        <div class="dropdown-menu bg-dark">
-                          <table class="table table-sm table-hover">
-                            <tbody id="generatorTableBody"></tbody>
-                          </table>
-                        </div>
-                      </div>
-                      <button id="installedGenerator" type="button" class="btn btn-warning">n/a</button>
-                    </div>
-                  </li>
-                  <li class="list-group-item bg-dark">
-                    <div class="btn-group btn-block" role="group">
-                      <button id="lifeSupportMaxSize" type="button" class="btn btn-warning">n/a</button>
-                      <div class="btn-group btn-block" role="group">
-                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          Select: <i>Life Support</i>
-                        </button>
-                        <div class="dropdown-menu bg-dark">
-                          <table class="table table-sm table-hover">
-                            <tbody id="lifeSupportTableBody"></tbody>
-                          </table>
-                        </div>
-                      </div>
-                      <button id="installedLifeSupport" type="button" class="btn btn-warning">n/a</button>
-                    </div>
-                  </li>
-                  <li class="list-group-item bg-dark">
-                    <div class="btn-group btn-block" role="group">
-                      <button id="thrustersMaxSize" type="button" class="btn btn-warning">n/a</button>
-                      <div class="btn-group btn-block" role="group">
-                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          Select: <i>Thrusters</i>
-                        </button>
-                        <div class="dropdown-menu bg-dark">
-                          <table class="table table-sm table-hover">
-                            <tbody id="thrustersTableBody"></tbody>
-                          </table>
-                        </div>
-                      </div>
-                      <button id="installedThrusters" type="button" class="btn btn-warning">n/a</button>
-                    </div>
-                  </li>
-                  <li class="list-group-item bg-dark">
-                    <div class="btn-group btn-block" role="group">
-                      <button id="warpCoreMaxSize" type="button" class="btn btn-warning">n/a</button>
-                      <div class="btn-group btn-block" role="group">
-                        <button type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                          Select: <i>Warp Core</i>
-                        </button>
-                        <div class="dropdown-menu bg-dark">
-                          <table class="table table-sm table-hover">
-                            <tbody id="warpCoreTableBody"></tbody>
-                          </table>
-                        </div>
-                      </div>
-                      <button id="installedWarpCore" type="button" class="btn btn-warning">n/a</button>
-                    </div>
-                  </li>
-                </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -1,4 +1,3 @@
-"strict mode";
 var SpaceSim = SpaceSim || {};
 SpaceSim.ships = [];
 SpaceSim.coreModules = {

@@ -35,6 +35,9 @@ function displayStats() {
     document.querySelector('#maxPower').innerText = cm.generator.power;
     document.querySelector('#shipHeat').innerText = (isNaN(currentShip.getTotalHeat())) ? NaN : currentShip.getTotalHeat().toFixed(2);
     document.querySelector('#maxHeat').innerText = 100;
+
+    // setup Utility Modules
+    populateUtilityModuleTable(currentShip.utilityModules.size);
   }
 }
 
@@ -47,7 +50,7 @@ function generateJumpChart() {
   var massIncrements = warpCore.maximumMass / 10;
   for (var i=0; i<=11; i++) {
     var mass = massIncrements * i;
-    data.addRow([mass, warpCore.getJumpRange(mass), null]);
+    data.addRow([mass, warpCore.getJumpRange(mass)]);
   }
 
   var options = {
@@ -117,11 +120,12 @@ function populateShipList() {
   for (var manufacturerName in manufacterers) {
     if (manufacterers.hasOwnProperty(manufacturerName)) {
       htmlToAppend += '<h4 class="dropdown-header text-light">' + manufacturerName + '</h4>';
-      SpaceSim.ships.forEach(function(ship) {
+      for(var key in SpaceSim.ships) {
+        var ship = SpaceSim.ships[key];
         if (ship.manufacturer == manufacturerName) {
           htmlToAppend += '<button onclick="setShip(\'' + ship.name + '\');" type="button" class="btn btn-block btn-outline-warning">' + ship.name + '</button>';
         }
-      });
+      }
     }
   }
   htmlList.insertAdjacentHTML('beforeend', htmlToAppend);
@@ -156,9 +160,82 @@ function populateModuleList(tableBody, availableModules) {
   tableBody.insertAdjacentHTML('beforeend',htmlToAppend);
 }
 
+function populateUtilityModuleTable(size) {
+  var tableBody = document.querySelector('#utilitiesTableBody');
+  var addButton = document.querySelector('#addUtilityModuleButton');
+  var availableSpace = document.querySelector('#utilitiesAvailableSpace');
+  $(tableBody).empty();
+  $(addButton).prop('disabled', true);
+  $(availableSpace).empty();
+
+  var htmlToAppend = '';
+  // first add existing modules
+  var uMods = currentShip.utilityModules.modules;
+  var usedSlots = 0;
+  for (var j=0; j<uMods.length; j++) {
+    var module = uMods[j];
+    var moduleSlots = module.size; // how many slots this module will take up
+    usedSlots += moduleSlots;
+    var moduleName = module.name + ' - ' + module.size + module.class;
+    htmlToAppend += '<tr><td>';
+    htmlToAppend += '<div class="btn-group btn-block" role="group">';
+    htmlToAppend += '<button id="remove-'+module.id+'" type="button" class="btn btn-warning attachedUtilityModuleClass">-</button>';
+    htmlToAppend += '<div class="btn-group btn-block" role="group">';
+    htmlToAppend += '<button type="button" class="btn btn-outline-warning btn-block" disabled>'+module.name+'</button>';
+    htmlToAppend += '</div>';
+    if (module.enabled) {
+      htmlToAppend += '<button id="enabled-'+module.id+'" type="button" class="btn btn-warning installedUtilityModule">'+module.size+module.class+'</button>';
+    } else {
+      htmlToAppend += '<button id="enabled-'+module.id+'" type="button" class="btn btn-outline-warning installedUtilityModule">'+module.size+module.class+'</button>';
+    }
+    htmlToAppend += '</div>';
+    htmlToAppend += '</td></tr>';
+  }
+  tableBody.insertAdjacentHTML('beforeend',htmlToAppend);
+
+  // then display used vs. remaining space
+  var spaceAvailableHtml = '';
+  var remainingSlots = currentShip.utilityModules.size - usedSlots;
+  for (var i=0; i<currentShip.utilityModules.size; i++) {
+    if (remainingSlots > 0) {
+      spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-outline-light disabled" disabled>&nbsp;</a>';
+      remainingSlots--;
+    } else {
+      spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-warning">&nbsp;</a>';
+    }
+  }
+  availableSpace.insertAdjacentHTML('beforeend',spaceAvailableHtml);
+
+  if (usedSlots < currentShip.utilityModules.size) {
+    $(addButton).prop('disabled', false);
+  }
+
+  // allow removal of attached utility modules
+  $('.attachedUtilityModuleClass').click(function() {
+    var idParts = $(this).attr('id').split('remove-');
+    if (idParts.length == 2) {
+      var id = idParts[1];
+      currentShip.utilityModules.remove(id);
+    }
+    displayStats();
+  });
+  // allow toggling of enabled state for utility modules
+  $('.installedUtilityModule').click(function() {
+    var idParts = $(this).attr('id').split('enabled-');
+    if (idParts.length == 2) {
+      var id = idParts[1];
+      if (currentShip.utilityModules.isEnabled(id)) {
+        currentShip.utilityModules.setEnabled(id, false);
+      } else {
+        currentShip.utilityModules.setEnabled(id, true);
+      }
+    }
+    displayStats();
+  });
+}
+
 function populateCapacitorList() {
   var tableBody = document.querySelector('#capacitorTableBody');
-  var available = SpaceSim.coreModules.capacitors;
   var available = SpaceSim.coreModules.capacitors;
   populateModuleList(tableBody, available);
 }
@@ -194,6 +271,7 @@ function populateWarpCoreList() {
 }
 
 $(function() {
+  // setup Core Modules
   populateShipList();
   populateCapacitorList();
   populateFuelTankList();
