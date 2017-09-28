@@ -1,6 +1,4 @@
 var SpaceSim = SpaceSim || {};
-SpaceSim.utilityModules = SpaceSim.utilityModules || {};
-SpaceSim.utilityModules.cargoHolds = SpaceSim.utilityModules.cargoHolds || [];
 /** Size 1 **/
 SpaceSim.addModule({
   name: 'Cargo Hold',

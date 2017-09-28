@@ -31,10 +31,10 @@ SpaceSim.addModule({
     largeCount: 0
   },
   defenseModules: {
-    size: 2
+    size: 4
   },
   utilityModules: {
-    size: 4
+    size: 2
   },
   pitchMultiplier: 0.75, // 3/4 of max thrust
   yawMultiplier: 0.5,

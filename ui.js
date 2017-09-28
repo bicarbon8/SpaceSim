@@ -200,7 +200,7 @@ function populateModuleList(tableBody, availableModules, maxSize) {
   var htmlToAppend = '';
   for (var nameKey in names) {
     var name = names[nameKey];
-    htmlToAppend += '<tr><td colspan="'+moduleClasses.length+'" class="text-light"><h5>' + name + '</h5></td></tr>';
+    htmlToAppend += '<tr><td colspan="'+moduleClasses.length+'" class="text-light"><h6>' + name + '</h6></td></tr>';
     // then display one row per size
     for (var size=1; size<=maxSize; size++) {
       htmlToAppend += '<tr class="moduleSize' + size + '">';
@@ -341,7 +341,7 @@ function populateWarpCoreDropdownList() {
 
 function populateUtilitiesDropdownList() {
   var tableBody = document.querySelector('#utilitiesDropdownTableBody');
-  var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Utility, SpaceSim.ModuleSubTypes.CargoHold);
+  var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Utility);
   // TODO: add more Utility Modules
   populateModuleList(tableBody, available, currentShip.utilityModules.getRemainingSpace());
 }

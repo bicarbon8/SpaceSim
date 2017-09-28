@@ -16,7 +16,8 @@ SpaceSim.ModuleSubTypes = {
   Thrusters: 5,
   WarpCore: 6,
   HullPlating: 7,
-  CargoHold: 8
+  CargoHold: 8,
+  SpatialInterferometer: 9
 };
 
 SpaceSim.currentSystem = null;
@@ -33,25 +34,19 @@ SpaceSim.addModule = function(module) {
 };
 
 SpaceSim.getCoreModule = function(subType, size, moduleClass) {
-  var mOpts = {};
+  var mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, subType), size, moduleClass);
   switch (subType) {
     case SpaceSim.ModuleSubTypes.Capacitor:
-      mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, subType), size, moduleClass);
       return new SpaceSim.Ships.CoreModules.Capacitor(mOpts);
     case SpaceSim.ModuleSubTypes.FuelTank:
-      mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, subType), size, moduleClass);
       return new SpaceSim.Ships.CoreModules.FuelTank(mOpts);
     case SpaceSim.ModuleSubTypes.Generator:
-      mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, subType), size, moduleClass);
       return new SpaceSim.Ships.CoreModules.Generator(mOpts);
     case SpaceSim.ModuleSubTypes.LifeSupport:
-      mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, subType), size, moduleClass);
       return new SpaceSim.Ships.CoreModules.LifeSupport(mOpts);
     case SpaceSim.ModuleSubTypes.Thrusters:
-      mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, subType), size, moduleClass);
       return new SpaceSim.Ships.CoreModules.Thrusters(mOpts);
     case SpaceSim.ModuleSubTypes.WarpCore:
-      mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, subType), size, moduleClass);
       return new SpaceSim.Ships.CoreModules.WarpCore(mOpts);
     default:
       throw "no core module of subType '" + subType + "' exists";
@@ -59,10 +54,9 @@ SpaceSim.getCoreModule = function(subType, size, moduleClass) {
 };
 
 SpaceSim.getDefenseModule = function(subType, size, moduleClass) {
-  var mOpts = {};
+  var mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Defense, subType), size, moduleClass);
   switch (subType) {
     case SpaceSim.ModuleSubTypes.HullPlating:
-      mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Defense, subType), size, moduleClass);
       return new SpaceSim.Ships.DefenseModules.HullPlating(mOpts);
     default:
       throw "no defense module of subType '" + subType + "' exists";
@@ -70,11 +64,12 @@ SpaceSim.getDefenseModule = function(subType, size, moduleClass) {
 };
 
 SpaceSim.getUtilityModule = function(subType, size, moduleClass) {
-  var mOpts = {};
+  var mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Utility, subType), size, moduleClass);
   switch (subType) {
     case SpaceSim.ModuleSubTypes.CargoHold:
-      mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Utility, subType), size, moduleClass);
       return new SpaceSim.Ships.UtilityModules.CargoHold(mOpts);
+    case SpaceSim.ModuleSubTypes.SpatialInterferometer:
+      return new SpaceSim.Ships.UtilityModules.SpatialInterferometer(mOpts);
     default:
       throw "no utility module of subType '" + subType + "' exists";
   }
