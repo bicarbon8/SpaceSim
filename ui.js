@@ -347,6 +347,8 @@ function populateUtilitiesDropdownList() {
 }
 
 $(function() {
+  $('[data-toggle="tooltip"]').tooltip();
+
   // setup list of Ships to select from
   populateShipList();
 
