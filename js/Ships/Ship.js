@@ -49,3 +49,13 @@ SpaceSim.Ships.Ship.prototype.getTotalMass = function() {
       this.weaponModules.getTotalMass();
   return totalMass;
 };
+SpaceSim.Ships.Ship.prototype.getTotalCargoCapacity = function() {
+  var capacity = 0;
+  for (var i=0; i<this.utilityModules.modules.length; i++) {
+    var uMod = this.utilityModules.modules[i];
+    if (uMod.type == SpaceSim.ModuleTypes.Utility && uMod.subType == SpaceSim.ModuleSubTypes.CargoHold) {
+      capacity += uMod.getCapacity();
+    }
+  }
+  return capacity;
+};

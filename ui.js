@@ -92,6 +92,10 @@ function displayStats() {
     document.querySelector('#shipHeat').innerText = (isNaN(currentShip.getTotalHeat())) ? NaN : currentShip.getTotalHeat().toFixed(2);
     document.querySelector('#maxHeat').innerText = 100;
 
+    var capacity = currentShip.getTotalCargoCapacity();
+    document.querySelector('#shipCargo').innerText = capacity;
+    document.querySelector('#shipLadenWeight').innerText = shipMass + capacity;
+
     // setup Utility Modules
     populateUtilityModuleTable(currentShip.utilityModules.size);
   }
@@ -204,19 +208,18 @@ function populateModuleList(tableBody, availableModules, maxSize) {
       // and one column per class where unavailable classes are displayed disabled
       for(var j=0; j<moduleClasses.length; j++) {
         var availableModuleExists = false;
-
+        var sizeClass = size + '' + moduleClasses[j];
         // is there a module of the current size and class?
         for (var i=0; i<availableModules.length; i++) {
           var availableModule = availableModules[i];
           if (availableModule.size == size && availableModule.class == moduleClasses[j] && availableModule.name == name) {
             availableModuleExists = true;
+            htmlToAppend += '<td><button sizeclass=\'' + JSON.stringify({'type':availableModule.type,'subType':availableModule.subType,'size':size,'class':moduleClasses[j]}) + '\' type="button" class="btn btn-outline-warning">' + sizeClass + '</button></td>';
             break;
           }
         }
-        var sizeClass = size + '' + moduleClasses[j];
-        if (availableModuleExists) {
-          htmlToAppend += '<td><button sizeclass=\'' + JSON.stringify({'type':availableModule.type,'subType':availableModule.subType,'size':size,'class':moduleClasses[j]}) + '\' type="button" class="btn btn-outline-warning">' + sizeClass + '</button></td>';
-        } else {
+
+        if (!availableModuleExists) {
           htmlToAppend += '<td><button type="button" class="btn btn-outline-light disabled" disabled>' + sizeClass + '</button></td>';
         }
       }
@@ -267,7 +270,7 @@ function populateUtilityModuleTable(size) {
       spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-outline-light disabled" disabled>&nbsp;</a>';
       remainingSlots--;
     } else {
-      spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-warning">&nbsp;</a>';
+      spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-warning disabled" disabled>&nbsp;</a>';
     }
   }
   availableSpace.insertAdjacentHTML('beforeend',spaceAvailableHtml);
