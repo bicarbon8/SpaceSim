@@ -248,15 +248,15 @@ function populateUtilityModuleTable(size) {
     var moduleName = module.name + ' - ' + module.size + module.class;
     htmlToAppend += '<tr><td>';
     htmlToAppend += '<div class="btn-group btn-block" role="group">';
-    htmlToAppend += '<button id="remove-'+module.id+'" type="button" class="btn btn-warning attachedUtilityModuleClass">-</button>';
+    htmlToAppend += '<button id="remove-'+module.id+'" type="button" class="btn btn-warning attachedUtilityModuleClass" data-toggle="tooltip" data-placement="top" title="click to remove module">-</button>';
     htmlToAppend += '<div class="btn-group btn-block" role="group">';
     htmlToAppend += '<button type="button" class="btn btn-outline-warning btn-block" disabled>'+module.name+'</button>';
     htmlToAppend += '</div>';
-    if (module.enabled) {
-      htmlToAppend += '<button id="enabled-'+module.id+'" type="button" class="btn btn-warning installedUtilityModule">'+module.size+module.class+'</button>';
-    } else {
-      htmlToAppend += '<button id="enabled-'+module.id+'" type="button" class="btn btn-outline-warning installedUtilityModule">'+module.size+module.class+'</button>';
+    var state = 'btn-warning';
+    if (!module.enabled) {
+      state = 'btn-outline-warning';
     }
+    htmlToAppend += '<button id="enabled-'+module.id+'" type="button" class="btn '+state+' installedUtilityModule" data-toggle="tooltip" data-placement="right" title="click to toggle module enabled state">'+module.size+module.class+'</button>';
     htmlToAppend += '</div>';
     htmlToAppend += '</td></tr>';
   }
