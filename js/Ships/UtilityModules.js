@@ -67,3 +67,11 @@ SpaceSim.Ships.UtilityModules.prototype.setEnabled = function(id, enabled) {
     }
   }
 };
+
+SpaceSim.Ships.UtilityModules.prototype.getRemainingSpace = function() {
+  var remaining = this.size;
+  for (var i=0; i<this.modules.length; i++) {
+    remaining -= this.modules[i].size;
+  }
+  return remaining;
+};

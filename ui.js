@@ -4,21 +4,77 @@ function displayStats() {
   if (currentShip) {
     document.querySelector('#shipName').innerText = currentShip.manufacturer + ': ' + currentShip.name;
 
-    // update Module Sizes
+    // update Core Module display
     var cm = currentShip.coreModules;
+    /** Capacitor **/
     document.querySelector('#capacitorMaxSize').innerText = cm.capacitorMaxSize;
-    document.querySelector('#fuelTankMaxSize').innerText = cm.fuelTankMaxSize;
-    document.querySelector('#generatorMaxSize').innerText = cm.generatorMaxSize;
-    document.querySelector('#lifeSupportMaxSize').innerText = cm.lifeSupportMaxSize;
-    document.querySelector('#thrustersMaxSize').innerText = cm.thrustersMaxSize;
-    document.querySelector('#warpCoreMaxSize').innerText = cm.warpCoreMaxSize;
-
     document.querySelector('#installedCapacitor').innerText = cm.capacitor.size + cm.capacitor.class;
+    populateCapacitorDropdownList();
+    $('#capacitorTableBody button:not([disabled])').click(function() {
+      var sizeClassStr = $(this).attr('sizeClass');
+      var sizeClass = JSON.parse(sizeClassStr);
+      currentShip.coreModules.updateCapacitor(SpaceSim.getCoreModule(sizeClass.subType, sizeClass.size, sizeClass.class));
+      displayStats();
+    });
+    /** Fuel Tank **/
+    document.querySelector('#fuelTankMaxSize').innerText = cm.fuelTankMaxSize;
     document.querySelector('#installedFuelTank').innerText = cm.fuelTank.size + cm.fuelTank.class;
+    populateFuelTankDropdownList();
+    $('#fuelTankTableBody button:not([disabled])').click(function() {
+      var sizeClassStr = $(this).attr('sizeClass');
+      var sizeClass = JSON.parse(sizeClassStr);
+      currentShip.coreModules.updateFuelTank(SpaceSim.getCoreModule(sizeClass.subType, sizeClass.size, sizeClass.class));
+      displayStats();
+    });
+    /** Generator **/
+    document.querySelector('#generatorMaxSize').innerText = cm.generatorMaxSize;
     document.querySelector('#installedGenerator').innerText = cm.generator.size + cm.generator.class;
+    populateGeneratorDropdownList();
+    $('#generatorTableBody button:not([disabled])').click(function() {
+      var sizeClassStr = $(this).attr('sizeClass');
+      var sizeClass = JSON.parse(sizeClassStr);
+      currentShip.coreModules.updateGenerator(SpaceSim.getCoreModule(sizeClass.subType, sizeClass.size, sizeClass.class));
+      displayStats();
+    });
+    /** Life Support **/
+    document.querySelector('#lifeSupportMaxSize').innerText = cm.lifeSupportMaxSize;
     document.querySelector('#installedLifeSupport').innerText = cm.lifeSupport.size + cm.lifeSupport.class;
+    populateLifeSupportDropdownList();
+    $('#lifeSupportTableBody button:not([disabled])').click(function() {
+      var sizeClassStr = $(this).attr('sizeClass');
+      var sizeClass = JSON.parse(sizeClassStr);
+      currentShip.coreModules.updateLifeSupport(SpaceSim.getCoreModule(sizeClass.subType, sizeClass.size, sizeClass.class));
+      displayStats();
+    });
+    /** Thrusters **/
+    document.querySelector('#thrustersMaxSize').innerText = cm.thrustersMaxSize;
     document.querySelector('#installedThrusters').innerText = cm.thrusters.size + cm.thrusters.class;
+    populateThrustersDropdownList();
+    $('#thrustersTableBody button:not([disabled])').click(function() {
+      var sizeClassStr = $(this).attr('sizeClass');
+      var sizeClass = JSON.parse(sizeClassStr);
+      currentShip.coreModules.updateThrusters(SpaceSim.getCoreModule(sizeClass.subType, sizeClass.size, sizeClass.class));
+      displayStats();
+    });
+    /** Warp Core **/
+    document.querySelector('#warpCoreMaxSize').innerText = cm.warpCoreMaxSize;
     document.querySelector('#installedWarpCore').innerText = cm.warpCore.size + cm.warpCore.class;
+    populateWarpCoreDropdownList();
+    $('#warpCoreTableBody button:not([disabled])').click(function() {
+      var sizeClassStr = $(this).attr('sizeClass');
+      var sizeClass = JSON.parse(sizeClassStr);
+      currentShip.coreModules.updateWarpCore(SpaceSim.getCoreModule(sizeClass.subType, sizeClass.size, sizeClass.class));
+      displayStats();
+    });
+
+    // update Utility Modules display
+    populateUtilitiesDropdownList();
+    $('#utilitiesDropdownTableBody button:not([disabled])').click(function() {
+      var sizeClassStr = $(this).attr('sizeClass');
+      var sizeClass = JSON.parse(sizeClassStr);
+      currentShip.utilityModules.add(SpaceSim.getUtilityModule(sizeClass.subType, sizeClass.size, sizeClass.class));
+      displayStats();
+    });
 
     var shipMass = currentShip.getTotalMass();
     var shipRange = cm.warpCore.getJumpRange(shipMass);
@@ -132,31 +188,40 @@ function populateShipList() {
   htmlList.insertAdjacentHTML('beforeend', htmlToAppend);
 }
 
-function populateModuleList(tableBody, availableModules) {
+function populateModuleList(tableBody, availableModules, maxSize) {
   $(tableBody).empty();
+  // group by names
+  var names = SpaceSim.getModuleOptionNames(availableModules);
+  var moduleClasses = ['A','B','C','D','E'];
   var htmlToAppend = '';
-  for (var size=1; size<=8; size++) {
-    htmlToAppend += '<tr class="moduleSize' + size + '">';
-    var moduleClasses = ['A','B','C','D','E'];
-    for(var j=0; j<moduleClasses.length; j++) {
-      var availableModuleExists = false;
+  for (var nameKey in names) {
+    var name = names[nameKey];
+    htmlToAppend += '<tr><td colspan="'+moduleClasses.length+'" class="text-light"><h5>' + name + '</h5></td></tr>';
+    // then display one row per size
+    for (var size=1; size<=maxSize; size++) {
+      htmlToAppend += '<tr class="moduleSize' + size + '">';
 
-      // is there a module of the current size and class?
-      for (var i=0; i<availableModules.length; i++) {
-        var availableModule = availableModules[i];
-        if (availableModule.size == size && availableModule.class == moduleClasses[j]) {
-          availableModuleExists = true;
-          break;
+      // and one column per class where unavailable classes are displayed disabled
+      for(var j=0; j<moduleClasses.length; j++) {
+        var availableModuleExists = false;
+
+        // is there a module of the current size and class?
+        for (var i=0; i<availableModules.length; i++) {
+          var availableModule = availableModules[i];
+          if (availableModule.size == size && availableModule.class == moduleClasses[j] && availableModule.name == name) {
+            availableModuleExists = true;
+            break;
+          }
+        }
+        var sizeClass = size + '' + moduleClasses[j];
+        if (availableModuleExists) {
+          htmlToAppend += '<td><button sizeclass=\'' + JSON.stringify({'type':availableModule.type,'subType':availableModule.subType,'size':size,'class':moduleClasses[j]}) + '\' type="button" class="btn btn-outline-warning">' + sizeClass + '</button></td>';
+        } else {
+          htmlToAppend += '<td><button type="button" class="btn btn-outline-light disabled" disabled>' + sizeClass + '</button></td>';
         }
       }
-      var sizeClass = size + '' + moduleClasses[j];
-      if (availableModuleExists) {
-        htmlToAppend += '<td><button sizeclass=\'' + JSON.stringify({'size':size,'class':moduleClasses[j]}) + '\' type="button" class="btn btn-outline-warning">' + sizeClass + '</button></td>';
-      } else {
-        htmlToAppend += '<td><button type="button" class="btn btn-outline-light disabled" disabled>' + sizeClass + '</button></td>';
-      }
+      htmlToAppend += '</tr>';
     }
-    htmlToAppend += '</tr>';
   }
   tableBody.insertAdjacentHTML('beforeend',htmlToAppend);
 }
@@ -235,99 +300,52 @@ function populateUtilityModuleTable(size) {
   });
 }
 
-function populateCapacitorList() {
+function populateCapacitorDropdownList() {
   var tableBody = document.querySelector('#capacitorTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.Capacitor);
-  populateModuleList(tableBody, available);
+  populateModuleList(tableBody, available, currentShip.coreModules.capacitor.size);
 }
 
-function populateFuelTankList() {
+function populateFuelTankDropdownList() {
   var tableBody = document.querySelector('#fuelTankTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.FuelTank);
-  populateModuleList(tableBody, available);
+  populateModuleList(tableBody, available, currentShip.coreModules.fuelTank.size);
 }
 
-function populateGeneratorList() {
+function populateGeneratorDropdownList() {
   var tableBody = document.querySelector('#generatorTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.Generator);
-  populateModuleList(tableBody, available);
+  populateModuleList(tableBody, available, currentShip.coreModules.generator.size);
 }
 
-function populateLifeSupportList() {
+function populateLifeSupportDropdownList() {
   var tableBody = document.querySelector('#lifeSupportTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.LifeSupport);
-  populateModuleList(tableBody, available);
+  populateModuleList(tableBody, available, currentShip.coreModules.lifeSupport.size);
 }
 
-function populateThrustersList() {
+function populateThrustersDropdownList() {
   var tableBody = document.querySelector('#thrustersTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.Thrusters);
-  populateModuleList(tableBody, available);
+  populateModuleList(tableBody, available, currentShip.coreModules.thrusters.size);
 }
 
-function populateWarpCoreList() {
+function populateWarpCoreDropdownList() {
   var tableBody = document.querySelector('#warpCoreTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.WarpCore);
-  populateModuleList(tableBody, available);
+  populateModuleList(tableBody, available, currentShip.coreModules.warpCore.size);
 }
 
 function populateUtilitiesDropdownList() {
   var tableBody = document.querySelector('#utilitiesDropdownTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Utility, SpaceSim.ModuleSubTypes.CargoHold);
   // TODO: add more Utility Modules
-  populateModuleList(tableBody, available);
+  populateModuleList(tableBody, available, currentShip.utilityModules.getRemainingSpace());
 }
 
 $(function() {
-  // setup Core Modules
+  // setup list of Ships to select from
   populateShipList();
-  populateCapacitorList();
-  populateFuelTankList();
-  populateGeneratorList();
-  populateLifeSupportList();
-  populateThrustersList();
-  populateWarpCoreList();
-
-  // setup Utility Modules
-  populateUtilitiesDropdownList();
-  
-  /** update ship modules **/
-  $('#capacitorTableBody button:not([disabled])').click(function() {
-    var sizeClassStr = $(this).attr('sizeClass');
-    var sizeClass = JSON.parse(sizeClassStr);
-    currentShip.coreModules.updateCapacitor(new SpaceSim.Ships.CoreModules.Capacitor(SpaceSim.getCoreModule('capacitor', sizeClass.size, sizeClass.class)));
-    displayStats();
-  });
-  $('#fuelTankTableBody button:not([disabled])').click(function() {
-    var sizeClassStr = $(this).attr('sizeClass');
-    var sizeClass = JSON.parse(sizeClassStr);
-    currentShip.coreModules.updateFuelTank(new SpaceSim.Ships.CoreModules.FuelTank(SpaceSim.getCoreModule('fuelTank', sizeClass.size, sizeClass.class)));
-    displayStats();
-  });
-  $('#generatorTableBody button:not([disabled])').click(function() {
-    var sizeClassStr = $(this).attr('sizeClass');
-    var sizeClass = JSON.parse(sizeClassStr);
-    currentShip.coreModules.updateGenerator(new SpaceSim.Ships.CoreModules.Generator(SpaceSim.getCoreModule('generator', sizeClass.size, sizeClass.class)));
-    displayStats();
-  });
-  $('#lifeSupportTableBody button:not([disabled])').click(function() {
-    var sizeClassStr = $(this).attr('sizeClass');
-    var sizeClass = JSON.parse(sizeClassStr);
-    currentShip.coreModules.updateLifeSupport(new SpaceSim.Ships.CoreModules.LifeSupport(SpaceSim.getCoreModule('lifeSupport', sizeClass.size, sizeClass.class)));
-    displayStats();
-  });
-  $('#thrustersTableBody button:not([disabled])').click(function() {
-    var sizeClassStr = $(this).attr('sizeClass');
-    var sizeClass = JSON.parse(sizeClassStr);
-    currentShip.coreModules.updateThrusters(new SpaceSim.Ships.CoreModules.Thrusters(SpaceSim.getCoreModule('thrusters', sizeClass.size, sizeClass.class)));
-    displayStats();
-  });
-  $('#warpCoreTableBody button:not([disabled])').click(function() {
-    var sizeClassStr = $(this).attr('sizeClass');
-    var sizeClass = JSON.parse(sizeClassStr);
-    currentShip.coreModules.updateWarpCore(new SpaceSim.Ships.CoreModules.WarpCore(SpaceSim.getCoreModule('warpCore', sizeClass.size, sizeClass.class)));
-    displayStats();
-  });
 
   /** disable ship module **/
   $('#installedCapacitor').click(function() {

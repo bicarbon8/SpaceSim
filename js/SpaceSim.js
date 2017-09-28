@@ -103,10 +103,10 @@ SpaceSim.getModuleOptionsByType = function(type, subType) {
   return options;
 };
 
-SpaceSim._getModuleOptionNames = function(modules) {
+SpaceSim.getModuleOptionNames = function(modulesOptions) {
   var namesHash = {};
-  for (var i=0; i<modules.length; i++) {
-    namesHash[modules[i].name] = true;
+  for (var i=0; i<modulesOptions.length; i++) {
+    namesHash[modulesOptions[i].name] = true;
   }
   var names = [];
   for (var nameKey in namesHash) {
