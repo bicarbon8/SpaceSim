@@ -41,3 +41,27 @@ input::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
 input:-moz-placeholder, textarea:-moz-placeholder {
   color: #ffc107;
 }
+
+.ct-series-a .ct-point {
+  stroke: transparent;
+}
+.ct-series-a .ct-line {
+  stroke: #ffc107;
+}
+
+.ct-series-b .ct-line,
+.ct-series-b .ct-point {
+  stroke: white;
+}
+
+.ct-grid {
+  stroke: #ffc107;
+}
+.ct-labels span {
+  color: #ffc107;
+}
+
+.ct-axis-title {
+  color: #ffc107;
+  fill: #ffc107;
+}

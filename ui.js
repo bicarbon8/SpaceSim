@@ -102,55 +102,98 @@ function displayStats() {
 }
 
 function generateJumpChart() {
-  var data = new google.visualization.DataTable();
-  data.addColumn('number', 'Mass');
-  data.addColumn('number', 'Distance');
   var warpCore = currentShip.coreModules.warpCore;
   var currentMass = currentShip.getTotalMass();
   var massIncrements = warpCore.maximumMass / 10;
-  for (var i=0; i<=11; i++) {
+  var xyPoints = [];
+  for (var i=10; i>0; i--) {
     var mass = massIncrements * i;
-    data.addRow([mass, warpCore.getJumpRange(mass)]);
+    xyPoints.push({x: warpCore.getJumpRange(mass), y: mass});
   }
 
-  var options = {
-    width: 350,
-    height: 250,
-    backgroundColor: '#868e96',
-    legend: 'none',
-    hAxis: {title: 'Mass (tonnes)'},
-    vAxis: {title: 'Distance (LY)'}
-  };
-
-  var chart = new google.visualization.LineChart(document.getElementById('shipJumpRangeChart'));
-
-  chart.draw(data, options);
+  $('#shipJumpRangeChart').empty();
+  var jumpChart = new Chartist.Line('#shipJumpRangeChart', {
+    series: [
+      xyPoints, // series-a
+      [{x: warpCore.getJumpRange(currentMass), y: currentMass}] // series-b
+    ]
+  }, {
+    fullWidth: true,
+    axisX: {
+      type: Chartist.AutoScaleAxis,
+      onlyInteger: true
+    },
+    plugins: [
+      Chartist.plugins.ctAxisTitle({
+        axisX: {
+          axisTitle: 'Distance (LY)',
+          axisClass: 'ct-axis-title',
+          offset: {
+            x: 0,
+            y: 30
+          },
+          textAnchor: 'middle'
+        },
+        axisY: {
+          axisTitle: 'Mass (tonnes)',
+          axisClass: 'ct-axis-title',
+          textAnchor: 'middle',
+          offset: {
+            x: 0,
+            y: 0
+          },
+          flipTitle: false
+        }
+      })
+    ]
+  });
 }
 
 function generateFuelUsedChart() {
-  var data = new google.visualization.DataTable();
-  data.addColumn('number', 'Distance');
-  data.addColumn('number', 'Fuel');
   var warpCore = currentShip.coreModules.warpCore;
   var mass = currentShip.getTotalMass();
   var steps = warpCore.getJumpRange(mass) / 10;
-  for (var i=0; i<=11; i++) {
+  var xyPoints = [];
+  for (var i=0; i<=10; i++) {
     var dist = steps * i;
-    data.addRow([dist, warpCore.getFuelNeededForJump(mass, dist)]);
+    xyPoints.push({x: dist, y: warpCore.getFuelNeededForJump(mass, dist)});
   }
 
-  var options = {
-    width: 350,
-    height: 250,
-    backgroundColor: '#868e96',
-    legend: 'none',
-    hAxis: {title: 'Distance (LY)'},
-    vAxis: {title: 'Fuel (tonnes)'}
-  };
-
-  var chart = new google.visualization.LineChart(document.getElementById('shipJumpFuelChart'));
-
-  chart.draw(data, options);
+  $('#shipJumpFuelChart').empty();
+  var jumpChart = new Chartist.Line('#shipJumpFuelChart', {
+    series: [
+      xyPoints, // series-a
+    ]
+  }, {
+    fullWidth: true,
+    axisX: {
+      type: Chartist.AutoScaleAxis,
+      onlyInteger: true
+    },
+    plugins: [
+      Chartist.plugins.ctAxisTitle({
+        axisX: {
+          axisTitle: 'Distance (LY)',
+          axisClass: 'ct-axis-title',
+          offset: {
+            x: 0,
+            y: 30
+          },
+          textAnchor: 'middle'
+        },
+        axisY: {
+          axisTitle: 'Fuel (tonnes)',
+          axisClass: 'ct-axis-title',
+          textAnchor: 'middle',
+          offset: {
+            x: 0,
+            y: 0
+          },
+          flipTitle: false
+        }
+      })
+    ]
+  });
 }
 
 function resetModules() {
@@ -306,37 +349,37 @@ function populateUtilityModuleTable(size) {
 function populateCapacitorDropdownList() {
   var tableBody = document.querySelector('#capacitorTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.Capacitor);
-  populateModuleList(tableBody, available, currentShip.coreModules.capacitor.size);
+  populateModuleList(tableBody, available, currentShip.coreModules.capacitorMaxSize);
 }
 
 function populateFuelTankDropdownList() {
   var tableBody = document.querySelector('#fuelTankTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.FuelTank);
-  populateModuleList(tableBody, available, currentShip.coreModules.fuelTank.size);
+  populateModuleList(tableBody, available, currentShip.coreModules.fuelTankMaxSize);
 }
 
 function populateGeneratorDropdownList() {
   var tableBody = document.querySelector('#generatorTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.Generator);
-  populateModuleList(tableBody, available, currentShip.coreModules.generator.size);
+  populateModuleList(tableBody, available, currentShip.coreModules.generatorMaxSize);
 }
 
 function populateLifeSupportDropdownList() {
   var tableBody = document.querySelector('#lifeSupportTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.LifeSupport);
-  populateModuleList(tableBody, available, currentShip.coreModules.lifeSupport.size);
+  populateModuleList(tableBody, available, currentShip.coreModules.lifeSupportMaxSize);
 }
 
 function populateThrustersDropdownList() {
   var tableBody = document.querySelector('#thrustersTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.Thrusters);
-  populateModuleList(tableBody, available, currentShip.coreModules.thrusters.size);
+  populateModuleList(tableBody, available, currentShip.coreModules.thrustersMaxSize);
 }
 
 function populateWarpCoreDropdownList() {
   var tableBody = document.querySelector('#warpCoreTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.WarpCore);
-  populateModuleList(tableBody, available, currentShip.coreModules.warpCore.size);
+  populateModuleList(tableBody, available, currentShip.coreModules.warpCoreMaxSize);
 }
 
 function populateUtilitiesDropdownList() {
@@ -405,5 +448,5 @@ $(function() {
     displayStats();
   });
 
-  google.charts.load('current', {'packages':['corechart']});
+  // google.charts.load('current', {'packages':['corechart']});
 });

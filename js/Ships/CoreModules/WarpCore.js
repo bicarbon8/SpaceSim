@@ -25,6 +25,16 @@ SpaceSim.Ships.CoreModules.WarpCore.prototype.getJumpRange = function(mass) {
   return range;
 };
 
+SpaceSim.Ships.CoreModules.WarpCore.prototype.getJumpRangeWithFuel = function(mass, fuelAvailable) {
+  var distance = this.getJumpRange(mass);
+  var fuelNeeded = this.getFuelNeededForJump(mass, distance);
+  while (fuelNeeded > fuelAvailable) {
+    distance--;
+    fuelNeeded = this.getFuelNeededForJump(mass, distance);
+  }
+  return distance;
+};
+
 /**
  * function will calculate the amount of fuel needed to jump the specified distance
  * based on current module's ratings and passed in mass to be moved
