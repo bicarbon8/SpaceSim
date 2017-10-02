@@ -16,6 +16,7 @@
     <script src="js/Utilities/RNG.js"></script>
 
     <script src="js/Ships/PoweredModule.js"></script>
+    <script src="js/Ships/ModulesContainer.js"></script>
     <script src="js/Ships/CoreModules.js"></script>
     <script src="js/Ships/DefenseModules.js"></script>
     <script src="js/Ships/UtilityModules.js"></script>
@@ -29,6 +30,7 @@
     <script src="js/Ships/CoreModules/Thrusters.js"></script>
     <script src="js/Ships/CoreModules/WarpCore.js"></script>
     <script src="js/Ships/DefenseModules/HullPlating.js"></script>
+    <script src="js/Ships/DefenseModules/Radiator.js"></script>
     <script src="js/Ships/UtilityModules/CargoHold.js"></script>
     <script src="js/Ships/UtilityModules/SpatialInterferometer.js"></script>
     <script src="js/Ships/WeaponModules/Weapon.js"></script>
@@ -40,6 +42,7 @@
     <script src="resources/Ships/CoreModules/Thrusters.js"></script>
     <script src="resources/Ships/CoreModules/WarpCores.js"></script>
     <script src="resources/Ships/DefenseModules/HullPlatings.js"></script>
+    <script src="resources/Ships/DefenseModules/Radiators.js"></script>
     <script src="resources/Ships/UtilityModules/CargoHolds.js"></script>
     <script src="resources/Ships/UtilityModules/SpatialInterferometers.js"></script>
 
@@ -201,6 +204,42 @@
                               <tr>
                                 <td>
                                   <div id="utilitiesAvailableSpace" class="btn-group btn-group-justified" role="group"></div>
+                                </td>
+                              </tr>
+                            </tfooter>
+                          </table>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">&nbsp;</div>
+                <div class="row">
+                  <div class="col-md-12">
+                    <div class="card bg-dark">
+                      <div class="card-header"><h5>Defense Modules</h5></div>
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item bg-dark">
+                          <table class="table table-sm table-hover">
+                            <thead>
+                              <tr>
+                                <td>
+                                  <button id="addDefenseModuleButton" type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>
+                                    Add Module
+                                  </button>
+                                  <div class="dropdown-menu bg-dark">
+                                    <table class="table table-sm table-hover bg-dark">
+                                      <tbody id="defenseDropdownTableBody"></tbody>
+                                    </table>
+                                  </div>
+                                </td>
+                              </tr>
+                            </thead>
+                            <tbody id="defenseTableBody"></tbody>
+                            <tfooter>
+                              <tr>
+                                <td>
+                                  <div id="defenseAvailableSpace" class="btn-group btn-group-justified" role="group"></div>
                                 </td>
                               </tr>
                             </tfooter>

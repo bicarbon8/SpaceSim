@@ -17,7 +17,8 @@ SpaceSim.ModuleSubTypes = {
   WarpCore: 6,
   HullPlating: 7,
   CargoHold: 8,
-  SpatialInterferometer: 9
+  SpatialInterferometer: 9,
+  Radiator: 10
 };
 
 SpaceSim.currentSystem = null;
@@ -58,6 +59,8 @@ SpaceSim.getDefenseModule = function(subType, size, moduleClass) {
   switch (subType) {
     case SpaceSim.ModuleSubTypes.HullPlating:
       return new SpaceSim.Ships.DefenseModules.HullPlating(mOpts);
+    case SpaceSim.ModuleSubTypes.Radiator:
+      return new SpaceSim.Ships.DefenseModules.Radiator(mOpts);
     default:
       throw "no defense module of subType '" + subType + "' exists";
   }

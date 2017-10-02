@@ -76,6 +76,15 @@ function displayStats() {
       displayStats();
     });
 
+    // update Defense Modules display
+    populateDefenseDropdownList();
+    $('#defenseDropdownTableBody button:not([disabled])').click(function() {
+      var sizeClassStr = $(this).attr('sizeClass');
+      var sizeClass = JSON.parse(sizeClassStr);
+      currentShip.defenseModules.add(SpaceSim.getDefenseModule(sizeClass.subType, sizeClass.size, sizeClass.class));
+      displayStats();
+    });
+
     var shipMass = currentShip.getTotalMass();
     var shipRange = cm.warpCore.getJumpRange(shipMass);
     var shipFuelMaxJump = cm.warpCore.getFuelNeededForJump(shipMass, shipRange);
@@ -98,6 +107,9 @@ function displayStats() {
 
     // setup Utility Modules
     populateUtilityModuleTable(currentShip.utilityModules.size);
+
+    // setup Defense Modules
+    populateDefenseModuleTable(currentShip.defenseModules.size);
   }
 }
 
@@ -346,6 +358,80 @@ function populateUtilityModuleTable(size) {
   });
 }
 
+function populateDefenseModuleTable(size) {
+  var tableBody = document.querySelector('#defenseTableBody');
+  var addButton = document.querySelector('#addDefenseModuleButton');
+  var availableSpace = document.querySelector('#defenseAvailableSpace');
+  $(tableBody).empty();
+  $(addButton).prop('disabled', true);
+  $(availableSpace).empty();
+
+  var htmlToAppend = '';
+  // first add existing modules
+  var uMods = currentShip.defenseModules.modules;
+  var usedSlots = 0;
+  for (var j=0; j<uMods.length; j++) {
+    var module = uMods[j];
+    var moduleSlots = module.size; // how many slots this module will take up
+    usedSlots += moduleSlots;
+    var moduleName = module.name + ' - ' + module.size + module.class;
+    htmlToAppend += '<tr><td>';
+    htmlToAppend += '<div class="btn-group btn-block" role="group">';
+    htmlToAppend += '<button id="remove-'+module.id+'" type="button" class="btn btn-warning attachedDefenseModuleClass" data-toggle="tooltip" data-placement="top" title="click to remove module">-</button>';
+    htmlToAppend += '<div class="btn-group btn-block" role="group">';
+    htmlToAppend += '<button type="button" class="btn btn-outline-warning btn-block" disabled>'+module.name+'</button>';
+    htmlToAppend += '</div>';
+    var state = 'btn-warning';
+    if (!module.enabled) {
+      state = 'btn-outline-warning';
+    }
+    htmlToAppend += '<button id="enabled-'+module.id+'" type="button" class="btn '+state+' installedDefenseModule" data-toggle="tooltip" data-placement="right" title="click to toggle module enabled state">'+module.size+module.class+'</button>';
+    htmlToAppend += '</div>';
+    htmlToAppend += '</td></tr>';
+  }
+  tableBody.insertAdjacentHTML('beforeend',htmlToAppend);
+
+  // then display used vs. remaining space
+  var spaceAvailableHtml = '';
+  var remainingSlots = currentShip.defenseModules.size - usedSlots;
+  for (var i=0; i<currentShip.defenseModules.size; i++) {
+    if (remainingSlots > 0) {
+      spaceAvailableHtml += '<a href="#" role="button" id="defenseSlot-' + i + '" class="btn btn-outline-light disabled" disabled>&nbsp;</a>';
+      remainingSlots--;
+    } else {
+      spaceAvailableHtml += '<a href="#" role="button" id="defenseSlot-' + i + '" class="btn btn-warning disabled" disabled>&nbsp;</a>';
+    }
+  }
+  availableSpace.insertAdjacentHTML('beforeend',spaceAvailableHtml);
+
+  if (usedSlots < currentShip.defenseModules.size) {
+    $(addButton).prop('disabled', false);
+  }
+
+  // allow removal of attached defense modules
+  $('.attachedDefenseModuleClass').click(function() {
+    var idParts = $(this).attr('id').split('remove-');
+    if (idParts.length == 2) {
+      var id = idParts[1];
+      currentShip.defenseModules.remove(id);
+    }
+    displayStats();
+  });
+  // allow toggling of enabled state for defense modules
+  $('.installedDefenseModule').click(function() {
+    var idParts = $(this).attr('id').split('enabled-');
+    if (idParts.length == 2) {
+      var id = idParts[1];
+      if (currentShip.defenseModules.isEnabled(id)) {
+        currentShip.defenseModules.setEnabled(id, false);
+      } else {
+        currentShip.defenseModules.setEnabled(id, true);
+      }
+    }
+    displayStats();
+  });
+}
+
 function populateCapacitorDropdownList() {
   var tableBody = document.querySelector('#capacitorTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Core, SpaceSim.ModuleSubTypes.Capacitor);
@@ -385,8 +471,13 @@ function populateWarpCoreDropdownList() {
 function populateUtilitiesDropdownList() {
   var tableBody = document.querySelector('#utilitiesDropdownTableBody');
   var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Utility);
-  // TODO: add more Utility Modules
   populateModuleList(tableBody, available, currentShip.utilityModules.getRemainingSpace());
+}
+
+function populateDefenseDropdownList() {
+  var tableBody = document.querySelector('#defenseDropdownTableBody');
+  var available = SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Defense);
+  populateModuleList(tableBody, available, currentShip.defenseModules.getRemainingSpace());
 }
 
 $(function() {
@@ -447,6 +538,4 @@ $(function() {
     }
     displayStats();
   });
-
-  // google.charts.load('current', {'packages':['corechart']});
 });

@@ -11,7 +11,7 @@ SpaceSim.Ships.PoweredModule = function(options) {
   if (!options) { options = {}; }
   this.name = options.name || null;
   this.description = options.description || null;
-  this.type = options.type || -1; 
+  this.type = options.type || -1;
   this.subType = options.subType || -1;
   this.mass = options.mass || 0; // in tonnes
   this.size = options.size || 0;
@@ -20,8 +20,8 @@ SpaceSim.Ships.PoweredModule = function(options) {
   this.impactResistance = options.impactResistance || 0; // collisions, bullets / shrapnel resistance: 100% is immune to impacts
   this.cost = options.cost || 0;
 
-  this.integrity = 100; // 100% is healthy, 0% is broken and must be repaired. Starts at 100%
-  this.enabled = true; // enabled by default
+  this.integrity = options.integrity || 1; // (1 == 100%); 100% is healthy, 0% is broken and must be repaired. Starts at 100%
+  this.enabled = options.enabled || true; // enabled by default
   this.active = options.active || false; // not in use by default
   this.powerDraw = options.powerDraw || 0; // in MegaWatts
   this.activePowerDraw = options.activePowerDraw || 0; // in MegaWatts
