@@ -65,3 +65,7 @@ input:-moz-placeholder, textarea:-moz-placeholder {
   color: #ffc107;
   fill: #ffc107;
 }
+
+tbody tr td {
+  color: #ffc107;
+}

@@ -53,7 +53,7 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-md-6">
-          <div id="headerMenu" class="card text-white bg-dark mb-3">
+          <div class="card text-white bg-dark mb-3">
             <div class="card-header">
               <div class="container-fluid">
                 <div class="row">
@@ -75,8 +75,8 @@
                 <div class="row">
                   <div class="col-md-12">
                     <div class="card bg-dark">
-                      <div class="card-header"><h5>Core Modules</h5></div>
-                      <ul class="list-group list-group-flush">
+                      <div class="card-header" for="coreCard"><h5>Core Modules</h5></div>
+                      <ul class="list-group list-group-flush" name="coreCard">
                         <li class="list-group-item bg-dark">
                           <div class="btn-group btn-block" role="group">
                             <button id="capacitorMaxSize" type="button" class="btn btn-warning">n/a</button>
@@ -181,8 +181,8 @@
                 <div class="row">
                   <div class="col-md-12">
                     <div class="card bg-dark">
-                      <div class="card-header"><h5>Utility Modules</h5></div>
-                      <ul class="list-group list-group-flush">
+                      <div class="card-header" for="utilityCard"><h5>Utility Modules</h5></div>
+                      <ul class="list-group list-group-flush" name="utilityCard">
                         <li class="list-group-item bg-dark">
                           <table class="table table-sm table-hover">
                             <thead>
@@ -217,8 +217,8 @@
                 <div class="row">
                   <div class="col-md-12">
                     <div class="card bg-dark">
-                      <div class="card-header"><h5>Defense Modules</h5></div>
-                      <ul class="list-group list-group-flush">
+                      <div class="card-header" for="defenseCard"><h5>Defense Modules</h5></div>
+                      <ul class="list-group list-group-flush" name="defenseCard">
                         <li class="list-group-item bg-dark">
                           <table class="table table-sm table-hover">
                             <thead>
@@ -254,71 +254,110 @@
           </div>
         </div>
         <div class="col-md-6">
-          <div id="headerMenu" class="card text-white bg-dark mb-3">
-            <div class="card-header">
-              <div class="container-fluid">
-                <div class="row">
-                  <div class="col-md-12">
-                    <h5>Statistics &amp; Characteristics</h5>
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card text-white bg-dark mb-3">
+                  <div class="card-header" for="statsCard">
+                    <div class="container-fluid">
+                      <div class="row">
+                        <div class="col-md-12">
+                          <h5>Statistics &amp; Characteristics</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body" name="statsCard">
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <td>Mass <small><i>(tonnes)</i></small></td>
+                          <td>Power Consumed <small><i>(MegaWatts)</i></small></td>
+                          <td>Heat Generated <small><i>(Degrees Celcius)</i></small></td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><span id="shipMass">n/a</span></td>
+                          <td><span id="shipPower">n/a</span> <small><i>(of <span id="maxPower">n/a</span> max)</i></small></td>
+                          <td><span id="shipHeat">n/a</span> <small><i>(of <span id="maxHeat">n/a</span> max)</i></small></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <td>Cargo Capacity <small><i>(tonnes)</i></small></td>
+                          <td>Laden Weight <small><i>(tonnes)</i></small></td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><span id="shipCargo">n/a</span></td>
+                          <td><span id="shipLadenWeight">n/a</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <table class="table table-sm table-hover table-block">
+                      <thead>
+                        <tr>
+                          <td>Jump Range: <small><i><span id="maxJumpRange">n/a</span> lightyears maximum</i></small></td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><div id="shipJumpRangeChart" class="ct-chart ct-perfect-fourth"></div></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                    <table class="table table-sm table-hover table-block">
+                      <thead>
+                        <tr>
+                          <td>Fuel required to jump: <small><i>of tank containing <span id="maxFuel">n/a</span> tonnes</i></small></td>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td><div id="shipJumpFuelChart" class="ct-chart ct-perfect-fourth"></div></td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="card-body">
-              <table class="table table-sm table-hover">
-                <thead>
-                  <tr>
-                    <td>Mass <small><i>(tonnes)</i></small></td>
-                    <td>Power Consumed <small><i>(MegaWatts)</i></small></td>
-                    <td>Heat Generated <small><i>(Degrees Celcius)</i></small></td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><span id="shipMass">n/a</span></td>
-                    <td><span id="shipPower">n/a</span> <small><i>(of <span id="maxPower">n/a</span> max)</i></small></td>
-                    <td><span id="shipHeat">n/a</span> <small><i>(of <span id="maxHeat">n/a</span> max)</i></small></td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="table table-sm table-hover">
-                <thead>
-                  <tr>
-                    <td>Cargo Capacity <small><i>(tonnes)</i></small></td>
-                    <td>Laden Weight <small><i>(tonnes)</i></small></td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><span id="shipCargo">n/a</span></td>
-                    <td><span id="shipLadenWeight">n/a</span></td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="table table-sm table-hover table-block">
-                <thead>
-                  <tr>
-                    <td>Jump Range: <small><i><span id="maxJumpRange">n/a</span> lightyears maximum</i></small></td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><div id="shipJumpRangeChart" class="ct-chart ct-perfect-fourth"></div></td>
-                  </tr>
-                </tbody>
-              </table>
-              <table class="table table-sm table-hover table-block">
-                <thead>
-                  <tr>
-                    <td>Fuel required to jump: <small><i>of tank containing <span id="maxFuel">n/a</span> tonnes</i></small></td>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><div id="shipJumpFuelChart" class="ct-chart ct-perfect-fourth"></div></td>
-                  </tr>
-                </tbody>
-              </table>
+            <div class="row">&nbsp;</div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="card text-white bg-dark mb-3">
+                  <div class="card-header" for="costsCard">
+                    <div class="container-fluid">
+                      <div class="row">
+                        <div class="col-md-12">
+                          <h5>Costs</h5>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card-body" name="costsCard">
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <td><h6>Size + Class</h6></td>
+                          <td><h6>Module</h6></td>
+                          <td><h6>Cost</h6></td>
+                        </tr>
+                      </thead>
+                      <tbody id="costsTableBody"></tbody>
+                      <tfoot>
+                        <tr>
+                          <td>&nbsp;</td><td>&nbsp;</td><td id="costsTableFootTotal"></td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -134,3 +134,18 @@ SpaceSim.getShip = function(shipName) {
     }
   }
 };
+
+SpaceSim.getShipSize = function(ship) {
+  if (ship.size < 20) {
+    return 'Micro';
+  }
+  if (ship.size < 50) {
+    return 'Small';
+  }
+  if (ship.size < 100) {
+    return 'Medium';
+  }
+  if (ship.size < 500) {
+    return 'Large';
+  }
+};

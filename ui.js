@@ -110,7 +110,53 @@ function displayStats() {
 
     // setup Defense Modules
     populateDefenseModuleTable(currentShip.defenseModules.size);
+
+    displayCostsTable(currentShip);
   }
+}
+
+function displayCostsTable(ship) {
+  var tableBody = document.querySelector('#costsTableBody');
+  $(tableBody).empty();
+
+  var htmlToAppend = '';
+  var totalCost = 0;
+
+  htmlToAppend += '<tr><td>' + SpaceSim.getShipSize(ship) + '</td><td>' + ship.name + '</td><td>' + ship.cost + '</td></tr>';
+  totalCost += ship.cost;
+  /* capacitor */
+  htmlToAppend += '<tr><td>' + ship.coreModules.capacitor.size + ship.coreModules.capacitor.class + '</td><td>' + ship.coreModules.capacitor.name + '</td><td>' + ship.coreModules.capacitor.cost + '</td></tr>';
+  totalCost += ship.coreModules.capacitor.cost;
+  /* fuelTank */
+  htmlToAppend += '<tr><td>' + ship.coreModules.fuelTank.size + ship.coreModules.fuelTank.class + '</td><td>' + ship.coreModules.fuelTank.name + '</td><td>' + ship.coreModules.fuelTank.cost + '</td></tr>';
+  totalCost += ship.coreModules.fuelTank.cost;
+  /* generator */
+  htmlToAppend += '<tr><td>' + ship.coreModules.generator.size + ship.coreModules.generator.class + '</td><td>' + ship.coreModules.generator.name + '</td><td>' + ship.coreModules.generator.cost + '</td></tr>';
+  totalCost += ship.coreModules.generator.cost;
+  /* lifeSupport */
+  htmlToAppend += '<tr><td>' + ship.coreModules.lifeSupport.size + ship.coreModules.lifeSupport.class + '</td><td>' + ship.coreModules.lifeSupport.name + '</td><td>' + ship.coreModules.lifeSupport.cost + '</td></tr>';
+  totalCost += ship.coreModules.lifeSupport.cost;
+  /* thrusters */
+  htmlToAppend += '<tr><td>' + ship.coreModules.thrusters.size + ship.coreModules.thrusters.class + '</td><td>' + ship.coreModules.thrusters.name + '</td><td>' + ship.coreModules.thrusters.cost + '</td></tr>';
+  totalCost += ship.coreModules.thrusters.cost;
+  /* warpCore */
+  htmlToAppend += '<tr><td>' + ship.coreModules.warpCore.size + ship.coreModules.warpCore.class + '</td><td>' + ship.coreModules.warpCore.name + '</td><td>' + ship.coreModules.warpCore.cost + '</td></tr>';
+  totalCost += ship.coreModules.warpCore.cost;
+
+  for (var utilityKey in ship.utilityModules.modules) {
+    var utilityModule = ship.utilityModules.modules[utilityKey];
+    htmlToAppend += '<tr><td>' + utilityModule.size + utilityModule.class + '</td><td>' + utilityModule.name + '</td><td>' + utilityModule.cost + '</td></tr>';
+    totalCost += utilityModule.cost;
+  }
+
+  for (var defenseKey in ship.defenseModules.modules) {
+    var defenseModule = ship.defenseModules.modules[defenseKey];
+    htmlToAppend += '<tr><td>' + defenseModule.size + defenseModule.class + '</td><td>' + defenseModule.name + '</td><td>' + defenseModule.cost + '</td></tr>';
+    totalCost += defenseModule.cost;
+  }
+
+  tableBody.insertAdjacentHTML('beforeend', htmlToAppend);
+  document.querySelector('#costsTableFootTotal').innerText = totalCost;
 }
 
 function generateJumpChart() {
@@ -221,6 +267,9 @@ function setShip(shipName) {
   var newShip = SpaceSim.getShip(shipName);
   currentShip = newShip;
   resetModules();
+
+  $('.card-body').show();
+
   displayStats();
 }
 
@@ -485,6 +534,21 @@ $(function() {
 
   // setup list of Ships to select from
   populateShipList();
+
+  $('.card-body').hide();
+
+  $('.card-header').click(function() {
+    var name = $(this).attr('for');
+    var el = $('[name=' + name + ']');
+    if (el.is(':visible')) {
+      el.hide();
+    } else {
+      if (currentShip) {
+        el.show();
+        displayStats();
+      }
+    }
+  });
 
   /** disable ship module **/
   $('#installedCapacitor').click(function() {

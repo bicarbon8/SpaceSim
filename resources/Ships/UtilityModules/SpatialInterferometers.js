@@ -10,7 +10,7 @@ SpaceSim.addModule({
   range: 100, // between Jupiter and Saturn
   heatResistance: 0, // none
   impactResistance: 0, // none
-  cost: 100,
+  cost: 1000,
   powerDraw: 1,
   activePowerDraw: 5,
   heatGenerated: 1,
@@ -23,10 +23,10 @@ SpaceSim.addModule({
   mass: 0, // in tonnes
   size: 1,
   class: "D",
-  range: 500, // past Pluto
+  range: 1500, // almost to the heliopause
   heatResistance: 0, // none
   impactResistance: 0, // none
-  cost: 500,
+  cost: 10000,
   powerDraw: 2,
   activePowerDraw: 8,
   heatGenerated: 1,
@@ -39,10 +39,10 @@ SpaceSim.addModule({
   mass: 1, // in tonnes
   size: 1,
   class: "C",
-  range: 1500, // almost to the Heliopause
+  range: 525600, // one lightyear
   heatResistance: 0, // none
   impactResistance: 0, // none
-  cost: 1500,
+  cost: 250000,
   powerDraw: 2,
   activePowerDraw: 9,
   heatGenerated: 1,
@@ -55,7 +55,7 @@ SpaceSim.addModule({
   mass: 2, // in tonnes
   size: 1,
   class: "B",
-  range: 525600, // one lightyear
+  range: 5256000, // 10 lightyears
   heatResistance: 0, // none
   impactResistance: 0, // none
   cost: 1000000,
@@ -71,10 +71,10 @@ SpaceSim.addModule({
   mass: 2, // in tonnes
   size: 1,
   class: "A",
-  range: 5256000, // 10 lightyears
+  range: 52560000, // 100 lightyears
   heatResistance: 0, // none
   impactResistance: 0, // none
-  cost: 10000000,
+  cost: 50000000,
   powerDraw: 2,
   activePowerDraw: 15,
   heatGenerated: 1,
