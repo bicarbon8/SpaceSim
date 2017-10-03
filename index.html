@@ -52,7 +52,7 @@
   <body style="background-color: #000;">
     <div class="container-fluid">
       <div class="row">
-        <div class="col-md-6">
+        <div class="col-sm-12">
           <div class="card text-white bg-dark mb-3">
             <div class="card-header">
               <div class="container-fluid">
@@ -73,7 +73,7 @@
             <div class="card-body">
               <div class="container-fluid">
                 <div class="row">
-                  <div class="col-md-12">
+                  <div class="col-lg-3 col-sm-6">
                     <div class="card bg-dark">
                       <div class="card-header" for="coreCard"><h5>Core Modules</h5></div>
                       <ul class="list-group list-group-flush" name="coreCard">
@@ -176,10 +176,7 @@
                       </ul>
                     </div>
                   </div>
-                </div>
-                <div class="row">&nbsp;</div>
-                <div class="row">
-                  <div class="col-md-12">
+                  <div class="col-lg-3 col-sm-6">
                     <div class="card bg-dark">
                       <div class="card-header" for="utilityCard"><h5>Utility Modules</h5></div>
                       <ul class="list-group list-group-flush" name="utilityCard">
@@ -212,10 +209,7 @@
                       </ul>
                     </div>
                   </div>
-                </div>
-                <div class="row">&nbsp;</div>
-                <div class="row">
-                  <div class="col-md-12">
+                  <div class="col-lg-3 col-sm-6">
                     <div class="card bg-dark">
                       <div class="card-header" for="defenseCard"><h5>Defense Modules</h5></div>
                       <ul class="list-group list-group-flush" name="defenseCard">
@@ -253,10 +247,12 @@
             </div>
           </div>
         </div>
-        <div class="col-md-6">
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
           <div class="container-fluid">
             <div class="row">
-              <div class="col-md-12">
+              <div class="col-sm-12 col-md-6">
                 <div class="card text-white bg-dark mb-3">
                   <div class="card-header" for="statsCard">
                     <div class="container-fluid">
@@ -298,37 +294,42 @@
                         </tr>
                       </tbody>
                     </table>
-                    <table class="table table-sm table-hover table-block">
-                      <thead>
-                        <tr>
-                          <td>Jump Range: <small><i><span id="maxJumpRange">n/a</span> lightyears maximum</i></small></td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><div id="shipJumpRangeChart" class="ct-chart ct-perfect-fourth"></div></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <table class="table table-sm table-hover table-block">
-                      <thead>
-                        <tr>
-                          <td>Fuel required to jump: <small><i>of tank containing <span id="maxFuel">n/a</span> tonnes</i></small></td>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td><div id="shipJumpFuelChart" class="ct-chart ct-perfect-fourth"></div></td>
-                        </tr>
-                      </tbody>
-                    </table>
+                    <div class="container-fluid">
+                      <div class="row">
+                        <div class="col-md-12 col-lg-6">
+                          <table class="table table-sm table-hover table-block">
+                            <thead>
+                              <tr>
+                                <td>Jump Range: <small><i><span id="maxJumpRange">n/a</span> lightyears maximum</i></small></td>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td><div id="shipJumpRangeChart" class="ct-chart ct-perfect-fourth"></div></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div class="col-md-12 col-lg-6">
+                          <table class="table table-sm table-hover table-block">
+                            <thead>
+                              <tr>
+                                <td>Fuel required to jump: <small><i>of tank containing <span id="maxFuel">n/a</span> tonnes</i></small></td>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td><div id="shipJumpFuelChart" class="ct-chart ct-perfect-fourth"></div></td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div class="row">&nbsp;</div>
-            <div class="row">
-              <div class="col-md-12">
+              <div class="col-md-6">
                 <div class="card text-white bg-dark mb-3">
                   <div class="card-header" for="costsCard">
                     <div class="container-fluid">

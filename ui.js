@@ -371,10 +371,10 @@ function populateUtilityModuleTable(size) {
   var remainingSlots = currentShip.utilityModules.size - usedSlots;
   for (var i=0; i<currentShip.utilityModules.size; i++) {
     if (remainingSlots > 0) {
-      spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-outline-light disabled" disabled>&nbsp;</a>';
+      spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-sm btn-outline-light disabled" disabled>&nbsp;</a>';
       remainingSlots--;
     } else {
-      spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-warning disabled" disabled>&nbsp;</a>';
+      spaceAvailableHtml += '<a href="#" role="button" id="utilitySlot-' + i + '" class="btn btn-sm btn-warning disabled" disabled>&nbsp;</a>';
     }
   }
   availableSpace.insertAdjacentHTML('beforeend',spaceAvailableHtml);
@@ -445,10 +445,10 @@ function populateDefenseModuleTable(size) {
   var remainingSlots = currentShip.defenseModules.size - usedSlots;
   for (var i=0; i<currentShip.defenseModules.size; i++) {
     if (remainingSlots > 0) {
-      spaceAvailableHtml += '<a href="#" role="button" id="defenseSlot-' + i + '" class="btn btn-outline-light disabled" disabled>&nbsp;</a>';
+      spaceAvailableHtml += '<a href="#" role="button" id="defenseSlot-' + i + '" class="btn btn-sm btn-outline-light disabled" disabled>&nbsp;</a>';
       remainingSlots--;
     } else {
-      spaceAvailableHtml += '<a href="#" role="button" id="defenseSlot-' + i + '" class="btn btn-warning disabled" disabled>&nbsp;</a>';
+      spaceAvailableHtml += '<a href="#" role="button" id="defenseSlot-' + i + '" class="btn btn-sm btn-warning disabled" disabled>&nbsp;</a>';
     }
   }
   availableSpace.insertAdjacentHTML('beforeend',spaceAvailableHtml);
