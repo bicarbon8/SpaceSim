@@ -18,7 +18,8 @@ SpaceSim.ModuleSubTypes = {
   HullPlating: 7,
   CargoHold: 8,
   SpatialInterferometer: 9,
-  Radiator: 10
+  Radiator: 10,
+  MachineGun: 11
 };
 
 SpaceSim.currentSystem = null;
@@ -78,8 +79,9 @@ SpaceSim.getUtilityModule = function(subType, size, moduleClass) {
   }
 };
 
-SpaceSim.getWeaponModule = function(type, size, moduleClass) {
-  throw 'not yet supported';
+SpaceSim.getWeaponModule = function(subType, size, moduleClass) {
+  var mOpts = SpaceSim._getModuleOptionsBySizeAndClass(SpaceSim.getModuleOptionsByType(SpaceSim.ModuleTypes.Weapon, subType), size, moduleClass);
+  return new SpaceSim.Ships.WeaponModules.Weapon(mOpts);
 };
 
 SpaceSim.getModuleOptionsByType = function(type, subType) {

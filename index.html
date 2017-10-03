@@ -45,6 +45,7 @@
     <script src="resources/Ships/DefenseModules/Radiators.js"></script>
     <script src="resources/Ships/UtilityModules/CargoHolds.js"></script>
     <script src="resources/Ships/UtilityModules/SpatialInterferometers.js"></script>
+    <script src="resources/Ships/WeaponModules/MachineGuns.js"></script>
 
     <script src="resources/Ships/Manufacturers/HopferBranchen.js"></script>
     <script src="resources/Ships/Manufacturers/Ikitomi.js"></script>
@@ -234,6 +235,39 @@
                               <tr>
                                 <td>
                                   <div id="defenseAvailableSpace" class="btn-group btn-group-justified" role="group"></div>
+                                </td>
+                              </tr>
+                            </tfooter>
+                          </table>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="col-lg-3 col-sm-6">
+                    <div class="card bg-dark">
+                      <div class="card-header" for="weaponCard"><h5>Weapon Modules</h5></div>
+                      <ul class="list-group list-group-flush" name="weaponCard">
+                        <li class="list-group-item bg-dark">
+                          <table class="table table-sm table-hover">
+                            <thead>
+                              <tr>
+                                <td>
+                                  <button id="addWeaponModuleButton" type="button" class="btn btn-outline-warning dropdown-toggle btn-block" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>
+                                    Add Module
+                                  </button>
+                                  <div class="dropdown-menu bg-dark">
+                                    <table class="table table-sm table-hover bg-dark">
+                                      <tbody id="weaponDropdownTableBody"></tbody>
+                                    </table>
+                                  </div>
+                                </td>
+                              </tr>
+                            </thead>
+                            <tbody id="weaponTableBody"></tbody>
+                            <tfooter>
+                              <tr>
+                                <td>
+                                  <div id="weaponAvailableSpace" class="btn-group btn-group-justified" role="group"></div>
                                 </td>
                               </tr>
                             </tfooter>
