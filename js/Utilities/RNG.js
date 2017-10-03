@@ -1,5 +1,6 @@
 var SpaceSim = SpaceSim || {};
-SpaceSim.RNG = {
+SpaceSim.Utilities = SpaceSim.Utilities || {};
+SpaceSim.Utilities.RNG = {
   int: function (min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   },

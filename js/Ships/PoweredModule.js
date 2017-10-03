@@ -6,7 +6,7 @@ SpaceSim.Ships = SpaceSim.Ships || {};
  * power from the installed 'generator' if turned on
  */
 SpaceSim.Ships.PoweredModule = function(options) {
-  this.id = SpaceSim.RNG.guid(); // randomly generated unique id for module instance
+  this.id = options.id || SpaceSim.Utilities.RNG.guid(); // randomly generated unique id for module instance
 
   if (!options) { options = {}; }
   this.name = options.name || null;

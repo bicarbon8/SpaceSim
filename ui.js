@@ -167,6 +167,12 @@ function displayCostsTable(ship) {
     totalCost += defenseModule.cost;
   }
 
+  for (var weaponKey in ship.weaponModules.modules) {
+    var weaponModule = ship.weaponModules.modules[weaponKey];
+    htmlToAppend += '<tr><td>' + weaponModule.size + weaponModule.class + '</td><td>' + weaponModule.name + '</td><td>' + weaponModule.cost + '</td></tr>';
+    totalCost += weaponModule.cost;
+  }
+
   tableBody.insertAdjacentHTML('beforeend', htmlToAppend);
   document.querySelector('#costsTableFootTotal').innerText = totalCost;
 }
@@ -529,7 +535,7 @@ function populateWeaponModuleTable(size) {
   // then display used vs. remaining space
   var spaceAvailableHtml = '';
   var remainingSlots = currentShip.weaponModules.size - usedSlots;
-  for (var i=0; i<currentShip.defenseModules.size; i++) {
+  for (var i=0; i<currentShip.weaponModules.size; i++) {
     if (remainingSlots > 0) {
       spaceAvailableHtml += '<a href="#" role="button" id="weaponSlot-' + i + '" class="btn btn-sm btn-outline-light disabled" disabled>&nbsp;</a>';
       remainingSlots--;

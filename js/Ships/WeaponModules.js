@@ -75,7 +75,7 @@ SpaceSim.Ships.WeaponModules.prototype.add = function(weapon) {
       this.addLarge(weapon);
       added = true;
     } catch (e) {
-      /* unable to add to medium; maybe already full? */
+      /* unable to add to large; maybe already full? */
       err += e + '\n';
     }
   }
