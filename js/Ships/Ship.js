@@ -20,6 +20,8 @@ SpaceSim.Ships.Ship = function(options) {
   this.downThrustMultiplier = options.downThrustMultiplier || 0;
   this.leftThrustMultiplier = options.leftThrustMultiplier || 0;
   this.rightThrustMultiplier = options.rightThrustMultiplier || 0;
+
+  this.position = options.position || new Vector3();
 };
 SpaceSim.Ships.Ship.prototype = Object.create(SpaceSim.Ships.PoweredModule.prototype);
 SpaceSim.Ships.Ship.prototype.constructor = SpaceSim.Ships.Ship;
@@ -48,6 +50,9 @@ SpaceSim.Ships.Ship.prototype.getTotalMass = function() {
       this.utilityModules.getTotalMass() +
       this.weaponModules.getTotalMass();
   return totalMass;
+};
+SpaceSim.Ships.Ship.prototype.getPosition = function() {
+  return this.position;
 };
 SpaceSim.Ships.Ship.prototype.getTotalCargoCapacity = function() {
   var capacity = 0;
