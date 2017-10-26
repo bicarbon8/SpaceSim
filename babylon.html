@@ -54,7 +54,12 @@
 
         // create a ArcRotateCamera, and set its position to (x:0, y:5, z:-10)
         var camera = new BABYLON.ArcRotateCamera('Camera', 0, 0, 0, new BABYLON.Vector3(0, 0, -4.5), scn);
-        //var camera = new BABYLON.FollowCamera('Camera', new BABYLON.Vector3(0, 0, 4.5), scn);
+        // var camera = new BABYLON.FollowCamera('Camera', new BABYLON.Vector3(0, 0, -4.5), scn);
+        // camera.radius = 30;
+        // camera.heightOffset = 10;
+        // camera.rotationOffset = 0;
+        // camera.cameraAcceleration = 0.005;
+        // camera.maxCameraSpeed = 10;
 
         // target the camera to scn origin
         camera.setTarget(BABYLON.Vector3.Zero());
@@ -65,12 +70,33 @@
         // create a basic light, aiming 0,1,0 - meaning, to the sky
         var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,1,0), scn);
 
-        box = BABYLON.MeshBuilder.CreateBox('ship', {size:2}, scn);
+        box = BABYLON.MeshBuilder.CreateBox('ship', {size:0}, scn);
+        var size = 4;
+        var axisX = BABYLON.Mesh.CreateLines("axisX", [
+            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
+            new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
+        ], scene);
+        axisX.color = new BABYLON.Color3(1, 0, 0);
+        axisX.parent = box;
+        var axisY = BABYLON.Mesh.CreateLines("axisY", [
+            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
+            new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
+        ], scene);
+        axisY.color = new BABYLON.Color3(0, 1, 0);
+        axisY.parent = box;
+        var axisZ = BABYLON.Mesh.CreateLines("axisZ", [
+            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, -0.05 * size, size * 0.95),
+            new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, 0.05 * size, size * 0.95)
+        ], scene);
+        axisZ.color = new BABYLON.Color3(0, 0, 1);
+        axisZ.parent = box;
 
         mat = new BABYLON.StandardMaterial("", scn);
         mat.diffuseTexture = new BABYLON.Texture("http://i.imgur.com/88fOIk3.jpg", scn);
 
         box.material = mat;
+
+        //camera.lockedTarget = box;
 
         scn.registerAfterRender(function () {
           var dirThrust = 0.001;
