@@ -52,39 +52,20 @@
           map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
         }));
 
-        // create a ArcRotateCamera, and set its position to (x:0, y:5, z:-10)
-        var camera = new BABYLON.ArcRotateCamera('Camera', 0, 0, 0, new BABYLON.Vector3(0, 0, -4.5), scn);
-
-        // target the camera to scn origin
+        // create a ArcRotateCamera, and set its position to (x:0, y:0, z:-10)
+        var camera = new BABYLON.ArcRotateCamera('Camera', 0, 0, 10, new BABYLON.Vector3(0, 0, 0), scn);
         camera.setTarget(BABYLON.Vector3.Zero());
-
+        camera.setPosition(new BABYLON.Vector3(0, 0, -10));
         // attach the camera to the canvas
         camera.attachControl(canvas, false);
 
         // create a basic light, aiming 0,1,0 - meaning, to the sky
         var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,1,0), scn);
 
-        box = BABYLON.MeshBuilder.CreateBox('ship', {size:0.5}, scn);
+        // parent object used to simplify control and collisions
+        box = BABYLON.MeshBuilder.CreateBox('ship', {size:1}, scn);
         box.isVisible = false;
-        var size = 1;
-        var axisX = BABYLON.Mesh.CreateLines("axisX", [
-            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
-            new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
-        ], scene);
-        axisX.color = new BABYLON.Color3(1, 0, 0); // red
-        axisX.parent = box;
-        var axisY = BABYLON.Mesh.CreateLines("axisY", [
-            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
-            new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
-        ], scene);
-        axisY.color = new BABYLON.Color3(0, 1, 0); // green
-        axisY.parent = box;
-        var axisZ = BABYLON.Mesh.CreateLines("axisZ", [
-            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, -0.05 * size, size * 0.95),
-            new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, 0.05 * size, size * 0.95)
-        ], scene);
-        axisZ.color = new BABYLON.Color3(0, 0, 1); // blue
-        axisZ.parent = box;
+        createShip(box, scn);
 
         scn.registerAfterRender(function () {
           var rotThrust = 0.001;
@@ -150,6 +131,55 @@
 
         // return the created scn
         return scn;
+      }
+
+      function createShip(parent, scene) {
+        // ship body
+        var cylinderOpts = {
+          height: 1,
+          diameterTop: 0,
+          diameterBottom: 1,
+          tessellation: 6
+        };
+        var body = BABYLON.MeshBuilder.CreateCylinder("ship body", cylinderOpts, scene);
+        body.addRotation(Math.PI / 4, 0, 0); // = new BABYLON.Vector3(Math.PI / 4, 0, 0);
+        body.bakeTransformIntoVertices(body.getWorldMatrix());
+        body.position = new BABYLON.Vector3(0, 0, 0.5);
+        body.parent = parent;
+
+        // cockpit
+        var sphereOpts = {
+          segments: 3,
+          diameter: 0.5
+        };
+        var cockpit = BABYLON.MeshBuilder.CreateSphere("ship cockpit", sphereOpts, scene);
+        cockpit.position = new BABYLON.Vector3(0, 0.125, 0.25);
+        cockpit.bakeTransformIntoVertices(cockpit.getWorldMatrix());
+        cockpit.parent = parent;
+
+        createShipAxisLines(parent, scene);
+      }
+
+      function createShipAxisLines(parent, scene) {
+        var size = 1;
+        var axisX = BABYLON.Mesh.CreateLines("axisX", [
+            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, 0.05 * size, 0),
+            new BABYLON.Vector3(size, 0, 0), new BABYLON.Vector3(size * 0.95, -0.05 * size, 0)
+        ], scene);
+        axisX.color = new BABYLON.Color3(1, 0, 0); // red
+        axisX.parent = parent;
+        var axisY = BABYLON.Mesh.CreateLines("axisY", [
+            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(-0.05 * size, size * 0.95, 0),
+            new BABYLON.Vector3(0, size, 0), new BABYLON.Vector3(0.05 * size, size * 0.95, 0)
+        ], scene);
+        axisY.color = new BABYLON.Color3(0, 1, 0); // green
+        axisY.parent = parent;
+        var axisZ = BABYLON.Mesh.CreateLines("axisZ", [
+            new BABYLON.Vector3.Zero(), new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, -0.05 * size, size * 0.95),
+            new BABYLON.Vector3(0, 0, size), new BABYLON.Vector3(0, 0.05 * size, size * 0.95)
+        ], scene);
+        axisZ.color = new BABYLON.Color3(0, 0, 1); // blue
+        axisZ.parent = parent;
       }
 
       function translateMesh(mesh, worldVelocity) {
