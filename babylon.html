@@ -3,8 +3,22 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html" charset="utf-8"/>
     <title>Babylon - Getting Started</title>
-    <!--- link to the last version of babylon --->
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <!-- link to the last version of babylon -->
+    <!-- Babylon.js -->
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://rawgit.com/BabylonJS/Extensions/master/ClonerSystem/src/babylonx.cloner.js"></script>
+    <script src="https://rawgit.com/BabylonJS/Extensions/master/canvas2D/dist/preview%20release/babylon.canvas2d.min.js"></script>
+    <script src="https://rawgit.com/BabylonJS/Extensions/master/CompoundShader/src/babylonx.CompoundShader.js"></script>
+
     <style>
         html, body {
             overflow: hidden;
@@ -28,6 +42,7 @@
       var engine = null;
       var canvas = document.querySelector('#renderCanvas');
       var box = null;
+      var planetBox = null;
       var velocity = new BABYLON.Vector3.Zero(); // not moving
       var rotation = new BABYLON.Vector3.Zero(); // not rotating
 
@@ -42,7 +57,11 @@
       function createScene(engine) {
         // create a basic BJS Scene object
         var scn = new BABYLON.Scene(engine);
-
+        scn.clearColor = BABYLON.Color3.Black(); // we're in space
+        
+        var envTexture = new BABYLON.CubeTexture("/resources/Systems/skybox.dds", scn);
+        scn.createDefaultSkybox(envTexture, true, 1000);
+        
         var map = {}; //object for multiple key presses
         scn.actionManager = new BABYLON.ActionManager(scn);
         scn.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
@@ -52,13 +71,11 @@
           map[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
         }));
 
-        // create a ArcRotateCamera, and set its position to (x:0, y:0, z:-10)
-        var camera = new BABYLON.ArcRotateCamera('Camera', 0, 0, 10, new BABYLON.Vector3(0, 0, 0), scn);
+        // create a UniversalCamera, and set its position to (x:0, y:0, z:-10)
+        var camera = new BABYLON.UniversalCamera('Camera', new BABYLON.Vector3(0, 0, -10), scn);
         camera.setTarget(BABYLON.Vector3.Zero());
-        camera.setPosition(new BABYLON.Vector3(0, 0, -10));
-        // attach the camera to the canvas
         camera.attachControl(canvas, false);
-
+        
         // create a basic light, aiming 0,1,0 - meaning, to the sky
         var light = new BABYLON.HemisphericLight('light1', new BABYLON.Vector3(0,1,0), scn);
 
@@ -66,6 +83,11 @@
         box = BABYLON.MeshBuilder.CreateBox('ship', {size:1}, scn);
         box.isVisible = false;
         createShip(box, scn);
+
+        camera.parent = box;
+        
+
+        // planetBox = new BABYLON.MeshBuilder.CreateBox('')
 
         scn.registerAfterRender(function () {
           var rotThrust = 0.001;
@@ -137,7 +159,7 @@
         // ship body
         var cylinderOpts = {
           height: 1,
-          diameterTop: 0,
+          diameterTop: 0.1,
           diameterBottom: 1,
           tessellation: 6
         };
@@ -158,6 +180,16 @@
         cockpit.parent = parent;
 
         createShipAxisLines(parent, scene);
+      }
+
+      function createPlanet(parent, scene) {
+        var sphereOpts = {
+          segments: 3,
+          diameter: 2000
+        };
+        var planet = BABYLON.MeshBuilder.CreateSphere("planet", sphereOpts, scene);
+        planet.position = new BABYLON.Vector3(-1000, -1000, 1000);
+        planet.parent = parent;
       }
 
       function createShipAxisLines(parent, scene) {
