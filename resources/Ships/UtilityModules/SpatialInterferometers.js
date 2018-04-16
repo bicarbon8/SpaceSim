@@ -4,7 +4,7 @@ SpaceSim.addModule({
   name: 'Spatial Interferometer',
   type: SpaceSim.ModuleTypes.Utility,
   subType: SpaceSim.ModuleSubTypes.SpatialInterferometer,
-  mass: 0, // in tonnes
+  mass: 0.1, // in tonnes
   size: 1,
   class: "E",
   range: 100, // between Jupiter and Saturn
@@ -20,7 +20,7 @@ SpaceSim.addModule({
   name: 'Spatial Interferometer',
   type: SpaceSim.ModuleTypes.Utility,
   subType: SpaceSim.ModuleSubTypes.SpatialInterferometer,
-  mass: 0, // in tonnes
+  mass: 0.5, // in tonnes
   size: 1,
   class: "D",
   range: 1500, // almost to the heliopause
@@ -52,7 +52,7 @@ SpaceSim.addModule({
   name: 'Spatial Interferometer',
   type: SpaceSim.ModuleTypes.Utility,
   subType: SpaceSim.ModuleSubTypes.SpatialInterferometer,
-  mass: 2, // in tonnes
+  mass: 5, // in tonnes
   size: 1,
   class: "B",
   range: 5256000, // 10 lightyears
@@ -68,7 +68,7 @@ SpaceSim.addModule({
   name: 'Spatial Interferometer',
   type: SpaceSim.ModuleTypes.Utility,
   subType: SpaceSim.ModuleSubTypes.SpatialInterferometer,
-  mass: 2, // in tonnes
+  mass: 10, // in tonnes
   size: 1,
   class: "A",
   range: 52560000, // 100 lightyears

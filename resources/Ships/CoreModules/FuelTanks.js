@@ -104,3 +104,55 @@ SpaceSim.addModule({
   heatGenerated: 2, // in degrees Celcius
   activeHeatGenerated: 2
 });
+
+/** Size 3 **/
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
+  maxCapacity: 16,
+  mass: 3,
+  size: 3,
+  class: "E",
+  heatResistance: 0,
+  impactResistance: 0,
+  cost: 2500,
+  powerDraw: 0, // in MegaWatts
+  activePowerDraw: 0, // in MegaWatts
+  heatGenerated: 0, // in degrees Celcius
+  activeHeatGenerated: 0
+});
+
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
+  maxCapacity: 24,
+  mass: 5,
+  size: 3,
+  class: "C",
+  heatResistance: 0,
+  impactResistance: 0,
+  cost: 5000,
+  powerDraw: 5, // in MegaWatts
+  activePowerDraw: 5, // in MegaWatts
+  heatGenerated: 5, // in degrees Celcius
+  activeHeatGenerated: 5
+});
+
+SpaceSim.addModule({
+  name: 'Fuel Tank',
+  type: SpaceSim.ModuleTypes.Core,
+  subType: SpaceSim.ModuleSubTypes.FuelTank,
+  maxCapacity: 32,
+  mass: 4,
+  size: 3,
+  class: "A",
+  heatResistance: 0,
+  impactResistance: 0,
+  cost: 10000,
+  powerDraw: 5, // in MegaWatts
+  activePowerDraw: 5, // in MegaWatts
+  heatGenerated: 2, // in degrees Celcius
+  activeHeatGenerated: 2
+});

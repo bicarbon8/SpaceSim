@@ -21,7 +21,7 @@ SpaceSim.Ships.Ship = function(options) {
   this.leftThrustMultiplier = options.leftThrustMultiplier || 0;
   this.rightThrustMultiplier = options.rightThrustMultiplier || 0;
 
-  this.position = options.position || new Vector3();
+  this.position = options.position || new THREE.Vector3();
 };
 SpaceSim.Ships.Ship.prototype = Object.create(SpaceSim.Ships.PoweredModule.prototype);
 SpaceSim.Ships.Ship.prototype.constructor = SpaceSim.Ships.Ship;

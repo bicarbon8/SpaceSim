@@ -6,10 +6,10 @@ SpaceSim.addModule({
   name: 'Warp Core',
   type: SpaceSim.ModuleTypes.Core,
   subType: SpaceSim.ModuleSubTypes.WarpCore,
-  maximumMass: 50, // tonnes
-  maximumFuel: 3, // tonnes
-  maximumRange: 5, // lightyears at 0 mass
-  mass: 5,
+  maximumMass: 40,     // tonnes
+  optimalMass: 20, // tonnes
+  fuelPerLightYear: 1, // tonnes consumed per LY
+  mass: 1,
   size: 1,
   class: 'E',
   heatResistance: 0,
@@ -25,29 +25,29 @@ SpaceSim.addModule({
   name: 'Warp Core',
   type: SpaceSim.ModuleTypes.Core,
   subType: SpaceSim.ModuleSubTypes.WarpCore,
-  maximumMass: 70, // tonnes
-  maximumFuel: 4, // tonnes
-  maximumRange: 10, // lightyears at 0 mass
-  mass: 7,
+  maximumMass: 50,     // tonnes
+  optimalMass: 40, // tonnes
+  fuelPerLightYear: 1.5, // tonnes consumed per LY
+  mass: 1.5,
   size: 1,
   class: 'C',
   heatResistance: 0,
   impactResistance: 0,
   cost: 250,
-  powerDraw: 15, // in megaWatts
-  activePowerDraw: 50,
-  heatGenerated: 20, // in degrees Celcius
-  activeHeatGenerated: 40
+  powerDraw: 10, // in megaWatts
+  activePowerDraw: 40,
+  heatGenerated: 5, // in degrees Celcius
+  activeHeatGenerated: 25
 });
 
 SpaceSim.addModule({
   name: 'Warp Core',
   type: SpaceSim.ModuleTypes.Core,
   subType: SpaceSim.ModuleSubTypes.WarpCore,
-  maximumMass: 70, // tonnes
-  maximumFuel: 5, // tonnes
-  maximumRange: 15, // lightyears at 0 mass
-  mass: 5,
+  maximumMass: 50,     // tonnes
+  optimalMass: 40, // tonnes
+  fuelPerLightYear: 1, // tonnes consumed per LY
+  mass: 0.9,
   size: 1,
   class: 'A',
   heatResistance: 0,
@@ -64,10 +64,10 @@ SpaceSim.addModule({
   name: 'Warp Core',
   type: SpaceSim.ModuleTypes.Core,
   subType: SpaceSim.ModuleSubTypes.WarpCore,
-  maximumMass: 100, // tonnes
-  maximumFuel: 8, // tonnes
-  maximumRange: 10, // lightyears at 0 mass
-  mass: 10,
+  maximumMass: 90, // tonnes
+  optimalMass: 45, // tonnes
+  fuelPerLightYear: 2, // tonnes consumed per LY
+  mass: 2,
   size: 2,
   class: "E",
   heatResistance: 0,
@@ -83,19 +83,19 @@ SpaceSim.addModule({
   name: 'Warp Core',
   type: SpaceSim.ModuleTypes.Core,
   subType: SpaceSim.ModuleSubTypes.WarpCore,
-  maximumMass: 150, // tonnes
-  maximumFuel: 9, // tonnes
-  maximumRange: 15, // lightyears at 0 mass
-  mass: 15,
+  maximumMass: 100, // tonnes
+  optimalMass: 85, // tonnes
+  fuelPerLightYear: 3, // tonnes consumed per LY
+  mass: 3,
   size: 2,
   class: "C",
   heatResistance: 0,
   impactResistance: 0,
   cost: 5000,
-  powerDraw: 35, // in megaWatts
-  activePowerDraw: 70,
-  heatGenerated: 30, // in degrees Celcius
-  activeHeatGenerated: 55
+  powerDraw: 30, // in megaWatts
+  activePowerDraw: 60,
+  heatGenerated: 15, // in degrees Celcius
+  activeHeatGenerated: 40
 });
 
 SpaceSim.addModule({
@@ -103,9 +103,9 @@ SpaceSim.addModule({
   type: SpaceSim.ModuleTypes.Core,
   subType: SpaceSim.ModuleSubTypes.WarpCore,
   maximumMass: 100, // tonnes
-  maximumFuel: 10, // tonnes
-  maximumRange: 20, // lightyears at 0 mass
-  mass: 12,
+  optimalMass: 85, // tonnes
+  fuelPerLightYear: 2, // tonnes consumed per LY
+  mass: 1.8,
   size: 2,
   class: "A",
   heatResistance: 0,

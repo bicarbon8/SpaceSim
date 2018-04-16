@@ -72,7 +72,7 @@ SpaceSim.addModule({
     lifeSupport: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.LifeSupport, 1, 'E'),
     capacitorMaxSize: 1,
     capacitor: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.Capacitor, 1, 'E'),
-    fuelTankMaxSize: 2,
+    fuelTankMaxSize: 3,
     fuelTank: SpaceSim.getCoreModule(SpaceSim.ModuleSubTypes.FuelTank, 2, 'E')
   },
   weaponModules: {

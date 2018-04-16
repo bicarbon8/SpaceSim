@@ -95,15 +95,16 @@ function displayStats() {
     });
 
     var shipMass = currentShip.getTotalMass();
-    var shipRange = cm.warpCore.getJumpRange(shipMass);
+    var maxFuel = currentShip.coreModules.fuelTank.currentAmount; 
+    var shipRange = cm.warpCore.getJumpRangeWithFuel(shipMass, maxFuel);
     var shipFuelMaxJump = cm.warpCore.getFuelNeededForJump(shipMass, shipRange);
 
     document.querySelector('#shipMass').innerText = shipMass;
     generateJumpChart();
     generateFuelUsedChart();
     var mass = cm.getTotalMass();
-    document.querySelector('#maxJumpRange').innerText = cm.warpCore.getJumpRange(mass).toFixed(2);
-    document.querySelector('#maxFuel').innerText = cm.fuelTank.maxCapacity;
+    document.querySelector('#maxJumpRange').innerText = shipRange.toFixed(2);
+    document.querySelector('#maxFuel').innerText = maxFuel;
 
     document.querySelector('#shipPower').innerText = cm.getTotalPowerConsumed();
     document.querySelector('#maxPower').innerText = cm.generator.power;
@@ -180,21 +181,24 @@ function displayCostsTable(ship) {
 function generateJumpChart() {
   var warpCore = currentShip.coreModules.warpCore;
   var currentMass = currentShip.getTotalMass();
-  var massIncrements = warpCore.maximumMass / 10;
+  var maxFuel = currentShip.coreModules.fuelTank.maxCapacity; 
+  var massIncrements = currentMass / 10;
   var xyPoints = [];
-  for (var i=10; i>0; i--) {
-    var mass = massIncrements * i;
-    xyPoints.push({x: warpCore.getJumpRange(mass), y: mass});
+  for (var i=5; i>-5; i--) {
+    var mass = currentMass + (i * massIncrements);
+    var dist = warpCore.getJumpRangeWithFuel(mass, maxFuel);
+    xyPoints.push({ x: dist, y: mass});
   }
 
   $('#shipJumpRangeChart').empty();
   var jumpChart = new Chartist.Line('#shipJumpRangeChart', {
     series: [
       xyPoints, // series-a
-      [{x: warpCore.getJumpRange(currentMass), y: currentMass}] // series-b
+      [{x: warpCore.getJumpRangeWithFuel(currentMass, maxFuel), y: currentMass}] // series-b
     ]
   }, {
     fullWidth: true,
+    lineSmooth: false,
     axisX: {
       type: Chartist.AutoScaleAxis,
       onlyInteger: true
@@ -228,20 +232,24 @@ function generateJumpChart() {
 function generateFuelUsedChart() {
   var warpCore = currentShip.coreModules.warpCore;
   var mass = currentShip.getTotalMass();
-  var steps = warpCore.getJumpRange(mass) / 10;
+  var totalFuel = currentShip.coreModules.fuelTank.currentAmount;
+  var steps = totalFuel / 10; // tonnes of fuel available
   var xyPoints = [];
-  for (var i=0; i<=10; i++) {
-    var dist = steps * i;
-    xyPoints.push({x: dist, y: warpCore.getFuelNeededForJump(mass, dist)});
+  for (var i=-5; i<=5; i++) {
+    var fuel = totalFuel + (steps * i);
+    var dist = warpCore.getJumpRangeWithFuel(mass, fuel);
+    xyPoints.push({ x: dist, y: fuel });
   }
 
   $('#shipJumpFuelChart').empty();
   var jumpChart = new Chartist.Line('#shipJumpFuelChart', {
     series: [
       xyPoints, // series-a
+      [{ x: warpCore.getJumpRangeWithFuel(mass, totalFuel), y: totalFuel }] // series-b
     ]
   }, {
     fullWidth: true,
+    lineSmooth: false,
     axisX: {
       type: Chartist.AutoScaleAxis,
       onlyInteger: true
