@@ -4,8 +4,10 @@
   "description": "JavaScript based 3D Spaceflight Simulator",
   "main": "server.js",
   "scripts": {
-    "test": "jasmine JASMINE_CONFIG_PATH=./jasmine.json",
-    "start": "node server.js"
+    "webpack": "node_modules/.bin/webpack",
+    "build": "webpack --config ./webpack.config.js",
+    "test": "npm run build && jasmine JASMINE_CONFIG_PATH=./jasmine.json",
+    "start": "npm run build && node server.js"
   },
   "repository": {
     "type": "git",
@@ -28,13 +30,18 @@
   "homepage": "https://github.com/bicarbon8/SpaceSim#readme",
   "devDependencies": {
     "@types/jasmine": "^3.5.0",
+    "@types/matter-js": "^0.10.7",
     "@types/node": "^13.1.7",
     "@types/uuid": "^3.4.6",
     "jasmine": "^3.5.0",
-    "typescript": "^3.7.5"
+    "ts-loader": "^6.2.1",
+    "tsc": "^1.20150623.0",
+    "typescript": "^3.7.5",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "three": "^0.112.1",
+    "matter-js": "^0.14.2",
     "uuid": "^3.4.0"
   }
 }

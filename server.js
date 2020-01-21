@@ -11,14 +11,22 @@ function handleRequests(data, request, response) {
     var respBody;
     try {
         var path = request.url;
+        console.log(`handling request for '${path}'`);
         if (path == '/') {
-            path = '/babylon.html';
+            path = '/index.html';
         }
-        respBody = fs.readFileSync('.' + path);
-        response.writeHead(200, { "Content-Type": getContentType(path) });
-        response.end(respBody);
+        if (path.includes('favicon.ico')) {
+            // ignore requests for favicon
+            response.writeHead(204, { "Content-Type": "text/html" });
+            response.end(0);
+            console.log(`request for '${path}' ignored`);
+        } else {
+            respBody = fs.readFileSync('.' + path);
+            response.writeHead(200, { "Content-Type": getContentType(path) });
+            response.end(respBody);
+        }
     } catch (err) {
-        console.log(err);
+        console.log(`'${path}' could not be found`);
     }
 }
 
@@ -52,3 +60,5 @@ server.on('error', function (err) {
 
 // Listen on port 9898, IP defaults to 127.0.0.1
 server.listen(9898);
+
+console.log('listening on "http://localhost:9898"');
