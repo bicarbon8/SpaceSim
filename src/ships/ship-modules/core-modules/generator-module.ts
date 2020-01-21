@@ -1,15 +1,14 @@
-import { PoweredModule } from "../powered-module";
 import { Ship } from "../../ship";
 import { ShipModuleType } from "../ship-module-type";
+import { CoreModule } from "./core-module";
 
-export class GeneratorModule extends PoweredModule {
+export class GeneratorModule extends CoreModule {
     power: number; // generators should have negative power draw representing their production of power
     heatEfficiency: number; // how much heat generated per MegaWatt produced; 1 (100%) means no heat, 0 means 100% heat
     fuelEfficiency: number; // how much fuel consumed per MegaWatt produced in 1 tonne increments per hour; 1 (100%) means no fuel, 0 means 100% fuel
     
     constructor(ship: Ship) {
         super(ship);
-        this.setModuleType(ShipModuleType.core);
 
         this.power = 0;
         this.heatEfficiency = 0; 

@@ -12,6 +12,11 @@ export class ModuleContainer {
         this.accepts = accepts;
     }
 
+    setSize(size: number): ModuleContainer {
+        this.size = size;
+        return this;
+    }
+
     addModule<T extends ShipModule>(shipModule: T): ModuleContainer {
         if (shipModule.getSize() <= this.getRemainingSpace() && this.isAcceptedType(shipModule.getModuleType())) {
             this.shipModules.push(shipModule);

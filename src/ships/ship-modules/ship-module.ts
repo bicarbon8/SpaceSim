@@ -26,7 +26,7 @@ export abstract class ShipModule {
     getShip(): Ship {
         return this.ship;
     }
-    setShip(ship: Ship): ShipModule {
+    setShip<T extends Ship>(ship: T): ShipModule {
         this.ship = ship;
         return this;
     }

@@ -1,14 +1,13 @@
-import { PoweredModule } from "../powered-module";
 import { Ship } from "../../ship";
 import { ShipModuleType } from "../ship-module-type";
+import { CoreModule } from "./core-module";
 
-export class ThrusterModule extends PoweredModule {
+export class ThrusterModule extends CoreModule {
     private thrust: number; // in KiloNewtons
     private afterburnerDraw: number; // Units per second
 
     constructor(ship: Ship) {
         super(ship);
-        this.setModuleType(ShipModuleType.core);
 
         this.thrust = 0;
         this.afterburnerDraw = 0;

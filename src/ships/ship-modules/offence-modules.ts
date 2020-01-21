@@ -1,5 +1,4 @@
 import { OffenceModule } from "./offence-modules/offence-module";
-import { ShipModuleType } from "./ship-module-type";
 import { OffenceModuleSize } from "./offence-modules/offence-module-size";
 
 export class OffenceModules {
@@ -12,7 +11,19 @@ export class OffenceModules {
     largeModules: OffenceModule[];
     hugeModules: OffenceModule[];
 
-    constructor(smallCount: number, mediumCount: number, largeCount: number, hugeCount: number) {
+    constructor(smallCount?: number, mediumCount?: number, largeCount?: number, hugeCount?: number) {
+        if (!smallCount) {
+            smallCount = 0;
+        }
+        if (!mediumCount) {
+            mediumCount = 0;
+        }
+        if (!largeCount) {
+            largeCount = 0;
+        }
+        if (!hugeCount) {
+            hugeCount = 0;
+        }
         this.smallCount = smallCount;
         this.mediumCount = mediumCount;
         this.largeCount = largeCount;
@@ -27,7 +38,11 @@ export class OffenceModules {
         if (this.smallModules.length < this.smallCount) {
             if (this.isExpectedSize(OffenceModuleSize.small, mod)) {
                 this.smallModules.push(mod);
+            } else {
+                // TODO: signal size error
             }
+        } else {
+            // TODO: signal no more space error
         }
         return this;
     }

@@ -1,13 +1,11 @@
-import { PoweredModule } from "../powered-module";
-import { ShipModuleType } from "../ship-module-type";
 import { Ship } from "../../ship";
+import { DefenceModule } from "./defence-module";
 
-export class RadiatorModule extends PoweredModule {
+export class RadiatorModule extends DefenceModule {
     private heatDissipationPerSecond: number;
 
     constructor(ship: Ship) {
         super(ship);
-        this.setModuleType(ShipModuleType.defense);
         
         this.heatDissipationPerSecond = 0;
     }

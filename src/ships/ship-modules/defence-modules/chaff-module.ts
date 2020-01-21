@@ -1,15 +1,13 @@
-import { PoweredModule } from "../powered-module";
-import { ShipModuleType } from "../ship-module-type";
 import { Ship } from "../../ship";
+import { DefenceModule } from "./defence-module";
 
-export class ChaffModule extends PoweredModule {
+export class ChaffModule extends DefenceModule {
     private maxAmmo: number;
     private ammoRemaining: number;
 
     constructor(ship: Ship) {
         super(ship);
-        this.setModuleType(ShipModuleType.defense);
-
+        
         this.maxAmmo = 0;
         this.ammoRemaining = 0;
     }

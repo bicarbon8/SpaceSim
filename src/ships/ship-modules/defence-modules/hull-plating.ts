@@ -1,15 +1,13 @@
-import { PoweredModule } from "../powered-module";
-import { ShipModuleType } from "../ship-module-type";
 import { Ship } from "../../ship";
+import { DefenceModule } from "./defence-module";
 
-export class HullPlating extends PoweredModule {
+export class HullPlating extends DefenceModule {
     private impactResistanceModifier: number;
     private heatResistanceModifier: number;
 
     constructor(ship: Ship) {
         super(ship);
-        this.setModuleType(ShipModuleType.defense);
-
+        
         this.impactResistanceModifier = 0;
         this.heatResistanceModifier = 0;
     }

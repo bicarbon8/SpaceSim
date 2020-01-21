@@ -1,14 +1,13 @@
-import { PoweredModule } from "../powered-module";
 import { Ship } from "../../ship";
 import { ShipModuleType } from "../ship-module-type";
+import { CoreModule } from "./core-module";
 
-export class FuelModule extends PoweredModule {
+export class FuelModule extends CoreModule {
     private capacity: number;
     private currentAmount: number;
 
     constructor(ship: Ship) {
         super(ship);
-        this.setModuleType(ShipModuleType.core);
 
         this.capacity = 0;
         this.currentAmount = 0;
