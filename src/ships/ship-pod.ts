@@ -1,23 +1,27 @@
 import { RNG } from "../utilities/rng";
-import { Vector, Bodies } from "matter-js";
+import { Vector, Bodies, Body } from "matter-js";
+import { SpaceSim } from "../space-sim";
 
 export class ShipPod {
     private id: string; // UUID
 
-    obj: Bodies = Bodies.circle(0, 0, 25, {maxSides: 5} as Matter.IBodyDefinition);
+    obj: Body = Bodies.polygon(200, 200, 6, 25, {
+        density: 1,
+        frictionAir: 0.001
+    });
     
-    fuelCapacity: number;
-    remainingFuel: number;
-    thrust: number; // KiloNewtons
-    rotationRate: number; // degrees per second
-    integrity: number; // maximum of 100
-    mass: number; // in Tonnes
-    temperature: number; // in Celcius
+    fuelCapacity: number = 100;
+    remainingFuel: number = 100;
+    
+    thrust: number = 1; // KiloNewtons
+    thrusterFuelConsumption: number = 0.01;
+    thrusterHeatGeneration: number = 0.5;
 
-    position: Vector;
+    rotationRate: number = 0.2; // degrees per second
+    integrity: number = 100; // maximum of 100
+    temperature: number = 0; // in Celcius
 
-    private heading: Vector; // must always be normalized
-    private movement: Vector; // must always be normalized
+    realPosition: Vector; // needed so we can use Floating Origin
 
     constructor() {
         this.id = RNG.guid();
@@ -27,8 +31,21 @@ export class ShipPod {
         return this.id;
     }
 
+    lookAt(position: Vector): ShipPod {
+        let angle: number = Vector.angle(this.obj.position, position);
+        Body.setAngle(this.obj, angle);
+        return this;
+    }
+
     activateThruster(): ShipPod {
-        this.movement = Vector.normalise(Vector.add(Vector.mult(this.heading, this.thrust), this.movement));
+        if (this.remainingFuel > 0) {
+            let delta: Vector = Vector.sub(SpaceSim.mouse.position, this.obj.position);
+            let normalisedDelta: Vector = Vector.normalise(delta);
+            let force: Vector = Vector.mult(normalisedDelta, this.thrust);
+            Body.applyForce(this.obj, this.obj.position, force);
+
+            this.remainingFuel -= this.thrusterFuelConsumption;
+        }
         return this;
     }
 }
