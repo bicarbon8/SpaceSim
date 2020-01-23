@@ -1,14 +1,13 @@
 import { RNG } from "../utilities/rng";
 import { Vector, Bodies, Body } from "matter-js";
-import { SpaceSim } from "../space-sim";
+import { Game } from "../game";
+import { Updatable } from "../interfaces/updatable";
 
-export class ShipPod {
+export class ShipPod implements Updatable {
     private id: string; // UUID
 
-    obj: Body = Bodies.polygon(200, 200, 6, 25, {
-        density: 1,
-        frictionAir: 0.001
-    });
+    obj: Body;
+    active: boolean = true;
     
     fuelCapacity: number = 100;
     remainingFuel: number = 100;
@@ -25,6 +24,37 @@ export class ShipPod {
 
     constructor() {
         this.id = RNG.guid();
+        this.obj = Bodies.polygon(200, 200, 6, 25, {
+            density: 1,
+            frictionAir: 0.001,
+            render: {
+                sprite: {
+                    texture: './assets/sprites/ship-pod.png',
+                    xScale: 1,
+                    yScale: 1
+                }
+            }
+        });
+    }
+
+    update(): void {
+        if (this.active) {
+            this.lookAt(Game.mouse.position);
+            let keys: string[] = Game.keys;
+            Game.keys = [];
+            while (keys.length > 0) {
+                let key: string = keys.pop();
+                if (key == 'Space') {
+                    this.activateThruster();
+                }
+            }
+            this.applyCooling();
+            if (this.temperature > 100) {
+                // reduce integrity based on degrees over 100
+                let delta: number = this.temperature - 100;
+                this.integrity -= delta;
+            }
+        }
     }
 
     getId(): string {
@@ -39,12 +69,23 @@ export class ShipPod {
 
     activateThruster(): ShipPod {
         if (this.remainingFuel > 0) {
-            let delta: Vector = Vector.sub(SpaceSim.mouse.position, this.obj.position);
+            let delta: Vector = Vector.sub(Game.mouse.position, this.obj.position);
             let normalisedDelta: Vector = Vector.normalise(delta);
             let force: Vector = Vector.mult(normalisedDelta, this.thrust);
             Body.applyForce(this.obj, this.obj.position, force);
 
             this.remainingFuel -= this.thrusterFuelConsumption;
+            this.temperature += this.thrusterHeatGeneration;
+        }
+        return this;
+    }
+
+    applyCooling(): ShipPod {
+        if (this.temperature > 0) {
+            this.temperature -= 0.1;
+        }
+        if (this.temperature < 0) {
+            this.temperature = 0;
         }
         return this;
     }

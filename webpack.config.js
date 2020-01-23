@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './src/space-sim.ts',
+  entry: './src/game.ts',
   devtool: 'inline-source-map',
   module: {
     rules: [

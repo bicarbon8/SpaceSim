@@ -1,7 +1,9 @@
 import { Vector, Body } from "matter-js";
-export declare class ShipPod {
+import { Updatable } from "../interfaces/updatable";
+export declare class ShipPod implements Updatable {
     private id;
     obj: Body;
+    active: boolean;
     fuelCapacity: number;
     remainingFuel: number;
     thrust: number;
@@ -12,7 +14,9 @@ export declare class ShipPod {
     temperature: number;
     realPosition: Vector;
     constructor();
+    update(): void;
     getId(): string;
     lookAt(position: Vector): ShipPod;
     activateThruster(): ShipPod;
+    applyCooling(): ShipPod;
 }
