@@ -21,7 +21,7 @@ export class ShipPod {
     integrity: number = 100; // maximum of 100
     temperature: number = 0; // in Celcius
 
-    realPosition: Vector; // needed so we can use Floating Origin
+    realPosition: Vector = {x:0, y:0}; // needed so we can use Floating Origin
 
     constructor() {
         this.id = RNG.guid();

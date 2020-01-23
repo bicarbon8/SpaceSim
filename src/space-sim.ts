@@ -1,6 +1,6 @@
 import {Engine, Render, Runner, World, Bodies, Mouse} from "matter-js";
 import { ShipPod } from "./ships/ship-pod";
-import { Listener } from "./controls/listener";
+import { InputListener } from "./controls/input-listener";
 
 export module SpaceSim {
     var engine: Engine = Engine.create();
@@ -12,7 +12,7 @@ export module SpaceSim {
         }
     });
     var runner: Runner = Runner.create();
-    var listener: Listener = new Listener();
+    var listener: InputListener = new InputListener();
 
     export var mouse: Mouse = Mouse.create(render.canvas);
     

@@ -3,7 +3,7 @@ import { SpaceSim } from "../space-sim";
 import { Keys } from "./keys";
 import { ShipPod } from "../ships/ship-pod";
 
-export class Listener {
+export class InputListener {
     private running: boolean = false;
 
     run(player: ShipPod): void {
@@ -19,9 +19,9 @@ export class Listener {
     startMouseTracking(player: ShipPod): void {
         if (this.running) {
             player.lookAt(SpaceSim.mouse.position);
-            window.setTimeout(() => {
+            window.requestAnimationFrame(() => {
                 this.startMouseTracking(player);
-            }, 10);
+            });
         }
     }
 
