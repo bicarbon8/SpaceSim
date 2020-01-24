@@ -31,7 +31,6 @@
   "devDependencies": {
     "@types/jasmine": "^3.5.0",
     "@types/jquery": "^3.3.31",
-    "@types/matter-js": "^0.10.7",
     "@types/node": "^13.1.7",
     "@types/uuid": "^3.4.6",
     "jasmine": "^3.5.0",
@@ -43,7 +42,7 @@
   },
   "dependencies": {
     "jquery": "^3.4.1",
-    "matter-js": "^0.14.2",
+    "phaser": "^3.22.0",
     "uuid": "^3.4.0"
   }
 }

@@ -1,18 +1,18 @@
 import { RNG } from "../utilities/rng";
-import { Vector, Bodies, Body } from "matter-js";
-import { Game } from "../game";
-import { Updatable } from "../interfaces/updatable";
+import "phaser";
+import { ShipPodConfig } from "./ship-pod-config";
 
-export class ShipPod implements Updatable {
+export class ShipPod {
     private id: string; // UUID
+    private config: ShipPodConfig;
+    private gameObj: Phaser.Physics.Arcade.Sprite;
 
-    obj: Body;
     active: boolean = true;
     
     fuelCapacity: number = 100;
     remainingFuel: number = 100;
     
-    thrust: number = 1; // KiloNewtons
+    thrusterForce: number = 1; // KiloNewtons
     thrusterFuelConsumption: number = 0.01;
     thrusterHeatGeneration: number = 0.5;
 
@@ -20,73 +20,72 @@ export class ShipPod implements Updatable {
     integrity: number = 100; // maximum of 100
     temperature: number = 0; // in Celcius
 
-    realPosition: Vector = {x:0, y:0}; // needed so we can use Floating Origin
+    realPosition: Phaser.Math.Vector2 = Phaser.Math.Vector2.ZERO; // needed so we can use Floating Origin
 
-    constructor() {
+    constructor(config: ShipPodConfig) {
+        this.config = config;
         this.id = RNG.guid();
-        this.obj = Bodies.polygon(200, 200, 6, 25, {
-            density: 1,
-            frictionAir: 0.001,
-            render: {
-                sprite: {
-                    texture: './assets/sprites/ship-pod.png',
-                    xScale: 1,
-                    yScale: 1
-                }
-            }
-        });
+
+        this.gameObj = this.config.scene.physics.add.sprite(this.config.scene.game.scale.width / 2, this.config.scene.game.scale.height / 2, 'ship-pod');
     }
 
     update(): void {
-        if (this.active) {
-            this.lookAt(Game.mouse.position);
-            let keys: string[] = Game.keys;
-            Game.keys = [];
-            while (keys.length > 0) {
-                let key: string = keys.pop();
-                if (key == 'Space') {
-                    this.activateThruster();
-                }
-            }
-            this.applyCooling();
-            if (this.temperature > 100) {
-                // reduce integrity based on degrees over 100
-                let delta: number = this.temperature - 100;
-                this.integrity -= delta;
-            }
+        this.lookAt(this.config.scene.mouseLocation);
+        if (this.config.scene.inputKeys.space.isDown) {
+            this.activateThruster();
         }
+        this.applyCooling();
+        this.integrityCheck();
     }
 
     getId(): string {
         return this.id;
     }
 
-    lookAt(position: Vector): ShipPod {
-        let angle: number = Vector.angle(this.obj.position, position);
-        Body.setAngle(this.obj, angle);
-        return this;
+    lookAt(position: Phaser.Math.Vector2): void {
+        if (position) {
+            let radians: number = Phaser.Math.Angle.Between(position.x, position.y, this.gameObj.x, this.gameObj.y);
+            this.gameObj.setRotation(radians);
+        }
     }
 
-    activateThruster(): ShipPod {
+    activateThruster(): void {
         if (this.remainingFuel > 0) {
-            let delta: Vector = Vector.sub(Game.mouse.position, this.obj.position);
-            let normalisedDelta: Vector = Vector.normalise(delta);
-            let force: Vector = Vector.mult(normalisedDelta, this.thrust);
-            Body.applyForce(this.obj, this.obj.position, force);
+            let delta: Phaser.Math.Vector2 = this.config.scene.mouseLocation.subtract(new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y));
+            let normalisedDelta: Phaser.Math.Vector2 = delta.normalize();
+            let force: Phaser.Math.Vector2 = normalisedDelta.multiply(new Phaser.Math.Vector2(this.thrusterForce, this.thrusterForce));
+            let v = this.gameObj.body.velocity;
+            console.log(`current velocity: ${JSON.stringify(v)}`);
+            let velocity = v.add(force);
+            this.gameObj.setVelocity(velocity.x, velocity.y);
 
             this.remainingFuel -= this.thrusterFuelConsumption;
-            this.temperature += this.thrusterHeatGeneration;
+            this.applyHeating(this.thrusterHeatGeneration);
         }
-        return this;
     }
 
-    applyCooling(): ShipPod {
+    applyHeating(degrees: number): void {
+        this.temperature += degrees;
+        if (this.temperature > 100) {
+            // reduce integrity based on degrees over 100
+            let delta: number = this.temperature - 100;
+            this.integrity -= delta;
+        }
+    }
+
+    applyCooling(): void {
         if (this.temperature > 0) {
             this.temperature -= 0.1;
         }
         if (this.temperature < 0) {
             this.temperature = 0;
         }
-        return this;
+    }
+
+    integrityCheck(): void {
+        if (this.integrity <= 0) {
+            this.active = false;
+            // TODO: destroy ship and end game
+        }
     }
 }

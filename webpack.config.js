@@ -20,5 +20,8 @@ module.exports = {
     libraryTarget: 'umd',
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
+  },
+  externals: {
+    phaser: 'phaser'
   }
 };
