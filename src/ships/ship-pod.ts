@@ -1,6 +1,7 @@
 import { RNG } from "../utilities/rng";
 import "phaser";
 import { ShipPodConfig } from "./ship-pod-config";
+import { Globals } from "../utilities/globals";
 
 export class ShipPod {
     private id: string; // UUID
@@ -30,8 +31,8 @@ export class ShipPod {
     }
 
     update(): void {
-        this.lookAt(this.config.scene.mouseLocation);
-        if (this.config.scene.inputKeys.space.isDown) {
+        this.lookAt(Globals.mouseLocation);
+        if (Globals.inputKeys.space.isDown) {
             this.activateThruster();
         }
         this.applyCooling();
@@ -51,9 +52,9 @@ export class ShipPod {
 
     activateThruster(): void {
         if (this.remainingFuel > 0) {
-            let delta: Phaser.Math.Vector2 = this.config.scene.mouseLocation.subtract(new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y));
-            let normalisedDelta: Phaser.Math.Vector2 = delta.normalize();
-            let force: Phaser.Math.Vector2 = normalisedDelta.multiply(new Phaser.Math.Vector2(this.thrusterForce, this.thrusterForce));
+            let delta: Phaser.Math.Vector2 = Globals.mouseLocation.clone().subtract(new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y));
+            let normalisedDelta: Phaser.Math.Vector2 = delta.clone().normalize();
+            let force: Phaser.Math.Vector2 = normalisedDelta.clone().multiply(new Phaser.Math.Vector2(this.thrusterForce, this.thrusterForce));
             let v = this.gameObj.body.velocity;
             console.log(`current velocity: ${JSON.stringify(v)}`);
             let velocity = v.add(force);
