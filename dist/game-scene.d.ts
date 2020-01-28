@@ -3,4 +3,5 @@ export declare class GameScene extends Phaser.Scene {
     preload(): void;
     create(): void;
     update(): void;
+    private followPlayer;
 }

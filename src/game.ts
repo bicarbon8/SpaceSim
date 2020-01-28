@@ -20,4 +20,4 @@ export const game: Phaser.Game = new Phaser.Game(gameConfig);
 
 window.addEventListener('resize', () => {
     game.scale.refresh();
-})
+});

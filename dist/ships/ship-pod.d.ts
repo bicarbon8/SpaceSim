@@ -1,9 +1,16 @@
 import "phaser";
 import { ShipPodConfig } from "./ship-pod-config";
-export declare class ShipPod {
+import { Updatable } from "../interfaces/updatable";
+import { CanTarget } from "../interfaces/can-target";
+import { CanThrust } from "../interfaces/can-thrust";
+import { HasLocation } from "../interfaces/has-location";
+import { HasGameObject } from "../interfaces/has-game-object";
+export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject {
     private id;
     private config;
     private gameObj;
+    private target;
+    private inputKeys;
     active: boolean;
     fuelCapacity: number;
     remainingFuel: number;
@@ -13,12 +20,26 @@ export declare class ShipPod {
     rotationRate: number;
     integrity: number;
     temperature: number;
-    realPosition: Phaser.Math.Vector2;
     constructor(config: ShipPodConfig);
     update(): void;
+    /**
+     * TODO: needed so we can use Floating Origin
+     */
+    getRealPosition(): Phaser.Math.Vector2;
+    /**
+     * the location within the viewable area
+     * @returns a {Phaser.Math.Vector2} offset for location within current
+     * viewable area
+     */
+    getPosition(): Phaser.Math.Vector2;
     getId(): string;
-    lookAt(position: Phaser.Math.Vector2): void;
-    activateThruster(): void;
+    getGameObject(): Phaser.GameObjects.GameObject;
+    setTarget(target: HasLocation): void;
+    lookAtTarget(): void;
+    thrustFowards(): void;
+    strafeLeft(): void;
+    strafeRight(): void;
+    thrustBackwards(): void;
     applyHeating(degrees: number): void;
     applyCooling(): void;
     integrityCheck(): void;

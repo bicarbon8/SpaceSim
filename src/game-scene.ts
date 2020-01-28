@@ -18,8 +18,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     public create(): void {
-        Globals.inputKeys = this.input.keyboard.createCursorKeys();
-        
         let podConfig: ShipPodConfig = {
             scene: this,
             x: 200,
@@ -28,10 +26,9 @@ export class GameScene extends Phaser.Scene {
             frame: 0
         };
         Globals.player = new ShipPod(podConfig);
+
+        this.followPlayer();
         
-        this.input.on('pointermove', (pointer) => {
-            Globals.mouseLocation = new Phaser.Math.Vector2(pointer.x, pointer.y);
-        });
         this.input.on('KEY_DOWN_P', (event) => {
             Globals.isPaused = true;
         });
@@ -44,5 +41,9 @@ export class GameScene extends Phaser.Scene {
         if (!Globals.isPaused) {
             Globals.player.update();
         }
+    }
+
+    private followPlayer(): void {
+        this.cameras.main.startFollow(Globals.player.getGameObject(), false, 0.5, 0.1);
     }
 }
