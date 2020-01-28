@@ -1,4 +1,5 @@
-import { GameScene } from "./game-scene";
+import { ShipScene } from "./scenes/ship-scene";
+import { Globals } from "./utilities/globals";
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -14,10 +15,12 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
             gravity: { x: 0, y: 0 },
         }
     },
-    scene: GameScene
+    scene: ShipScene
 };
 export const game: Phaser.Game = new Phaser.Game(gameConfig);
 
 window.addEventListener('resize', () => {
     game.scale.refresh();
 });
+
+Globals.game = game;

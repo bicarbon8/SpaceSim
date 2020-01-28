@@ -7,7 +7,7 @@ export class Mouse implements HasLocation {
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
         this.location = Phaser.Math.Vector2.ZERO;
-        this.scene.input.on('pointermove', (pointer) => {
+        this.scene.input.on('pointermove', (pointer: Phaser.Math.Vector2) => {
             this.location = new Phaser.Math.Vector2(pointer.x, pointer.y);
         });
     }
@@ -18,7 +18,7 @@ export class Mouse implements HasLocation {
      * @returns a {Phaser.Math.Vector2} clone of the position
      */
     getPosition(): Phaser.Math.Vector2 {
-        console.log(`mouse location: ${JSON.stringify(this.location)}`);
+        // console.log(`mouse location: ${JSON.stringify(this.location)}`);
         return this.location.clone();
     }
 
@@ -27,7 +27,7 @@ export class Mouse implements HasLocation {
      */
     getRealPosition(): Phaser.Math.Vector2 {
         let world: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(this.location.x, this.location.y);
-        console.log(`mouse REAL location: ${JSON.stringify(world)}`);
+        // console.log(`mouse REAL location: ${JSON.stringify(world)}`);
         return world;
     }
 }

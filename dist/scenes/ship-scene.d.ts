@@ -1,4 +1,4 @@
-export declare class GameScene extends Phaser.Scene {
+export declare class ShipScene extends Phaser.Scene {
     constructor();
     preload(): void;
     create(): void;

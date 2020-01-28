@@ -1,16 +1,16 @@
 import { RNG } from "../utilities/rng";
 import "phaser";
-import { ShipPodConfig } from "./ship-pod-config";
 import { Updatable } from "../interfaces/updatable";
 import { CanTarget } from "../interfaces/can-target";
 import { CanThrust } from "../interfaces/can-thrust";
 import { HasLocation } from "../interfaces/has-location";
 import { Mouse } from "../utilities/mouse";
 import { HasGameObject } from "../interfaces/has-game-object";
+import { Globals } from "../utilities/globals";
 
 export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject {
     private id: string; // UUID
-    private config: ShipPodConfig;
+    private scene: Phaser.Scene;
     private gameObj: Phaser.Physics.Arcade.Sprite;
     private target: HasLocation;
     private inputKeys: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -28,13 +28,13 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     integrity: number = 100; // maximum of 100
     temperature: number = 0; // in Celcius
 
-    constructor(config: ShipPodConfig) {
-        this.config = config;
+    constructor(scene: Phaser.Scene) {
         this.id = RNG.guid();
+        this.scene = scene;
+        this.gameObj = scene.physics.add.sprite(0, 0, 'ship-pod');
+        this.inputKeys = scene.input.keyboard.createCursorKeys();
 
-        this.gameObj = this.config.scene.physics.add.sprite(this.config.scene.game.scale.width / 2, this.config.scene.game.scale.height / 2, 'ship-pod');
-        this.setTarget(new Mouse(this.config.scene));
-        this.inputKeys = this.config.scene.input.keyboard.createCursorKeys();
+        this.setTarget(Globals.mouse);
     }
 
     update(): void {
@@ -59,7 +59,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
      * viewable area
      */
     getPosition(): Phaser.Math.Vector2 {
-        let cameraPos: Phaser.Math.Vector2 = this.config.scene.cameras.main.getWorldPoint(0, 0);
+        let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
         return new Phaser.Math.Vector2(this.gameObj.x - cameraPos.x, this.gameObj.y - cameraPos.y);
     }
 
@@ -81,17 +81,19 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.gameObj.setRotation(radians);
     }
 
+    getHeading(): Phaser.Math.Vector2 {
+        let x: number = Math.cos(this.gameObj.rotation);
+        let y: number = Math.sin(this.gameObj.rotation);
+        return new Phaser.Math.Vector2(x, y).normalize().negate();
+    }
+
     thrustFowards(): void {
         if (this.remainingFuel > 0) {
-            let delta: Phaser.Math.Vector2 = new Phaser.Math.Vector2(Math.cos(Phaser.Math.Angle.CounterClockwise(this.gameObj.rotation)), Math.sin(Phaser.Math.Angle.CounterClockwise(this.gameObj.rotation)));
-            // let delta: Phaser.Math.Vector2 = mousePosition.clone().subtract(new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y));
-            let normalisedDelta: Phaser.Math.Vector2 = delta.clone().normalize();
-            let force: Phaser.Math.Vector2 = normalisedDelta.clone().multiply(new Phaser.Math.Vector2(this.thrusterForce, this.thrusterForce));
-            let v = this.gameObj.body.velocity;
-            let velocity = v.add(force);
-            this.gameObj.setVelocity(velocity.x, velocity.y);
+            let heading: Phaser.Math.Vector2 = this.getHeading();
+            let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(this.thrusterForce, this.thrusterForce));
+            this.gameObj.body.velocity.add(deltaV);
 
-            this.remainingFuel -= this.thrusterFuelConsumption;
+            this.reduceFuel(this.thrusterFuelConsumption);
             this.applyHeating(this.thrusterHeatGeneration);
         }
     }
@@ -123,6 +125,13 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         }
         if (this.temperature < 0) {
             this.temperature = 0;
+        }
+    }
+
+    reduceFuel(amount: number): void {
+        this.remainingFuel -= amount;
+        if (this.remainingFuel < 0) {
+            this.remainingFuel = 0;
         }
     }
 
