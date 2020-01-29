@@ -9,6 +9,9 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 };
 
 export class ShipScene extends Phaser.Scene {
+    private mouse: Mouse;
+    private player: ShipPod;
+    
     constructor() {
         super(sceneConfig);
     }
@@ -21,38 +24,38 @@ export class ShipScene extends Phaser.Scene {
     public create(): void {
         this.add.tileSprite(0, 0, this.cameras.main.width * 10, this.cameras.main.height * 10, 'stars');
 
-        if (!Globals.mouse) {
-            Globals.mouse = new Mouse(this);
-        }
-        Globals.player = new ShipPod(this);
+        this.mouse = new Mouse(this);
+        this.player = new ShipPod(this);
+        Globals.player = this.player;
+        this.player.setTarget(this.mouse);
 
-        this.setupCamera(Globals.player);
+        this.setupCamera(this.player);
         
-        this.input.on('KEY_DOWN_P', (event) => {
+        this.input.keyboard.on('keydown-P', () => {
             Globals.isPaused = true;
         });
-        this.input.on('KEY_DOWN_R', () => {
+        this.input.keyboard.on('keydown-R', () => {
             Globals.isPaused = false;
         });
-        this.input.on('wheel', (pointer, currentlyOver, dx, dy, dz, event) => {
+        this.mouse.onWheelUp((scrollAmount: number) => {
             let currentZoom: number = this.cameras.main.zoom;
-            if (dy < 0) { // scrolled down
-                // zoom in
-                let newZoom: number = currentZoom + 0.5;
-                if (newZoom > 1) {
-                    newZoom = 1;
-                }
-                // console.log(`zooming from ${currentZoom} to ${newZoom}`);
-                this.cameras.main.zoomTo(newZoom);
-            } else if (dy > 0) { // scrolled up
-                // zoom out
-                let newZoom: number = currentZoom - 0.5;
-                if (newZoom < 0.1) {
-                    newZoom = 0.1;
-                }
-                // console.log(`zooming from ${currentZoom} to ${newZoom}`);
-                this.cameras.main.zoomTo(newZoom);
+            // zoom out
+            let newZoom: number = currentZoom - 0.5;
+            if (newZoom < 0.1) {
+                newZoom = 0.1;
             }
+            // console.log(`zooming from ${currentZoom} to ${newZoom}`);
+            this.cameras.main.zoomTo(newZoom);
+        });
+        this.mouse.onWheelDown((scrollAmount: number) => {
+            let currentZoom: number = this.cameras.main.zoom;
+            // zoom in
+            let newZoom: number = currentZoom + 0.5;
+            if (newZoom > 1) {
+                newZoom = 1;
+            }
+            // console.log(`zooming from ${currentZoom} to ${newZoom}`);
+            this.cameras.main.zoomTo(newZoom);
         });
     }
 

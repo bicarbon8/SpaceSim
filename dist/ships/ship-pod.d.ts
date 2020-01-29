@@ -7,6 +7,7 @@ import { HasGameObject } from "../interfaces/has-game-object";
 import { HasIntegrity } from "../interfaces/has-integrity";
 import { ShipAttachment } from "./attachments/ship-attachment";
 import { HasAttachments } from "../interfaces/has-attachments";
+import { AttachmentLocation } from "./attachments/attachment-location";
 import { HasTemperature } from "../interfaces/has-temperature";
 export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasIntegrity, HasAttachments, HasTemperature {
     private id;
@@ -23,6 +24,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     active: boolean;
     constructor(scene: Phaser.Scene);
     update(): void;
+    private updateAttachments;
     private setupInputHandlers;
     /**
      * checks for and applies damage based on degrees over safe temperature at a rate
@@ -33,13 +35,13 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     /**
      * TODO: needed so we can use Floating Origin
      */
-    getRealPosition(): Phaser.Math.Vector2;
+    getRealLocation(): Phaser.Math.Vector2;
     /**
      * the location within the viewable area
      * @returns a {Phaser.Math.Vector2} offset for location within current
      * viewable area
      */
-    getPosition(): Phaser.Math.Vector2;
+    getLocation(): Phaser.Math.Vector2;
     getId(): string;
     getGameObject(): Phaser.GameObjects.GameObject;
     setTarget(target: HasLocation): void;
@@ -57,6 +59,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     repair(amount: number): void;
     rotateAttachmentsClockwise(): void;
     rotateAttachmentsAntiClockwise(): void;
+    private updateAttachmentPositions;
     /**
      * replaces the attachment in {AttachmentLocation.front}
      * with the passed in {ShipAttachment}. if no attachment
@@ -65,5 +68,6 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
      * @param attachment the attachment to be added
      */
     addAttachment(attachment: ShipAttachment): void;
+    removeAttachment(location: AttachmentLocation): void;
     destroy(): void;
 }

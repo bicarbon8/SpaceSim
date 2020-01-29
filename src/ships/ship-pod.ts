@@ -37,7 +37,6 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.integrity = Constants.MAX_INTEGRITY;
         this.attachments = new Array<ShipAttachment>(Helpers.enumLength(AttachmentLocation));
 
-        this.setTarget(Globals.mouse);
         this.setupInputHandlers();
         this.checkOverheatCondition();
     }
@@ -53,6 +52,16 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
             }
             if (this.rotateAttachmentsAntiClockwiseKey.isDown) {
                 this.rotateAttachmentsAntiClockwise();
+            }
+            this.updateAttachments();
+        }
+    }
+
+    private updateAttachments(): void {
+        for (var i=0; i<this.attachments.length; i++) {
+            let a: ShipAttachment = this.attachments[i];
+            if (a) {
+                a.update();
             }
         }
     }
@@ -86,7 +95,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     /**
      * TODO: needed so we can use Floating Origin
      */
-    getRealPosition(): Phaser.Math.Vector2 {
+    getRealLocation(): Phaser.Math.Vector2 {
         return new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y);
     }
 
@@ -95,7 +104,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
      * @returns a {Phaser.Math.Vector2} offset for location within current 
      * viewable area
      */
-    getPosition(): Phaser.Math.Vector2 {
+    getLocation(): Phaser.Math.Vector2 {
         let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
         return new Phaser.Math.Vector2(this.gameObj.x - cameraPos.x, this.gameObj.y - cameraPos.y);
     }
@@ -113,7 +122,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     }
 
     lookAtTarget(): void {
-        let pos = this.target.getRealPosition();
+        let pos = this.target.getRealLocation();
         let radians: number = Phaser.Math.Angle.Between(pos.x, pos.y, this.gameObj.x, this.gameObj.y);
         this.gameObj.setRotation(radians);
     }
@@ -188,11 +197,41 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     rotateAttachmentsClockwise(): void {
         let last: ShipAttachment = this.attachments.pop(); // remove last element
         this.attachments.unshift(last); // push last element onto start of array
+        this.updateAttachmentPositions();
     }
 
     rotateAttachmentsAntiClockwise(): void {
         let first: ShipAttachment = this.attachments.shift(); // remove first element
         this.attachments.push(first); // push first element onto end of array
+        this.updateAttachmentPositions();
+    }
+
+    private updateAttachmentPositions(): void {
+        for (var i=0; i<this.attachments.length; i++) {
+            switch (i) {
+                case AttachmentLocation.front:
+                    this.attachments[i].setAttachmentLocation(AttachmentLocation.front);
+                    break;
+                case AttachmentLocation.frontRight:
+                    this.attachments[i].setAttachmentLocation(AttachmentLocation.frontRight);
+                    break;
+                case AttachmentLocation.right:
+                    this.attachments[i].setAttachmentLocation(AttachmentLocation.right);
+                    break;
+                case AttachmentLocation.backRight:
+                    this.attachments[i].setAttachmentLocation(AttachmentLocation.backRight);
+                    break;
+                case AttachmentLocation.backLeft:
+                    this.attachments[i].setAttachmentLocation(AttachmentLocation.backLeft);
+                    break;
+                case AttachmentLocation.left:
+                    this.attachments[i].setAttachmentLocation(AttachmentLocation.left);
+                    break;
+                case AttachmentLocation.frontLeft:
+                    this.attachments[i].setAttachmentLocation(AttachmentLocation.frontLeft);
+                    break;
+            }
+        }
     }
 
     /**
@@ -203,12 +242,14 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
      * @param attachment the attachment to be added
      */
     addAttachment(attachment: ShipAttachment): void {
-        if (this.attachments[AttachmentLocation.front]) {
-            let a: ShipAttachment = this.attachments[AttachmentLocation.front];
-            a.detach();
-        }
+        this.removeAttachment(AttachmentLocation.front);
         this.attachments[AttachmentLocation.front] = attachment;
         attachment.attach(this);
+    }
+
+    removeAttachment(location: AttachmentLocation): void {
+        this.attachments[location].detach();
+        this.attachments[location] = null;
     }
 
     destroy(): void {

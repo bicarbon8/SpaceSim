@@ -4,27 +4,31 @@ import { Updatable } from "../../interfaces/updatable";
 import { HasLocation } from "../../interfaces/has-location";
 import { HasIntegrity } from "../../interfaces/has-integrity";
 import { Constants } from "../../utilities/constants";
+import { AttachmentLocation } from "./attachment-location";
 
 export abstract class ShipAttachment implements Updatable, HasGameObject, HasLocation, HasIntegrity {
-    private ship: ShipPod;
-    private scene: Phaser.Scene;
-    private gameObj: Phaser.Physics.Arcade.Sprite;
-    private integrity: number;
+    protected ship: ShipPod;
+    protected scene: Phaser.Scene;
+    protected gameObj: Phaser.Physics.Arcade.Sprite;
+    protected integrity: number;
+    protected attachmentLocation: AttachmentLocation;
 
     active: boolean;
     
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
         this.active = true;
-        this.integrity = 100;
+        this.integrity = Constants.MAX_INTEGRITY;
     }
 
     attach(ship: ShipPod): void {
         this.ship = ship;
+        this.setAttachmentLocation(AttachmentLocation.front); // always added on front
     }
 
     detach(): void {
         this.ship = null;
+        this.attachmentLocation = null;
     }
     
     getGameObject(): Phaser.GameObjects.GameObject {
@@ -35,12 +39,12 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
 
     }
 
-    getPosition(): Phaser.Math.Vector2 {
+    getLocation(): Phaser.Math.Vector2 {
         let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
         return new Phaser.Math.Vector2(this.gameObj.x - cameraPos.x, this.gameObj.y - cameraPos.y);
     }
 
-    getRealPosition(): Phaser.Math.Vector2 {
+    getRealLocation(): Phaser.Math.Vector2 {
         return new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y);
     }
 
@@ -57,7 +61,19 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
         }
     }
 
-    repair(): void {
-        this.integrity = Constants.MAX_INTEGRITY;
+    repair(amount: number): void {
+        this.integrity = amount;
+        if (this.integrity > Constants.MAX_INTEGRITY) {
+            this.integrity = Constants.MAX_INTEGRITY;
+        }
+    }
+
+    destroy(): void {
+        this.ship.removeAttachment(this.attachmentLocation);
+        // TODO: destroy attachment
+    }
+
+    setAttachmentLocation(loc: AttachmentLocation): void {
+        this.attachmentLocation = loc;
     }
 }
