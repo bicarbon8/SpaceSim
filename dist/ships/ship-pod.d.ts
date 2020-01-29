@@ -4,23 +4,32 @@ import { CanTarget } from "../interfaces/can-target";
 import { CanThrust } from "../interfaces/can-thrust";
 import { HasLocation } from "../interfaces/has-location";
 import { HasGameObject } from "../interfaces/has-game-object";
-export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject {
+import { HasIntegrity } from "../interfaces/has-integrity";
+import { ShipAttachment } from "./attachments/ship-attachment";
+import { HasAttachments } from "../interfaces/has-attachments";
+import { HasTemperature } from "../interfaces/has-temperature";
+export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasIntegrity, HasAttachments, HasTemperature {
     private id;
     private scene;
     private gameObj;
     private target;
-    private inputKeys;
+    private integrity;
+    private attachments;
+    private thrustKey;
+    private rotateAttachmentsClockwiseKey;
+    private rotateAttachmentsAntiClockwiseKey;
+    private remainingFuel;
+    private temperature;
     active: boolean;
-    fuelCapacity: number;
-    remainingFuel: number;
-    thrusterForce: number;
-    thrusterFuelConsumption: number;
-    thrusterHeatGeneration: number;
-    rotationRate: number;
-    integrity: number;
-    temperature: number;
     constructor(scene: Phaser.Scene);
     update(): void;
+    private setupInputHandlers;
+    /**
+     * checks for and applies damage based on degrees over safe temperature at a rate
+     * defined by {Constants.OVERHEAT_CHECK_INTERVAL} milliseconds between each check.
+     * also applies cooling at a rate of {Constants.COOLING_RATE}
+     */
+    private checkOverheatCondition;
     /**
      * TODO: needed so we can use Floating Origin
      */
@@ -41,7 +50,20 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     strafeRight(): void;
     thrustBackwards(): void;
     applyHeating(degrees: number): void;
-    applyCooling(): void;
+    applyCooling(degrees: number): void;
     reduceFuel(amount: number): void;
-    integrityCheck(): void;
+    getIntegrity(): number;
+    sustainDamage(amount: number): void;
+    repair(amount: number): void;
+    rotateAttachmentsClockwise(): void;
+    rotateAttachmentsAntiClockwise(): void;
+    /**
+     * replaces the attachment in {AttachmentLocation.front}
+     * with the passed in {ShipAttachment}. if no attachment
+     * in the {AttachmentLocation.front} slot then it is
+     * simply added.
+     * @param attachment the attachment to be added
+     */
+    addAttachment(attachment: ShipAttachment): void;
+    destroy(): void;
 }

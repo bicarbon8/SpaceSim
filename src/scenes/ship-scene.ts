@@ -5,7 +5,7 @@ import { Mouse } from "../utilities/mouse";
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
     visible: true,
-    key: 'GameScene'
+    key: 'ShipScene'
 };
 
 export class ShipScene extends Phaser.Scene {
@@ -14,22 +14,19 @@ export class ShipScene extends Phaser.Scene {
     }
 
     public preload(): void {
-        this.load.image('stellar-forge', './assets/backgrounds/StellarForgeClouds.jpg');
+        this.load.image('stars', './assets/backgrounds/tileableStars.png');
         this.load.image('ship-pod', './assets/sprites/ship-pod.png');
     }
 
     public create(): void {
-        // this.cameras.main.setBounds(0, 0, 2666, 2621);
-        // this.physics.world.setBounds(0, 0, 2666, 2621);
-
-        this.add.image(0, 0, 'stellar-forge');
+        this.add.tileSprite(0, 0, this.cameras.main.width * 10, this.cameras.main.height * 10, 'stars');
 
         if (!Globals.mouse) {
             Globals.mouse = new Mouse(this);
         }
         Globals.player = new ShipPod(this);
 
-        this.setupCamera();
+        this.setupCamera(Globals.player);
         
         this.input.on('KEY_DOWN_P', (event) => {
             Globals.isPaused = true;
@@ -65,7 +62,9 @@ export class ShipScene extends Phaser.Scene {
         }
     }
 
-    private setupCamera(): void {
+    private setupCamera(player: ShipPod): void {
+        this.cameras.main.backgroundColor.setFromRGB({r: 0, g: 0, b: 0});
+        
         this.cameras.main.setZoom(1);
         this.cameras.main.centerOn(0, 0);
 
@@ -75,7 +74,7 @@ export class ShipScene extends Phaser.Scene {
         let dzHeight: number = Math.floor(height / 2);
         let dzX: number = Math.floor(dzWidth / 2);
         let dzY: number = Math.floor(dzHeight / 2);
-        this.cameras.main.startFollow(Globals.player.getGameObject(), true);
+        this.cameras.main.startFollow(player.getGameObject(), true);
         this.cameras.main.deadzone = new Phaser.Geom.Rectangle(dzX, dzY, dzWidth, dzHeight);
     }
 }

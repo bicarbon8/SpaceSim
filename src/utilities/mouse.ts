@@ -7,6 +7,7 @@ export class Mouse implements HasLocation {
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
         this.location = Phaser.Math.Vector2.ZERO;
+        this.scene.input.mouse.capture = true;
         this.scene.input.on('pointermove', (pointer: Phaser.Math.Vector2) => {
             this.location = new Phaser.Math.Vector2(pointer.x, pointer.y);
         });
