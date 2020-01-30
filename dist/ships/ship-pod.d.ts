@@ -9,7 +9,8 @@ import { ShipAttachment } from "./attachments/ship-attachment";
 import { HasAttachments } from "../interfaces/has-attachments";
 import { AttachmentLocation } from "./attachments/attachment-location";
 import { HasTemperature } from "../interfaces/has-temperature";
-export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasIntegrity, HasAttachments, HasTemperature {
+import { HasFuel } from "../interfaces/has-fuel";
+export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasIntegrity, HasAttachments, HasTemperature, HasFuel {
     private id;
     private scene;
     private gameObj;
@@ -17,6 +18,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     private integrity;
     private attachments;
     private thrustKey;
+    private boostKey;
     private rotateAttachmentsClockwiseKey;
     private rotateAttachmentsAntiClockwiseKey;
     private remainingFuel;
@@ -50,6 +52,9 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     getHeading(): Phaser.Math.Vector2;
     getVelocity(): number;
     thrustFowards(): void;
+    boostForwards(): void;
+    private lastBoostTime;
+    private applyThrust;
     strafeLeft(): void;
     strafeRight(): void;
     thrustBackwards(): void;
@@ -57,6 +62,8 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     applyHeating(degrees: number): void;
     applyCooling(degrees: number): void;
     reduceFuel(amount: number): void;
+    addFuel(amount: number): void;
+    getRemainingFuel(): number;
     getIntegrity(): number;
     sustainDamage(amount: number): void;
     repair(amount: number): void;

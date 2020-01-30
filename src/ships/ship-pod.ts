@@ -13,8 +13,9 @@ import { HasAttachments } from "../interfaces/has-attachments";
 import { Helpers } from "../utilities/helpers";
 import { AttachmentLocation } from "./attachments/attachment-location";
 import { HasTemperature } from "../interfaces/has-temperature";
+import { HasFuel } from "../interfaces/has-fuel";
 
-export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasIntegrity, HasAttachments, HasTemperature {
+export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasIntegrity, HasAttachments, HasTemperature, HasFuel {
     private id: string; // UUID
     private scene: Phaser.Scene;
     private gameObj: Phaser.Physics.Arcade.Sprite;
@@ -22,6 +23,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     private integrity: number;
     private attachments: ShipAttachment[];
     private thrustKey: Phaser.Input.Keyboard.Key;
+    private boostKey: Phaser.Input.Keyboard.Key;
     private rotateAttachmentsClockwiseKey: Phaser.Input.Keyboard.Key;
     private rotateAttachmentsAntiClockwiseKey: Phaser.Input.Keyboard.Key;
     private remainingFuel: number = 100;
@@ -46,6 +48,9 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
             if (this.thrustKey.isDown) {
                 this.thrustFowards();
             }
+            if (this.boostKey.isDown) {
+                this.boostForwards();
+            }
             this.checkOverheatCondition();
             if (this.rotateAttachmentsClockwiseKey.isDown) {
                 this.rotateAttachmentsClockwise();
@@ -68,8 +73,9 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
 
     private setupInputHandlers(): void {
         this.thrustKey = this.scene.input.keyboard.addKey('SPACE', true, true);
-        this.rotateAttachmentsClockwiseKey = this.scene.input.keyboard.addKey('E', true, true);
-        this.rotateAttachmentsAntiClockwiseKey = this.scene.input.keyboard.addKey('Q', true, true);
+        this.boostKey = this.scene.input.keyboard.addKey('TAB', true, false);
+        this.rotateAttachmentsClockwiseKey = this.scene.input.keyboard.addKey('E', true, false);
+        this.rotateAttachmentsAntiClockwiseKey = this.scene.input.keyboard.addKey('Q', true, false);
     }
 
     /**
@@ -141,13 +147,25 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     }
 
     thrustFowards(): void {
-        if (this.remainingFuel > 0) {
+        this.applyThrust(Constants.THRUSTER_FORCE, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST);
+    }
+
+    boostForwards(): void {
+        if (Helpers.now() - this.lastBoostTime >= Constants.BOOSTER_COOLDOWN_TIME) {
+            this.applyThrust(Constants.BOOSTER_FORCE, Constants.FUEL_PER_BOOST, Constants.HEAT_PER_BOOST);
+            this.lastBoostTime = Helpers.now();
+        }
+    }
+    private lastBoostTime: number = 0;
+
+    private applyThrust(force: number, fuel: number, heat: number): void {
+        if (this.getRemainingFuel() > 0) {
             let heading: Phaser.Math.Vector2 = this.getHeading();
-            let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(Constants.THRUSTER_FORCE, Constants.THRUSTER_FORCE));
+            let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(force, force));
             this.gameObj.body.velocity.add(deltaV);
 
-            this.reduceFuel(Constants.FUEL_PER_THRUST);
-            this.applyHeating(Constants.HEAT_PER_THRUST);
+            this.reduceFuel(fuel);
+            this.applyHeating(heat);
         }
     }
 
@@ -183,6 +201,17 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         if (this.remainingFuel < 0) {
             this.remainingFuel = 0;
         }
+    }
+
+    addFuel(amount: number): void {
+        this.remainingFuel += amount;
+        if (this.remainingFuel > Constants.MAX_FUEL) {
+            this.remainingFuel = Constants.MAX_FUEL;
+        }
+    }
+
+    getRemainingFuel(): number {
+        return this.remainingFuel;
     }
 
     getIntegrity(): number {
