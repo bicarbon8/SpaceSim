@@ -32,10 +32,10 @@ export class ShipScene extends Phaser.Scene {
         this.setupCamera(this.player);
         
         this.input.keyboard.on('keydown-P', () => {
-            Globals.isPaused = true;
+            Globals.paused = true;
         });
         this.input.keyboard.on('keydown-R', () => {
-            Globals.isPaused = false;
+            Globals.paused = false;
         });
         this.mouse.onWheelUp((scrollAmount: number) => {
             let currentZoom: number = this.cameras.main.zoom;
@@ -60,7 +60,7 @@ export class ShipScene extends Phaser.Scene {
     }
 
     public update(): void {
-        if (!Globals.isPaused) {
+        if (!Globals.paused) {
             Globals.player.update();
         }
     }

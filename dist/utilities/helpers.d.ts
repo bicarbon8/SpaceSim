@@ -9,4 +9,8 @@ export declare module Helpers {
      * @returns the number of elements in the enum
      */
     function enumLength(enumType: any): number;
+    /**
+     * @returns the current time in milliseconds since the epoch
+     */
+    function now(): number;
 }

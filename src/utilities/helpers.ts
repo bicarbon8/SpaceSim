@@ -17,4 +17,11 @@ export module Helpers {
         }
         return count;
     }
+
+    /**
+     * @returns the current time in milliseconds since the epoch
+     */
+    export function now(): number {
+        return new Date().getTime();
+    }
 }

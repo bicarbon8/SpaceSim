@@ -38,15 +38,15 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.attachments = new Array<ShipAttachment>(Helpers.enumLength(AttachmentLocation));
 
         this.setupInputHandlers();
-        this.checkOverheatCondition();
     }
 
     update(): void {
-        if (!Globals.isPaused && this.active) {
+        if (!Globals.paused && this.active) {
             this.lookAtTarget();
             if (this.thrustKey.isDown) {
                 this.thrustFowards();
             }
+            this.checkOverheatCondition();
             if (this.rotateAttachmentsClockwiseKey.isDown) {
                 this.rotateAttachmentsClockwise();
             }
@@ -78,19 +78,22 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
      * also applies cooling at a rate of {Constants.COOLING_RATE}
      */
     private checkOverheatCondition(): void {
-        if (!Globals.isPaused && this.active) {
-            if (this.temperature > Constants.MAX_TEMPERATURE) {
-                this.destroy(); // we are dead
+        if (!Globals.paused && this.active) {
+            if (Helpers.now() - this.lastOverheatCheck > Constants.OVERHEAT_CHECK_INTERVAL) {
+                if (this.temperature > Constants.MAX_TEMPERATURE) {
+                    this.destroy(); // we are dead
+                }
+                if (this.temperature > Constants.MAX_SAFE_TEMPERATURE) {
+                    // reduce integrity based on degrees over safe operating temp
+                    let delta: number = (this.temperature - Constants.MAX_SAFE_TEMPERATURE) / Constants.MAX_SAFE_TEMPERATURE;
+                    this.sustainDamage(delta);
+                }
+                this.applyCooling(Constants.COOLING_RATE);
+                this.lastOverheatCheck = Helpers.now();
             }
-            if (this.temperature > Constants.MAX_SAFE_TEMPERATURE) {
-                // reduce integrity based on degrees over safe operating temp
-                let delta: number = this.temperature - Constants.MAX_SAFE_TEMPERATURE;
-                this.integrity -= delta;
-            }
-            this.applyCooling(Constants.COOLING_RATE);
         }
-        setTimeout(this.checkOverheatCondition, Constants.OVERHEAT_CHECK_INTERVAL);
     }
+    private lastOverheatCheck: number = 0;
 
     /**
      * TODO: needed so we can use Floating Origin
@@ -133,6 +136,10 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         return new Phaser.Math.Vector2(x, y).normalize().negate();
     }
 
+    getVelocity(): number {
+        return this.gameObj.body.velocity.length();
+    }
+
     thrustFowards(): void {
         if (this.remainingFuel > 0) {
             let heading: Phaser.Math.Vector2 = this.getHeading();
@@ -154,6 +161,10 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
 
     thrustBackwards(): void {
 
+    }
+
+    getTemperature(): number {
+        return this.temperature;
     }
 
     applyHeating(degrees: number): void {

@@ -32,6 +32,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
      * also applies cooling at a rate of {Constants.COOLING_RATE}
      */
     private checkOverheatCondition;
+    private lastOverheatCheck;
     /**
      * TODO: needed so we can use Floating Origin
      */
@@ -47,10 +48,12 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     setTarget(target: HasLocation): void;
     lookAtTarget(): void;
     getHeading(): Phaser.Math.Vector2;
+    getVelocity(): number;
     thrustFowards(): void;
     strafeLeft(): void;
     strafeRight(): void;
     thrustBackwards(): void;
+    getTemperature(): number;
     applyHeating(degrees: number): void;
     applyCooling(degrees: number): void;
     reduceFuel(amount: number): void;
