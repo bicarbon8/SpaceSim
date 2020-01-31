@@ -33,6 +33,10 @@ export class CannonAttachment extends ShipAttachment implements CanShoot {
     }
 
     update(): void {
+        
+    }
+
+    trigger(): void {
         if (!Globals.paused && this.active) {
             this.fire();
         }

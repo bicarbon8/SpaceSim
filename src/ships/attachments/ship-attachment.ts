@@ -45,6 +45,8 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
 
     abstract update(): void;
 
+    abstract trigger(): void;
+
     getAngle(): number {
         return this.gameObj.angle;
     }

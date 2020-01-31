@@ -57,7 +57,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
             }
             if (this.scene.input.activePointer.leftButtonDown()) {
                 if (this.attachments[0]) {
-                    this.attachments[0].update();
+                    this.attachments[0].trigger();
                 }
             }
             this.checkOverheatCondition();

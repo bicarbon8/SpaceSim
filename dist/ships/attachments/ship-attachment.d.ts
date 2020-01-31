@@ -16,6 +16,7 @@ export declare abstract class ShipAttachment implements Updatable, HasGameObject
     detach(): void;
     getGameObject(): Phaser.GameObjects.GameObject;
     abstract update(): void;
+    abstract trigger(): void;
     getAngle(): number;
     /**
      * returns a normalised {Phaser.Math.Vector2} representing

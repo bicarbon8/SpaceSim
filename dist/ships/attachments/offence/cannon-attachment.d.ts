@@ -9,5 +9,6 @@ export declare class CannonAttachment extends ShipAttachment implements CanShoot
     reload(amount: number): void;
     getRemainingAmmo(): number;
     update(): void;
+    trigger(): void;
     fire(direction?: Phaser.Math.Vector2): void;
 }
