@@ -4,4 +4,5 @@ export module Globals {
     export var paused: boolean;
     export var player: ShipPod;
     export var game: Phaser.Game;
+    export var interactables: Phaser.GameObjects.GameObject[] = [];
 }

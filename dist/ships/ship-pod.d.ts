@@ -49,6 +49,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     getGameObject(): Phaser.GameObjects.GameObject;
     setTarget(target: HasLocation): void;
     lookAtTarget(): void;
+    getAngle(): number;
     getHeading(): Phaser.Math.Vector2;
     getVelocity(): number;
     thrustFowards(): void;

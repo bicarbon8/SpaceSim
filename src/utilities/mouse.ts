@@ -9,6 +9,21 @@ export class Mouse implements HasLocation {
         this.scene.input.mouse.capture = true;
     }
 
+    getAngle(): number {
+        return this.scene.input.activePointer.getAngle();
+    }
+
+    getHeading(): Phaser.Math.Vector2 {
+        let rotation: number = this.getAngle();
+        let x: number = Math.cos(rotation);
+        let y: number = Math.sin(rotation);
+        return new Phaser.Math.Vector2(x, y).normalize().negate();
+    }
+
+    getVelocity(): number {
+        return this.scene.input.activePointer.velocity.length();
+    }
+
     /**
      * returns the position of the mouse within the bounds of the current
      * screen.

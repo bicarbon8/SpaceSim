@@ -1,6 +1,7 @@
 import { ShipPod } from "../ships/ship-pod";
 import { Globals } from "../utilities/globals";
 import { Mouse } from "../utilities/mouse";
+import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -28,6 +29,10 @@ export class ShipScene extends Phaser.Scene {
         this.player = new ShipPod(this);
         Globals.player = this.player;
         this.player.setTarget(this.mouse);
+
+        // TMP
+        let canon: CannonAttachment = new CannonAttachment(this);
+        this.player.addAttachment(canon);
 
         this.setupCamera(this.player);
         

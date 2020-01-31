@@ -3,6 +3,9 @@ import { MouseWheelScroll } from "../interfaces/mouse-wheel-scroll";
 export declare class Mouse implements HasLocation {
     private scene;
     constructor(scene: Phaser.Scene);
+    getAngle(): number;
+    getHeading(): Phaser.Math.Vector2;
+    getVelocity(): number;
     /**
      * returns the position of the mouse within the bounds of the current
      * screen.

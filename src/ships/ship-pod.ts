@@ -18,7 +18,7 @@ import { HasFuel } from "../interfaces/has-fuel";
 export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasIntegrity, HasAttachments, HasTemperature, HasFuel {
     private id: string; // UUID
     private scene: Phaser.Scene;
-    private gameObj: Phaser.Physics.Arcade.Sprite;
+    private gameObj: Phaser.GameObjects.Container;
     private target: HasLocation;
     private integrity: number;
     private attachments: ShipAttachment[];
@@ -34,7 +34,11 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     constructor(scene: Phaser.Scene) {
         this.id = RNG.guid();
         this.scene = scene;
-        this.gameObj = scene.physics.add.sprite(0, 0, 'ship-pod');
+        this.gameObj = scene.add.container(0, 0);
+        this.scene.physics.add.existing(this.gameObj);
+        (this.gameObj.body as Phaser.Physics.Arcade.Body).bounce.setTo(0.7, 0.7);
+        let ship: Phaser.GameObjects.Sprite = scene.add.sprite(0, 0, 'ship-pod');
+        this.gameObj.add(ship);
 
         this.integrity = Constants.MAX_INTEGRITY;
         this.attachments = new Array<ShipAttachment>(Helpers.enumLength(AttachmentLocation));
@@ -50,6 +54,11 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
             }
             if (this.boostKey.isDown) {
                 this.boostForwards();
+            }
+            if (this.scene.input.activePointer.leftButtonDown()) {
+                if (this.attachments[0]) {
+                    this.attachments[0].update();
+                }
             }
             this.checkOverheatCondition();
             if (this.rotateAttachmentsClockwiseKey.isDown) {
@@ -136,6 +145,10 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.gameObj.setRotation(radians);
     }
 
+    getAngle(): number {
+        return this.gameObj.angle;
+    }
+
     getHeading(): Phaser.Math.Vector2 {
         let x: number = Math.cos(this.gameObj.rotation);
         let y: number = Math.sin(this.gameObj.rotation);
@@ -143,7 +156,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     }
 
     getVelocity(): number {
-        return this.gameObj.body.velocity.length();
+        return (this.gameObj.body as Phaser.Physics.Arcade.Body).velocity.length();
     }
 
     thrustFowards(): void {
@@ -162,7 +175,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         if (this.getRemainingFuel() > 0) {
             let heading: Phaser.Math.Vector2 = this.getHeading();
             let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(force, force));
-            this.gameObj.body.velocity.add(deltaV);
+            (this.gameObj.body as Phaser.Physics.Arcade.Body).velocity.add(deltaV);
 
             this.reduceFuel(fuel);
             this.applyHeating(heat);
@@ -285,11 +298,16 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.removeAttachment(AttachmentLocation.front);
         this.attachments[AttachmentLocation.front] = attachment;
         attachment.attach(this);
+        this.gameObj.add(attachment.getGameObject());
     }
 
     removeAttachment(location: AttachmentLocation): void {
-        this.attachments[location].detach();
-        this.attachments[location] = null;
+        if (this.attachments[location]) {
+            let go: Phaser.GameObjects.GameObject = this.attachments[location].getGameObject();
+            this.gameObj.remove(go);
+            this.attachments[location].detach();
+            this.attachments[location] = null;
+        }
     }
 
     destroy(): void {

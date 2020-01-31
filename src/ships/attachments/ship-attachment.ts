@@ -24,6 +24,14 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
     attach(ship: ShipPod): void {
         this.ship = ship;
         this.setAttachmentLocation(AttachmentLocation.front); // always added on front
+        let centre: Phaser.Math.Vector2 = this.ship.getRealLocation();
+        this.gameObj.setPosition(centre.x, centre.y); // centre on ship location
+        this.gameObj.setRotation(this.ship.getAngle()); // set heading to match ship
+        let heading: Phaser.Math.Vector2 = this.getHeading();
+        heading.multiply(new Phaser.Math.Vector2(11, 0)); // offset by -11x
+        let loc: Phaser.Math.Vector2 = this.getRealLocation();
+        loc.add(heading);
+        this.gameObj.setPosition(loc.x, loc.y);
     }
 
     detach(): void {
@@ -35,8 +43,24 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
         return this.gameObj;
     }
 
-    update(): void {
+    abstract update(): void;
 
+    getAngle(): number {
+        return this.gameObj.angle;
+    }
+
+    /**
+     * returns a normalised {Phaser.Math.Vector2} representing 
+     * the direction this object would travel
+     */
+    getHeading(): Phaser.Math.Vector2 {
+        let x: number = Math.cos(this.gameObj.rotation);
+        let y: number = Math.sin(this.gameObj.rotation);
+        return new Phaser.Math.Vector2(x, y).normalize().negate();
+    }
+
+    getVelocity(): number {
+        return this.gameObj.body.velocity.length();
     }
 
     getLocation(): Phaser.Math.Vector2 {
@@ -69,6 +93,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
     }
 
     destroy(): void {
+        this.active = false;
         this.ship.removeAttachment(this.attachmentLocation);
         // TODO: destroy attachment
     }
