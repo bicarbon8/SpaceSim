@@ -11,6 +11,7 @@ export declare class Bullet implements HasGameObject, HasLocation {
     private onImpact;
     getGameObject(): Phaser.GameObjects.GameObject;
     getAngle(): number;
+    getRotation(): number;
     getHeading(): Phaser.Math.Vector2;
     getVelocity(): number;
     getLocation(): Phaser.Math.Vector2;

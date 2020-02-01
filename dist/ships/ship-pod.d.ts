@@ -21,6 +21,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     private boostKey;
     private rotateAttachmentsClockwiseKey;
     private rotateAttachmentsAntiClockwiseKey;
+    private detachAttachmentKey;
     private remainingFuel;
     private temperature;
     active: boolean;
@@ -50,6 +51,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     setTarget(target: HasLocation): void;
     lookAtTarget(): void;
     getAngle(): number;
+    getRotation(): number;
     getHeading(): Phaser.Math.Vector2;
     getVelocity(): number;
     thrustFowards(): void;
@@ -72,13 +74,14 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     rotateAttachmentsAntiClockwise(): void;
     private updateAttachmentPositions;
     /**
-     * replaces the attachment in {AttachmentLocation.front}
-     * with the passed in {ShipAttachment}. if no attachment
-     * in the {AttachmentLocation.front} slot then it is
-     * simply added.
+     * adds the passed in {ShipAttachment} in {AttachmentLocation.front} or
+     * the first open {AttachmentLocation} in a clockwise search. if no open
+     * slots exist then the existing {ShipAttachment} at {AttachmentLocation.front}
+     * is detached and replaced with the passed in {ShipAttachment}
      * @param attachment the attachment to be added
      */
     addAttachment(attachment: ShipAttachment): void;
     removeAttachment(location: AttachmentLocation): void;
+    getAttachments(): ShipAttachment[];
     destroy(): void;
 }

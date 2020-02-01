@@ -8,7 +8,7 @@ export module Constants {
     export const THRUSTER_FORCE: number = 1;
     export const FUEL_PER_THRUST: number = 0.001; // units
     export const HEAT_PER_THRUST: number = 0.1 // degrees
-    export const BOOSTER_FORCE: number = 100;
+    export const BOOSTER_FORCE: number = 300;
     export const FUEL_PER_BOOST: number = 1; // units
     export const HEAT_PER_BOOST: number = 25; // degrees
     export const BOOSTER_COOLDOWN_TIME: number = 1000; // milliseconds

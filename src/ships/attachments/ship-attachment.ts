@@ -21,9 +21,12 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
         this.integrity = Constants.MAX_INTEGRITY;
     }
 
-    attach(ship: ShipPod): void {
+    attach(ship: ShipPod, location?: AttachmentLocation): void {
+        if (!location) {
+            location = AttachmentLocation.front;
+        }
         this.ship = ship;
-        this.setAttachmentLocation(AttachmentLocation.front); // always added on front
+        this.setAttachmentLocation(location);
         let centre: Phaser.Math.Vector2 = this.ship.getRealLocation();
         this.gameObj.setPosition(centre.x, centre.y); // centre on ship location
         this.gameObj.setRotation(this.ship.getAngle()); // set heading to match ship
@@ -48,7 +51,19 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
     abstract trigger(): void;
 
     getAngle(): number {
-        return this.gameObj.angle;
+        let angle: number = this.gameObj.angle;
+        if (this.ship) {
+            angle += this.ship.getAngle();
+        }
+        return angle;
+    }
+
+    getRotation(): number {
+        let rotation: number = this.gameObj.rotation;
+        if (this.ship) {
+            rotation += this.ship.getRotation();
+        }
+        return rotation;
     }
 
     /**
@@ -56,22 +71,31 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
      * the direction this object would travel
      */
     getHeading(): Phaser.Math.Vector2 {
-        let x: number = Math.cos(this.gameObj.rotation);
-        let y: number = Math.sin(this.gameObj.rotation);
+        let x: number = Math.cos(this.getRotation());
+        let y: number = Math.sin(this.getRotation());
         return new Phaser.Math.Vector2(x, y).normalize().negate();
     }
 
     getVelocity(): number {
-        return this.gameObj.body.velocity.length();
+        let velocity: number = this.gameObj.body.velocity.length();
+        if (this.ship) {
+            velocity += this.ship.getVelocity();
+        }
+        return velocity;
     }
 
     getLocation(): Phaser.Math.Vector2 {
         let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
-        return new Phaser.Math.Vector2(this.gameObj.x - cameraPos.x, this.gameObj.y - cameraPos.y);
+        let realLoc: Phaser.Math.Vector2 = this.getRealLocation();
+        return new Phaser.Math.Vector2(realLoc.x - cameraPos.x, realLoc.y - cameraPos.y);
     }
 
     getRealLocation(): Phaser.Math.Vector2 {
-        return new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y);
+        let realLocation: Phaser.Math.Vector2 = new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y);
+        if (this.ship) {
+            realLocation.add(this.ship.getRealLocation());
+        }
+        return realLocation;
     }
 
     getIntegrity(): number {

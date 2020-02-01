@@ -26,6 +26,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     private boostKey: Phaser.Input.Keyboard.Key;
     private rotateAttachmentsClockwiseKey: Phaser.Input.Keyboard.Key;
     private rotateAttachmentsAntiClockwiseKey: Phaser.Input.Keyboard.Key;
+    private detachAttachmentKey: Phaser.Input.Keyboard.Key;
     private remainingFuel: number = 100;
     private temperature: number = 0; // in Celcius
 
@@ -67,6 +68,9 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
             if (this.rotateAttachmentsAntiClockwiseKey.isDown) {
                 this.rotateAttachmentsAntiClockwise();
             }
+            if (this.detachAttachmentKey.isDown) {
+                this.removeAttachment(AttachmentLocation.front);
+            }
             this.updateAttachments();
         }
     }
@@ -85,6 +89,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.boostKey = this.scene.input.keyboard.addKey('TAB', true, false);
         this.rotateAttachmentsClockwiseKey = this.scene.input.keyboard.addKey('E', true, false);
         this.rotateAttachmentsAntiClockwiseKey = this.scene.input.keyboard.addKey('Q', true, false);
+        this.detachAttachmentKey = this.scene.input.keyboard.addKey('X', true, false);
     }
 
     /**
@@ -147,6 +152,10 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
 
     getAngle(): number {
         return this.gameObj.angle;
+    }
+
+    getRotation(): number {
+        return this.gameObj.rotation;
     }
 
     getHeading(): Phaser.Math.Vector2 {
@@ -261,43 +270,82 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
 
     private updateAttachmentPositions(): void {
         for (var i=0; i<this.attachments.length; i++) {
-            switch (i) {
-                case AttachmentLocation.front:
-                    this.attachments[i].setAttachmentLocation(AttachmentLocation.front);
-                    break;
-                case AttachmentLocation.frontRight:
-                    this.attachments[i].setAttachmentLocation(AttachmentLocation.frontRight);
-                    break;
-                case AttachmentLocation.right:
-                    this.attachments[i].setAttachmentLocation(AttachmentLocation.right);
-                    break;
-                case AttachmentLocation.backRight:
-                    this.attachments[i].setAttachmentLocation(AttachmentLocation.backRight);
-                    break;
-                case AttachmentLocation.backLeft:
-                    this.attachments[i].setAttachmentLocation(AttachmentLocation.backLeft);
-                    break;
-                case AttachmentLocation.left:
-                    this.attachments[i].setAttachmentLocation(AttachmentLocation.left);
-                    break;
-                case AttachmentLocation.frontLeft:
-                    this.attachments[i].setAttachmentLocation(AttachmentLocation.frontLeft);
-                    break;
+            if (this.attachments[i]) {
+                switch (i) {
+                    case AttachmentLocation.front:
+                        this.attachments[i].setAttachmentLocation(AttachmentLocation.front);
+                        break;
+                    case AttachmentLocation.frontRight:
+                        this.attachments[i].setAttachmentLocation(AttachmentLocation.frontRight);
+                        break;
+                    case AttachmentLocation.right:
+                        this.attachments[i].setAttachmentLocation(AttachmentLocation.right);
+                        break;
+                    case AttachmentLocation.backRight:
+                        this.attachments[i].setAttachmentLocation(AttachmentLocation.backRight);
+                        break;
+                    case AttachmentLocation.backLeft:
+                        this.attachments[i].setAttachmentLocation(AttachmentLocation.backLeft);
+                        break;
+                    case AttachmentLocation.left:
+                        this.attachments[i].setAttachmentLocation(AttachmentLocation.left);
+                        break;
+                    case AttachmentLocation.frontLeft:
+                        this.attachments[i].setAttachmentLocation(AttachmentLocation.frontLeft);
+                        break;
+                }
             }
         }
     }
 
     /**
-     * replaces the attachment in {AttachmentLocation.front}
-     * with the passed in {ShipAttachment}. if no attachment
-     * in the {AttachmentLocation.front} slot then it is 
-     * simply added.
+     * adds the passed in {ShipAttachment} in {AttachmentLocation.front} or
+     * the first open {AttachmentLocation} in a clockwise search. if no open
+     * slots exist then the existing {ShipAttachment} at {AttachmentLocation.front}
+     * is detached and replaced with the passed in {ShipAttachment}
      * @param attachment the attachment to be added
      */
     addAttachment(attachment: ShipAttachment): void {
-        this.removeAttachment(AttachmentLocation.front);
-        this.attachments[AttachmentLocation.front] = attachment;
-        attachment.attach(this);
+        let attached: boolean = false;
+        for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
+            if (!this.attachments[i]) {
+                let loc: AttachmentLocation;
+                switch (i) {
+                    case AttachmentLocation.front:
+                        loc = AttachmentLocation.front;
+                        break;
+                    case AttachmentLocation.frontRight:
+                        loc = AttachmentLocation.frontRight;
+                        break;
+                    case AttachmentLocation.right:
+                        loc = AttachmentLocation.right;
+                        break;
+                    case AttachmentLocation.backRight:
+                        loc = AttachmentLocation.backRight;
+                        break;
+                    case AttachmentLocation.backLeft:
+                        loc = AttachmentLocation.backLeft;
+                        break;
+                    case AttachmentLocation.left:
+                        loc = AttachmentLocation.left;
+                        break;
+                    case AttachmentLocation.frontLeft:
+                        loc = AttachmentLocation.frontLeft;
+                        break;
+                }
+                this.attachments[i] = attachment;
+                attachment.attach(this, loc);
+                attached = true;
+            }
+        }
+
+        if (!attached) {
+            // detach current front attachment
+            this.attachments[AttachmentLocation.front].detach();
+            this.attachments[AttachmentLocation.front] = attachment;
+            attachment.attach(this, AttachmentLocation.front);
+        }
+
         this.gameObj.add(attachment.getGameObject());
     }
 
@@ -308,6 +356,10 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
             this.attachments[location].detach();
             this.attachments[location] = null;
         }
+    }
+
+    getAttachments(): ShipAttachment[] {
+        return this.attachments;
     }
 
     destroy(): void {

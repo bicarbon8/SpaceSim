@@ -12,12 +12,13 @@ export declare abstract class ShipAttachment implements Updatable, HasGameObject
     protected attachmentLocation: AttachmentLocation;
     active: boolean;
     constructor(scene: Phaser.Scene);
-    attach(ship: ShipPod): void;
+    attach(ship: ShipPod, location?: AttachmentLocation): void;
     detach(): void;
     getGameObject(): Phaser.GameObjects.GameObject;
     abstract update(): void;
     abstract trigger(): void;
     getAngle(): number;
+    getRotation(): number;
     /**
      * returns a normalised {Phaser.Math.Vector2} representing
      * the direction this object would travel

@@ -37,6 +37,10 @@ export class Bullet implements HasGameObject, HasLocation {
         return this.gameObj.angle;
     }
 
+    getRotation(): number {
+        return this.gameObj.rotation;
+    }
+
     getHeading(): Phaser.Math.Vector2 {
         let x: number = Math.cos(this.gameObj.rotation);
         let y: number = Math.sin(this.gameObj.rotation);

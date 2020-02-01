@@ -46,10 +46,11 @@ export class CannonAttachment extends ShipAttachment implements CanShoot {
         if (!Globals.paused && this.active) {
             if (this.getRemainingAmmo() > 0) {
                 if (Helpers.now() - this.lastFiredAt > this.cooldownTime) {
+                    let loc: Phaser.Math.Vector2 = this.getRealLocation();
                     new Bullet(this.scene, {
-                        x: this.getRealLocation().x,
-                        y: this.getRealLocation().y,
-                        force: 1000,
+                        x: loc.x,
+                        y: loc.y,
+                        force: 3000,
                         angle: this.getAngle()
                     });
                     this.lastFiredAt = Helpers.now();

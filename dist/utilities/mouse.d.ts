@@ -4,6 +4,7 @@ export declare class Mouse implements HasLocation {
     private scene;
     constructor(scene: Phaser.Scene);
     getAngle(): number;
+    getRotation(): number;
     getHeading(): Phaser.Math.Vector2;
     getVelocity(): number;
     /**

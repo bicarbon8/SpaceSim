@@ -6,4 +6,5 @@ export interface HasAttachments {
     rotateAttachmentsAntiClockwise(): void;
     addAttachment(attachment: ShipAttachment): void;
     removeAttachment(location: AttachmentLocation): void;
+    getAttachments(): ShipAttachment[];
 }

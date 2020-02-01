@@ -13,6 +13,10 @@ export class Mouse implements HasLocation {
         return this.scene.input.activePointer.getAngle();
     }
 
+    getRotation(): number {
+        return this.getAngle() * (Math.PI / 180);
+    }
+
     getHeading(): Phaser.Math.Vector2 {
         let rotation: number = this.getAngle();
         let x: number = Math.cos(rotation);
