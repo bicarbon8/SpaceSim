@@ -31,7 +31,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasLoc
         this.gameObj.setPosition(centre.x, centre.y); // centre on ship location
         this.gameObj.setRotation(this.ship.getAngle()); // set heading to match ship
         let heading: Phaser.Math.Vector2 = this.getHeading();
-        heading.multiply(new Phaser.Math.Vector2(11, 0)); // offset by -11x
+        heading.multiply(new Phaser.Math.Vector2(0, 0));
         let loc: Phaser.Math.Vector2 = this.getRealLocation();
         loc.add(heading);
         this.gameObj.setPosition(loc.x, loc.y);
