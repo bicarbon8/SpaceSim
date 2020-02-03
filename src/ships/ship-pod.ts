@@ -172,7 +172,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
 
     thrustFowards(): void {
         this.applyThrust(Constants.THRUSTER_FORCE, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST);
-        this.displayThrusterFire('yellow', 0.4);
+        this.displayThrusterFire('yellow', 0.2);
     }
 
     boostForwards(): void {
@@ -205,16 +205,16 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
             frame: colour,
             x: loc.x,
             y: loc.y,
-            lifespan: 500,
+            lifespan: { min: 200, max: 500 },
             speedX: { min: h.x*600, max: h.x*1000 },
             speedY: { min: h.y*600, max: h.y*1000 },
-            angle: { min: -85, max: 95 },
+            angle: { min: -180, max: 179 },
             gravityX: 0,
             gravityY: 0,
             scale: { start: startScale, end: 0 },
             //quantity: 4,
             blendMode: 'ADD',
-            maxParticles: 10
+            maxParticles: 3
         });
     }
 
