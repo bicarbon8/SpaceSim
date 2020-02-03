@@ -29,6 +29,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     private detachAttachmentKey: Phaser.Input.Keyboard.Key;
     private remainingFuel: number = 100;
     private temperature: number = 0; // in Celcius
+    private thrusterParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
 
     active: boolean = true;
     
@@ -38,9 +39,10 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.gameObj = scene.add.container(0, 0);
         this.scene.physics.add.existing(this.gameObj);
         (this.gameObj.body as Phaser.Physics.Arcade.Body).bounce.setTo(0.7, 0.7);
+        this.thrusterParticles = scene.add.particles('flares');
         let ship: Phaser.GameObjects.Sprite = scene.add.sprite(0, 0, 'ship-pod');
         this.gameObj.add(ship);
-
+        
         this.integrity = Constants.MAX_INTEGRITY;
         this.attachments = new Array<ShipAttachment>(Helpers.enumLength(AttachmentLocation));
 
@@ -170,11 +172,13 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
 
     thrustFowards(): void {
         this.applyThrust(Constants.THRUSTER_FORCE, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST);
+        this.displayThrusterFire('yellow', 0.4);
     }
 
     boostForwards(): void {
         if (Helpers.now() - this.lastBoostTime >= Constants.BOOSTER_COOLDOWN_TIME) {
             this.applyThrust(Constants.BOOSTER_FORCE, Constants.FUEL_PER_BOOST, Constants.HEAT_PER_BOOST);
+            this.displayThrusterFire('blue', 1);
             this.lastBoostTime = Helpers.now();
         }
     }
@@ -185,10 +189,33 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
             let heading: Phaser.Math.Vector2 = this.getHeading();
             let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(force, force));
             (this.gameObj.body as Phaser.Physics.Arcade.Body).velocity.add(deltaV);
-
+            
             this.reduceFuel(fuel);
             this.applyHeating(heat);
         }
+    }
+
+    private displayThrusterFire(colour: string, startScale: number): void {
+        // make thruster fire
+        let pos: Phaser.Math.Vector2 = this.getRealLocation();
+        let offset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(20, 0).add(this.getRealLocation());
+        let loc: Phaser.Geom.Point = Phaser.Math.RotateAround(offset, pos.x, pos.y, this.getRotation());
+        let h: Phaser.Math.Vector2 = this.getHeading().negate();
+        this.thrusterParticles.createEmitter({
+            frame: colour,
+            x: loc.x,
+            y: loc.y,
+            lifespan: 500,
+            speedX: { min: h.x*100, max: h.x*600 },
+            speedY: { min: h.y*100, max: h.y*600 },
+            angle: { min: -85, max: 95 },
+            gravityX: 0,
+            gravityY: 0,
+            scale: { start: startScale, end: 0 },
+            //quantity: 4,
+            blendMode: 'ADD',
+            maxParticles: 10
+        });
     }
 
     strafeLeft(): void {

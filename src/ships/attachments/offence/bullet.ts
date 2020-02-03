@@ -25,8 +25,8 @@ export class Bullet implements HasGameObject, HasLocation {
         }
     }
 
-    private onImpact(bullet: Phaser.GameObjects.GameObject, collider: Phaser.GameObjects.GameObject): void {
-        // TODO: impart damage to collider and destroy bullet
+    private onImpact(bullet: Phaser.GameObjects.GameObject, target: Phaser.GameObjects.GameObject): void {
+        // TODO: impart damage to target and destroy bullet
     }
 
     getGameObject(): Phaser.GameObjects.GameObject {

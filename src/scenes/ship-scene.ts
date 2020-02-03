@@ -20,6 +20,7 @@ export class ShipScene extends Phaser.Scene {
     public preload(): void {
         this.load.image('stars', './assets/backgrounds/tileableStars.png');
         this.load.image('ship-pod', './assets/sprites/ship-pod.png');
+        this.load.atlas('flares', './assets/particles/flares.png', './assets/particles/flares.json');
     }
 
     public create(): void {

@@ -32,7 +32,8 @@ export class OverlayScene extends Phaser.Scene {
                     `Integrity: ${p.getIntegrity().toFixed(1)}`,
                     `Heat: ${p.getTemperature().toFixed(1)}`,
                     `Fuel: ${p.getRemainingFuel().toFixed(1)}`,
-                    `Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`
+                    `Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`,
+                    `Angle: ${p.getAngle().toFixed(1)}`
                 ]);
             }
         }

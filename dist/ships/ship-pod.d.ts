@@ -24,6 +24,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     private detachAttachmentKey;
     private remainingFuel;
     private temperature;
+    private thrusterParticles;
     active: boolean;
     constructor(scene: Phaser.Scene);
     update(): void;
@@ -58,6 +59,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     boostForwards(): void;
     private lastBoostTime;
     private applyThrust;
+    private displayThrusterFire;
     strafeLeft(): void;
     strafeRight(): void;
     thrustBackwards(): void;
