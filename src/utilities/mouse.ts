@@ -42,10 +42,8 @@ export class Mouse implements HasLocation {
      * offsets the screen position based on camera position
      */
     getRealLocation(): Phaser.Math.Vector2 {
-        let loc: Phaser.Math.Vector2 = this.getLocation();
-        let world: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(loc.x, loc.y);
         // console.log(`mouse REAL location: ${JSON.stringify(world)}`);
-        return world;
+        return this.scene.input.activePointer.positionToCamera(this.scene.cameras.main) as Phaser.Math.Vector2;
     }
 
     onWheelUp<T extends MouseWheelScroll>(func: T): void {

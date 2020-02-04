@@ -30,6 +30,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     private remainingFuel: number = 100;
     private temperature: number = 0; // in Celcius
     private thrusterParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
+    private explosionParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
 
     active: boolean = true;
     
@@ -39,7 +40,8 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.gameObj = scene.add.container(0, 0);
         this.scene.physics.add.existing(this.gameObj);
         (this.gameObj.body as Phaser.Physics.Arcade.Body).bounce.setTo(0.7, 0.7);
-        this.thrusterParticles = scene.add.particles('flares');
+        this.thrusterParticles = scene.add.particles('flares', Constants.Flare.yellow);
+        this.explosionParticles = scene.add.particles('explosion');
         let ship: Phaser.GameObjects.Sprite = scene.add.sprite(0, 0, 'ship-pod');
         this.gameObj.add(ship);
         
@@ -101,7 +103,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
      */
     private checkOverheatCondition(): void {
         if (!Globals.paused && this.active) {
-            if (Helpers.now() - this.lastOverheatCheck > Constants.OVERHEAT_CHECK_INTERVAL) {
+            if (this.scene.game.getTime() > this.lastOverheatCheck + Constants.OVERHEAT_CHECK_INTERVAL) {
                 if (this.temperature > Constants.MAX_TEMPERATURE) {
                     this.destroy(); // we are dead
                 }
@@ -111,7 +113,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
                     this.sustainDamage(delta);
                 }
                 this.applyCooling(Constants.COOLING_RATE);
-                this.lastOverheatCheck = Helpers.now();
+                this.lastOverheatCheck = this.scene.game.getTime();
             }
         }
     }
@@ -121,7 +123,10 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
      * TODO: needed so we can use Floating Origin
      */
     getRealLocation(): Phaser.Math.Vector2 {
-        return new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y);
+        if (this.gameObj) {
+            return new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y);
+        }
+        return Phaser.Math.Vector2.ZERO;
     }
 
     /**
@@ -130,8 +135,11 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
      * viewable area
      */
     getLocation(): Phaser.Math.Vector2 {
-        let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
-        return new Phaser.Math.Vector2(this.gameObj.x - cameraPos.x, this.gameObj.y - cameraPos.y);
+        if (this.gameObj) {
+            let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
+            return new Phaser.Math.Vector2(this.gameObj.x - cameraPos.x, this.gameObj.y - cameraPos.y);
+        }
+        return Phaser.Math.Vector2.ZERO;
     }
 
     getId(): string {
@@ -147,38 +155,52 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     }
 
     lookAtTarget(): void {
-        let pos = this.target.getRealLocation();
-        let radians: number = Phaser.Math.Angle.Between(pos.x, pos.y, this.gameObj.x, this.gameObj.y);
-        this.gameObj.setRotation(radians);
+        if (this.gameObj) {
+            let pos = this.target.getRealLocation();
+            let radians: number = Phaser.Math.Angle.Between(pos.x, pos.y, this.gameObj.x, this.gameObj.y);
+            this.gameObj.setRotation(radians);
+        }
     }
 
     getAngle(): number {
-        return this.gameObj.angle;
+        if (this.gameObj) {
+            return this.gameObj.angle;
+        }
+        return 0;
     }
 
     getRotation(): number {
-        return this.gameObj.rotation;
+        if (this.gameObj) {
+            return this.gameObj.rotation;
+        }
+        return 0;
     }
 
     getHeading(): Phaser.Math.Vector2 {
-        let x: number = Math.cos(this.gameObj.rotation);
-        let y: number = Math.sin(this.gameObj.rotation);
-        return new Phaser.Math.Vector2(x, y).normalize().negate();
+        if (this.gameObj) {
+            let x: number = Math.cos(this.gameObj.rotation);
+            let y: number = Math.sin(this.gameObj.rotation);
+            return new Phaser.Math.Vector2(x, y).normalize().negate();
+        }
+        return Phaser.Math.Vector2.ZERO;
     }
 
     getVelocity(): number {
-        return (this.gameObj.body as Phaser.Physics.Arcade.Body).velocity.length();
+        if (this.gameObj) {
+            return (this.gameObj.body as Phaser.Physics.Arcade.Body).velocity.length();
+        }
+        return 0;
     }
 
     thrustFowards(): void {
         this.applyThrust(Constants.THRUSTER_FORCE, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST);
-        this.displayThrusterFire('yellow', 0.2);
+        this.displayThrusterFire(Constants.Flare.yellow, 0.2);
     }
 
     boostForwards(): void {
         if (Helpers.now() - this.lastBoostTime >= Constants.BOOSTER_COOLDOWN_TIME) {
             this.applyThrust(Constants.BOOSTER_FORCE, Constants.FUEL_PER_BOOST, Constants.HEAT_PER_BOOST);
-            this.displayThrusterFire('blue', 1);
+            this.displayThrusterFire(Constants.Flare.blue, 1);
             this.lastBoostTime = Helpers.now();
         }
     }
@@ -195,14 +217,14 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         }
     }
 
-    private displayThrusterFire(colour: string, startScale: number): void {
+    private displayThrusterFire(colour: Constants.Flare, startScale: number): void {
         // make thruster fire
         let pos: Phaser.Math.Vector2 = this.getRealLocation();
         let offset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(20, 0).add(this.getRealLocation());
         let loc: Phaser.Geom.Point = Phaser.Math.RotateAround(offset, pos.x, pos.y, this.getRotation());
         let h: Phaser.Math.Vector2 = this.getHeading().negate();
         this.thrusterParticles.createEmitter({
-            frame: colour,
+            frame: colour as number,
             x: loc.x,
             y: loc.y,
             lifespan: { min: 200, max: 500 },
@@ -271,7 +293,6 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
         this.integrity -= amount;
         if (this.integrity <= 0) {
             this.integrity = 0;
-            this.active = false;
             this.destroy(); // we are dead
         }
     }
@@ -390,6 +411,42 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     }
 
     destroy(): void {
-        // TODO:
+        this.active = false;
+        this.displayShipExplosion();
+        this.getGameObject().destroy();
+        this.gameObj = null;
+        // TODO: signal end of game and display menu
+    }
+
+    private displayShipExplosion(): void {
+        // make thruster fire
+        let pos: Phaser.Math.Vector2 = this.getRealLocation();
+        this.explosionParticles.createEmitter({
+            x: pos.x,
+            y: pos.y,
+            lifespan: { min: 500, max: 1000 },
+            speedX: { min: -1, max: 1 },
+            speedY: { min: -1, max: 1 },
+            angle: { min: -180, max: 179 },
+            gravityX: 0,
+            gravityY: 0,
+            scale: { start: 1, end: 0 },
+            blendMode: 'ADD',
+            maxParticles: 3
+        });
+        this.thrusterParticles.createEmitter({
+            frame: Constants.Flare.red as number,
+            x: pos.x,
+            y: pos.y,
+            lifespan: { min: 100, max: 500 },
+            speedX: { min: -600, max: 600 },
+            speedY: { min: -600, max: 600 },
+            angle: { min: -180, max: 179 },
+            gravityX: 0,
+            gravityY: 0,
+            scale: { start: 1, end: 0 },
+            blendMode: 'ADD',
+            maxParticles: 10
+        });
     }
 }

@@ -1,22 +1,21 @@
 import { ShipAttachment } from "../ship-attachment";
 import { CanShoot } from "../../../interfaces/can-shoot";
 import { Globals } from "../../../utilities/globals";
-import { Helpers } from "../../../utilities/helpers";
 import { Bullet } from "./bullet";
 
 export class CannonAttachment extends ShipAttachment implements CanShoot {
     private maxAmmo: number;
     private remainingAmmo: number;
     private cooldownTime: number;
-    private lastFiredAt: number;
+    private firingDelay: number;
 
     constructor(scene: Phaser.Scene) {
         super(scene);
 
         this.maxAmmo = 500;
         this.remainingAmmo = this.maxAmmo;
-        this.cooldownTime = 1000; // milliseconds
-        this.lastFiredAt = 0; // never
+        this.cooldownTime = 0;
+        this.firingDelay = 1000; // milliseconds
 
         this.gameObj = this.scene.physics.add.sprite(0, 0, 'cannon');
     }
@@ -45,7 +44,7 @@ export class CannonAttachment extends ShipAttachment implements CanShoot {
     fire(direction?: Phaser.Math.Vector2): void {
         if (!Globals.paused && this.active) {
             if (this.getRemainingAmmo() > 0) {
-                if (Helpers.now() - this.lastFiredAt > this.cooldownTime) {
+                if (this.scene.game.getTime() > this.cooldownTime) {
                     let loc: Phaser.Math.Vector2 = this.getRealLocation();
                     new Bullet(this.scene, {
                         x: loc.x,
@@ -53,7 +52,7 @@ export class CannonAttachment extends ShipAttachment implements CanShoot {
                         force: 3000,
                         angle: this.getAngle()
                     });
-                    this.lastFiredAt = Helpers.now();
+                    this.cooldownTime = this.scene.game.getTime() + this.firingDelay;
                 }
             }
         }

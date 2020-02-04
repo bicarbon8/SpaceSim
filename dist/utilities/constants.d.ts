@@ -12,4 +12,11 @@ export declare module Constants {
     const FUEL_PER_BOOST: number;
     const HEAT_PER_BOOST: number;
     const BOOSTER_COOLDOWN_TIME: number;
+    enum Flare {
+        blue = 0,
+        green = 1,
+        red = 2,
+        white = 3,
+        yellow = 4
+    }
 }

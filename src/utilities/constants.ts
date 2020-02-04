@@ -12,4 +12,11 @@ export module Constants {
     export const FUEL_PER_BOOST: number = 1; // units
     export const HEAT_PER_BOOST: number = 25; // degrees
     export const BOOSTER_COOLDOWN_TIME: number = 1000; // milliseconds
+    export enum Flare {
+        blue = 0,
+        green = 1,
+        red = 2,
+        white = 3,
+        yellow = 4
+    }
 }

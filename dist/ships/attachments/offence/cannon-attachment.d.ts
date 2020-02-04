@@ -4,7 +4,7 @@ export declare class CannonAttachment extends ShipAttachment implements CanShoot
     private maxAmmo;
     private remainingAmmo;
     private cooldownTime;
-    private lastFiredAt;
+    private firingDelay;
     constructor(scene: Phaser.Scene);
     reload(amount: number): void;
     getRemainingAmmo(): number;

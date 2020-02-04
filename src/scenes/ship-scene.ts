@@ -18,15 +18,19 @@ export class ShipScene extends Phaser.Scene {
     }
 
     public preload(): void {
-        this.load.image('stars', './assets/backgrounds/tileableStars.png');
         this.load.image('ship-pod', './assets/sprites/ship-pod.png');
         this.load.image('cannon', './assets/sprites/cannon.png');
-        this.load.atlas('flares', './assets/particles/flares.png', './assets/particles/flares.json');
+        this.load.spritesheet('flares', './assets/particles/flares.png', {
+            frameWidth: 130,
+            frameHeight: 132,
+            startFrame: 0,
+            endFrame: 4
+        });
+        this.load.image('explosion', './assets/particles/explosion.png');
+        this.load.image('bullet', './assets/sprites/bullet.png');
     }
 
     public create(): void {
-        this.add.tileSprite(0, 0, this.cameras.main.width * 10, this.cameras.main.height * 10, 'stars');
-
         this.mouse = new Mouse(this);
         this.player = new ShipPod(this);
         Globals.player = this.player;
