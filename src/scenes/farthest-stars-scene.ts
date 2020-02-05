@@ -1,4 +1,5 @@
 import { Globals } from "../utilities/globals";
+import { ZoomableScene } from "./zoomable-scene";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -6,7 +7,7 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     key: 'FarthestStars'
 };
 
-export class FarthestStarsScene extends Phaser.Scene {
+export class FarthestStarsScene extends ZoomableScene {
     private background: Phaser.GameObjects.TileSprite;
 
     constructor() {
@@ -14,10 +15,11 @@ export class FarthestStarsScene extends Phaser.Scene {
     }
 
     public preload(): void {
-        this.load.image('far-stars', './assets/backgrounds/starfield.png');
+        this.load.image('far-stars', './assets/backgrounds/starfield-tile-512x512.png');
     }
 
     public create(): void {
+        super.create();
         this.background = this.add.tileSprite(0, 0, this.cameras.main.width * 10, this.cameras.main.height * 10, 'far-stars');
     }
 

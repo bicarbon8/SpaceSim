@@ -2,6 +2,7 @@ import { ShipPod } from "../ships/ship-pod";
 import { Globals } from "../utilities/globals";
 import { Mouse } from "../utilities/mouse";
 import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
+import { ZoomableScene } from "./zoomable-scene";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -9,8 +10,7 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     key: 'ShipScene'
 };
 
-export class ShipScene extends Phaser.Scene {
-    private mouse: Mouse;
+export class ShipScene extends ZoomableScene {
     private player: ShipPod;
     
     constructor() {
@@ -31,7 +31,7 @@ export class ShipScene extends Phaser.Scene {
     }
 
     public create(): void {
-        this.mouse = new Mouse(this);
+        super.create();
         this.player = new ShipPod(this);
         Globals.player = this.player;
         this.player.setTarget(this.mouse);
@@ -48,26 +48,9 @@ export class ShipScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-R', () => {
             Globals.paused = false;
         });
-        this.mouse.onWheelUp((scrollAmount: number) => {
-            let currentZoom: number = this.cameras.main.zoom;
-            // zoom out
-            let newZoom: number = currentZoom - 0.5;
-            if (newZoom < 0.1) {
-                newZoom = 0.1;
-            }
-            // console.log(`zooming from ${currentZoom} to ${newZoom}`);
-            this.cameras.main.zoomTo(newZoom);
-        });
-        this.mouse.onWheelDown((scrollAmount: number) => {
-            let currentZoom: number = this.cameras.main.zoom;
-            // zoom in
-            let newZoom: number = currentZoom + 0.5;
-            if (newZoom > 1) {
-                newZoom = 1;
-            }
-            // console.log(`zooming from ${currentZoom} to ${newZoom}`);
-            this.cameras.main.zoomTo(newZoom);
-        });
+        this.game.canvas.oncontextmenu = (e) => {
+            e.preventDefault();
+        }
     }
 
     public update(): void {

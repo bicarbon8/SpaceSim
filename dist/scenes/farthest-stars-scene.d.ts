@@ -1,4 +1,5 @@
-export declare class FarthestStarsScene extends Phaser.Scene {
+import { ZoomableScene } from "./zoomable-scene";
+export declare class FarthestStarsScene extends ZoomableScene {
     private background;
     constructor();
     preload(): void;

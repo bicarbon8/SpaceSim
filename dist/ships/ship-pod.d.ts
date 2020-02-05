@@ -10,7 +10,8 @@ import { HasAttachments } from "../interfaces/has-attachments";
 import { AttachmentLocation } from "./attachments/attachment-location";
 import { HasTemperature } from "../interfaces/has-temperature";
 import { HasFuel } from "../interfaces/has-fuel";
-export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasIntegrity, HasAttachments, HasTemperature, HasFuel {
+import { HasPhysicsGameObject } from "../interfaces/has-physics-game-object";
+export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasPhysicsGameObject, HasIntegrity, HasAttachments, HasTemperature, HasFuel {
     private id;
     private scene;
     private gameObj;
@@ -50,12 +51,17 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     getLocation(): Phaser.Math.Vector2;
     getId(): string;
     getGameObject(): Phaser.GameObjects.GameObject;
+    getPhysicsBody(): Phaser.Physics.Arcade.Body;
     setTarget(target: HasLocation): void;
+    getTarget(): HasLocation;
     lookAtTarget(): void;
-    getAngle(): number;
+    /**
+     * the rotation of the Ship's {GameObject.body} in degrees
+     */
     getRotation(): number;
     getHeading(): Phaser.Math.Vector2;
-    getVelocity(): number;
+    getSpeed(): number;
+    getVelocity(): Phaser.Math.Vector2;
     thrustFowards(): void;
     boostForwards(): void;
     private lastBoostTime;
@@ -85,6 +91,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
      */
     addAttachment(attachment: ShipAttachment): void;
     removeAttachment(location: AttachmentLocation): void;
+    throwAttachment(attachment: ShipAttachment): void;
     getAttachments(): ShipAttachment[];
     destroy(): void;
     private displayShipExplosion;

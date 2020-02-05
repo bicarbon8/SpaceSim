@@ -1,5 +1,5 @@
-export declare class ShipScene extends Phaser.Scene {
-    private mouse;
+import { ZoomableScene } from "./zoomable-scene";
+export declare class ShipScene extends ZoomableScene {
     private player;
     constructor();
     preload(): void;

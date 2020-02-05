@@ -50,7 +50,7 @@ export class CannonAttachment extends ShipAttachment implements CanShoot {
                         x: loc.x,
                         y: loc.y,
                         force: 3000,
-                        angle: this.getAngle()
+                        angle: this.getRotation()
                     });
                     this.cooldownTime = this.scene.game.getTime() + this.firingDelay;
                 }

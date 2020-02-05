@@ -28,12 +28,12 @@ export class OverlayScene extends Phaser.Scene {
                 let p: ShipPod = Globals.player;
                 let loc: Phaser.Math.Vector2 = p.getRealLocation();
                 this.debug.setText([
-                    `Velocity: ${p.getVelocity().toFixed(1)}`,
+                    `Velocity: ${p.getSpeed().toFixed(1)}`,
                     `Integrity: ${p.getIntegrity().toFixed(1)}`,
                     `Heat: ${p.getTemperature().toFixed(1)}`,
                     `Fuel: ${p.getRemainingFuel().toFixed(1)}`,
                     `Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`,
-                    `Angle: ${p.getAngle().toFixed(1)}`
+                    `Angle: ${p.getRotation().toFixed(1)}`
                 ]);
             }
         }

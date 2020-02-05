@@ -2,8 +2,10 @@ import { HasGameObject } from "../../../interfaces/has-game-object";
 import { BulletParameters } from "../../../interfaces/bullet-parameters";
 import { HasLocation } from "../../../interfaces/has-location";
 import { Globals } from "../../../utilities/globals";
+import { HasPhysicsGameObject } from "../../../interfaces/has-physics-game-object";
+import { Helpers } from "../../../utilities/helpers";
 
-export class Bullet implements HasGameObject, HasLocation {
+export class Bullet implements HasGameObject, HasPhysicsGameObject, HasLocation {
     scene: Phaser.Scene;
     force: number;
     gameObj: Phaser.Physics.Arcade.Sprite;
@@ -33,6 +35,12 @@ export class Bullet implements HasGameObject, HasLocation {
         return this.gameObj;
     }
 
+    getPhysicsBody(): Phaser.Physics.Arcade.Body {
+        if (this.getGameObject()) {
+            return this.getGameObject().body as Phaser.Physics.Arcade.Body;
+        }
+    }
+
     getAngle(): number {
         return this.gameObj.angle;
     }
@@ -42,18 +50,24 @@ export class Bullet implements HasGameObject, HasLocation {
     }
 
     getHeading(): Phaser.Math.Vector2 {
-        let x: number = Math.cos(this.gameObj.rotation);
-        let y: number = Math.sin(this.gameObj.rotation);
-        return new Phaser.Math.Vector2(x, y).normalize().negate();
+        return Helpers.getHeading(this.getPhysicsBody());
     }
 
-    getVelocity(): number {
-        return this.gameObj.body.velocity.length();
+    getSpeed(): number {
+        return this.getVelocity().length();
+    }
+
+    getVelocity(): Phaser.Math.Vector2 {
+        if (this.getPhysicsBody()) {
+            return this.getPhysicsBody().velocity.clone();
+        }
+        return Phaser.Math.Vector2.ZERO;
     }
 
     getLocation(): Phaser.Math.Vector2 {
         let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
-        return new Phaser.Math.Vector2(this.gameObj.x - cameraPos.x, this.gameObj.y - cameraPos.y);
+        let go: Phaser.Physics.Arcade.Body = this.getPhysicsBody();
+        return new Phaser.Math.Vector2(go.x - cameraPos.x, go.y - cameraPos.y);
     }
 
     getRealLocation(): Phaser.Math.Vector2 {

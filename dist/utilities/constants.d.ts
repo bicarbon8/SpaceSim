@@ -3,6 +3,7 @@ export declare module Constants {
     const MAX_FUEL: number;
     const MAX_SAFE_TEMPERATURE: number;
     const MAX_TEMPERATURE: number;
+    const MAX_VELOCITY: number;
     const OVERHEAT_CHECK_INTERVAL: number;
     const COOLING_RATE: number;
     const THRUSTER_FORCE: number;
@@ -12,6 +13,7 @@ export declare module Constants {
     const FUEL_PER_BOOST: number;
     const HEAT_PER_BOOST: number;
     const BOOSTER_COOLDOWN_TIME: number;
+    const THROW_FORCE: number;
     enum Flare {
         blue = 0,
         green = 1,

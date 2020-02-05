@@ -24,8 +24,12 @@ export class Mouse implements HasLocation {
         return new Phaser.Math.Vector2(x, y).normalize().negate();
     }
 
-    getVelocity(): number {
-        return this.scene.input.activePointer.velocity.length();
+    getSpeed(): number {
+        return this.getVelocity().length();
+    }
+
+    getVelocity(): Phaser.Math.Vector2 {
+        return this.scene.input.activePointer.velocity.clone();
     }
 
     /**

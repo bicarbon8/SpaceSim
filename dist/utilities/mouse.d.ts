@@ -6,7 +6,8 @@ export declare class Mouse implements HasLocation {
     getAngle(): number;
     getRotation(): number;
     getHeading(): Phaser.Math.Vector2;
-    getVelocity(): number;
+    getSpeed(): number;
+    getVelocity(): Phaser.Math.Vector2;
     /**
      * returns the position of the mouse within the bounds of the current
      * screen.
