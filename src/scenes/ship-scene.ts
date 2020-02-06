@@ -14,7 +14,7 @@ export class ShipScene extends ZoomableScene {
     private player: ShipPod;
     
     constructor() {
-        super(sceneConfig);
+        super(0.4, sceneConfig);
     }
 
     public preload(): void {

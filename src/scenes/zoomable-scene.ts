@@ -2,9 +2,15 @@ import { Mouse } from "../utilities/mouse";
 
 export abstract class ZoomableScene extends Phaser.Scene {
     protected mouse: Mouse;
+    private increment: number;
+    private minZoom: number;
+    private maxZoom: number;
 
-    constructor(config: Phaser.Types.Scenes.SettingsConfig) {
+    constructor(increment: number, config: Phaser.Types.Scenes.SettingsConfig) {
         super(config);
+        this.increment = increment;
+        this.minZoom = 1 - (increment * 2);
+        this.maxZoom = 1;
     }
 
     public abstract preload(): void;
@@ -14,9 +20,9 @@ export abstract class ZoomableScene extends Phaser.Scene {
         this.mouse.onWheelUp((scrollAmount: number) => {
             let currentZoom: number = this.cameras.main.zoom;
             // zoom out
-            let newZoom: number = currentZoom - 0.5;
-            if (newZoom < 0.1) {
-                newZoom = 0.1;
+            let newZoom: number = currentZoom - this.increment;
+            if (newZoom < this.minZoom) {
+                newZoom = this.minZoom;
             }
             // console.log(`zooming from ${currentZoom} to ${newZoom}`);
             this.cameras.main.zoomTo(newZoom);
@@ -24,9 +30,9 @@ export abstract class ZoomableScene extends Phaser.Scene {
         this.mouse.onWheelDown((scrollAmount: number) => {
             let currentZoom: number = this.cameras.main.zoom;
             // zoom in
-            let newZoom: number = currentZoom + 0.5;
-            if (newZoom > 1) {
-                newZoom = 1;
+            let newZoom: number = currentZoom + this.increment;
+            if (newZoom > this.maxZoom) {
+                newZoom = this.maxZoom;
             }
             // console.log(`zooming from ${currentZoom} to ${newZoom}`);
             this.cameras.main.zoomTo(newZoom);

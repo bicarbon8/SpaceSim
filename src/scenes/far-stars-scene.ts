@@ -1,12 +1,10 @@
-import { ZoomableScene } from "./zoomable-scene";
-
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
     visible: true,
     key: 'FarStars'
 };
 
-export class FarStarsScene extends ZoomableScene {
+export class FarStarsScene extends Phaser.Scene {
     constructor() {
         super(sceneConfig);
     }
@@ -16,10 +14,9 @@ export class FarStarsScene extends ZoomableScene {
     }
 
     public create(): void {
-        super.create();
         let xOffset: number = Math.ceil(this.game.canvas.width / 2);
         let yOffset: number = Math.ceil(this.game.canvas.height / 2);
-        this.add.tileSprite(xOffset, yOffset, this.game.canvas.width * 10, this.game.canvas.height * 10, 'far-stars');
+        this.add.tileSprite(xOffset, yOffset, this.game.canvas.width + 10, this.game.canvas.height + 10, 'far-stars');
     }
 
     public update(): void {
