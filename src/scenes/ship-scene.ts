@@ -42,21 +42,13 @@ export class ShipScene extends ZoomableScene {
 
         this.setupCamera(this.player);
         
-        this.input.keyboard.on('keydown-P', () => {
-            Globals.paused = true;
-        });
-        this.input.keyboard.on('keydown-R', () => {
-            Globals.paused = false;
-        });
         this.game.canvas.oncontextmenu = (e) => {
             e.preventDefault();
         }
     }
 
     public update(): void {
-        if (!Globals.paused) {
-            Globals.player.update();
-        }
+        this.player.update();
     }
 
     private setupCamera(player: ShipPod): void {

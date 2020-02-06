@@ -23,19 +23,17 @@ export class OverlayScene extends Phaser.Scene {
     }
 
     public update(): void {
-        if (!Globals.paused) {
-            if (Globals.player) {
-                let p: ShipPod = Globals.player;
-                let loc: Phaser.Math.Vector2 = p.getRealLocation();
-                this.debug.setText([
-                    `Velocity: ${p.getSpeed().toFixed(1)}`,
-                    `Integrity: ${p.getIntegrity().toFixed(1)}`,
-                    `Heat: ${p.getTemperature().toFixed(1)}`,
-                    `Fuel: ${p.getRemainingFuel().toFixed(1)}`,
-                    `Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`,
-                    `Angle: ${p.getRotation().toFixed(1)}`
-                ]);
-            }
+        if (Globals.player) {
+            let p: ShipPod = Globals.player;
+            let loc: Phaser.Math.Vector2 = p.getRealLocation();
+            this.debug.setText([
+                `Velocity: ${p.getSpeed().toFixed(1)}`,
+                `Integrity: ${p.getIntegrity().toFixed(1)}`,
+                `Heat: ${p.getTemperature().toFixed(1)}`,
+                `Fuel: ${p.getRemainingFuel().toFixed(1)}`,
+                `Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`,
+                `Angle: ${p.getRotation().toFixed(1)}`
+            ]);
         }
     }
 }

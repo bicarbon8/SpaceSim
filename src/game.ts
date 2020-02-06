@@ -1,8 +1,8 @@
 import { ShipScene } from "./scenes/ship-scene";
 import { Globals } from "./utilities/globals";
 import { OverlayScene } from "./scenes/overlay-scene";
-import { FarthestStarsScene } from "./scenes/farthest-stars-scene";
-import { NearestStarsScene } from "./scenes/nearest-stars-scene";
+import { FarStarsScene } from "./scenes/far-stars-scene";
+import { SystemScene } from "./scenes/system-scene";
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
     type: Phaser.AUTO,
@@ -18,7 +18,7 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
             gravity: { x: 0, y: 0 },
         }
     },
-    scene: [FarthestStarsScene, NearestStarsScene, ShipScene, OverlayScene]
+    scene: [FarStarsScene, SystemScene, ShipScene, OverlayScene]
 };
 export const game: Phaser.Game = new Phaser.Game(gameConfig);
 

@@ -5,7 +5,6 @@ import { CanTarget } from "../interfaces/can-target";
 import { CanThrust } from "../interfaces/can-thrust";
 import { HasLocation } from "../interfaces/has-location";
 import { HasGameObject } from "../interfaces/has-game-object";
-import { Globals } from "../utilities/globals";
 import { HasIntegrity } from "../interfaces/has-integrity";
 import { Constants } from "../utilities/constants";
 import { ShipAttachment } from "./attachments/ship-attachment";
@@ -54,7 +53,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
     }
 
     update(): void {
-        if (!Globals.paused && this.active) {
+        if (this.active) {
             this.lookAtTarget();
             if (this.thrustKey.isDown) {
                 this.thrustFowards();
@@ -109,7 +108,7 @@ export class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, Ha
      * also applies cooling at a rate of {Constants.COOLING_RATE}
      */
     private checkOverheatCondition(): void {
-        if (!Globals.paused && this.active) {
+        if (this.active) {
             if (this.scene.game.getTime() > this.lastOverheatCheck + Constants.OVERHEAT_CHECK_INTERVAL) {
                 if (this.temperature > Constants.MAX_TEMPERATURE) {
                     this.destroy(); // we are dead

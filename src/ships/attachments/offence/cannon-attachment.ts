@@ -36,13 +36,13 @@ export class CannonAttachment extends ShipAttachment implements CanShoot {
     }
 
     trigger(): void {
-        if (!Globals.paused && this.active) {
+        if (this.active) {
             this.fire();
         }
     }
 
     fire(direction?: Phaser.Math.Vector2): void {
-        if (!Globals.paused && this.active) {
+        if (this.active) {
             if (this.getRemainingAmmo() > 0) {
                 if (this.scene.game.getTime() > this.cooldownTime) {
                     let loc: Phaser.Math.Vector2 = this.getRealLocation();
