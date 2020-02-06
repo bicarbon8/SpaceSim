@@ -8,10 +8,10 @@ import { AttachmentLocation } from "./attachment-location";
 import { Helpers } from "../../utilities/helpers";
 import { HasPhysicsGameObject } from "../../interfaces/has-physics-game-object";
 
-export abstract class ShipAttachment implements Updatable, HasGameObject, HasPhysicsGameObject, HasLocation, HasIntegrity {
+export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Sprite>, HasPhysicsGameObject, HasLocation, HasIntegrity {
     protected ship: ShipPod;
     protected scene: Phaser.Scene;
-    protected gameObj: Phaser.Physics.Arcade.Sprite;
+    protected gameObj: Phaser.GameObjects.Sprite;
     protected integrity: number;
     protected attachmentLocation: AttachmentLocation;
     protected isThrown: boolean;
@@ -56,7 +56,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasPhy
         this.getPhysicsBody().velocity.add(deltaV);
     }
     
-    getGameObject(): Phaser.GameObjects.GameObject {
+    getGameObject(): Phaser.GameObjects.Sprite {
         return this.gameObj;
     }
 
@@ -72,7 +72,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasPhy
     abstract trigger(): void;
 
     getRotation(): number {
-        let rotation: number = this.gameObj.rotation;
+        let rotation: number = this.getPhysicsBody().rotation;
         if (this.ship) {
             rotation += this.ship.getRotation();
         }
@@ -84,11 +84,8 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasPhy
      * the direction this object would travel
      */
     getHeading(): Phaser.Math.Vector2 {
-        let heading: Phaser.Math.Vector2 = Helpers.getHeading(this.getPhysicsBody());
-        if (this.ship) {
-            heading.add(this.ship.getHeading());
-        }
-        return heading;
+        let rotation: number = this.getRotation();
+        return Helpers.getHeadingFromRotation(rotation);
     }
 
     getSpeed(): number {
@@ -117,8 +114,8 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasPhy
     }
 
     getRealLocation(): Phaser.Math.Vector2 {
-        let go: Phaser.Physics.Arcade.Body = this.getPhysicsBody();
-        let realLocation: Phaser.Math.Vector2 = new Phaser.Math.Vector2(go.x, go.y);
+        let body: Phaser.Physics.Arcade.Body = this.getPhysicsBody();
+        let realLocation: Phaser.Math.Vector2 = new Phaser.Math.Vector2(body.x, body.y);
         if (this.ship) {
             realLocation.add(this.ship.getRealLocation());
         }
@@ -147,8 +144,8 @@ export abstract class ShipAttachment implements Updatable, HasGameObject, HasPhy
 
     destroy(): void {
         this.active = false;
-        this.ship.removeAttachment(this.attachmentLocation);
-        // TODO: destroy attachment
+        this.ship.attachments.removeAttachment(this.attachmentLocation);
+        this.getGameObject().destroy();
     }
 
     setAttachmentLocation(loc: AttachmentLocation): void {

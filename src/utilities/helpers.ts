@@ -40,6 +40,17 @@ export module Helpers {
     }
 
     /**
+     * returns a {Phaser.Math.Vector2} that represents a normalised vector of direction
+     * based on the passed in rotation
+     * @param rotation the rotation in degrees
+     */
+    export function getHeadingFromRotation(rotation: number): Phaser.Math.Vector2 {
+        let x: number = Math.cos(Phaser.Math.DegToRad(rotation));
+        let y: number = Math.sin(Phaser.Math.DegToRad(rotation));
+        return new Phaser.Math.Vector2(x, y).normalize().negate();
+    }
+
+    /**
      * applies the passed in offset to a rotated body equivalent to reversing the
      * rotation, applying the offset and then re-applying the offset
      * @param body the {Phaser.Physics.Arcade.Body} to offset

@@ -1,37 +1,30 @@
 import "phaser";
 import { Updatable } from "../interfaces/updatable";
 import { CanTarget } from "../interfaces/can-target";
-import { CanThrust } from "../interfaces/can-thrust";
 import { HasLocation } from "../interfaces/has-location";
 import { HasGameObject } from "../interfaces/has-game-object";
 import { HasIntegrity } from "../interfaces/has-integrity";
-import { ShipAttachment } from "./attachments/ship-attachment";
-import { HasAttachments } from "../interfaces/has-attachments";
-import { AttachmentLocation } from "./attachments/attachment-location";
 import { HasTemperature } from "../interfaces/has-temperature";
 import { HasFuel } from "../interfaces/has-fuel";
 import { HasPhysicsGameObject } from "../interfaces/has-physics-game-object";
-export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLocation, HasGameObject, HasPhysicsGameObject, HasIntegrity, HasAttachments, HasTemperature, HasFuel {
+import { AttachmentManager } from "./attachments/attachment-manager";
+import { Thruster } from "./attachments/utility/thruster";
+import { ShipPodConfig } from "./ship-pod-config";
+export declare class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsGameObject, HasIntegrity, HasTemperature, HasFuel {
     private id;
     private scene;
     private gameObj;
     private target;
     private integrity;
-    private attachments;
-    private thrustKey;
-    private boostKey;
-    private rotateAttachmentsClockwiseKey;
-    private rotateAttachmentsAntiClockwiseKey;
-    private detachAttachmentKey;
     private remainingFuel;
     private temperature;
-    private thrusterParticles;
+    private flareParticles;
     private explosionParticles;
     active: boolean;
-    constructor(scene: Phaser.Scene);
+    attachments: AttachmentManager;
+    thruster: Thruster;
+    constructor(scene: Phaser.Scene, config?: ShipPodConfig);
     update(): void;
-    private updateAttachments;
-    private setupInputHandlers;
     /**
      * checks for and applies damage based on degrees over safe temperature at a rate
      * defined by {Constants.OVERHEAT_CHECK_INTERVAL} milliseconds between each check.
@@ -50,7 +43,7 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
      */
     getLocation(): Phaser.Math.Vector2;
     getId(): string;
-    getGameObject(): Phaser.GameObjects.GameObject;
+    getGameObject(): Phaser.GameObjects.Container;
     getPhysicsBody(): Phaser.Physics.Arcade.Body;
     setTarget(target: HasLocation): void;
     getTarget(): HasLocation;
@@ -62,14 +55,6 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     getHeading(): Phaser.Math.Vector2;
     getSpeed(): number;
     getVelocity(): Phaser.Math.Vector2;
-    thrustFowards(): void;
-    boostForwards(): void;
-    private lastBoostTime;
-    private applyThrust;
-    private displayThrusterFire;
-    strafeLeft(): void;
-    strafeRight(): void;
-    thrustBackwards(): void;
     getTemperature(): number;
     applyHeating(degrees: number): void;
     applyCooling(degrees: number): void;
@@ -79,20 +64,6 @@ export declare class ShipPod implements Updatable, CanTarget, CanThrust, HasLoca
     getIntegrity(): number;
     sustainDamage(amount: number): void;
     repair(amount: number): void;
-    rotateAttachmentsClockwise(): void;
-    rotateAttachmentsAntiClockwise(): void;
-    private updateAttachmentPositions;
-    /**
-     * adds the passed in {ShipAttachment} in {AttachmentLocation.front} or
-     * the first open {AttachmentLocation} in a clockwise search. if no open
-     * slots exist then the existing {ShipAttachment} at {AttachmentLocation.front}
-     * is detached and replaced with the passed in {ShipAttachment}
-     * @param attachment the attachment to be added
-     */
-    addAttachment(attachment: ShipAttachment): void;
-    removeAttachment(location: AttachmentLocation): void;
-    throwAttachment(attachment: ShipAttachment): void;
-    getAttachments(): ShipAttachment[];
     destroy(): void;
     private displayShipExplosion;
 }

@@ -5,10 +5,10 @@ import { HasLocation } from "../../interfaces/has-location";
 import { HasIntegrity } from "../../interfaces/has-integrity";
 import { AttachmentLocation } from "./attachment-location";
 import { HasPhysicsGameObject } from "../../interfaces/has-physics-game-object";
-export declare abstract class ShipAttachment implements Updatable, HasGameObject, HasPhysicsGameObject, HasLocation, HasIntegrity {
+export declare abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Sprite>, HasPhysicsGameObject, HasLocation, HasIntegrity {
     protected ship: ShipPod;
     protected scene: Phaser.Scene;
-    protected gameObj: Phaser.Physics.Arcade.Sprite;
+    protected gameObj: Phaser.GameObjects.Sprite;
     protected integrity: number;
     protected attachmentLocation: AttachmentLocation;
     protected isThrown: boolean;
@@ -17,7 +17,7 @@ export declare abstract class ShipAttachment implements Updatable, HasGameObject
     attach(ship: ShipPod, location?: AttachmentLocation): void;
     detach(): void;
     throw(): void;
-    getGameObject(): Phaser.GameObjects.GameObject;
+    getGameObject(): Phaser.GameObjects.Sprite;
     getPhysicsBody(): Phaser.Physics.Arcade.Body;
     abstract update(): void;
     abstract trigger(): void;

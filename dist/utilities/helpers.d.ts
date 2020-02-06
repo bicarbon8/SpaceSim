@@ -20,6 +20,12 @@ export declare module Helpers {
      */
     function getHeading(body: Phaser.Physics.Arcade.Body): Phaser.Math.Vector2;
     /**
+     * returns a {Phaser.Math.Vector2} that represents a normalised vector of direction
+     * based on the passed in rotation
+     * @param rotation the rotation in degrees
+     */
+    function getHeadingFromRotation(rotation: number): Phaser.Math.Vector2;
+    /**
      * applies the passed in offset to a rotated body equivalent to reversing the
      * rotation, applying the offset and then re-applying the offset
      * @param body the {Phaser.Physics.Arcade.Body} to offset

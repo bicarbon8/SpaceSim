@@ -5,18 +5,20 @@ import { Globals } from "../../../utilities/globals";
 import { HasPhysicsGameObject } from "../../../interfaces/has-physics-game-object";
 import { Helpers } from "../../../utilities/helpers";
 
-export class Bullet implements HasGameObject, HasPhysicsGameObject, HasLocation {
+export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasPhysicsGameObject, HasLocation {
     scene: Phaser.Scene;
     force: number;
-    gameObj: Phaser.Physics.Arcade.Sprite;
+    gameObj: Phaser.GameObjects.Sprite;
     active: boolean;
 
     constructor(scene: Phaser.Scene, params: BulletParameters) {
+        this.active = true;
         this.scene = scene;
         this.force = params.force || 0;
-        this.gameObj = scene.physics.add.sprite(params.x || 0, params.y || 0, 'bullet');
-        this.gameObj.setAngle(params.angle || 0);
-        this.active = true;
+        this.gameObj = this.scene.add.sprite(params.x || 0, params.y || 0, 'bullet');
+        this.scene.physics.add.existing(this.gameObj);
+
+        this.getPhysicsBody().rotation = params.angle || 0;
         this.addCollisionDetection();
         this.setInMotion();
     }
@@ -31,7 +33,7 @@ export class Bullet implements HasGameObject, HasPhysicsGameObject, HasLocation 
         // TODO: impart damage to target and destroy bullet
     }
 
-    getGameObject(): Phaser.GameObjects.GameObject {
+    getGameObject(): Phaser.GameObjects.Sprite {
         return this.gameObj;
     }
 
@@ -41,12 +43,8 @@ export class Bullet implements HasGameObject, HasPhysicsGameObject, HasLocation 
         }
     }
 
-    getAngle(): number {
-        return this.gameObj.angle;
-    }
-
     getRotation(): number {
-        return this.gameObj.rotation;
+        return this.getPhysicsBody().rotation;
     }
 
     getHeading(): Phaser.Math.Vector2 {
@@ -76,7 +74,8 @@ export class Bullet implements HasGameObject, HasPhysicsGameObject, HasLocation 
 
     private setInMotion(): void {
         let heading: Phaser.Math.Vector2 = this.getHeading();
+        // add force to heading
         let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(this.force, this.force));
-        this.gameObj.body.velocity.add(deltaV);
+        this.getPhysicsBody().velocity.add(deltaV);
     }
 }
