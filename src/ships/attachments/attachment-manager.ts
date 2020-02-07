@@ -53,33 +53,10 @@ export class AttachmentManager implements HasAttachments, Updatable {
         let attached: boolean = false;
         for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
             if (!this.attachments[i]) {
-                let loc: AttachmentLocation;
-                switch (i) {
-                    case AttachmentLocation.front:
-                        loc = AttachmentLocation.front;
-                        break;
-                    case AttachmentLocation.frontRight:
-                        loc = AttachmentLocation.frontRight;
-                        break;
-                    case AttachmentLocation.right:
-                        loc = AttachmentLocation.right;
-                        break;
-                    case AttachmentLocation.backRight:
-                        loc = AttachmentLocation.backRight;
-                        break;
-                    case AttachmentLocation.backLeft:
-                        loc = AttachmentLocation.backLeft;
-                        break;
-                    case AttachmentLocation.left:
-                        loc = AttachmentLocation.left;
-                        break;
-                    case AttachmentLocation.frontLeft:
-                        loc = AttachmentLocation.frontLeft;
-                        break;
-                }
                 this.attachments[i] = attachment;
-                attachment.attach(this.ship, loc);
+                attachment.attach(this.ship, i);
                 attached = true;
+                break;
             }
         }
 
@@ -135,29 +112,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
     private updateAttachmentPositions(): void {
         for (var i=0; i<this.attachments.length; i++) {
             if (this.attachments[i]) {
-                switch (i) {
-                    case AttachmentLocation.front:
-                        this.attachments[i].setAttachmentLocation(AttachmentLocation.front);
-                        break;
-                    case AttachmentLocation.frontRight:
-                        this.attachments[i].setAttachmentLocation(AttachmentLocation.frontRight);
-                        break;
-                    case AttachmentLocation.right:
-                        this.attachments[i].setAttachmentLocation(AttachmentLocation.right);
-                        break;
-                    case AttachmentLocation.backRight:
-                        this.attachments[i].setAttachmentLocation(AttachmentLocation.backRight);
-                        break;
-                    case AttachmentLocation.backLeft:
-                        this.attachments[i].setAttachmentLocation(AttachmentLocation.backLeft);
-                        break;
-                    case AttachmentLocation.left:
-                        this.attachments[i].setAttachmentLocation(AttachmentLocation.left);
-                        break;
-                    case AttachmentLocation.frontLeft:
-                        this.attachments[i].setAttachmentLocation(AttachmentLocation.frontLeft);
-                        break;
-                }
+                this.attachments[i].setAttachmentLocation(i);
             }
         }
     }

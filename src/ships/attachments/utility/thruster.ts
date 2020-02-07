@@ -28,15 +28,15 @@ export class Thruster implements CanThrust {
     }
 
     strafeLeft(): void {
-        throw new Error("Method not implemented.");
+        
     }
 
     strafeRight(): void {
-        throw new Error("Method not implemented.");
+        
     }
 
     thrustBackwards(): void {
-        throw new Error("Method not implemented.");
+        
     }
 
     private applyThrust(force: number, fuel: number, heat: number): void {

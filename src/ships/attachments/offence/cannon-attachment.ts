@@ -50,7 +50,8 @@ export class CannonAttachment extends ShipAttachment implements CanShoot {
                         x: loc.x,
                         y: loc.y,
                         force: 3000,
-                        angle: this.getRotation()
+                        angle: this.getRotation(),
+                        startingV: this.getVelocity()
                     });
                     this.lastFired = this.scene.game.getTime();
                 }

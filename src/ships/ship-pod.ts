@@ -85,7 +85,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      */
     getRealLocation(): Phaser.Math.Vector2 {
         if (this.getGameObject()) {
-            return new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y);
+            return new Phaser.Math.Vector2(this.getGameObject().x, this.getGameObject().y);
         }
         return Phaser.Math.Vector2.ZERO;
     }
@@ -142,14 +142,14 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      * the rotation of the Ship's {GameObject.body} in degrees
      */
     getRotation(): number {
-        if (this.getPhysicsBody()) {
-            return this.getPhysicsBody().rotation;
+        if (this.getGameObject()) {
+            return this.getGameObject().angle;
         }
         return 0;
     }
 
     getHeading(): Phaser.Math.Vector2 {
-        return Helpers.getHeading(this.getPhysicsBody());
+        return Helpers.getHeading(this.getRotation());
     }
 
     getSpeed(): number {

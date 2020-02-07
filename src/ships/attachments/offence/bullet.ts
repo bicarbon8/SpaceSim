@@ -18,7 +18,8 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasPhys
         this.gameObj = this.scene.add.sprite(params.x || 0, params.y || 0, 'bullet');
         this.scene.physics.add.existing(this.gameObj);
 
-        this.getPhysicsBody().rotation = params.angle || 0;
+        this.getGameObject().angle = params.angle || 0;
+        this.getPhysicsBody().velocity = params.startingV || Phaser.Math.Vector2.ZERO;
         this.addCollisionDetection();
         this.setInMotion();
     }
@@ -44,11 +45,11 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasPhys
     }
 
     getRotation(): number {
-        return this.getPhysicsBody().rotation;
+        return this.getGameObject().angle;
     }
 
     getHeading(): Phaser.Math.Vector2 {
-        return Helpers.getHeading(this.getPhysicsBody());
+        return Helpers.getHeading(this.getRotation());
     }
 
     getSpeed(): number {
@@ -64,18 +65,22 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasPhys
 
     getLocation(): Phaser.Math.Vector2 {
         let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
-        let go: Phaser.Physics.Arcade.Body = this.getPhysicsBody();
-        return new Phaser.Math.Vector2(go.x - cameraPos.x, go.y - cameraPos.y);
+        let loc: Phaser.Math.Vector2 = this.getRealLocation();
+        return new Phaser.Math.Vector2(loc.x - cameraPos.x, loc.y - cameraPos.y);
     }
 
     getRealLocation(): Phaser.Math.Vector2 {
-        return new Phaser.Math.Vector2(this.gameObj.x, this.gameObj.y);
+        if (this.getGameObject()) {
+            return new Phaser.Math.Vector2(this.getGameObject().x, this.getGameObject().y);
+        }
+        return Phaser.Math.Vector2.ZERO;
     }
 
     private setInMotion(): void {
         let heading: Phaser.Math.Vector2 = this.getHeading();
         // add force to heading
-        let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(this.force, this.force));
+        let deltaV: Phaser.Math.Vector2 = heading.multiply(Helpers.vector2(this.force));
+        // add deltaV to current Velocity
         this.getPhysicsBody().velocity.add(deltaV);
     }
 }

@@ -72,7 +72,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     abstract trigger(): void;
 
     getRotation(): number {
-        let rotation: number = this.getPhysicsBody().rotation;
+        let rotation: number = this.getGameObject().angle;
         if (this.ship) {
             rotation += this.ship.getRotation();
         }
@@ -85,7 +85,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
      */
     getHeading(): Phaser.Math.Vector2 {
         let rotation: number = this.getRotation();
-        return Helpers.getHeadingFromRotation(rotation);
+        return Helpers.getHeading(rotation);
     }
 
     getSpeed(): number {
@@ -114,12 +114,14 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     }
 
     getRealLocation(): Phaser.Math.Vector2 {
-        let body: Phaser.Physics.Arcade.Body = this.getPhysicsBody();
-        let realLocation: Phaser.Math.Vector2 = new Phaser.Math.Vector2(body.x, body.y);
-        if (this.ship) {
-            realLocation.add(this.ship.getRealLocation());
+        if (this.getGameObject()) {
+            let realLoc: Phaser.Math.Vector2 = new Phaser.Math.Vector2(this.getGameObject().x, this.getGameObject().y);
+            if (this.ship) {
+                realLoc.add(this.ship.getRealLocation());
+            }
+            return realLoc;
         }
-        return realLocation;
+        return Phaser.Math.Vector2.ZERO;
     }
 
     getIntegrity(): number {
@@ -131,7 +133,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         if (this.integrity <= 0) {
             this.integrity = 0;
             this.active = false;
-            // TODO: destroy attachment
+            this.destroy();
         }
     }
 

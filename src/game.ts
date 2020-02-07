@@ -27,3 +27,4 @@ window.addEventListener('resize', () => {
 });
 
 Globals.game = game;
+Globals.debug = true;

@@ -19,46 +19,20 @@ export module Helpers {
     }
 
     /**
-     * @returns the current time in milliseconds since the epoch
-     */
-    export function now(): number {
-        return new Date().getTime();
-    }
-
-    /**
-     * returns a {Phaser.Math.Vector2} that represents a normalised vector of direction
-     * based on the rotation of the passed in {Phaser.Physics.Arcade.Body}
-     * @param body the physics enabled {GameObject.body} from which to get the heading
-     */
-    export function getHeading(body: Phaser.Physics.Arcade.Body): Phaser.Math.Vector2 {
-        if (body) {
-            let x: number = Math.cos(Phaser.Math.DegToRad(body.rotation));
-            let y: number = Math.sin(Phaser.Math.DegToRad(body.rotation));
-            return new Phaser.Math.Vector2(x, y).normalize().negate();
-        }
-        return Phaser.Math.Vector2.ZERO;
-    }
-
-    /**
      * returns a {Phaser.Math.Vector2} that represents a normalised vector of direction
      * based on the passed in rotation
      * @param rotation the rotation in degrees
      */
-    export function getHeadingFromRotation(rotation: number): Phaser.Math.Vector2 {
+    export function getHeading(rotation: number): Phaser.Math.Vector2 {
         let x: number = Math.cos(Phaser.Math.DegToRad(rotation));
         let y: number = Math.sin(Phaser.Math.DegToRad(rotation));
         return new Phaser.Math.Vector2(x, y).normalize().negate();
     }
 
-    /**
-     * applies the passed in offset to a rotated body equivalent to reversing the
-     * rotation, applying the offset and then re-applying the offset
-     * @param body the {Phaser.Physics.Arcade.Body} to offset
-     * @param offset a {Phaser.Math.Vector2} representing the unrotated offset to apply
-     */
-    export function offsetWithHeading(body: Phaser.Physics.Arcade.Body, offset: Phaser.Math.Vector2): void {
-        let heading: Phaser.Math.Vector2 = Helpers.getHeading(body);
-        heading.multiply(offset);
-        body.position.add(heading);
+    export function vector2(x: number, y?: number): Phaser.Math.Vector2 {
+        if (!y) {
+            y = x;
+        }
+        return new Phaser.Math.Vector2(x, y);
     }
 }
