@@ -46,7 +46,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         
         this.integrity = Constants.MAX_INTEGRITY;
         this.thruster = new Thruster(this, this.scene);
-        this.attachments = new AttachmentManager(this);
+        this.attachments = new AttachmentManager(this, this.scene);
     }
 
     update(): void {

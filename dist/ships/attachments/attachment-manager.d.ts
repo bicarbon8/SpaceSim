@@ -6,8 +6,11 @@ import { ShipPod } from "../ship-pod";
 export declare class AttachmentManager implements HasAttachments, Updatable {
     private attachments;
     private ship;
+    private scene;
+    private lastRotatedTime;
+    private rotationDelay;
     active: boolean;
-    constructor(parent: ShipPod);
+    constructor(parent: ShipPod, scene: Phaser.Scene);
     update(): void;
     rotateAttachmentsClockwise(): void;
     rotateAttachmentsAntiClockwise(): void;

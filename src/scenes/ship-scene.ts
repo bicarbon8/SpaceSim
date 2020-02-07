@@ -101,15 +101,9 @@ export class ShipScene extends ZoomableScene {
         this.cameras.main.backgroundColor.setFromRGB({r: 0, g: 0, b: 0});
         
         this.cameras.main.setZoom(1);
-        this.cameras.main.centerOn(0, 0);
+        let playerLoc: Phaser.Math.Vector2 = player.getRealLocation();
+        this.cameras.main.centerOn(playerLoc.x, playerLoc.y);
 
-        let width: number = this.cameras.main.width;
-        let height: number = this.cameras.main.height;
-        let dzWidth: number = Math.floor(width / 2);
-        let dzHeight: number = Math.floor(height / 2);
-        let dzX: number = Math.floor(dzWidth / 2);
-        let dzY: number = Math.floor(dzHeight / 2);
-        this.cameras.main.startFollow(player.getGameObject(), true);
-        this.cameras.main.deadzone = new Phaser.Geom.Rectangle(dzX, dzY, dzWidth, dzHeight);
+        this.cameras.main.startFollow(player.getGameObject(), true, 0.1, 0.1);
     }
 }

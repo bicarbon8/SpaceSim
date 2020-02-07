@@ -8,12 +8,18 @@ import { ShipPod } from "../ship-pod";
 export class AttachmentManager implements HasAttachments, Updatable {
     private attachments: ShipAttachment[] = [];
     private ship: ShipPod;
+    private scene: Phaser.Scene;
+    private lastRotatedTime: number;
+    private rotationDelay: number;
 
     active: boolean;
 
-    constructor(parent: ShipPod) {
+    constructor(parent: ShipPod, scene: Phaser.Scene) {
         this.active = true;
         this.ship = parent;
+        this.scene = scene;
+        this.lastRotatedTime = 0;
+        this.rotationDelay = 100; // milliseconds
         for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
             this.attachments.push(null);
         }
@@ -31,15 +37,21 @@ export class AttachmentManager implements HasAttachments, Updatable {
     }
     
     rotateAttachmentsClockwise(): void {
-        let last: ShipAttachment = this.attachments.pop(); // remove last element
-        this.attachments.unshift(last); // push last element onto start of array
-        this.updateAttachmentPositions();
+        if (this.scene.game.getTime() > this.lastRotatedTime + this.rotationDelay) {
+            let last: ShipAttachment = this.attachments.pop(); // remove last element
+            this.attachments.unshift(last); // push last element onto start of array
+            this.updateAttachmentPositions();
+            this.lastRotatedTime = this.scene.game.getTime();
+        }
     }
     
     rotateAttachmentsAntiClockwise(): void {
-        let first: ShipAttachment = this.attachments.shift(); // remove first element
-        this.attachments.push(first); // push first element onto end of array
-        this.updateAttachmentPositions();
+        if (this.scene.game.getTime() > this.lastRotatedTime + this.rotationDelay) {
+            let first: ShipAttachment = this.attachments.shift(); // remove first element
+            this.attachments.push(first); // push first element onto end of array
+            this.updateAttachmentPositions();
+            this.lastRotatedTime = this.scene.game.getTime();
+        }
     }
     
     /**
@@ -110,9 +122,36 @@ export class AttachmentManager implements HasAttachments, Updatable {
     }
 
     private updateAttachmentPositions(): void {
+        let angle: number = 360 / 8;
         for (var i=0; i<this.attachments.length; i++) {
-            if (this.attachments[i]) {
-                this.attachments[i].setAttachmentLocation(i);
+            let att: ShipAttachment = this.attachments[i];
+            if (att) {
+                att.setAttachmentLocation(i);
+                let rot: number = 0;
+                switch (i) {
+                    case AttachmentLocation.frontRight:
+                        rot = angle;
+                        break;
+                    case AttachmentLocation.right:
+                        rot = angle * 2;
+                        break;
+                    case AttachmentLocation.backRight:
+                        rot = angle * 3;
+                        break;
+                    case AttachmentLocation.backLeft:
+                        rot = angle * 5;
+                        break;
+                    case AttachmentLocation.left:
+                        rot = angle * 6;
+                        break;
+                    case AttachmentLocation.frontLeft:
+                        rot = angle * 7;
+                        break;
+                    default:
+                        rot = 0;
+                        break;
+                }
+                att.getGameObject().angle = rot;
             }
         }
     }
