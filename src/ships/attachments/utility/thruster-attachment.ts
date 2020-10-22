@@ -1,16 +1,29 @@
 import { CanThrust } from "../../../interfaces/can-thrust";
 import { ShipPod } from "../../ship-pod";
 import { Constants } from "../../../utilities/constants";
+import { ShipAttachment } from "../ship-attachment";
 
-export class Thruster implements CanThrust {
-    private ship: ShipPod;
-    private scene: Phaser.Scene;
+export class ThrusterAttachment extends ShipAttachment implements CanThrust {
+    ship: ShipPod;
+    scene: Phaser.Scene;
     private flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
     
-    constructor(ship: ShipPod, scene: Phaser.Scene) {
-        this.ship = ship;
+    constructor(scene: Phaser.Scene) {
+        super(scene);
         this.scene = scene;
         this.flareParticles = scene.add.particles('flares');
+        this.gameObj = this.scene.add.sprite(0, 0, 'thruster');
+        this.scene.physics.add.existing(this.gameObj);
+    }
+
+    update(): void {
+        
+    }
+
+    trigger(): void {
+        if(this.active) {
+            this.thrustFowards();
+        }
     }
     
     thrustFowards(): void {
@@ -52,25 +65,25 @@ export class Thruster implements CanThrust {
 
     private displayThrusterFire(colour: Constants.Flare, startScale: number, quantity: number): void {
         // make thruster fire
-        let pos: Phaser.Math.Vector2 = this.ship.getRealLocation();
-        let offset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(20, 0).add(pos);
-        let h: Phaser.Math.Vector2 = this.ship.getHeading().negate();
-        let loc: Phaser.Geom.Point = Phaser.Math.RotateAround(offset, pos.x, pos.y, Phaser.Math.DegToRad(this.ship.getRotation()));
-        let v: Phaser.Math.Vector2 = this.ship.getVelocity();
+        let shipPosition: Phaser.Math.Vector2 = this.ship.getRealLocation();
+        let emissionPosition: Phaser.Math.Vector2 = new Phaser.Math.Vector2(20, 0).add(shipPosition);
+        let negatedShipHeading: Phaser.Math.Vector2 = this.ship.getHeading().negate();
+        let adjustedEmissionPosition: Phaser.Geom.Point = Phaser.Math.RotateAround(emissionPosition, shipPosition.x, shipPosition.y, Phaser.Math.DegToRad(this.ship.getRotation()));
+        let shipVelocity: Phaser.Math.Vector2 = this.ship.getVelocity();
         this.flareParticles.createEmitter({
             frame: colour as number,
-            x: loc.x,
-            y: loc.y,
+            x: adjustedEmissionPosition.x,
+            y: adjustedEmissionPosition.y,
             lifespan: { min: 250, max: 500 },
-            speedX: { min: h.x*100, max: h.x*500 },
-            speedY: { min: h.y*100, max: h.y*500 },
+            speedX: { min: (negatedShipHeading.x*100)+shipVelocity.x, max: (negatedShipHeading.x*500)+shipVelocity.x },
+            speedY: { min: (negatedShipHeading.y*100)+shipVelocity.y, max: (negatedShipHeading.y*500)+shipVelocity.y },
             angle: 0,
             gravityX: 0,
             gravityY: 0,
             scale: { start: startScale, end: 0 },
             quantity: quantity,
             blendMode: 'ADD',
-            maxParticles: 10
+            maxParticles: 1
         });
     }
 }

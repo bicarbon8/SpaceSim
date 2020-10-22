@@ -8,12 +8,11 @@ import { HasTemperature } from "../interfaces/has-temperature";
 import { HasFuel } from "../interfaces/has-fuel";
 import { HasPhysicsGameObject } from "../interfaces/has-physics-game-object";
 import { AttachmentManager } from "./attachments/attachment-manager";
-import { Thruster } from "./attachments/utility/thruster";
+import { ThrusterAttachment } from "./attachments/utility/thruster-attachment";
 import { ShipPodConfig } from "./ship-pod-config";
 export declare class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsGameObject, HasIntegrity, HasTemperature, HasFuel {
     private id;
     private scene;
-    private gameObj;
     private target;
     private integrity;
     private remainingFuel;
@@ -22,8 +21,9 @@ export declare class ShipPod implements Updatable, CanTarget, HasLocation, HasGa
     private explosionParticles;
     active: boolean;
     attachments: AttachmentManager;
-    thruster: Thruster;
+    containerGameObj: Phaser.GameObjects.Container;
     constructor(scene: Phaser.Scene, config?: ShipPodConfig);
+    getThruster(): ThrusterAttachment;
     update(): void;
     /**
      * checks for and applies damage based on degrees over safe temperature at a rate

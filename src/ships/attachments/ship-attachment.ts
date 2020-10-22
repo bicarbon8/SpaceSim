@@ -14,8 +14,8 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     protected gameObj: Phaser.GameObjects.Sprite;
     protected integrity: number;
     protected attachmentLocation: AttachmentLocation;
-    protected isThrown: boolean;
-
+    
+    isThrown: boolean;
     active: boolean;
     
     constructor(scene: Phaser.Scene) {
@@ -25,16 +25,12 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         this.isThrown = false;
     }
 
-    attach(ship: ShipPod, location?: AttachmentLocation): void {
-        if (!location) {
-            location = AttachmentLocation.front;
-        }
+    attach(ship: ShipPod, location: AttachmentLocation = AttachmentLocation.front): void {
         this.ship = ship;
         this.setAttachmentLocation(location);
         let centre: Phaser.Math.Vector2 = this.ship.getRealLocation();
         this.getPhysicsBody().position = centre; // centre on ship location
         this.getPhysicsBody().rotation = this.ship.getRotation(); // set heading to match ship
-        // TODO: offset attachment by XX units in the forward direction
     }
 
     detach(): void {
@@ -44,25 +40,15 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         go.setActive(true);
         this.scene.add.existing(go);
     }
-
-    throw(): void {
-        this.isThrown = true;
-        let deltaV = this.getHeading();
-        deltaV.multiply(new Phaser.Math.Vector2(Constants.THROW_FORCE, Constants.THROW_FORCE));
-        if (this.ship) {
-            deltaV.add(this.ship.getPhysicsBody().velocity);
-        }
-        // add throw force to current velocity
-        this.getPhysicsBody().velocity.add(deltaV);
-    }
     
     getGameObject(): Phaser.GameObjects.Sprite {
         return this.gameObj;
     }
 
     getPhysicsBody(): Phaser.Physics.Arcade.Body {
-        if (this.getGameObject()) {
-            return this.getGameObject().body as Phaser.Physics.Arcade.Body;
+        let go: Phaser.GameObjects.Sprite = this.getGameObject();
+        if (go) {
+            return go.body as Phaser.Physics.Arcade.Body;
         }
         return null;
     }
@@ -114,8 +100,9 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     }
 
     getRealLocation(): Phaser.Math.Vector2 {
-        if (this.getGameObject()) {
-            let realLoc: Phaser.Math.Vector2 = new Phaser.Math.Vector2(this.getGameObject().x, this.getGameObject().y);
+        let go: Phaser.GameObjects.Sprite = this.getGameObject();
+        if (go) {
+            let realLoc: Phaser.Math.Vector2 = new Phaser.Math.Vector2(go.x, go.y);
             if (this.ship) {
                 realLoc.add(this.ship.getRealLocation());
             }

@@ -1,13 +1,8 @@
-import { ShipAttachment } from "../ship-attachment";
-import { CanShoot } from "../../../interfaces/can-shoot";
+import { Helpers } from "../../../utilities/helpers";
 import { Bullet } from "./bullet";
+import { OffenceAttachment } from "./offence-attachment";
 
-export class CannonAttachment extends ShipAttachment implements CanShoot {
-    private maxAmmo: number;
-    private remainingAmmo: number;
-    private lastFired: number;
-    private firingDelay: number;
-
+export class CannonAttachment extends OffenceAttachment {
     constructor(scene: Phaser.Scene) {
         super(scene);
 
@@ -20,35 +15,20 @@ export class CannonAttachment extends ShipAttachment implements CanShoot {
         this.scene.physics.add.existing(this.gameObj);
     }
 
-    reload(amount: number): void {
-        this.remainingAmmo += amount;
-        if (this.remainingAmmo > this.maxAmmo) {
-            this.remainingAmmo = this.maxAmmo;
-        }
-    }
-
-    getRemainingAmmo(): number {
-        return this.remainingAmmo;
-    }
-
     update(): void {
-        
-    }
 
-    trigger(): void {
-        if (this.active) {
-            this.fire();
-        }
     }
-
+    
     fire(direction?: Phaser.Math.Vector2): void {
         if (this.active) {
             if (this.getRemainingAmmo() > 0) {
                 if (this.scene.game.getTime() > this.lastFired + this.firingDelay) {
-                    let loc: Phaser.Math.Vector2 = this.getRealLocation();
+                    let bulletOffset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(-20, 0).add(this.getRealLocation());
+                    let shipRealLocation: Phaser.Math.Vector2 = this.ship.getRealLocation();
+                    let adjustedLocation: Phaser.Geom.Point = Phaser.Math.RotateAround(bulletOffset, shipRealLocation.x, shipRealLocation.y, Phaser.Math.DegToRad(this.getRotation()));
                     new Bullet(this.scene, {
-                        x: loc.x,
-                        y: loc.y,
+                        x: adjustedLocation.x,
+                        y: adjustedLocation.y,
                         force: 3000,
                         angle: this.getRotation(),
                         startingV: this.getVelocity()

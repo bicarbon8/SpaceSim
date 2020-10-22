@@ -1,7 +1,7 @@
 import { CanThrust } from "../../../interfaces/can-thrust";
 import { ShipPod } from "../../ship-pod";
 import { ShipAttachment } from "../ship-attachment";
-export declare class Thruster extends ShipAttachment implements CanThrust {
+export declare class ThrusterAttachment extends ShipAttachment implements CanThrust {
     ship: ShipPod;
     scene: Phaser.Scene;
     private flareParticles;

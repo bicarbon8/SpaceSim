@@ -7,6 +7,8 @@ export declare class ShipScene extends ZoomableScene {
     private rotateAttachmentsClockwiseKey;
     private rotateAttachmentsAntiClockwiseKey;
     private detachAttachmentKey;
+    private throwAttachmentKey;
+    private grabAttachmentKey;
     constructor();
     preload(): void;
     create(): void;

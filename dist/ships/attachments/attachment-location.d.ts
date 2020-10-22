@@ -3,7 +3,8 @@ export declare enum AttachmentLocation {
     frontRight = 1,
     right = 2,
     backRight = 3,
-    backLeft = 4,
-    left = 5,
-    frontLeft = 6
+    back = 4,
+    backLeft = 5,
+    left = 6,
+    frontLeft = 7
 }

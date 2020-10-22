@@ -4,6 +4,9 @@ import { Helpers } from "../../utilities/helpers";
 import { AttachmentLocation } from "./attachment-location";
 import { Updatable } from "../../interfaces/updatable";
 import { ShipPod } from "../ship-pod";
+import { ThrusterAttachment } from "./utility/thruster-attachment";
+import { timeStamp } from "console";
+import { Constants } from "../../utilities/constants";
 
 export class AttachmentManager implements HasAttachments, Updatable {
     private attachments: ShipAttachment[] = [];
@@ -38,18 +41,38 @@ export class AttachmentManager implements HasAttachments, Updatable {
     
     rotateAttachmentsClockwise(): void {
         if (this.scene.game.getTime() > this.lastRotatedTime + this.rotationDelay) {
-            let last: ShipAttachment = this.attachments.pop(); // remove last element
-            this.attachments.unshift(last); // push last element onto start of array
-            this.updateAttachmentPositions();
+            let tmp: ShipAttachment = this.getAttachment(Helpers.enumLength(AttachmentLocation)-1);
+            for (var i=Helpers.enumLength(AttachmentLocation)-1; i>=0; i--) {
+                if (i == AttachmentLocation.back) {
+                    continue; // skip
+                }
+                if (i == AttachmentLocation.backLeft) {
+                    this.attachments[i] = this.attachments[i-2];
+                    continue;
+                }
+                this.attachments[i] = this.attachments[i-1];
+            }
+            this.attachments[0] = tmp;
+            this.updateAttachmentAngles();
             this.lastRotatedTime = this.scene.game.getTime();
         }
     }
     
     rotateAttachmentsAntiClockwise(): void {
         if (this.scene.game.getTime() > this.lastRotatedTime + this.rotationDelay) {
-            let first: ShipAttachment = this.attachments.shift(); // remove first element
-            this.attachments.push(first); // push first element onto end of array
-            this.updateAttachmentPositions();
+            let tmp: ShipAttachment = this.getAttachment(0);
+            for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
+                if (i == AttachmentLocation.back) {
+                    continue; // skip
+                }
+                if (i == AttachmentLocation.backRight) {
+                    this.attachments[i] = this.attachments[i+2];
+                    continue;
+                }
+                this.attachments[i] = this.attachments[i+1];
+            }
+            this.attachments[Helpers.enumLength(AttachmentLocation)-1] = tmp;
+            this.updateAttachmentAngles();
             this.lastRotatedTime = this.scene.game.getTime();
         }
     }
@@ -62,54 +85,61 @@ export class AttachmentManager implements HasAttachments, Updatable {
      * @param attachment the attachment to be added
      */
     addAttachment(attachment: ShipAttachment): void {
-        let attached: boolean = false;
-        for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
-            if (!this.attachments[i]) {
-                this.attachments[i] = attachment;
-                attachment.attach(this.ship, i);
-                attached = true;
-                break;
+        if (attachment instanceof ThrusterAttachment) {
+            this.removeAttachment(AttachmentLocation.back);
+            this.attachments[AttachmentLocation.back] = attachment;
+            attachment.attach(this.ship, AttachmentLocation.back);
+        } else {
+            let attached: boolean = false;
+
+            for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
+                if (!this.attachments[i]) {
+                    this.attachments[i] = attachment;
+                    attachment.attach(this.ship, i);
+                    attached = true;
+                    break;
+                }
+            }
+
+            // if was unable to find an open spot
+            if (!attached) {
+                // detach current front attachment
+                this.removeAttachment(AttachmentLocation.front);
+                this.attachments[AttachmentLocation.front] = attachment;
+                attachment.attach(this.ship, AttachmentLocation.front);
             }
         }
 
-        if (!attached) {
-            // detach current front attachment
-            this.attachments[AttachmentLocation.front].detach();
-            this.attachments[AttachmentLocation.front] = attachment;
-            attachment.attach(this.ship, AttachmentLocation.front);
-        }
-
         this.ship.getGameObject().add(attachment.getGameObject());
+        this.updateAttachmentAngles();
     }
     
     removeAttachment(location: AttachmentLocation): void {
         if (this.attachments[location]) {
-            let body: Phaser.Physics.Arcade.Body = this.attachments[location].getPhysicsBody();
-            
-            let go: Phaser.GameObjects.GameObject = this.attachments[location].getGameObject();
-            this.ship.getGameObject().remove(go, false);
-            this.attachments[location].detach();
+            let attachment: ShipAttachment = this.attachments[location];
             this.attachments[location] = null;
+            this.ship.getGameObject().remove(attachment.getGameObject(), false);
+            attachment.detach();
 
             // move attachment to ship location and rotation and apply current velocity
-            body.position = this.ship.getRealLocation();
-            let shipVelocityVector: Phaser.Math.Vector2 = this.ship.getPhysicsBody().velocity;
-            body.setVelocity(shipVelocityVector.x, shipVelocityVector.y);
-            body.rotation = this.ship.getRotation();
+            let shipRealLocation: Phaser.Math.Vector2 = this.ship.getRealLocation();
+            let newLocation: Phaser.Math.Vector2 = shipRealLocation;
+            attachment.getGameObject().setPosition(newLocation.x, newLocation.y);
+            let shipVelocityVector: Phaser.Math.Vector2 = this.ship.getVelocity();
+            attachment.getPhysicsBody().velocity = shipVelocityVector;
+            attachment.getPhysicsBody().rotation += this.ship.getRotation();
         }
     }
     
     throwAttachment(location: AttachmentLocation): void {
         let attachment: ShipAttachment = this.getAttachment(location);
         if (attachment) {
-            for (var i=0; i<this.attachments.length; i++) {
-                if (this.attachments[i] && this.attachments[i] == attachment) {
-                    this.removeAttachment(i);
-                    
-                    attachment.throw();
-                    break;
-                }
-            }
+            this.removeAttachment(location);
+            attachment.isThrown = true;
+            let heading = attachment.getHeading();
+            let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(Constants.THROW_FORCE, Constants.THROW_FORCE));
+            // add throw force to current velocity
+            attachment.getPhysicsBody().velocity.add(deltaV);
         }
     }
     
@@ -121,12 +151,11 @@ export class AttachmentManager implements HasAttachments, Updatable {
         return this.attachments[location];
     }
 
-    private updateAttachmentPositions(): void {
+    private updateAttachmentAngles(): void {
         let angle: number = 360 / 8;
         for (var i=0; i<this.attachments.length; i++) {
             let att: ShipAttachment = this.attachments[i];
             if (att) {
-                att.setAttachmentLocation(i);
                 let rot: number = 0;
                 switch (i) {
                     case AttachmentLocation.frontRight:
@@ -137,6 +166,9 @@ export class AttachmentManager implements HasAttachments, Updatable {
                         break;
                     case AttachmentLocation.backRight:
                         rot = angle * 3;
+                        break;
+                    case AttachmentLocation.back:
+                        rot = angle * 4;
                         break;
                     case AttachmentLocation.backLeft:
                         rot = angle * 5;

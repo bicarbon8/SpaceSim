@@ -26,5 +26,5 @@ export declare class AttachmentManager implements HasAttachments, Updatable {
     throwAttachment(location: AttachmentLocation): void;
     getAttachments(): ShipAttachment[];
     getAttachment(location: AttachmentLocation): ShipAttachment;
-    private updateAttachmentPositions;
+    private updateAttachmentAngles;
 }

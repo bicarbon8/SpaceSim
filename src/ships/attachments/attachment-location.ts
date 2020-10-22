@@ -3,7 +3,7 @@ export enum AttachmentLocation {
     frontRight,
     right,
     backRight,
-    // NOTE: there is no 'back' attachment point due to location of thruster
+    back,
     backLeft,
     left,
     frontLeft
