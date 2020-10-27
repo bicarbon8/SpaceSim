@@ -7,6 +7,7 @@ import { ShipAttachment } from "../ships/attachments/ship-attachment";
 import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
 import { Helpers } from "../utilities/helpers";
 import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
+import { MachineGunAttachment } from "../ships/attachments/offence/machine-gun-attachment";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -34,6 +35,7 @@ export class ShipScene extends ZoomableScene {
         this.load.image('ship-pod', './assets/sprites/ship-pod.png');
         this.load.image('thruster', './assets/sprites/thruster.png');
         this.load.image('cannon', './assets/sprites/cannon.png');
+        this.load.image('machine-gun', './assets/sprites/machine-gun.png');
         this.load.spritesheet('flares', './assets/particles/flares.png', {
             frameWidth: 130,
             frameHeight: 132,
@@ -58,6 +60,9 @@ export class ShipScene extends ZoomableScene {
         this.player.attachments.addAttachment(thruster);
         let canon: CannonAttachment = new CannonAttachment(this);
         this.player.attachments.addAttachment(canon);
+        this.player.attachments.rotateAttachmentsClockwise();
+        let machineGun: MachineGunAttachment = new MachineGunAttachment(this);
+        this.player.attachments.addAttachment(machineGun);
 
         this.setupCamera(this.player);
         this.setupInputHandling();

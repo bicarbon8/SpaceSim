@@ -68,7 +68,7 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
         let shipPosition: Phaser.Math.Vector2 = this.ship.getRealLocation();
         let emissionPosition: Phaser.Math.Vector2 = new Phaser.Math.Vector2(20, 0).add(shipPosition);
         let negatedShipHeading: Phaser.Math.Vector2 = this.ship.getHeading().negate();
-        let adjustedEmissionPosition: Phaser.Geom.Point = Phaser.Math.RotateAround(emissionPosition, shipPosition.x, shipPosition.y, Phaser.Math.DegToRad(this.ship.getRotation()));
+        let adjustedEmissionPosition: Phaser.Math.Vector2 = Phaser.Math.RotateAround(emissionPosition, shipPosition.x, shipPosition.y, Phaser.Math.DegToRad(this.ship.getRotation()));
         let shipVelocity: Phaser.Math.Vector2 = this.ship.getVelocity();
         this.flareParticles.createEmitter({
             frame: colour as number,

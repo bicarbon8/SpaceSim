@@ -1,16 +1,16 @@
 import { Bullet } from "./bullet";
 import { OffenceAttachment } from "./offence-attachment";
 
-export class CannonAttachment extends OffenceAttachment {
+export class MachineGunAttachment extends OffenceAttachment {
     constructor(scene: Phaser.Scene) {
         super(scene);
 
-        this.maxAmmo = 500;
+        this.maxAmmo = 1500;
         this.remainingAmmo = this.maxAmmo;
         this.lastFired = 0;
-        this.firingDelay = 1000; // milliseconds
+        this.firingDelay = 1; // milliseconds
 
-        this.gameObj = this.scene.add.sprite(0, 0, 'cannon');
+        this.gameObj = this.scene.add.sprite(0, 0, 'machine-gun');
         this.scene.physics.add.existing(this.gameObj);
     }
 
@@ -28,10 +28,10 @@ export class CannonAttachment extends OffenceAttachment {
                     new Bullet(this.scene, {
                         x: adjustedLocation.x,
                         y: adjustedLocation.y,
-                        force: 3000,
+                        force: 1500,
                         angle: this.getRotation(),
                         startingV: this.getVelocity(),
-                        scale: 1
+                        scale: 0.25
                     });
                     this.remainingAmmo--;
                     this.lastFired = this.scene.game.getTime();

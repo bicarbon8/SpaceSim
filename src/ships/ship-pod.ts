@@ -40,7 +40,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this.explosionParticles = scene.add.particles('explosion');
         let ship: Phaser.GameObjects.Sprite = scene.add.sprite(0, 0, 'ship-pod');
         this.getGameObject().add(ship);
-        this.scene.physics.add.existing(this.containerGameObj);
+        this.scene.physics.add.existing(this.getGameObject());
         this.getPhysicsBody().bounce.setTo(0.7, 0.7);
         this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
         

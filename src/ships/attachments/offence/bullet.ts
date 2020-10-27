@@ -10,12 +10,14 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasPhys
     force: number;
     gameObj: Phaser.GameObjects.Sprite;
     active: boolean;
+    scale: number;
 
     constructor(scene: Phaser.Scene, params: BulletParameters) {
         this.active = true;
         this.scene = scene;
         this.force = params.force || 0;
         this.gameObj = this.scene.add.sprite(params.x || 0, params.y || 0, 'bullet');
+        this.gameObj.setScale(params.scale || 1, params.scale || 1);
         this.scene.physics.add.existing(this.gameObj);
 
         this.getGameObject().angle = params.angle || 0;

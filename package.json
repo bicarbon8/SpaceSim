@@ -17,9 +17,7 @@
     "Space",
     "Spaceship",
     "Simulator",
-    "Three.js",
-    "3D",
-    "Javascript",
+    "Typescript",
     "Game"
   ],
   "author": "Jason Holt Smith <bicarbon8@gmail.com>",
@@ -42,7 +40,7 @@
   },
   "dependencies": {
     "jquery": "^3.4.1",
-    "phaser": "^3.22.0",
+    "phaser": "^3.24.1",
     "uuid": "^3.4.0"
   }
 }

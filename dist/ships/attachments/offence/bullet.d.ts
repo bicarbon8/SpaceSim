@@ -7,6 +7,7 @@ export declare class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>,
     force: number;
     gameObj: Phaser.GameObjects.Sprite;
     active: boolean;
+    scale: number;
     constructor(scene: Phaser.Scene, params: BulletParameters);
     private addCollisionDetection;
     private onImpact;

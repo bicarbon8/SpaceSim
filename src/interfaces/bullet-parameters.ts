@@ -3,5 +3,6 @@ export interface BulletParameters {
     y: number,
     force: number,
     angle: number,
-    startingV: Phaser.Math.Vector2
+    startingV: Phaser.Math.Vector2,
+    scale: number
 }
