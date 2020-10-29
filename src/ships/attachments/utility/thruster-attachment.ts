@@ -56,7 +56,8 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
         if (this.ship.getRemainingFuel() > 0) {
             let heading: Phaser.Math.Vector2 = this.ship.getHeading();
             let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(force, force));
-            this.ship.getPhysicsBody().velocity.add(deltaV);
+            let newV: Phaser.Math.Vector2 = this.ship.getVelocity().add(deltaV);
+            this.ship.getPhysicsBody().setVelocity(newV.x, newV.y);
             
             this.ship.reduceFuel(fuel);
             this.ship.applyHeating(heat);

@@ -134,12 +134,13 @@ export class AttachmentManager implements HasAttachments, Updatable {
     throwAttachment(location: AttachmentLocation): void {
         let attachment: ShipAttachment = this.getAttachment(location);
         if (attachment) {
+            let heading = attachment.getHeading();
             this.removeAttachment(location);
             attachment.isThrown = true;
-            let heading = attachment.getHeading();
             let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(Constants.THROW_FORCE, Constants.THROW_FORCE));
+            let newV: Phaser.Math.Vector2 = deltaV.add(attachment.getVelocity());
             // add throw force to current velocity
-            attachment.getPhysicsBody().velocity.add(deltaV);
+            attachment.getPhysicsBody().setVelocity(newV.x, newV.y);
         }
     }
     

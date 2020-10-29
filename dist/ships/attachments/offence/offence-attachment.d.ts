@@ -5,7 +5,6 @@ export declare abstract class OffenceAttachment extends ShipAttachment implement
     protected remainingAmmo: number;
     protected lastFired: number;
     protected firingDelay: number;
-    protected lifespan: number;
     reload(amount: number): void;
     getRemainingAmmo(): number;
     trigger(): void;

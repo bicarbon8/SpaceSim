@@ -28,7 +28,7 @@ export class CannonAttachment extends OffenceAttachment {
                     new Bullet(this.scene, {
                         x: adjustedLocation.x,
                         y: adjustedLocation.y,
-                        force: 3000,
+                        force: 1000,
                         angle: this.getRotation(),
                         startingV: this.getVelocity(),
                         scale: 1

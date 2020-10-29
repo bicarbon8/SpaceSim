@@ -17,7 +17,7 @@ import { AttachmentLocation } from "./attachments/attachment-location";
 
 export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsGameObject, HasIntegrity, HasTemperature, HasFuel {
     private id: string; // UUID
-    private scene: Phaser.Scene;
+    private currentScene: Phaser.Scene;
     private target: HasLocation;
     private integrity: number;
     private remainingFuel: number = 100;
@@ -34,18 +34,26 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
             config = {x: 0, y: 0};
         }
         this.id = RNG.guid();
-        this.scene = scene;
-        this.containerGameObj = scene.add.container(config.x, config.y);
-        this.flareParticles = scene.add.particles('flares');
-        this.explosionParticles = scene.add.particles('explosion');
-        let ship: Phaser.GameObjects.Sprite = scene.add.sprite(0, 0, 'ship-pod');
+        this.currentScene = scene;
+
+        // create container
+        this.containerGameObj = new Phaser.GameObjects.Container(this.currentScene, config.x, config.y);
+        this.flareParticles = new Phaser.GameObjects.Particles.ParticleEmitterManager(this.currentScene, 'flares');
+        this.explosionParticles = new Phaser.GameObjects.Particles.ParticleEmitterManager(this.currentScene, 'explosion');
+        
+        // create ship-pod sprite and add to container
+        let ship: Phaser.GameObjects.Sprite = new Phaser.GameObjects.Sprite(this.currentScene, 0, 0, 'ship-pod');
         this.getGameObject().add(ship);
-        this.scene.physics.add.existing(this.getGameObject());
+
+        // setup physics for container
+        this.currentScene.physics.add.existing(this.getGameObject());
         this.getPhysicsBody().bounce.setTo(0.7, 0.7);
         this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
         
         this.integrity = Constants.MAX_INTEGRITY;
-        this.attachments = new AttachmentManager(this, this.scene);
+        this.attachments = new AttachmentManager(this, this.currentScene);
+
+        this.currentScene.children.add(this.getGameObject());
     }
 
     getThruster(): ThrusterAttachment {
@@ -67,7 +75,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      */
     private checkOverheatCondition(): void {
         if (this.active) {
-            if (this.scene.game.getTime() > this.lastOverheatCheck + Constants.OVERHEAT_CHECK_INTERVAL) {
+            if (this.currentScene.game.getTime() > this.lastOverheatCheck + Constants.OVERHEAT_CHECK_INTERVAL) {
                 if (this.temperature > Constants.MAX_TEMPERATURE) {
                     this.destroy(); // we are dead
                 }
@@ -77,7 +85,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
                     this.sustainDamage(delta);
                 }
                 this.applyCooling(Constants.COOLING_RATE);
-                this.lastOverheatCheck = this.scene.game.getTime();
+                this.lastOverheatCheck = this.currentScene.game.getTime();
             }
         }
     }
@@ -100,7 +108,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      * viewable area
      */
     getLocation(): Phaser.Math.Vector2 {
-        let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
+        let cameraPos: Phaser.Math.Vector2 = this.currentScene.cameras.main.getWorldPoint(0, 0);
         let realLoc: Phaser.Math.Vector2 = this.getRealLocation();
         return new Phaser.Math.Vector2(realLoc.x - cameraPos.x, realLoc.y - cameraPos.y);
     }

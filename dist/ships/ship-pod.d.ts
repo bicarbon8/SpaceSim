@@ -12,7 +12,7 @@ import { ThrusterAttachment } from "./attachments/utility/thruster-attachment";
 import { ShipPodConfig } from "./ship-pod-config";
 export declare class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsGameObject, HasIntegrity, HasTemperature, HasFuel {
     private id;
-    private scene;
+    private currentScene;
     private target;
     private integrity;
     private remainingFuel;
