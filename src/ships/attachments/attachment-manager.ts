@@ -184,7 +184,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
                         rot = 0;
                         break;
                 }
-                att.getGameObject().angle = rot;
+                att.getGameObject().setAngle(rot);
             }
         }
     }
