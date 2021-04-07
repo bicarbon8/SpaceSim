@@ -1,0 +1,71 @@
+.btn-group-justified {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+}
+.btn-group-justified .btn,
+.btn-group-justified .btn-group {
+  float: none;
+  display: table-cell;
+  width: 1%;
+}
+.btn-group-justified .btn .btn,
+.btn-group-justified .btn-group .btn {
+  width: 100%;
+}
+.btn-group-justified .btn .dropdown-menu,
+.btn-group-justified .btn-group .dropdown-menu {
+  left: auto;
+}
+
+input, textarea {
+  background-color: transparent;
+  color: #ffc107;
+}
+::-webkit-input-placeholder { /* WebKit browsers */
+  color: #ffc107;
+}
+:-moz-placeholder { /* Mozilla Firefox 4 to 18 */
+  color: #ffc107;
+}
+::-moz-placeholder { /* Mozilla Firefox 19+ */
+  color: #ffc107;
+}
+:-ms-input-placeholder { /* Internet Explorer 10+ */
+  color: #ffc107;
+}
+input::-webkit-input-placeholder, textarea::-webkit-input-placeholder {
+  color: #ffc107;
+}
+input:-moz-placeholder, textarea:-moz-placeholder {
+  color: #ffc107;
+}
+
+.ct-series-a .ct-point {
+  stroke: transparent;
+}
+.ct-series-a .ct-line {
+  stroke: #ffc107;
+}
+
+.ct-series-b .ct-line,
+.ct-series-b .ct-point {
+  stroke: white;
+}
+
+.ct-grid {
+  stroke: #ffc107;
+}
+.ct-labels span {
+  color: #ffc107;
+}
+
+.ct-axis-title {
+  color: #ffc107;
+  fill: #ffc107;
+}
+
+tbody tr td {
+  color: #ffc107;
+}
