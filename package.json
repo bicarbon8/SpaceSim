@@ -1,46 +1,47 @@
 {
-  "name": "spacesim",
-  "version": "1.0.0",
-  "description": "JavaScript based 3D Spaceflight Simulator",
-  "main": "server.js",
+  "name": "space-sim",
+  "version": "0.0.0",
   "scripts": {
-    "webpack": "node_modules/.bin/webpack",
-    "build": "webpack --config ./webpack.config.js",
-    "test": "npm run build && jasmine JASMINE_CONFIG_PATH=./jasmine.json",
-    "start": "npm run build && node server.js"
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "test": "ng test",
+    "lint": "ng lint",
+    "e2e": "ng e2e"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bicarbon8/SpaceSim.git"
-  },
-  "keywords": [
-    "Space",
-    "Spaceship",
-    "Simulator",
-    "Typescript",
-    "Game"
-  ],
-  "author": "Jason Holt Smith <bicarbon8@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/bicarbon8/SpaceSim/issues"
-  },
-  "homepage": "https://github.com/bicarbon8/SpaceSim#readme",
-  "devDependencies": {
-    "@types/jasmine": "^3.5.0",
-    "@types/jquery": "^3.3.31",
-    "@types/node": "^13.1.7",
-    "@types/uuid": "^3.4.6",
-    "jasmine": "^3.5.0",
-    "ts-loader": "^6.2.1",
-    "tsc": "^1.20150623.0",
-    "typescript": "^3.7.5",
-    "webpack": "^4.41.5",
-    "webpack-cli": "^3.3.10"
-  },
+  "private": true,
   "dependencies": {
-    "jquery": "^3.4.1",
-    "phaser": "^3.24.1",
-    "uuid": "^3.4.0"
+    "@angular/animations": "~11.2.0",
+    "@angular/common": "~11.2.0",
+    "@angular/compiler": "~11.2.0",
+    "@angular/core": "~11.2.0",
+    "@angular/forms": "~11.2.0",
+    "@angular/platform-browser": "~11.2.0",
+    "@angular/platform-browser-dynamic": "~11.2.0",
+    "@angular/router": "~11.2.0",
+    "bootstrap": "^4.6.0",
+    "phaser": "^3.54.0",
+    "rxjs": "~6.6.0",
+    "tslib": "^2.0.0",
+    "zone.js": "~0.11.3"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "~0.1102.0",
+    "@angular/cli": "~11.2.0",
+    "@angular/compiler-cli": "~11.2.0",
+    "@types/jasmine": "~3.6.0",
+    "@types/node": "^12.11.1",
+    "codelyzer": "^6.0.0",
+    "jasmine-core": "~3.6.0",
+    "jasmine-spec-reporter": "~5.0.0",
+    "karma": "~6.1.0",
+    "karma-chrome-launcher": "~3.1.0",
+    "karma-coverage": "~2.0.3",
+    "karma-jasmine": "~4.0.0",
+    "karma-jasmine-html-reporter": "^1.5.0",
+    "protractor": "~7.0.0",
+    "ts-node": "~8.3.0",
+    "tslint": "~6.1.0",
+    "typescript": "~4.1.2"
   }
 }
