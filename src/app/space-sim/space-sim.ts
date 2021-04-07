@@ -12,7 +12,7 @@ export class SpaceSim {
             type: Phaser.AUTO,
             scale: {
                 width: window.innerWidth,
-                height: window.innerHeight
+                height: window.innerHeight * 0.8
             },
             backgroundColor: '#000000',
             parent: 'space-sim',

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { SpaceSim } from './space-sim';
 import { Globals } from './utilities/globals';
 
@@ -7,14 +7,20 @@ import { Globals } from './utilities/globals';
   templateUrl: './space-sim.component.html',
   styleUrls: ['./space-sim.component.css']
 })
-export class SpaceSimComponent implements OnInit {
+export class SpaceSimComponent implements OnInit, OnDestroy {
   private _sim: SpaceSim;
 
-  constructor() { }
-
+  constructor(private zone: NgZone) { }
+  
   ngOnInit(): void {
-    this._sim = new SpaceSim();
+    this.zone.runOutsideAngular(() => {
+      this._sim = new SpaceSim();
+      Globals.debug = true;
+    });
+  }
 
-    Globals.debug = true;
+  ngOnDestroy(): void {
+    this._sim.game.destroy(true, true);
+    this._sim = null;
   }
 }
