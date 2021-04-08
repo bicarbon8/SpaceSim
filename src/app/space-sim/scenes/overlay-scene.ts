@@ -10,10 +10,11 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 };
 
 export class OverlayScene extends Phaser.Scene {
-    private shipDebug: Phaser.GameObjects.Text;
+    private _debugText: Phaser.GameObjects.Text;
 
-    constructor() {
-        super(sceneConfig);
+    constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
+        let conf: Phaser.Types.Scenes.SettingsConfig = settingsConfig || sceneConfig;
+        super(conf);
     }
 
     public preload(): void {
@@ -21,7 +22,7 @@ export class OverlayScene extends Phaser.Scene {
     }
 
     public create(): void {
-        this.shipDebug = this.add.text(10, 10, '', { font: '16px Courier', fontStyle: 'color: #ffdddd' });
+        this._debugText = this.add.text(10, 10, '', { font: '16px Courier', fontStyle: 'color: #ffdddd' });
     }
 
     public update(): void {
@@ -53,7 +54,7 @@ export class OverlayScene extends Phaser.Scene {
                     info.push(`-- Angle: ${attachments[i].getRotation().toFixed(1)}`);
                 }
             }
-            this.shipDebug.setText(info);
+            this._debugText.setText(info);
         }
     }
 }

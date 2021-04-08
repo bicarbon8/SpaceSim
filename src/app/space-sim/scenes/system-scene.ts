@@ -12,8 +12,9 @@ export class SystemScene extends ZoomableScene {
     sun: Phaser.GameObjects.Sprite;
     startPosition: Phaser.Math.Vector2;
     
-    constructor() {
-        super(0.05, sceneConfig);
+    constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
+        let conf: Phaser.Types.Scenes.SettingsConfig = settingsConfig || sceneConfig;
+        super(0.05, conf);
     }
     
     public preload(): void {

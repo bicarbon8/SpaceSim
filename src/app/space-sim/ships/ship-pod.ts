@@ -22,12 +22,12 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     private _integrity: number;
     private _remainingFuel: number;
     private _temperature: number; // in Celcius
+    private _attachmentMgr: AttachmentManager;
     private _flareParticles: GameObjects.Particles.ParticleEmitterManager;
     private _explosionParticles: GameObjects.Particles.ParticleEmitterManager;
+    private _containerGameObj: GameObjects.Container;
 
     active: boolean = true;
-    attachments: AttachmentManager;
-    containerGameObj: GameObjects.Container;
     
     constructor(scene: Scene, config?: ShipPodConfig) {
         this._id = config?.id || RNG.guid();
@@ -37,32 +37,23 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this._remainingFuel = config?.remainingFuel || Constants.MAX_FUEL;
         this._temperature = config?.temperature || 0;
 
-        // create container
-        this.containerGameObj = new GameObjects.Container(this._currentScene, config.location.x, config.location.y);
-        this._flareParticles = new GameObjects.Particles.ParticleEmitterManager(this._currentScene, 'flares');
-        this._explosionParticles = new GameObjects.Particles.ParticleEmitterManager(this._currentScene, 'explosion');
-        
         // create ship-pod sprite and add to container
-        let ship: GameObjects.Sprite = new GameObjects.Sprite(this._currentScene, 0, 0, 'ship-pod');
-        this.getGameObject().add(ship);
-
-        // setup physics for container
-        this._currentScene.physics.add.existing(this.getGameObject());
-        this.getPhysicsBody().bounce.setTo(0.7, 0.7);
-        this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
+        this._createGameObj(config);
         
-        this.attachments = new AttachmentManager(this, this._currentScene.game);
+        this._attachmentMgr = new AttachmentManager(this, this._currentScene.game);
+    }
 
-        this._currentScene.children.add(this.getGameObject());
+    get attachments(): AttachmentManager {
+        return this._attachmentMgr;
     }
 
     getThruster(): ThrusterAttachment {
-        return this.attachments.getAttachment<ThrusterAttachment>(AttachmentLocation.back);
+        return this.attachments.getAttachmentAt<ThrusterAttachment>(AttachmentLocation.back);
     }
 
     update(): void {
         if (this.active) {
-            this.lookAtTarget();
+            this.lookAt(this._target);
             this._checkOverheatCondition();
             this.attachments.update();
         }
@@ -118,25 +109,25 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     getGameObject(): GameObjects.Container {
-        return this.containerGameObj;
+        return this._containerGameObj;
     }
 
     getPhysicsBody(): Phaser.Physics.Arcade.Body {
         return this.getGameObject()?.body as Phaser.Physics.Arcade.Body;
     }
 
-    setTarget(target: HasLocation) {
+    setTarget<T extends HasLocation>(target: T): void {
         this._target = target;
     }
 
-    getTarget(): HasLocation {
-        return this._target;
+    getTarget<T extends HasLocation>(): T {
+        return this._target as T;
     }
 
-    lookAtTarget(): void {
+    lookAt<T extends HasLocation>(obj: T): void {
         if (this.getPhysicsBody()) {
-            if (this.getTarget()) {
-                let targetPos = this.getTarget().getRealLocation();
+            if (obj) {
+                let targetPos = obj.getRealLocation();
                 let shipPos = this.getRealLocation();
                 let radians: number = Phaser.Math.Angle.Between(targetPos.x, targetPos.y, shipPos.x, shipPos.y);
                 let degrees: number = Phaser.Math.RadToDeg(radians);
@@ -220,8 +211,24 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this.active = false;
         this._displayShipExplosion();
         this.getGameObject().destroy();
-        this.containerGameObj = null;
+        this._containerGameObj = null;
         // TODO: signal end of game and display menu
+    }
+
+    private _createGameObj(config?: ShipPodConfig): void {
+        // create container
+        let loc: Phaser.Math.Vector2 = config?.location || Helpers.vector2();
+        this._containerGameObj = new GameObjects.Container(this._currentScene, loc.x, loc.y);
+        this._flareParticles = new GameObjects.Particles.ParticleEmitterManager(this._currentScene, 'flares');
+        this._explosionParticles = new GameObjects.Particles.ParticleEmitterManager(this._currentScene, 'explosion');
+
+        let ship: GameObjects.Sprite = new GameObjects.Sprite(this._currentScene, 0, 0, 'ship-pod');
+        this._containerGameObj.add(ship);
+
+        // setup physics for container
+        this._currentScene.physics.add.existing(this._containerGameObj);
+        this.getPhysicsBody().bounce.setTo(0.7, 0.7);
+        this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
     }
 
     private _displayShipExplosion(): void {

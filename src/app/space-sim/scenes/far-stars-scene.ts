@@ -5,8 +5,9 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 };
 
 export class FarStarsScene extends Phaser.Scene {
-    constructor() {
-        super(sceneConfig);
+    constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
+        let conf: Phaser.Types.Scenes.SettingsConfig = settingsConfig || sceneConfig;
+        super(conf);
     }
 
     public preload(): void {

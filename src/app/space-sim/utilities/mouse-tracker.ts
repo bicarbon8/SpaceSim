@@ -1,9 +1,8 @@
-import { Input, Scene } from "phaser";
+import { Scene } from "phaser";
 import { HasLocation } from "../interfaces/has-location";
-import { MouseWheelScroll } from "../interfaces/mouse-wheel-scroll";
 import { Helpers } from "./helpers";
 
-export class Mouse implements HasLocation {
+export class MouseTracker implements HasLocation {
     private _scene: Scene;
     
     constructor(scene: Scene) {
@@ -49,22 +48,6 @@ export class Mouse implements HasLocation {
     getRealLocation(): Phaser.Math.Vector2 {
         // console.log(`mouse REAL location: ${JSON.stringify(world)}`);
         return this._pointer()?.positionToCamera(this._scene?.cameras?.main) as Phaser.Math.Vector2;
-    }
-
-    onWheelUp<T extends MouseWheelScroll>(func: T): void {
-        this._scene?.input.on(Input.Events.POINTER_WHEEL, (pointer: Phaser.Input.Pointer, currentlyOver: any, dx: number, dy: number, dz: number, event: Event) => {
-            if (dy > 0) {
-                func(dy);
-            }
-        });
-    }
-
-    onWheelDown<T extends MouseWheelScroll>(func: T): void {
-        this._scene?.input.on(Input.Events.POINTER_WHEEL, (pointer: Phaser.Input.Pointer, currentlyOver: any, dx: number, dy: number, dz: number, event: Event) => {
-            if (dy < 0) {
-                func(-dy);
-            }
-        });
     }
 
     private _pointer(): Phaser.Input.Pointer {
