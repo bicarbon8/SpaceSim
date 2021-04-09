@@ -36,6 +36,16 @@ export module Helpers {
         return new Phaser.Math.Vector2(x, y);
     }
 
+    export function rad2deg(radians: number): number {
+        // 1Rad × 180/π
+        return radians * (180 / Math.PI);
+    }
+
+    export function deg2rad(degrees: number): number {
+        // 1Deg × π/180
+        return degrees * (Math.PI / 180);
+    }
+
     /**
      * converts location in coordinate space to the location within the viewable area.
      * NOTE: this assumes that the camera is always centred on the view and moves with

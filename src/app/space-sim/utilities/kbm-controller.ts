@@ -47,15 +47,6 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
-                    if (this.player.attachments.getAttachmentAt(i) instanceof OffenceAttachment) {
-                        let a: OffenceAttachment = this.player.attachments.getAttachmentAt(i) as OffenceAttachment;
-                        a.trigger();
-                    }
-                }
-            }
-            // Right Click: activate front attachment
-            if (this.scene.input.activePointer.rightButtonDown()) {
                 let a: ShipAttachment = this.player.attachments.getAttachmentAt(AttachmentLocation.front);
                 if (a) {
                     a.trigger();

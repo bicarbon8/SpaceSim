@@ -145,6 +145,10 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return this.getGameObject()?.angle || 0;
     }
 
+    setRotation(angle: number): void {
+        this.getGameObject()?.setAngle(angle);
+    }
+
     getHeading(): Phaser.Math.Vector2 {
         return Helpers.getHeading(this.getRotation());
     }
