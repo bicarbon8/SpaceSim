@@ -34,7 +34,7 @@ export class OverlayScene extends Phaser.Scene {
     private displayDebugInfo(): void {
         if (Globals.player) {
             let p: ShipPod = Globals.player;
-            let loc: Phaser.Math.Vector2 = p.getRealLocation();
+            let loc: Phaser.Math.Vector2 = p.getLocation();
             let v: Phaser.Math.Vector2 = p.getVelocity();
             let info: string[] = [
                 `Speed: ${p.getSpeed().toFixed(1)}`,
@@ -49,7 +49,7 @@ export class OverlayScene extends Phaser.Scene {
             for (var i=0; i<attachments.length; i++) {
                 if (attachments[i]) {
                     info.push(`AttachmentLocation.${AttachmentLocation[i]} - ${i}`);
-                    let attLoc: Phaser.Math.Vector2 = attachments[i].getRealLocation();
+                    let attLoc: Phaser.Math.Vector2 = attachments[i].getLocation();
                     info.push(`-- Location: ${attLoc.x.toFixed(1)},${attLoc.y.toFixed(1)}`);
                     info.push(`-- Angle: ${attachments[i].getRotation().toFixed(1)}`);
                 }

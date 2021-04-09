@@ -41,6 +41,6 @@ export class TouchController extends InputController {
      */
     private _handleAimTouch(hitArea: any, x: number, y: number, gameObj: Phaser.GameObjects.GameObject): void {
         console.info(`handling touch at: ${x}, ${y}`);
-        this._touchTracker.setLocation(x, y);
+        this._touchTracker.setLocation(Helpers.vector2(x, y));
     }
 }

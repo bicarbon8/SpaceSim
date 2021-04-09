@@ -36,6 +36,10 @@ export abstract class InputController implements Updatable, HasGameObject<Phaser
         return this._container;
     }
 
+    getPhysicsBody(): Phaser.Physics.Arcade.Body {
+        return this.getGameObject()?.body as Phaser.Physics.Arcade.Body;
+    }
+
     private _createGameObj(): void {
         this._container = this.scene.add.container();
     }

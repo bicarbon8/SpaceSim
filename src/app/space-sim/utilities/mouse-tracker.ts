@@ -37,7 +37,7 @@ export class MouseTracker implements HasLocation {
      * screen.
      * @returns a {Vector2} clone of the position
      */
-    getLocation(): Phaser.Math.Vector2 {
+    getLocationInView(): Phaser.Math.Vector2 {
         // console.log(`mouse location: ${JSON.stringify(this.location)}`);
         return this._pointer()?.position?.clone() || Helpers.vector2();
     }
@@ -45,9 +45,13 @@ export class MouseTracker implements HasLocation {
     /**
      * offsets the screen position based on camera position
      */
-    getRealLocation(): Phaser.Math.Vector2 {
+    getLocation(): Phaser.Math.Vector2 {
         // console.log(`mouse REAL location: ${JSON.stringify(world)}`);
         return this._pointer()?.positionToCamera(this._scene?.cameras?.main) as Phaser.Math.Vector2;
+    }
+
+    setLocation(location: Phaser.Math.Vector2): void {
+        /* not supported! */
     }
 
     private _pointer(): Phaser.Input.Pointer {

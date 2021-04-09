@@ -124,7 +124,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
             attachment.detach();
 
             // move attachment to ship location and rotation and apply current velocity
-            let shipRealLocation: Vector2 = this._ship.getRealLocation();
+            let shipRealLocation: Vector2 = this._ship.getLocation();
             let newLocation: Vector2 = shipRealLocation;
             attachment.getGameObject().setPosition(newLocation.x, newLocation.y);
             let shipVelocityVector: Vector2 = this._ship.getVelocity();

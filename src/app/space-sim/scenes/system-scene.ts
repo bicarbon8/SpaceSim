@@ -36,7 +36,7 @@ export class SystemScene extends ZoomableScene {
             this.sun.angle = 0;
         }
         // move the sun in the opposite direction of travel at a rate of 1:500
-        let loc: Phaser.Math.Vector2 = Globals.player?.getRealLocation() || Helpers.vector2();
+        let loc: Phaser.Math.Vector2 = Globals.player?.getLocation() || Helpers.vector2();
         loc.divide(new Phaser.Math.Vector2(500, 500));
         loc.negate();
 

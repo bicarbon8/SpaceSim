@@ -35,30 +35,30 @@ export class TouchTracker implements HasLocation {
 
     getVelocity(): Phaser.Math.Vector2 {
         let elapsed: number = this._scene.game?.loop.delta;
-        let current: Phaser.Math.Vector2 = this.getLocation();
+        let current: Phaser.Math.Vector2 = this.getLocationInView();
         let previous: Phaser.Math.Vector2 = this._previousPosition;
         let deltaX: number = previous.x - current.x;
         let deltaY: number = previous.y - current.y;
         return Helpers.vector2(deltaX * elapsed, deltaY * elapsed);
     }
 
-    setLocation(x: number, y: number): void {
+    setLocation(location: Phaser.Math.Vector2): void {
         this._previousPosition = this._position;
-        this._position = Helpers.vector2(x, y);
+        this._position = location;
     }
 
     /**
      * returns the position where a touch action occurred on screen
      * @returns a {Vector2} clone of the position
      */
-    getLocation(): Phaser.Math.Vector2 {
+    getLocationInView(): Phaser.Math.Vector2 {
         return this._position?.clone() || Helpers.vector2();
     }
 
     /**
      * offsets the screen position based on ship position
      */
-    getRealLocation(): Phaser.Math.Vector2 {
+    getLocation(): Phaser.Math.Vector2 {
         // console.log(`mouse REAL location: ${JSON.stringify(world)}`);
         return this._pointer()?.positionToCamera(this._scene?.cameras?.main) as Phaser.Math.Vector2;
     }

@@ -1,7 +1,6 @@
 import { Vector2 } from "phaser/src/math";
 import { ShipPod } from "../ships/ship-pod";
 import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
-import { ZoomableScene } from "./zoomable-scene";
 import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
 import { Helpers } from "../utilities/helpers";
 import { MachineGunAttachment } from "../ships/attachments/offence/machine-gun-attachment";
@@ -10,6 +9,8 @@ import { TouchController } from "../utilities/touch-controller";
 import { KbmController } from "../utilities/kbm-controller";
 import { ShipAttachment } from "../ships/attachments/ship-attachment";
 import { AttachmentLocation } from "../ships/attachments/attachment-location";
+import { HasLocation } from "../interfaces/has-location";
+import { SystemBody } from "../star-systems/system-body";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -19,13 +20,18 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 
 export class ShipScene extends Phaser.Scene {
     private _player: ShipPod;
-    private _solarSystemBodies: Phaser.GameObjects.Sprite[];
+    private _solarSystemBodies: SystemBody[];
     private _controller: InputController;
     private _debugLayer: Phaser.GameObjects.Layer;
+    private _debugGroup: Phaser.GameObjects.Group;
     private _foregroundLayer: Phaser.GameObjects.Layer;
+    private _foregroundGroup: Phaser.GameObjects.Group;
     private _midgroundLayer: Phaser.GameObjects.Layer;
+    private _midgroundGroup: Phaser.GameObjects.Group;
     private _starSystemLayer: Phaser.GameObjects.Layer;
+    private _starSystemGroup: Phaser.GameObjects.Group;
     private _backgroundLayer: Phaser.GameObjects.Layer;
+    private _backgroundGroup: Phaser.GameObjects.Group;
     private _debugText: Phaser.GameObjects.Text;
 
     debug: boolean;
@@ -73,68 +79,38 @@ export class ShipScene extends Phaser.Scene {
     update(): void {
         this._controller?.update();
         this._player?.update();
-        this._updateSolarSystemBodies();
+        this._updateStarSystemObjects();
         if (this.debug) {
             this._displayDebugInfo();
         }
-        this._offsetForeground();
-        this._offsetBackground();
+        this._offsetDebugObjects();
+        this._offsetForegroundObjects();
+        this._offsetBackgroundObjects();
     }
 
-    private _updateSolarSystemBodies(): void {
-        this._solarSystemBodies.forEach((systemBody: Phaser.GameObjects.Sprite) => {
-            switch (systemBody.name) {
-                case 'sun':
-                    this._rotateSolarSystemBody(systemBody, Phaser.Math.RND.between(0.0001, 0.0005));
-                    break;
-                default:
-                    this._rotateSolarSystemBody(systemBody, Phaser.Math.RND.between(0.001, 0.005));
-                    break;
-            }
-
-            this._offsetSolarSystemBody(systemBody);
+    private _updateStarSystemObjects(): void {
+        this._solarSystemBodies.forEach((systemBody: SystemBody) => {
+            systemBody.update();
         });
     }
 
-    private _rotateSolarSystemBody(sun: Phaser.GameObjects.Sprite, angle: number): void {
-        sun.angle += angle;
-        if (sun.angle >= 360) {
-            sun.angle = 0;
-        }
+    private _offsetDebugObjects(): void {
+        let offset: Phaser.Math.Vector2 = this.cameras.main.getWorldPoint(10, 10);
+        this._debugGroup.setXY(offset.x, offset.y);
     }
 
-    private _offsetSolarSystemBody(body: Phaser.GameObjects.Sprite): void {
-        let playerV: Phaser.Math.Vector2 = this._player.getVelocity();
-        let playerLoc: Phaser.Math.Vector2 = this._player.getLocation();
-
-        // move the sun in the opposite direction of travel at a rate of 1:500
-        let bodyV: Phaser.Math.Vector2 = playerV.divide(Helpers.vector2(500)).negate();
-        let distance = bodyV.multiply(Helpers.vector2(this.game.loop.delta));
-
-        body.x = playerLoc.x + distance.x;
-        body.y = playerLoc.y + distance.y;
+    private _offsetForegroundObjects(): void {
+        let offset: Phaser.Math.Vector2 = this.cameras.main.getWorldPoint(0, 0);
+        this._foregroundGroup.setXY(offset.x, offset.y);
     }
 
-    private _offsetBackground(): void {
-        this._backgroundLayer.getChildren().forEach((obj: Phaser.GameObjects.TileSprite) => {
-            let playerLoc: Phaser.Math.Vector2 = this._player.getRealLocation();
-            obj.x = playerLoc.x;
-            obj.y = playerLoc.y;
-        });
-    }
-
-    private _offsetForeground(): void {
-        this._foregroundLayer.getChildren().forEach((obj: Phaser.GameObjects.Text) => {
-            let playerLoc: Phaser.Math.Vector2 = this._player.getRealLocation();
-            obj.x = playerLoc.x;
-            obj.y = playerLoc.y;
-        });
+    private _offsetBackgroundObjects(): void {
+        let offset: Phaser.Math.Vector2 = this.cameras.main.getWorldPoint(Math.ceil(this.game.canvas.width / 2), Math.ceil(this.game.canvas.height / 2));
+        this._backgroundGroup.setXY(offset.x, offset.y);
     }
 
     private _createPlayer(): void {
-        this._player = new ShipPod(this, {
-            location: Helpers.vector2(this.game.canvas.width / 2, this.game.canvas.height / 2)
-        });
+        this._player = new ShipPod(this);
         
         // TODO: have menu allowing selection of attachments
         let thruster: ThrusterAttachment = new ThrusterAttachment(this);
@@ -151,8 +127,11 @@ export class ShipScene extends Phaser.Scene {
         this._debugLayer.setName('debug');
         this._debugLayer.depth = 4;
 
+        this._debugGroup = this.add.group();
+
         this._debugText = this.add.text(10, 10, '', { font: '16px Courier', fontStyle: 'color: #ffdddd' });
 
+        this._debugGroup.add(this._debugText);
         this._debugLayer.add(this._debugText);
     }
 
@@ -161,12 +140,15 @@ export class ShipScene extends Phaser.Scene {
         this._foregroundLayer.setName('foreground');
         this._foregroundLayer.depth = 3;
 
+        this._foregroundGroup = this.add.group();
+
         if (this.game.device.os.desktop) {
             this._controller = new KbmController(this, this._player);
         } else {
             this._controller = new TouchController(this, this._player);
         }
 
+        this._foregroundGroup.add(this._controller.getGameObject());
         this._foregroundLayer.add(this._controller.getGameObject());
     }
 
@@ -175,6 +157,9 @@ export class ShipScene extends Phaser.Scene {
         this._midgroundLayer.setName('midground');
         this._midgroundLayer.depth = 2;
 
+        this._midgroundGroup = this.add.group();
+
+        this._midgroundGroup.add(this._player.getGameObject());
         this._midgroundLayer.add(this._player.getGameObject());
     }
 
@@ -183,15 +168,14 @@ export class ShipScene extends Phaser.Scene {
         this._starSystemLayer.setName('starsystem');
         this._starSystemLayer.depth = 1;
 
-        let startPosition = new Phaser.Math.Vector2(
-            Phaser.Math.RND.between(0, this.game.canvas.width),
-            Phaser.Math.RND.between(0, this.game.canvas.height)
-        );
-        // TODO: support multiple large stars and planets
-        this._solarSystemBodies.push(this.add.sprite(startPosition.x, startPosition.y, 'sun'));
+        this._starSystemGroup = this.add.group();
 
-        this._solarSystemBodies.forEach((body: Phaser.GameObjects.Sprite) => {
-            this._starSystemLayer.add(body);
+        // TODO: support multiple large stars and planets
+        this._solarSystemBodies.push(new SystemBody(this, this._player, {spriteName: 'sun'}));
+
+        this._solarSystemBodies.forEach((body: SystemBody) => {
+            this._starSystemGroup.add(body.getGameObject());
+            this._starSystemLayer.add(body.getGameObject());
         });
     }
 
@@ -200,10 +184,13 @@ export class ShipScene extends Phaser.Scene {
         this._backgroundLayer.setName('background');
         this._backgroundLayer.depth = 0;
 
+        this._backgroundGroup = this.add.group();
+
         let xOffset: number = Math.ceil(this.game.canvas.width / 2);
         let yOffset: number = Math.ceil(this.game.canvas.height / 2);
         let starField = this.add.tileSprite(xOffset, yOffset, this.game.canvas.width, this.game.canvas.height, 'far-stars');
 
+        this._backgroundGroup.add(starField);
         this._backgroundLayer.add(starField);
     }
 
@@ -211,14 +198,14 @@ export class ShipScene extends Phaser.Scene {
         this.cameras.main.backgroundColor.setFromRGB({r: 0, g: 0, b: 0});
         
         this.cameras.main.setZoom(1);
-        let playerLoc: Vector2 = this._player.getRealLocation();
+        let playerLoc: Vector2 = this._player.getLocation();
         this.cameras.main.centerOn(playerLoc.x, playerLoc.y);
 
         this.cameras.main.startFollow(this._player.getGameObject(), true, 1, 1);
     }
 
     private _displayDebugInfo(): void {
-        let loc: Phaser.Math.Vector2 = this._player.getRealLocation();
+        let loc: Phaser.Math.Vector2 = this._player.getLocation();
         let v: Phaser.Math.Vector2 = this._player.getVelocity();
         let info: string[] = [
             `Speed: ${this._player.getSpeed().toFixed(1)}`,
@@ -233,7 +220,7 @@ export class ShipScene extends Phaser.Scene {
         for (var i=0; i<attachments.length; i++) {
             if (attachments[i]) {
                 info.push(`AttachmentLocation.${AttachmentLocation[i]} - ${i}`);
-                let attLoc: Phaser.Math.Vector2 = attachments[i].getRealLocation();
+                let attLoc: Phaser.Math.Vector2 = attachments[i].getLocation();
                 info.push(`-- Location: ${attLoc.x.toFixed(1)},${attLoc.y.toFixed(1)}`);
                 info.push(`-- Angle: ${attachments[i].getRotation().toFixed(1)}`);
             }
