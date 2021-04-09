@@ -1,5 +1,5 @@
 import { HasGameObject } from "../../../interfaces/has-game-object";
-import { BulletParameters } from "../../../interfaces/bullet-parameters";
+import { BulletOptions } from "../../../interfaces/bullet-options";
 import { HasLocation } from "../../../interfaces/has-location";
 import { Helpers } from "../../../utilities/helpers";
 
@@ -12,16 +12,17 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
 
     active: boolean;
     
-    constructor(scene: Phaser.Scene, params: BulletParameters) {
+    constructor(scene: Phaser.Scene, options: BulletOptions) {
         this.id = Phaser.Math.RND.uuid();
         this.active = true;
         this._scene = scene;
-        this._force = params.force || 0;
+        this._force = (options.force === undefined) ? 1 : options.force;
+        this._scale = (options.scale === undefined) ? 1 : options.scale;
         
-        this._createGameObj(params);
+        this._createGameObj(options);
 
-        this.getGameObject().angle = params.angle || 0;
-        this.getPhysicsBody().velocity = params.startingV || Phaser.Math.Vector2.ZERO;
+        this.getGameObject().angle = options.angle || 0;
+        this.getPhysicsBody().velocity = options.startingV || Phaser.Math.Vector2.ZERO;
         this.addCollisionDetection();
         this._setInMotion();
     }
@@ -90,9 +91,10 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
         this.getPhysicsBody().velocity.add(deltaV);
     }
 
-    private _createGameObj(params: BulletParameters): void {
-        this._gameObj = this._scene.add.sprite(params.x || 0, params.y || 0, 'bullet');
-        this._gameObj.setScale(params.scale || 1, params.scale || 1);
+    private _createGameObj(options: BulletOptions): void {
+        this._gameObj = this._scene.add.sprite(0, 0, options.spriteName);
+        this.setLocation(options.location);
+        this._gameObj.setScale(this._scale);
         this._scene.physics.add.existing(this._gameObj);
     }
 }

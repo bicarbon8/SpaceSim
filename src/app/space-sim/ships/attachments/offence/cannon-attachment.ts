@@ -26,12 +26,11 @@ export class CannonAttachment extends OffenceAttachment {
                     let shipRealLocation: Phaser.Math.Vector2 = this.ship.getLocation();
                     let adjustedLocation: Phaser.Math.Vector2 = Phaser.Math.RotateAround(bulletOffset, shipRealLocation.x, shipRealLocation.y, Phaser.Math.DegToRad(this.getRotation()));
                     new Bullet(this.scene, {
-                        x: adjustedLocation.x,
-                        y: adjustedLocation.y,
+                        location: adjustedLocation,
                         force: 1000,
                         angle: this.getRotation(),
                         startingV: this.getVelocity(),
-                        scale: 1
+                        spriteName: 'bullet'
                     });
                     this.remainingAmmo--;
                     this.lastFired = this.scene.game.getTime();

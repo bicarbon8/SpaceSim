@@ -10,7 +10,7 @@ import { HasTemperature } from "../interfaces/has-temperature";
 import { HasFuel } from "../interfaces/has-fuel";
 import { AttachmentManager } from "./attachments/attachment-manager";
 import { ThrusterAttachment } from "./attachments/utility/thruster-attachment";
-import { ShipPodConfig } from "./ship-pod-config";
+import { ShipPodOptions } from "./ship-pod-options";
 import { AttachmentLocation } from "./attachments/attachment-location";
 
 export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<GameObjects.Container>, HasIntegrity, HasTemperature, HasFuel {
@@ -27,7 +27,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
 
     active: boolean = true;
     
-    constructor(scene: Scene, config?: ShipPodConfig) {
+    constructor(scene: Scene, config?: ShipPodOptions) {
         this.id = config?.id || Phaser.Math.RND.uuid();
         this._scene = scene;
         this._target = config?.target;
@@ -217,7 +217,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         // TODO: signal end of game and display menu
     }
 
-    private _createGameObj(config?: ShipPodConfig): void {
+    private _createGameObj(config?: ShipPodOptions): void {
         // create container
         let loc: Phaser.Math.Vector2 = config?.location || Helpers.vector2();
         this._containerGameObj = new GameObjects.Container(this._scene, loc.x, loc.y);

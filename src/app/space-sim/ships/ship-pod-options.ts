@@ -1,6 +1,6 @@
 import { HasLocation } from "../interfaces/has-location";
 
-export interface ShipPodConfig {
+export interface ShipPodOptions {
     id?: string;
     location?: Phaser.Math.Vector2;
     target?: HasLocation;
