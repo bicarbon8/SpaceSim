@@ -8,6 +8,7 @@ import { Updatable } from "../../interfaces/updatable";
 import { ShipPod } from "../ship-pod";
 import { ThrusterAttachment } from "./utility/thruster-attachment";
 import { Constants } from "../../utilities/constants";
+import { Globals } from "../../utilities/globals";
 
 export class AttachmentManager implements HasAttachments, Updatable {
     private _attachments: ShipAttachment[] = [];
@@ -18,10 +19,10 @@ export class AttachmentManager implements HasAttachments, Updatable {
 
     active: boolean;
 
-    constructor(parent: ShipPod, game: Game) {
+    constructor(parent: ShipPod, game?: Game) {
         this.active = true;
         this._ship = parent;
-        this._game = game;
+        this._game = game || Globals.game;
         this._lastRotatedTime = 0;
         this._rotationDelay = 100; // milliseconds
         for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
@@ -42,7 +43,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
     
     rotateAttachmentsClockwise(): void {
         if (this._game.getTime() > this._lastRotatedTime + this._rotationDelay) {
-            let tmp: ShipAttachment = this.getAttachment(Helpers.enumLength(AttachmentLocation)-1);
+            let tmp: ShipAttachment = this.getAttachmentAt(Helpers.enumLength(AttachmentLocation)-1);
             for (var i=Helpers.enumLength(AttachmentLocation)-1; i>=0; i--) {
                 if (i == AttachmentLocation.back) {
                     continue; // skip
@@ -61,7 +62,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
     
     rotateAttachmentsAntiClockwise(): void {
         if (this._game.getTime() > this._lastRotatedTime + this._rotationDelay) {
-            let tmp: ShipAttachment = this.getAttachment(0);
+            let tmp: ShipAttachment = this.getAttachmentAt(0);
             for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
                 if (i == AttachmentLocation.back) {
                     continue; // skip
@@ -87,7 +88,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
      */
     addAttachment<T extends ShipAttachment>(attachment: T): void {
         if (attachment instanceof ThrusterAttachment) {
-            this.removeAttachment(AttachmentLocation.back);
+            this.removeAttachmentAt(AttachmentLocation.back);
             this._attachments[AttachmentLocation.back] = attachment;
             attachment.attach(this._ship, AttachmentLocation.back);
         } else {
@@ -105,7 +106,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
             // if was unable to find an open spot
             if (!attached) {
                 // detach current front attachment
-                this.removeAttachment(AttachmentLocation.front);
+                this.removeAttachmentAt(AttachmentLocation.front);
                 this._attachments[AttachmentLocation.front] = attachment;
                 attachment.attach(this._ship, AttachmentLocation.front);
             }
@@ -115,7 +116,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
         this._updateAttachmentAngles();
     }
     
-    removeAttachment(location: AttachmentLocation): void {
+    removeAttachmentAt(location: AttachmentLocation): void {
         if (this._attachments[location]) {
             let attachment: ShipAttachment = this._attachments[location];
             this._attachments[location] = null;
@@ -123,7 +124,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
             attachment.detach();
 
             // move attachment to ship location and rotation and apply current velocity
-            let shipRealLocation: Vector2 = this._ship.getRealLocation();
+            let shipRealLocation: Vector2 = this._ship.getLocation();
             let newLocation: Vector2 = shipRealLocation;
             attachment.getGameObject().setPosition(newLocation.x, newLocation.y);
             let shipVelocityVector: Vector2 = this._ship.getVelocity();
@@ -132,11 +133,11 @@ export class AttachmentManager implements HasAttachments, Updatable {
         }
     }
     
-    throwAttachment(location: AttachmentLocation): void {
-        let attachment: ShipAttachment = this.getAttachment(location);
+    throwAttachmentAt(location: AttachmentLocation): void {
+        let attachment: ShipAttachment = this.getAttachmentAt(location);
         if (attachment) {
             let heading = attachment.getHeading();
-            this.removeAttachment(location);
+            this.removeAttachmentAt(location);
             attachment.isThrown = true;
             let deltaV: Vector2 = heading.multiply(new Vector2(Constants.THROW_FORCE, Constants.THROW_FORCE));
             let newV: Vector2 = deltaV.add(attachment.getVelocity());
@@ -149,7 +150,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
         return this._attachments;
     }
     
-    getAttachment<T extends ShipAttachment>(location: AttachmentLocation): T {
+    getAttachmentAt<T extends ShipAttachment>(location: AttachmentLocation): T {
         return this._attachments[location] as T;
     }
 

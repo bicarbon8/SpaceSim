@@ -6,9 +6,8 @@ import { HasIntegrity } from "../../interfaces/has-integrity";
 import { Constants } from "../../utilities/constants";
 import { AttachmentLocation } from "./attachment-location";
 import { Helpers } from "../../utilities/helpers";
-import { HasPhysicsGameObject } from "../../interfaces/has-physics-game-object";
 
-export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Sprite>, HasPhysicsGameObject, HasLocation, HasIntegrity {
+export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Sprite>, HasLocation, HasIntegrity {
     protected ship: ShipPod;
     protected scene: Phaser.Scene;
     protected gameObj: Phaser.GameObjects.Sprite;
@@ -28,7 +27,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     attach(ship: ShipPod, location: AttachmentLocation = AttachmentLocation.front): void {
         this.ship = ship;
         this.setAttachmentLocation(location);
-        let centre: Phaser.Math.Vector2 = this.ship.getRealLocation();
+        let centre: Phaser.Math.Vector2 = this.ship.getLocation();
         this.getPhysicsBody().position = centre; // centre on ship location
         this.getPhysicsBody().rotation = this.ship.getRotation(); // set heading to match ship
     }
@@ -93,22 +92,30 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         return Phaser.Math.Vector2.ZERO;
     }
 
-    getLocation(): Phaser.Math.Vector2 {
+    getLocationInView(): Phaser.Math.Vector2 {
         let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
-        let realLoc: Phaser.Math.Vector2 = this.getRealLocation();
+        let realLoc: Phaser.Math.Vector2 = this.getLocation();
         return new Phaser.Math.Vector2(realLoc.x - cameraPos.x, realLoc.y - cameraPos.y);
     }
 
-    getRealLocation(): Phaser.Math.Vector2 {
+    getLocation(): Phaser.Math.Vector2 {
         let go: Phaser.GameObjects.Sprite = this.getGameObject();
         if (go) {
             let realLoc: Phaser.Math.Vector2 = new Phaser.Math.Vector2(go.x, go.y);
             if (this.ship) {
-                realLoc.add(this.ship.getRealLocation());
+                realLoc.add(this.ship.getLocation());
             }
             return realLoc;
         }
         return Phaser.Math.Vector2.ZERO;
+    }
+
+    setLocation(location: Phaser.Math.Vector2): void {
+        let go: Phaser.GameObjects.Sprite = this.getGameObject();
+        if (go) {
+            go.x = location.x;
+            go.y = location.y;
+        }
     }
 
     getIntegrity(): number {
@@ -133,7 +140,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
 
     destroy(): void {
         this.active = false;
-        this.ship.attachments.removeAttachment(this.attachmentLocation);
+        this.ship.attachments.removeAttachmentAt(this.attachmentLocation);
         this.getGameObject().destroy();
     }
 

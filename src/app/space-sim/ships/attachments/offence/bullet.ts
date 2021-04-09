@@ -1,28 +1,30 @@
 import { HasGameObject } from "../../../interfaces/has-game-object";
-import { BulletParameters } from "../../../interfaces/bullet-parameters";
+import { BulletOptions } from "../../../interfaces/bullet-options";
 import { HasLocation } from "../../../interfaces/has-location";
-import { HasPhysicsGameObject } from "../../../interfaces/has-physics-game-object";
 import { Helpers } from "../../../utilities/helpers";
 
-export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasPhysicsGameObject, HasLocation {
-    scene: Phaser.Scene;
-    force: number;
-    gameObj: Phaser.GameObjects.Sprite;
+export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLocation {
+    readonly id: string;
+    private _scene: Phaser.Scene;
+    private _force: number;
+    private _gameObj: Phaser.GameObjects.Sprite;
+    private _scale: number;
+
     active: boolean;
-    scale: number;
-
-    constructor(scene: Phaser.Scene, params: BulletParameters) {
+    
+    constructor(scene: Phaser.Scene, options: BulletOptions) {
+        this.id = Phaser.Math.RND.uuid();
         this.active = true;
-        this.scene = scene;
-        this.force = params.force || 0;
-        this.gameObj = this.scene.add.sprite(params.x || 0, params.y || 0, 'bullet');
-        this.gameObj.setScale(params.scale || 1, params.scale || 1);
-        this.scene.physics.add.existing(this.gameObj);
+        this._scene = scene;
+        this._force = (options.force === undefined) ? 1 : options.force;
+        this._scale = (options.scale === undefined) ? 1 : options.scale;
+        
+        this._createGameObj(options);
 
-        this.getGameObject().angle = params.angle || 0;
-        this.getPhysicsBody().velocity = params.startingV || Phaser.Math.Vector2.ZERO;
+        this.getGameObject().angle = options.angle || 0;
+        this.getPhysicsBody().velocity = options.startingV || Phaser.Math.Vector2.ZERO;
         this.addCollisionDetection();
-        this.setInMotion();
+        this._setInMotion();
     }
 
     private addCollisionDetection(): void {
@@ -37,7 +39,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasPhys
     }
 
     getGameObject(): Phaser.GameObjects.Sprite {
-        return this.gameObj;
+        return this._gameObj;
     }
 
     getPhysicsBody(): Phaser.Physics.Arcade.Body {
@@ -60,24 +62,39 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasPhys
         return this.getPhysicsBody()?.velocity?.clone() || Helpers.vector2();
     }
 
-    getLocation(): Phaser.Math.Vector2 {
-        let cameraPos: Phaser.Math.Vector2 = this.scene.cameras.main.getWorldPoint(0, 0);
-        let loc: Phaser.Math.Vector2 = this.getRealLocation();
+    getLocationInView(): Phaser.Math.Vector2 {
+        let cameraPos: Phaser.Math.Vector2 = this._scene.cameras.main.getWorldPoint(0, 0);
+        let loc: Phaser.Math.Vector2 = this.getLocation();
         return new Phaser.Math.Vector2(loc.x - cameraPos.x, loc.y - cameraPos.y);
     }
 
-    getRealLocation(): Phaser.Math.Vector2 {
+    getLocation(): Phaser.Math.Vector2 {
         if (this.getGameObject()) {
             return Helpers.vector2(this.getGameObject().x, this.getGameObject().y);
         }
         return Helpers.vector2();
     }
 
-    private setInMotion(): void {
+    setLocation(location: Phaser.Math.Vector2): void {
+        let go: Phaser.GameObjects.Sprite = this.getGameObject();
+        if (go) {
+            go.x = location.x;
+            go.y = location.y;
+        }
+    }
+
+    private _setInMotion(): void {
         let heading: Phaser.Math.Vector2 = this.getHeading();
         // add force to heading
-        let deltaV: Phaser.Math.Vector2 = heading.multiply(Helpers.vector2(this.force));
+        let deltaV: Phaser.Math.Vector2 = heading.multiply(Helpers.vector2(this._force));
         // add deltaV to current Velocity
         this.getPhysicsBody().velocity.add(deltaV);
+    }
+
+    private _createGameObj(options: BulletOptions): void {
+        this._gameObj = this._scene.add.sprite(0, 0, options.spriteName);
+        this.setLocation(options.location);
+        this._gameObj.setScale(this._scale);
+        this._scene.physics.add.existing(this._gameObj);
     }
 }
