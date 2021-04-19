@@ -58,8 +58,9 @@ export class GameplayScene extends Phaser.Scene {
         });
         this.load.image('explosion', './assets/particles/explosion.png');
         this.load.image('bullet', './assets/sprites/bullet.png');
+        this.load.image('box', './assets/sprites/box.png');
 
-        this.load.image('tiles', 'assets/sprites/wall-tile.png');
+        this.load.image('metaltiles', './assets/tiles/metaltiles.png');
 
         this.load.image('sun', './assets/backgrounds/sun.png');
 
