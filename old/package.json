@@ -39,7 +39,7 @@
     "webpack-cli": "^3.3.10"
   },
   "dependencies": {
-    "jquery": "^3.4.1",
+    "jquery": "^3.5.0",
     "phaser": "^3.24.1",
     "uuid": "^3.4.0"
   }
