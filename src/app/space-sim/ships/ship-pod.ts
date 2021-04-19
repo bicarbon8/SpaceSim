@@ -49,11 +49,11 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return this.attachments.getAttachmentAt<ThrusterAttachment>(AttachmentLocation.back);
     }
 
-    update(): void {
+    update(time: number, delta: number): void {
         if (this.active) {
-            this.lookAt(this._target);
-            this._checkOverheatCondition();
-            this.attachments.update();
+            this.lookAt(this._target?.getLocation());
+            this._checkOverheatCondition(time, delta);
+            this.attachments.update(time, delta);
         }
     }
 
@@ -62,23 +62,20 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      * defined by {Constants.OVERHEAT_CHECK_INTERVAL} milliseconds between each check.
      * also applies cooling at a rate of {Constants.COOLING_RATE}
      */
-    private _checkOverheatCondition(): void {
+    private _checkOverheatCondition(time: number, delta: number): void {
         if (this.active) {
-            if (this._scene.game.getTime() > this._lastOverheatCheck + Constants.OVERHEAT_CHECK_INTERVAL) {
-                if (this._temperature > Constants.MAX_TEMPERATURE) {
-                    this.destroy(); // we are dead
-                }
-                if (this._temperature > Constants.MAX_SAFE_TEMPERATURE) {
-                    // reduce integrity based on degrees over safe operating temp
-                    let delta: number = (this._temperature - Constants.MAX_SAFE_TEMPERATURE) / Constants.MAX_SAFE_TEMPERATURE;
-                    this.sustainDamage(delta);
-                }
-                this.applyCooling(Constants.COOLING_RATE);
-                this._lastOverheatCheck = this._scene.game.getTime();
+            if (this._temperature > Constants.MAX_TEMPERATURE) {
+                this.destroy(); // we are dead
             }
+            if (this._temperature > Constants.MAX_SAFE_TEMPERATURE) {
+                // reduce integrity based on degrees over safe operating temp
+                let damage: number = (this._temperature - Constants.MAX_SAFE_TEMPERATURE / delta);
+                this.sustainDamage(damage);
+            }
+            let amountCooled: number = Constants.COOLING_RATE / delta;
+            this.applyCooling(amountCooled);
         }
     }
-    private _lastOverheatCheck: number = 0;
 
     /**
      * the location within coordinate space
@@ -126,12 +123,11 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return this._target as T;
     }
 
-    lookAt<T extends HasLocation>(obj: T): void {
+    lookAt(location: Phaser.Math.Vector2): void {
         if (this.getPhysicsBody()) {
-            if (obj) {
-                let targetPos = obj.getLocation();
+            if (location) {
                 let shipPos = this.getLocation();
-                let radians: number = Phaser.Math.Angle.Between(targetPos.x, targetPos.y, shipPos.x, shipPos.y);
+                let radians: number = Phaser.Math.Angle.Between(location.x, location.y, shipPos.x, shipPos.y);
                 let degrees: number = Phaser.Math.RadToDeg(radians);
                 this.getPhysicsBody().rotation = degrees;
             }
@@ -203,6 +199,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         if (this._integrity <= 0) {
             this._integrity = 0;
             this.destroy(); // we are dead
+            // TODO: return to menu scene
         }
     }
 
@@ -224,11 +221,11 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     private _createGameObj(config?: ShipPodOptions): void {
         // create container
         let loc: Phaser.Math.Vector2 = config?.location || Helpers.vector2();
-        this._containerGameObj = new GameObjects.Container(this._scene, loc.x, loc.y);
-        this._flareParticles = new GameObjects.Particles.ParticleEmitterManager(this._scene, 'flares');
-        this._explosionParticles = new GameObjects.Particles.ParticleEmitterManager(this._scene, 'explosion');
+        this._containerGameObj = this._scene.add.container(loc.x, loc.y);
+        this._flareParticles = this._scene.add.particles('flares');
+        this._explosionParticles = this._scene.add.particles('explosion');
 
-        let ship: GameObjects.Sprite = new GameObjects.Sprite(this._scene, 0, 0, 'ship-pod');
+        let ship: GameObjects.Sprite = this._scene.add.sprite(0, 0, 'ship-pod');
         this._containerGameObj.add(ship);
 
         // setup physics for container

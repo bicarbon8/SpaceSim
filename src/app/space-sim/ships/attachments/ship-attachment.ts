@@ -52,7 +52,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         return null;
     }
 
-    abstract update(): void;
+    abstract update(time: number, delta: number): void;
 
     abstract trigger(): void;
 

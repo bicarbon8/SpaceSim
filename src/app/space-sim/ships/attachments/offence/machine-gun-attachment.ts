@@ -14,8 +14,8 @@ export class MachineGunAttachment extends OffenceAttachment {
         this.scene.physics.add.existing(this.gameObj);
     }
 
-    update(): void {
-
+    update(time: number, delta: number): void {
+        // TODO: add cooling
     }
     
     fire(direction?: Phaser.Math.Vector2): void {
@@ -34,6 +34,7 @@ export class MachineGunAttachment extends OffenceAttachment {
                         spriteName: 'bullet'
                     });
                     this.remainingAmmo--;
+                    // TODO: add increase in heat
                     this.lastFired = this.scene.game.getTime();
                 }
             }

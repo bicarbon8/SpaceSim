@@ -1,4 +1,4 @@
 export interface Updatable {
     active: boolean;
-    update(): void;
+    update(time: number, delta: number): void;
 }

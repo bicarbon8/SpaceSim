@@ -30,12 +30,12 @@ export class AttachmentManager implements HasAttachments, Updatable {
         }
     }
 
-    update(): void {
+    update(time: number, delta: number): void {
         if (this.active) {
             for (var i=0; i<this._attachments.length; i++) {
                 let a: ShipAttachment = this._attachments[i];
                 if (a) {
-                    a.update();
+                    a.update(time, delta);
                 }
             }
         }

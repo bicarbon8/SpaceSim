@@ -2,24 +2,24 @@ import { Vector2 } from "phaser/src/math";
 import { ShipPod } from "../ships/ship-pod";
 import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
 import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
-import { Helpers } from "../utilities/helpers";
 import { MachineGunAttachment } from "../ships/attachments/offence/machine-gun-attachment";
-import { InputController } from "../utilities/input-controller";
-import { TouchController } from "../utilities/touch-controller";
-import { KbmController } from "../utilities/kbm-controller";
+import { InputController } from "../controllers/input-controller";
+import { TouchController } from "../controllers/touch-controller";
+import { KbmController } from "../controllers/kbm-controller";
 import { ShipAttachment } from "../ships/attachments/ship-attachment";
 import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { HasLocation } from "../interfaces/has-location";
 import { SystemBody } from "../star-systems/system-body";
+import { GameMap } from "../star-systems/game-map";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
     visible: true,
-    key: 'ShipScene'
+    key: 'GameplayScene'
 };
 
-export class ShipScene extends Phaser.Scene {
+export class GameplayScene extends Phaser.Scene {
     private _player: ShipPod;
+    private _map: GameMap;
     private _solarSystemBodies: SystemBody[];
     private _controller: InputController;
     private _debugLayer: Phaser.GameObjects.Layer;
@@ -59,6 +59,8 @@ export class ShipScene extends Phaser.Scene {
         this.load.image('explosion', './assets/particles/explosion.png');
         this.load.image('bullet', './assets/sprites/bullet.png');
 
+        this.load.image('tiles', 'assets/sprites/wall-tile.png');
+
         this.load.image('sun', './assets/backgrounds/sun.png');
 
         this.load.image('far-stars', './assets/backgrounds/starfield-tile-512x512.png');
@@ -76,10 +78,10 @@ export class ShipScene extends Phaser.Scene {
         this._createDebugLayer();
     }
 
-    update(): void {
-        this._controller?.update();
-        this._player?.update();
-        this._updateStarSystemObjects();
+    update(time: number, delta: number): void {
+        this._controller?.update(time, delta);
+        this._player?.update(time, delta);
+        this._updateStarSystemObjects(time, delta);
         if (this.debug) {
             this._displayDebugInfo();
         }
@@ -88,9 +90,9 @@ export class ShipScene extends Phaser.Scene {
         this._offsetBackgroundObjects();
     }
 
-    private _updateStarSystemObjects(): void {
+    private _updateStarSystemObjects(time: number, delta: number): void {
         this._solarSystemBodies.forEach((systemBody: SystemBody) => {
-            systemBody.update();
+            systemBody.update(time, delta);
         });
     }
 
@@ -146,10 +148,9 @@ export class ShipScene extends Phaser.Scene {
             this._controller = new KbmController(this, this._player);
         } else {
             this._controller = new TouchController(this, this._player);
+            this._foregroundGroup.add((this._controller as TouchController).getGameObject());
+            this._foregroundLayer.add((this._controller as TouchController).getGameObject());
         }
-
-        this._foregroundGroup.add(this._controller.getGameObject());
-        this._foregroundLayer.add(this._controller.getGameObject());
     }
 
     private _createMidgroundLayer(): void {
@@ -161,6 +162,8 @@ export class ShipScene extends Phaser.Scene {
 
         this._midgroundGroup.add(this._player.getGameObject());
         this._midgroundLayer.add(this._player.getGameObject());
+
+        this._map = new GameMap(this);
     }
 
     private _createStarSystemLayer(): void {

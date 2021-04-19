@@ -31,7 +31,7 @@ export class SystemBody implements Updatable, HasLocation, HasGameObject<Phaser.
         this._createGameObj(options);
     }
 
-    update(): void {
+    update(time: number, delta: number): void {
         if (this.active) {
             let go: Phaser.GameObjects.Sprite = this.getGameObject();
             if (go) {

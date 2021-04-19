@@ -24,8 +24,8 @@ export module Helpers {
      * @param rotation the rotation in degrees
      */
     export function getHeading(rotation: number): Phaser.Math.Vector2 {
-        let x: number = Math.cos(Phaser.Math.DegToRad(rotation));
-        let y: number = Math.sin(Phaser.Math.DegToRad(rotation));
+        let x: number = Math.cos(deg2rad(rotation));
+        let y: number = Math.sin(deg2rad(rotation));
         return new Phaser.Math.Vector2(x, y).normalize().negate();
     }
 
@@ -38,12 +38,12 @@ export module Helpers {
 
     export function rad2deg(radians: number): number {
         // 1Rad × 180/π
-        return radians * (180 / Math.PI);
+        return Phaser.Math.RadToDeg(radians); // radians * (180 / Math.PI);
     }
 
     export function deg2rad(degrees: number): number {
         // 1Deg × π/180
-        return degrees * (Math.PI / 180);
+        return Phaser.Math.DegToRad(degrees); // degrees * (Math.PI / 180);
     }
 
     /**

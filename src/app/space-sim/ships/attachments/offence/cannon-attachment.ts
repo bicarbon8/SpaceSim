@@ -14,7 +14,7 @@ export class CannonAttachment extends OffenceAttachment {
         this.scene.physics.add.existing(this.gameObj);
     }
 
-    update(): void {
+    update(time: number, delta: number): void {
 
     }
     

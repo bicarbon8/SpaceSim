@@ -1,6 +1,6 @@
 import { Scene } from "phaser";
 import { HasLocation } from "../interfaces/has-location";
-import { Helpers } from "./helpers";
+import { Helpers } from "../utilities/helpers";
 
 export class MouseTracker implements HasLocation {
     private _scene: Scene;

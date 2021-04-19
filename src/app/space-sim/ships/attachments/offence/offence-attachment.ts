@@ -25,5 +25,5 @@ export abstract class OffenceAttachment extends ShipAttachment implements CanSho
     }
 
     abstract fire(direction?: Phaser.Math.Vector2): void;
-    abstract update(): void;
+    abstract update(time: number, delta: number): void;
 }

@@ -1,10 +1,7 @@
-import { Updatable } from "../interfaces/updatable";
 import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
 import { ShipAttachment } from "../ships/attachments/ship-attachment";
 import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
 import { ShipPod } from "../ships/ship-pod";
-import { Helpers } from "./helpers";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
 
@@ -29,7 +26,7 @@ export class KbmController extends InputController {
         this.player.setTarget(this._mouseTracker);
     }
         
-    update(): void {
+    update(time: number, delta: number): void {
         if (this.active) {
             // activate Thruster
             if (this._thrustKey.isDown) {
