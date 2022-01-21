@@ -46,25 +46,25 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     preload(): void {
-        this.load.image('ship-pod', './assets/sprites/ship-pod.png');
-        this.load.image('thruster', './assets/sprites/thruster.png');
-        this.load.image('cannon', './assets/sprites/cannon.png');
-        this.load.image('machine-gun', './assets/sprites/machine-gun.png');
-        this.load.spritesheet('flares', './assets/particles/flares.png', {
+        this.load.image('ship-pod', 'https://bicarbon8.github.io/SpaceSim/assets/sprites/ship-pod.png');
+        this.load.image('thruster', 'https://bicarbon8.github.io/SpaceSim/assets/sprites/thruster.png');
+        this.load.image('cannon', 'https://bicarbon8.github.io/SpaceSim/assets/sprites/cannon.png');
+        this.load.image('machine-gun', 'https://bicarbon8.github.io/SpaceSim/assets/sprites/machine-gun.png');
+        this.load.spritesheet('flares', 'https://bicarbon8.github.io/SpaceSim/assets/particles/flares.png', {
             frameWidth: 130,
             frameHeight: 132,
             startFrame: 0,
             endFrame: 4
         });
-        this.load.image('explosion', './assets/particles/explosion.png');
-        this.load.image('bullet', './assets/sprites/bullet.png');
-        this.load.image('box', './assets/sprites/box.png');
+        this.load.image('explosion', 'https://bicarbon8.github.io/SpaceSim/assets/particles/explosion.png');
+        this.load.image('bullet', 'https://bicarbon8.github.io/SpaceSim/assets/sprites/bullet.png');
+        this.load.image('box', 'https://bicarbon8.github.io/SpaceSim/assets/sprites/box.png');
 
-        this.load.image('metaltiles', './assets/tiles/metaltiles.png');
+        this.load.image('metaltiles', 'https://bicarbon8.github.io/SpaceSim/assets/tiles/metaltiles.png');
 
-        this.load.image('sun', './assets/backgrounds/sun.png');
+        this.load.image('sun', 'https://bicarbon8.github.io/SpaceSim/assets/backgrounds/sun.png');
 
-        this.load.image('far-stars', './assets/backgrounds/starfield-tile-512x512.png');
+        this.load.image('far-stars', 'https://bicarbon8.github.io/SpaceSim/assets/backgrounds/starfield-tile-512x512.png');
     }
 
     create(): void {
