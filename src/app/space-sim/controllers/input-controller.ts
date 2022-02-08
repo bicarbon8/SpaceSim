@@ -1,6 +1,6 @@
 import { Updatable } from "../interfaces/updatable";
 import { ShipPod } from "../ships/ship-pod";
-import { Globals } from "../utilities/globals";
+import { SpaceSim } from "../space-sim";
 
 export abstract class InputController implements Updatable {
     private _scene: Phaser.Scene;
@@ -23,7 +23,7 @@ export abstract class InputController implements Updatable {
     }
 
     get player(): ShipPod {
-        return this._player || Globals.player;
+        return this._player || SpaceSim.player;
     }
 
     set player(player: ShipPod) {

@@ -15,7 +15,8 @@
       "es2018",
       "dom",
       "scripthost"
-    ]
+    ],
+    "allowSyntheticDefaultImports": true
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false

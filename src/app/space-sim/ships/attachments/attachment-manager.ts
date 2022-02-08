@@ -8,7 +8,7 @@ import { Updatable } from "../../interfaces/updatable";
 import { ShipPod } from "../ship-pod";
 import { ThrusterAttachment } from "./utility/thruster-attachment";
 import { Constants } from "../../utilities/constants";
-import { Globals } from "../../utilities/globals";
+import { SpaceSim } from "../../space-sim";
 
 export class AttachmentManager implements HasAttachments, Updatable {
     private _attachments: ShipAttachment[] = [];
@@ -22,7 +22,7 @@ export class AttachmentManager implements HasAttachments, Updatable {
     constructor(parent: ShipPod, game?: Game) {
         this.active = true;
         this._ship = parent;
-        this._game = game || Globals.game;
+        this._game = game || SpaceSim.game;
         this._lastRotatedTime = 0;
         this._rotationDelay = 100; // milliseconds
         for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {

@@ -2,6 +2,10 @@ import { HasGameObject } from "../../../interfaces/has-game-object";
 import { BulletOptions } from "../../../interfaces/bullet-options";
 import { HasLocation } from "../../../interfaces/has-location";
 import { Helpers } from "../../../utilities/helpers";
+import { HasIntegrity } from "src/app/space-sim/interfaces/has-integrity";
+import { Physics } from "phaser";
+import { SpaceSim } from "src/app/space-sim/space-sim";
+import { ShipPod } from "../../ship-pod";
 
 export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLocation {
     readonly id: string;
@@ -21,21 +25,27 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
         
         this._createGameObj(options);
 
-        this.getGameObject().angle = options.angle || 0;
-        this.getPhysicsBody().velocity = options.startingV || Phaser.Math.Vector2.ZERO;
+        const startingA: number = options.angle || 0;
+        this.getGameObject().setAngle(startingA);
+        const startingV: Phaser.Math.Vector2 = options.startingV || Phaser.Math.Vector2.ZERO;
+        this.getPhysicsBody().setVelocity(startingV.x, startingV.y);
+        this.getPhysicsBody().setBounce(0, 0);
         this.addCollisionDetection();
         this._setInMotion();
     }
 
     private addCollisionDetection(): void {
-        // TODO: setup collision detection with all walls and other ships
-        // for (var i=0; i<Globals.interactables.length; i++) {
-        //     this.scene.physics.add.collider(this.gameObj, Globals.interactables[i], this.onImpact);
-        // }
-    }
-
-    private onImpact(bullet: Phaser.GameObjects.GameObject, target: Phaser.GameObjects.GameObject): void {
-        // TODO: impart damage to target and destroy bullet
+        this._scene.physics.add.collider(this.getGameObject(), SpaceSim.map.getGameObject(), () => {
+            this.getGameObject().active = false;
+            this.getGameObject().destroy();
+        });
+        SpaceSim.opponents.forEach((opp: ShipPod) => {
+            this._scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
+                this.getGameObject().active = false;
+                this.getGameObject().destroy();
+                opp.sustainDamage(10);
+            });
+        });
     }
 
     getGameObject(): Phaser.GameObjects.Sprite {
