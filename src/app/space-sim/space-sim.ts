@@ -1,9 +1,10 @@
 import "phaser";
+import { GameMap } from "./map/game-map";
 import { GameplayScene } from "./scenes/gameplay-scene";
+import { ShipPod } from "./ships/ship-pod";
+import { SpaceSimOptions } from "./space-sim-options";
 
 export class SpaceSim {
-    private _game: Phaser.Game;
-    
     constructor() {
         let conf: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
@@ -18,32 +19,50 @@ export class SpaceSim {
             physics: {
                 default: 'arcade',
                 arcade: {
+                    debug: SpaceSim.debug,
                     gravity: { x: 0, y: 0 },
                 }
             },
             roundPixels: true,
             scene: [GameplayScene]
         };
-        this._game = new Phaser.Game(conf);
+        SpaceSim.game = new Phaser.Game(conf);
           
         window.addEventListener('resize', () => {
-            this._game.canvas.width = window.innerWidth;
-            this._game.canvas.height = window.innerHeight * 0.8;
-            this._game.scale.refresh();
+            SpaceSim.game.canvas.width = window.innerWidth;
+            SpaceSim.game.canvas.height = window.innerHeight * 0.8;
+            SpaceSim.game.scale.refresh();
         });
 
         document.addEventListener("visibilitychange", () => {
-            this._game.scene.getScenes(false).forEach((scene: Phaser.Scene) => {
+            SpaceSim.game.scene.getScenes(false).forEach((scene: Phaser.Scene) => {
                 if (document.hidden) {
-                    this._game.scene.pause(scene);
+                    SpaceSim.game.scene.pause(scene);
                 } else {
-                    this._game.scene.resume(scene);
+                    SpaceSim.game.scene.resume(scene);
                 }
             });
         }, false);
     }
+}
 
-    get game(): Phaser.Game {
-        return this._game;
+export module SpaceSim {
+    var _inst: SpaceSim;
+    export function start(options?: SpaceSimOptions): SpaceSim {
+        SpaceSim.debug = options?.debug || false;
+        if (!_inst) {
+            _inst = new SpaceSim();
+        }
+        return _inst;
+    }
+    export var player: ShipPod;
+    export var opponents: ShipPod[] = [];
+    export var game: Phaser.Game;
+    export var map: GameMap;
+    export var debug: boolean = false;
+    export function stop(): void {
+        if (game) {
+            game.destroy(true, true);
+        }
     }
 }

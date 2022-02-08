@@ -9,7 +9,10 @@ export class KbmController extends InputController {
     private _mouseTracker: MouseTracker;
     
     /** Input Handlers */
-    private _thrustKey: Phaser.Input.Keyboard.Key;
+    private _thrustForwardsKey: Phaser.Input.Keyboard.Key;
+    private _thrustBackwardsKey: Phaser.Input.Keyboard.Key;
+    private _strafeLeftKey: Phaser.Input.Keyboard.Key;
+    private _strafeRightKey: Phaser.Input.Keyboard.Key;
     private _boostKey: Phaser.Input.Keyboard.Key;
     private _rotateAttachmentsClockwiseKey: Phaser.Input.Keyboard.Key;
     private _rotateAttachmentsAntiClockwiseKey: Phaser.Input.Keyboard.Key;
@@ -29,12 +32,33 @@ export class KbmController extends InputController {
     update(time: number, delta: number): void {
         if (this.active) {
             // activate Thruster
-            if (this._thrustKey.isDown) {
+            if (this._thrustForwardsKey.isDown) {
                 let thruster: ThrusterAttachment = this.player.getThruster();
                 if (thruster) {
                     thruster.thrustFowards();
                 }
             }
+            // // reverse Thruster
+            // if (this._thrustBackwardsKey.isDown) {
+            //     let thruster: ThrusterAttachment = this.player.getThruster();
+            //     if (thruster) {
+            //         thruster.thrustBackwards();
+            //     }
+            // }
+            // // strafe Left
+            // if (this._strafeLeftKey.isDown) {
+            //     let thruster: ThrusterAttachment = this.player.getThruster();
+            //     if (thruster) {
+            //         thruster.strafeLeft();
+            //     }
+            // }
+            // // strafe Right
+            // if (this._strafeRightKey.isDown) {
+            //     let thruster: ThrusterAttachment = this.player.getThruster();
+            //     if (thruster) {
+            //         thruster.strafeRight();
+            //     }
+            // }
             // activate Booster
             if (this._boostKey.isDown) {
                 let thruster: ThrusterAttachment = this.player.getThruster();
@@ -71,7 +95,11 @@ export class KbmController extends InputController {
     }
     
     private _setupInputHandling(): void {
-        this._thrustKey = this.scene.input.keyboard.addKey('SPACE', true, true);
+        this._thrustForwardsKey = this.scene.input.keyboard.addKey('SPACE', true, true);
+        // this._thrustForwardsKey = this.scene.input.keyboard.addKey('W', true, true);
+        // this._thrustBackwardsKey = this.scene.input.keyboard.addKey('S', true, true);
+        // this._strafeLeftKey = this.scene.input.keyboard.addKey('A', true, true);
+        // this._strafeRightKey = this.scene.input.keyboard.addKey('D', true, true);
         this._boostKey = this.scene.input.keyboard.addKey('TAB', true, false);
         this._rotateAttachmentsClockwiseKey = this.scene.input.keyboard.addKey('E', true, false);
         this._rotateAttachmentsAntiClockwiseKey = this.scene.input.keyboard.addKey('Q', true, false);

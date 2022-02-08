@@ -2,6 +2,7 @@ import { CanThrust } from "../../../interfaces/can-thrust";
 import { ShipPod } from "../../ship-pod";
 import { Constants } from "../../../utilities/constants";
 import { ShipAttachment } from "../ship-attachment";
+import { Helpers } from "src/app/space-sim/utilities/helpers";
 
 export class ThrusterAttachment extends ShipAttachment implements CanThrust {
     ship: ShipPod;
@@ -27,40 +28,41 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
     }
     
     thrustFowards(): void {
-        this.applyThrust(Constants.THRUSTER_FORCE, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST);
+        this.applyThrust(Constants.THRUSTER_FORCE, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST, this.ship.getHeading());
         this.displayThrusterFire(Constants.Flare.yellow, 0.2, 1);
     }
     
     private lastBoostTime: number = 0;
     boostForwards(): void {
-        if (this.scene.game.getTime() >= this.lastBoostTime + Constants.BOOSTER_COOLDOWN_TIME) {
-            this.applyThrust(Constants.BOOSTER_FORCE, Constants.FUEL_PER_BOOST, Constants.HEAT_PER_BOOST);
+        if (this.scene.game.getTime() >= this.lastBoostTime + Constants.BOOSTER_RECHARGE_TIME) {
+            this.applyThrust(Constants.BOOSTER_FORCE, Constants.FUEL_PER_BOOST, Constants.HEAT_PER_BOOST, this.ship.getHeading());
             this.displayThrusterFire(Constants.Flare.blue, 1, 10);
             this.lastBoostTime = this.scene.game.getTime();
         }
     }
 
     strafeLeft(): void {
-        
+        this.applyThrust(Constants.THRUSTER_FORCE * 0.25, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST, this.ship.getHeading().rotate(Helpers.deg2rad(-90)));
     }
 
     strafeRight(): void {
-        
+        this.applyThrust(Constants.THRUSTER_FORCE * 0.25, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST, this.ship.getHeading().rotate(Helpers.deg2rad(90)));
     }
 
     thrustBackwards(): void {
-        
+        this.applyThrust(Constants.THRUSTER_FORCE * 0.10, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST, this.ship.getHeading().negate());
+        // this.displayThrusterFire(Constants.Flare.yellow, 0.2, 1);
     }
 
-    private applyThrust(force: number, fuel: number, heat: number): void {
+    private applyThrust(force: number, fuel: number, heat: number, heading: Phaser.Math.Vector2): void {
         if (this.ship.getRemainingFuel() > 0) {
-            let heading: Phaser.Math.Vector2 = this.ship.getHeading();
+            // let heading: Phaser.Math.Vector2 = this.ship.getHeading();
             let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(force, force));
             let newV: Phaser.Math.Vector2 = this.ship.getVelocity().add(deltaV);
-            this.ship.getPhysicsBody().setVelocity(newV.x, newV.y);
+            this.ship?.getPhysicsBody()?.setVelocity(newV.x, newV.y);
             
-            this.ship.reduceFuel(fuel);
-            this.ship.applyHeating(heat);
+            this.ship?.reduceFuel(fuel);
+            this.ship?.applyHeating(heat);
         }
     }
 

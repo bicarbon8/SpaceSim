@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { GameObjects, Scene } from "phaser";
 import { Updatable } from "../interfaces/updatable";
 import { CanTarget } from "../interfaces/can-target";
@@ -12,6 +13,7 @@ import { AttachmentManager } from "./attachments/attachment-manager";
 import { ThrusterAttachment } from "./attachments/utility/thruster-attachment";
 import { ShipPodOptions } from "./ship-pod-options";
 import { AttachmentLocation } from "./attachments/attachment-location";
+import { ShipAttachment } from './attachments/ship-attachment';
 
 export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<GameObjects.Container>, HasIntegrity, HasTemperature, HasFuel {
     readonly id: string; // UUID
@@ -49,6 +51,12 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return this.attachments.getAttachmentAt<ThrusterAttachment>(AttachmentLocation.back);
     }
 
+    /**
+     * if player is active, face the current target, check for overheat and update
+     * attachments
+     * @param time the current game time elapsed
+     * @param delta the number of elapsed milliseconds since last update 
+     */
     update(time: number, delta: number): void {
         if (this.active) {
             this.lookAt(this._target?.getLocation());
@@ -59,8 +67,10 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
 
     /**
      * checks for and applies damage based on degrees over safe temperature at a rate
-     * defined by {Constants.OVERHEAT_CHECK_INTERVAL} milliseconds between each check.
+     * of {delta} milliseconds between each check.
      * also applies cooling at a rate of {Constants.COOLING_RATE}
+     * @param time the current game time elapsed
+     * @param delta the number of elapsed milliseconds since last update
      */
     private _checkOverheatCondition(time: number, delta: number): void {
         if (this.active) {
@@ -69,7 +79,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
             }
             if (this._temperature > Constants.MAX_SAFE_TEMPERATURE) {
                 // reduce integrity based on degrees over safe operating temp
-                let damage: number = (this._temperature - Constants.MAX_SAFE_TEMPERATURE / delta);
+                let damage: number = (this._temperature - Constants.MAX_SAFE_TEMPERATURE) / delta;
                 this.sustainDamage(damage);
             }
             let amountCooled: number = Constants.COOLING_RATE / delta;
@@ -194,12 +204,16 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return this._integrity;
     }
 
+    private _lastDamaged: number = 0;
     sustainDamage(amount: number): void {
-        this._integrity -= amount;
-        if (this._integrity <= 0) {
-            this._integrity = 0;
-            this.destroy(); // we are dead
-            // TODO: return to menu scene
+        if (this._scene.time.now - this._lastDamaged > Constants.DAMAGE_IMMUNITY) {
+            this._lastDamaged = this._scene.time.now;
+            this._integrity -= amount;
+            if (this._integrity <= 0) {
+                this._integrity = 0;
+                this.destroy(); // we are dead
+                // TODO: return to menu scene
+            }
         }
     }
 
@@ -213,6 +227,14 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     destroy(): void {
         this.active = false;
         this._displayShipExplosion();
+        this.getGameObject().active = false;
+        this._attachmentMgr.active = false;
+        this._attachmentMgr.getAttachments().forEach((attachment: ShipAttachment) => {
+            if (attachment) {
+                attachment.active = false;
+                attachment.getGameObject().destroy();
+            }
+        });
         this.getGameObject().destroy();
         this._containerGameObj = null;
         // TODO: signal end of game and display menu
@@ -227,10 +249,12 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
 
         let ship: GameObjects.Sprite = this._scene.add.sprite(0, 0, 'ship-pod');
         this._containerGameObj.add(ship);
+        const containerBounds: Phaser.Geom.Rectangle = this._containerGameObj.getBounds();
+        this._containerGameObj.setSize(containerBounds.width, containerBounds.height);
 
         // setup physics for container
         this._scene.physics.add.existing(this._containerGameObj);
-        this.getPhysicsBody().bounce.setTo(0.7, 0.7);
+        this.getPhysicsBody().setBounce(0.2, 0.2);
         this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
     }
 
