@@ -151,6 +151,10 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return this.getGameObject()?.angle || 0;
     }
 
+    /**
+     * sets the ship's angle in degrees
+     * @param angle the angle in degrees
+     */
     setRotation(angle: number): void {
         this.getGameObject()?.setAngle(angle);
     }
@@ -237,15 +241,19 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         });
         this.getGameObject().destroy();
         this._containerGameObj = null;
-        // TODO: signal end of game and display menu
+
+        this._scene.events.emit('player-death', this);
     }
 
     private _createGameObj(config?: ShipPodOptions): void {
         // create container
         let loc: Phaser.Math.Vector2 = config?.location || Helpers.vector2();
         this._containerGameObj = this._scene.add.container(loc.x, loc.y);
+        this._containerGameObj.setDepth(Constants.DEPTH_PLAYER);
         this._flareParticles = this._scene.add.particles('flares');
+        this._flareParticles.setDepth(Constants.DEPTH_PLAYER);
         this._explosionParticles = this._scene.add.particles('explosion');
+        this._explosionParticles.setDepth(Constants.DEPTH_PLAYER);
 
         let ship: GameObjects.Sprite = this._scene.add.sprite(0, 0, 'ship-pod');
         this._containerGameObj.add(ship);

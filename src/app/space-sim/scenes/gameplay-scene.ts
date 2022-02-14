@@ -5,46 +5,35 @@ import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attach
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
-import { ShipAttachment } from "../ships/attachments/ship-attachment";
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { SystemBody } from "../star-systems/system-body";
+import { StellarBody } from "../star-systems/stellar-body";
 import { GameMap } from "../map/game-map";
 import { environment } from "../../../environments/environment";
 import { Constants } from "../utilities/constants";
 import { SpaceSim } from "../space-sim";
 import { Helpers } from "../utilities/helpers";
 import { Room } from "@mikewesthad/dungeon";
+import { AttachmentLocation } from "../ships/attachments/attachment-location";
+import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
+import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
-    active: true,
-    visible: true,
-    key: 'GameplayScene'
+    active: false,
+    visible: false,
+    key: 'gameplay-scene'
 };
 
 export class GameplayScene extends Phaser.Scene {
-    private _solarSystemBodies: SystemBody[];
     private _controller: InputController;
-    private _debugLayer: Phaser.GameObjects.Layer;
-    private _debugGroup: Phaser.GameObjects.Group;
-    private _foregroundLayer: Phaser.GameObjects.Layer;
-    private _foregroundGroup: Phaser.GameObjects.Group;
-    private _midgroundLayer: Phaser.GameObjects.Layer;
-    private _midgroundGroup: Phaser.GameObjects.Group;
-    private _starSystemLayer: Phaser.GameObjects.Layer;
-    private _starSystemGroup: Phaser.GameObjects.Group;
-    private _backgroundLayer: Phaser.GameObjects.Layer;
-    private _backgroundGroup: Phaser.GameObjects.Group;
-    private _debugText: Phaser.GameObjects.Text;
+    private _hudText: Phaser.GameObjects.Text;
+    private _stellarBodies: StellarBody[];
 
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        let conf: Phaser.Types.Scenes.SettingsConfig = settingsConfig || sceneConfig;
-        super(conf);
+        super(settingsConfig || sceneConfig);
 
-        this._solarSystemBodies = [];
-
-        this.debug = true;
+        this.debug = SpaceSim.debug;
+        this._stellarBodies = [];
     }
 
     preload(): void {
@@ -61,74 +50,32 @@ export class GameplayScene extends Phaser.Scene {
         this.load.image('bullet', `${environment.baseUrl}/assets/sprites/bullet.png`);
         this.load.image('box', `${environment.baseUrl}/assets/sprites/box.png`);
 
-        this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
-
         this.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
+        this.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
+        this.load.image('mercury', `${environment.baseUrl}/assets/backgrounds/mercury.png`);
 
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
+
+        this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
     }
 
     create(): void {
-        this._createDebugLayer();
-        this._createPlayerLayer();
-        this._createHUDLayer();
-        this._createStarSystemLayer();
-        this._createBackgroundLayer();
+        this._createHUD();
+        this._createMapAndPlayer();
+        this._setupCamera();
+        this._createController();
+        this._createStellarBodiesLayer();
+        this._createBackground();
+        this._createOpponents();
     }
 
     update(time: number, delta: number): void {
         this._controller?.update(time, delta);
         SpaceSim.player?.update(time, delta);
-        this._updateStarSystemObjects(time, delta);
-        if (this.debug) {
-            this._displayDebugInfo();
-        }
-        this._offsetDebugObjects();
-        this._offsetForegroundObjects();
-        this._offsetBackgroundObjects();
-    }
-
-    private _updateStarSystemObjects(time: number, delta: number): void {
-        this._solarSystemBodies.forEach((systemBody: SystemBody) => {
-            systemBody.update(time, delta);
+        this._stellarBodies.forEach((body) => {
+            body.update(time, delta);
         });
-    }
-
-    private _offsetDebugObjects(): void {
-        let offset: Phaser.Math.Vector2 = this.cameras.main.getWorldPoint(10, 10);
-        this._debugGroup.setXY(offset.x, offset.y);
-    }
-
-    private _offsetForegroundObjects(): void {
-        let offset: Phaser.Math.Vector2 = this.cameras.main.getWorldPoint(0, 0);
-        this._foregroundGroup.setXY(offset.x, offset.y);
-    }
-
-    private _offsetBackgroundObjects(): void {
-        let offset: Phaser.Math.Vector2 = this.cameras.main.getWorldPoint(Math.ceil(this.game.canvas.width / 2), Math.ceil(this.game.canvas.height / 2));
-        this._backgroundGroup.setXY(offset.x, offset.y);
-    }
-
-    private _createPlayer(): void {
-        // Place the player in random empty tile in the first room
-        const startingRoom = SpaceSim.map.getRooms()[0];
-        const startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
-        const startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
-        const playerStartingPosition: Phaser.Math.Vector2 = Helpers.vector2(
-            Phaser.Math.Between(startTopLeft.x, startBottomRight.x), 
-            Phaser.Math.Between(startTopLeft.y, startBottomRight.y)
-        );
-        SpaceSim.player = new ShipPod(this, {location: playerStartingPosition});
-        
-        // TODO: have menu allowing selection of attachments
-        let thruster: ThrusterAttachment = new ThrusterAttachment(this);
-        SpaceSim.player.attachments.addAttachment(thruster);
-        let cannon: CannonAttachment = new CannonAttachment(this);
-        SpaceSim.player.attachments.addAttachment(cannon);
-
-        this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject(), () => {
-            SpaceSim.player.sustainDamage((SpaceSim.player.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33));
-        });
+        this._displayHUDInfo();
     }
 
     private _createOpponents(): void {
@@ -136,8 +83,8 @@ export class GameplayScene extends Phaser.Scene {
             var tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
             var br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
             var pos: Phaser.Math.Vector2 = Helpers.vector2(
-                Phaser.Math.Between(tl.x, br.x), 
-                Phaser.Math.Between(tl.y, br.y)
+                Phaser.Math.RND.realInRange(tl.x, br.x), 
+                Phaser.Math.RND.realInRange(tl.y, br.y)
             );
             var p: ShipPod = new ShipPod(this, {location: pos});
             SpaceSim.opponents.push(p);
@@ -152,84 +99,83 @@ export class GameplayScene extends Phaser.Scene {
         });
     }
 
-    private _createMap(layerDepth: number): void {
-        SpaceSim.map = new GameMap(this, layerDepth);
+    private _createHUD(): void {
+        this._hudText = this.add.text(10, 10, '', { font: '12px Courier', fontStyle: 'color: #ffdddd' });
+        this._hudText.setScrollFactor(0); // keep fixed in original location on screen
+        this._hudText.setDepth(Constants.DEPTH_HUD);
     }
 
-    private _createDebugLayer(): void {
-        this._debugLayer = this.add.layer();
-        this._debugLayer.setName('debug');
-        this._debugLayer.depth = 4;
-
-        this._debugGroup = this.add.group();
-
-        this._debugText = this.add.text(10, 10, '', { font: '16px Courier', fontStyle: 'color: #ffdddd' });
-
-        this._debugGroup.add(this._debugText);
-        this._debugLayer.add(this._debugText);
-    }
-
-    private _createHUDLayer(): void {
-        this._foregroundLayer = this.add.layer();
-        this._foregroundLayer.setName('foreground');
-        this._foregroundLayer.depth = 3;
-
-        this._foregroundGroup = this.add.group();
-
+    private _createController(): void {
         if (this.game.device.os.desktop) {
             this._controller = new KbmController(this, SpaceSim.player);
         } else {
             this._controller = new TouchController(this, SpaceSim.player);
-            this._foregroundGroup.add((this._controller as TouchController).getGameObject());
-            this._foregroundLayer.add((this._controller as TouchController).getGameObject());
         }
     }
 
-    private _createPlayerLayer(): void {
-        this._midgroundLayer = this.add.layer();
-        this._midgroundLayer.setName('midground');
-        this._midgroundLayer.depth = 2;
-
-        this._midgroundGroup = this.add.group();
-
-        this._createMap(this._midgroundLayer.depth);
-        this._createPlayer();
-        this._setupCamera();
-        this._createOpponents();
+    private _createMapAndPlayer(): void {
+        SpaceSim.map = new GameMap(this);
         
-        this._midgroundGroup.add(SpaceSim.player.getGameObject());
-        this._midgroundLayer.add(SpaceSim.player.getGameObject());
-    }
+        // Place the player in random empty tile in the first room
+        const startingRoom = SpaceSim.map.getRooms()[0];
+        const startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
+        const startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
+        const playerStartingPosition: Phaser.Math.Vector2 = Helpers.vector2(
+            Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
+            Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
+        );
+        SpaceSim.player = new ShipPod(this, {location: playerStartingPosition});
+        
+        // TODO: have menu allowing selection of attachments
+        let thruster: ThrusterAttachment = new ThrusterAttachment(this);
+        SpaceSim.player.attachments.addAttachment(thruster);
+        let cannon: CannonAttachment = new CannonAttachment(this);
+        SpaceSim.player.attachments.addAttachment(cannon);
 
-    private _createStarSystemLayer(): void {
-        this._starSystemLayer = this.add.layer();
-        this._starSystemLayer.setName('starsystem');
-        this._starSystemLayer.depth = 1;
-
-        this._starSystemGroup = this.add.group();
-
-        // TODO: support multiple large stars and planets
-        this._solarSystemBodies.push(new SystemBody(this, SpaceSim.player, {spriteName: 'sun'}));
-
-        this._solarSystemBodies.forEach((body: SystemBody) => {
-            this._starSystemGroup.add(body.getGameObject());
-            this._starSystemLayer.add(body.getGameObject());
+        this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject(), () => {
+            SpaceSim.player.sustainDamage((SpaceSim.player.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33));
         });
+
+        this.events.addListener('player-death', (ship: ShipPod) => {
+            if (SpaceSim.player.id == ship?.id) {
+                this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+                    if (progress === 1) {
+                        this.game.scene.start('game-over-scene');
+                        this.game.scene.stop(this);
+                    }
+                });
+            }
+        })
     }
 
-    private _createBackgroundLayer(): void {
-        this._backgroundLayer = this.add.layer();
-        this._backgroundLayer.setName('background');
-        this._backgroundLayer.depth = 0;
+    private _createStellarBodiesLayer(): void {
+        let rooms = SpaceSim.map.getRooms();
+        let bodies: StellarBodyOptions[] = [
+            {spriteName: 'sun'}, 
+            {spriteName: 'venus', rotationSpeed: 0}, 
+            {spriteName: 'mercury', rotationSpeed: 0}
+        ];
+        for (var i=0; i<rooms.length; i+=3) {
+            let room = rooms[i];
+            let startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
+            let startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
+            let location: Phaser.Math.Vector2 = Helpers.vector2(
+                Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
+                Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
+            );
+            let opts: StellarBodyOptions = bodies[Phaser.Math.RND.between(0, 2)];
+            opts.location = location;
+            let body = new StellarBody(this, opts);
+            this._stellarBodies.push(body);
+        }
+    }
 
-        this._backgroundGroup = this.add.group();
-
-        let xOffset: number = Math.ceil(this.game.canvas.width / 2);
-        let yOffset: number = Math.ceil(this.game.canvas.height / 2);
-        let starField = this.add.tileSprite(xOffset, yOffset, this.game.canvas.width, this.game.canvas.height, 'far-stars');
-
-        this._backgroundGroup.add(starField);
-        this._backgroundLayer.add(starField);
+    private _createBackground(): void {
+        const width = this.game.canvas.width;
+	    const height = this.game.canvas.height;
+        const starField = this.add.tileSprite(width/2, height/2, width*3, height*3, 'far-stars');
+        starField.setDepth(Constants.DEPTH_BACKGROUND);
+        starField.setScrollFactor(0.01); // slight movement to appear very far away
     }
 
     private _setupCamera(): void {
@@ -242,27 +188,18 @@ export class GameplayScene extends Phaser.Scene {
         this.cameras.main.startFollow(SpaceSim.player.getGameObject(), true, 1, 1);
     }
 
-    private _displayDebugInfo(): void {
+    private _displayHUDInfo(): void {
         let loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
-        let v: Phaser.Math.Vector2 = SpaceSim.player.getVelocity();
         let info: string[] = [
             `Speed: ${SpaceSim.player.getSpeed().toFixed(1)}`,
             `Integrity: ${SpaceSim.player.getIntegrity().toFixed(1)}`,
             `Heat: ${SpaceSim.player.getTemperature().toFixed(1)}`,
             `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
-            `Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`,
-            `Angle: ${SpaceSim.player.getRotation().toFixed(1)}`,
-            `Velocity: ${v.x.toFixed(1)},${v.y.toFixed(1)}`
+            `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.getRemainingAmmo()}`
         ];
-        let attachments: ShipAttachment[] = SpaceSim.player.attachments.getAttachments();
-        for (var i=0; i<attachments.length; i++) {
-            if (attachments[i]) {
-                info.push(`AttachmentLocation.${AttachmentLocation[i]} - ${i}`);
-                let attLoc: Phaser.Math.Vector2 = attachments[i].getLocation();
-                info.push(`-- Location: ${attLoc.x.toFixed(1)},${attLoc.y.toFixed(1)}`);
-                info.push(`-- Angle: ${attachments[i].getRotation().toFixed(1)}`);
-            }
+        if (SpaceSim.debug) {
+            info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
         }
-        this._debugText.setText(info);
+        this._hudText.setText(info);
     }
 }

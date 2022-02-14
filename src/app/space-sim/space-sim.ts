@@ -1,36 +1,38 @@
 import "phaser";
 import { GameMap } from "./map/game-map";
+import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
+import { StartupScene } from "./scenes/startup-scene";
 import { ShipPod } from "./ships/ship-pod";
 import { SpaceSimOptions } from "./space-sim-options";
 
 export class SpaceSim {
-    constructor() {
+    constructor(options?: SpaceSimOptions) {
         let conf: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
-            width: window.innerWidth,
-            height: window.innerHeight * 0.8,
+            width: options?.width || window.innerWidth,
+            height: options?.height || window.innerHeight * 0.8,
             scale: {
                 mode: Phaser.Scale.NONE,
                 autoCenter: Phaser.Scale.CENTER_BOTH
             },
             backgroundColor: '#000000',
-            parent: 'space-sim',
+            parent: options?.parentElementId || 'space-sim',
             physics: {
                 default: 'arcade',
                 arcade: {
-                    debug: SpaceSim.debug,
+                    debug: (options?.debug === undefined) ? false : options.debug,
                     gravity: { x: 0, y: 0 },
                 }
             },
             roundPixels: true,
-            scene: [GameplayScene]
+            scene: [StartupScene, GameplayScene, GameOverScene]
         };
         SpaceSim.game = new Phaser.Game(conf);
           
         window.addEventListener('resize', () => {
-            SpaceSim.game.canvas.width = window.innerWidth;
-            SpaceSim.game.canvas.height = window.innerHeight * 0.8;
+            SpaceSim.game.canvas.width = options?.width || window.innerWidth;
+            SpaceSim.game.canvas.height = options?.height || window.innerHeight * 0.8;
             SpaceSim.game.scale.refresh();
         });
 
@@ -51,18 +53,18 @@ export module SpaceSim {
     export function start(options?: SpaceSimOptions): SpaceSim {
         SpaceSim.debug = options?.debug || false;
         if (!_inst) {
-            _inst = new SpaceSim();
+            _inst = new SpaceSim(options);
         }
         return _inst;
+    }
+    export function stop(): void {
+        if (game) {
+            game.destroy(true, true);
+        }
     }
     export var player: ShipPod;
     export var opponents: ShipPod[] = [];
     export var game: Phaser.Game;
     export var map: GameMap;
     export var debug: boolean = false;
-    export function stop(): void {
-        if (game) {
-            game.destroy(true, true);
-        }
-    }
 }

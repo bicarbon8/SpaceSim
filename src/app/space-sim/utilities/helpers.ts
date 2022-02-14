@@ -55,6 +55,6 @@ export module Helpers {
     export function convertLocToLocInView(location: Phaser.Math.Vector2, scene: Phaser.Scene): Phaser.Math.Vector2 {
         // NOTE: point 0,0 for the camera is the centre of the canvas where the ship appears
         let cameraPos: Phaser.Math.Vector2 = scene.cameras.main.getWorldPoint(0, 0);
-        return new Phaser.Math.Vector2(location.x - cameraPos.x, location.y - cameraPos.y);
+        return new Phaser.Math.Vector2(location.x - cameraPos.x, location.y - cameraPos.y).negate();
     }
 }

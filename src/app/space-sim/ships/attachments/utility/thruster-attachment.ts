@@ -8,16 +8,22 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
     ship: ShipPod;
     scene: Phaser.Scene;
     private flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
+    private _lastThrusted: number;
+    private _delayBetweenThrusts: number;
     
     constructor(scene: Phaser.Scene) {
         super(scene);
         this.scene = scene;
         this.flareParticles = scene.add.particles('flares');
+        this.flareParticles.setDepth(Constants.DEPTH_PLAYER);
         this.gameObj = this.scene.add.sprite(0, 0, 'thruster');
+        this.gameObj.setDepth(Constants.DEPTH_PLAYER);
         this.scene.physics.add.existing(this.gameObj);
+        this._lastThrusted = 0;
+        this._delayBetweenThrusts = 10; // ms
     }
 
-    update(): void {
+    update(time: number, delta: number): void {
         
     }
 
@@ -29,16 +35,12 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
     
     thrustFowards(): void {
         this.applyThrust(Constants.THRUSTER_FORCE, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST, this.ship.getHeading());
-        this.displayThrusterFire(Constants.Flare.yellow, 0.2, 1);
+        this.displayThrusterFire(Constants.Flare.yellow, 0.2);
     }
     
-    private lastBoostTime: number = 0;
     boostForwards(): void {
-        if (this.scene.game.getTime() >= this.lastBoostTime + Constants.BOOSTER_RECHARGE_TIME) {
-            this.applyThrust(Constants.BOOSTER_FORCE, Constants.FUEL_PER_BOOST, Constants.HEAT_PER_BOOST, this.ship.getHeading());
-            this.displayThrusterFire(Constants.Flare.blue, 1, 10);
-            this.lastBoostTime = this.scene.game.getTime();
-        }
+        this.applyThrust(Constants.BOOSTER_FORCE, Constants.FUEL_PER_BOOST, Constants.HEAT_PER_BOOST, this.ship.getHeading());
+        this.displayThrusterFire(Constants.Flare.blue, 1);
     }
 
     strafeLeft(): void {
@@ -51,11 +53,10 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
 
     thrustBackwards(): void {
         this.applyThrust(Constants.THRUSTER_FORCE * 0.10, Constants.FUEL_PER_THRUST, Constants.HEAT_PER_THRUST, this.ship.getHeading().negate());
-        // this.displayThrusterFire(Constants.Flare.yellow, 0.2, 1);
     }
 
     private applyThrust(force: number, fuel: number, heat: number, heading: Phaser.Math.Vector2): void {
-        if (this.ship.getRemainingFuel() > 0) {
+        if (this.ship.getRemainingFuel() > 0 && this.scene.game.getTime() > this._lastThrusted + this._delayBetweenThrusts) {
             // let heading: Phaser.Math.Vector2 = this.ship.getHeading();
             let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(force, force));
             let newV: Phaser.Math.Vector2 = this.ship.getVelocity().add(deltaV);
@@ -63,30 +64,29 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
             
             this.ship?.reduceFuel(fuel);
             this.ship?.applyHeating(heat);
+            this._lastThrusted = this.scene.game.getTime();
         }
     }
 
-    private displayThrusterFire(colour: Constants.Flare, startScale: number, quantity: number): void {
-        // make thruster fire
-        let shipPosition: Phaser.Math.Vector2 = this.ship.getLocation();
-        let emissionPosition: Phaser.Math.Vector2 = new Phaser.Math.Vector2(20, 0).add(shipPosition);
-        let negatedShipHeading: Phaser.Math.Vector2 = this.ship.getHeading().negate();
-        let adjustedEmissionPosition: Phaser.Math.Vector2 = Phaser.Math.RotateAround(emissionPosition, shipPosition.x, shipPosition.y, Phaser.Math.DegToRad(this.ship.getRotation()));
-        let shipVelocity: Phaser.Math.Vector2 = this.ship.getVelocity();
-        this.flareParticles.createEmitter({
-            frame: colour as number,
-            x: adjustedEmissionPosition.x,
-            y: adjustedEmissionPosition.y,
-            lifespan: { min: 250, max: 500 },
-            speedX: { min: (negatedShipHeading.x*100)+shipVelocity.x, max: (negatedShipHeading.x*500)+shipVelocity.x },
-            speedY: { min: (negatedShipHeading.y*100)+shipVelocity.y, max: (negatedShipHeading.y*500)+shipVelocity.y },
-            angle: 0,
-            gravityX: 0,
-            gravityY: 0,
-            scale: { start: startScale, end: 0 },
-            quantity: quantity,
-            blendMode: 'ADD',
-            maxParticles: 1
-        });
+    private displayThrusterFire(colour: Constants.Flare, startScale: number): void {
+        if (this.ship.getRemainingFuel() > 0) {
+            // make thruster fire
+            let shipPosition: Phaser.Math.Vector2 = this.ship.getLocation();
+            let emissionPosition: Phaser.Math.Vector2 = new Phaser.Math.Vector2(20, 0).add(shipPosition);
+            let adjustedEmissionPosition: Phaser.Math.Vector2 = Phaser.Math.RotateAround(emissionPosition, shipPosition.x, shipPosition.y, Phaser.Math.DegToRad(this.ship.getRotation()));
+            this.flareParticles.createEmitter({
+                frame: colour as number,
+                x: adjustedEmissionPosition.x,
+                y: adjustedEmissionPosition.y,
+                lifespan: 250,
+                gravityX: 0,
+                gravityY: 0,
+                scale: { start: startScale, end: 0 },
+                blendMode: 'ADD',
+                maxParticles: 1,
+                quantity: 1,
+                radial: false
+            });
+        }
     }
 }

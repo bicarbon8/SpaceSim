@@ -1,5 +1,7 @@
 import Dungeon, { Room } from "@mikewesthad/dungeon";
 import { HasGameObject } from "../interfaces/has-game-object";
+import { Constants } from "../utilities/constants";
+import { GameMapOptions } from "./game-map-options";
 import TILE_MAPPING from "./tile-mapping";
 
 export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
@@ -8,10 +10,9 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
     private _layer: Phaser.Tilemaps.TilemapLayer;
     private _tileMap: Phaser.Tilemaps.Tilemap;
 
-    constructor(scene: Phaser.Scene, layerDepth: number) {
+    constructor(scene: Phaser.Scene, options?: GameMapOptions) {
         this._scene = scene;
-
-        this._createGameObj(layerDepth);
+        this._createGameObj(options);
     }
 
     getGameObject(): Phaser.Tilemaps.TilemapLayer {
@@ -22,7 +23,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         return this._layer.body as Phaser.Physics.Arcade.Body;
     }
 
-    private _createGameObj(layerDepth: number): void {
+    private _createGameObj(options: GameMapOptions): void {
         this._dungeon = new Dungeon({
             randomSeed: 'bicarbon8',
             width: 500, // in tiles, not pixels
@@ -51,7 +52,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
 
         let tileset: Phaser.Tilemaps.Tileset = this._tileMap.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
         this._layer = this._tileMap.createBlankLayer('Map Layer', tileset);
-        this._layer.depth = layerDepth;
+        this._layer.setDepth(options?.layerDepth || Constants.DEPTH_PLAYER);
 
         this._dungeon.rooms.forEach(room => {
           const { x, y, width, height, left, right, top, bottom } = room;

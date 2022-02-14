@@ -1,3 +1,4 @@
+import { Constants } from "src/app/space-sim/utilities/constants";
 import { Bullet } from "./bullet";
 import { OffenceAttachment } from "./offence-attachment";
 
@@ -11,6 +12,7 @@ export class CannonAttachment extends OffenceAttachment {
         this.firingDelay = 1000; // milliseconds
 
         this.gameObj = this.scene.add.sprite(0, 0, 'cannon');
+        this.gameObj.setDepth(Constants.DEPTH_PLAYER);
         this.scene.physics.add.existing(this.gameObj);
     }
 

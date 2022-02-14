@@ -6,6 +6,7 @@ import { HasIntegrity } from "src/app/space-sim/interfaces/has-integrity";
 import { Physics } from "phaser";
 import { SpaceSim } from "src/app/space-sim/space-sim";
 import { ShipPod } from "../../ship-pod";
+import { Constants } from "src/app/space-sim/utilities/constants";
 
 export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLocation {
     readonly id: string;
@@ -103,6 +104,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
 
     private _createGameObj(options: BulletOptions): void {
         this._gameObj = this._scene.add.sprite(0, 0, options.spriteName);
+        this._gameObj.setDepth(Constants.DEPTH_PLAYER);
         this.setLocation(options.location);
         this._gameObj.setScale(this._scale);
         this._scene.physics.add.existing(this._gameObj);
