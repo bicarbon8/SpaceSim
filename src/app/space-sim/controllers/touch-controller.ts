@@ -78,6 +78,7 @@ export class TouchController extends InputController implements HasGameObject<Ph
 
     private _createGameObj(): void {
         this._container = this.scene.add.container();
+        this.scene.input.addPointer(9); // maximum input handling (10 total)
 
         this._createLeftStick();
         this._createTopButton();
@@ -91,9 +92,15 @@ export class TouchController extends InputController implements HasGameObject<Ph
         this._leftStick = this.scene.add.circle(xPos, yPos, radius, 0xf0f0f0, 0.2);
         this.getGameObject().add(this._leftStick);
         this._leftStick.setInteractive().on(Phaser.Input.Events.POINTER_MOVE, (pointer: Phaser.Input.Pointer, localX: number, localY: number, event: any) => {
-            this._handleAimTouch(localX, localY);
+            if (pointer.isDown) {
+                this._handleAimTouch(localX, localY);
+            }
         }).on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer, localX: number, localY: number, event: any) => {
             this._handleAimTouch(localX, localY);
+        }).on(Phaser.Input.Events.POINTER_OVER, (pointer: Phaser.Input.Pointer, localX: number, localY: number, event: any) => {
+            if (pointer.isDown) {
+                this._handleAimTouch(localX, localY);
+            }
         });
     }
 
