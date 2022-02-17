@@ -14,6 +14,7 @@ import { ThrusterAttachment } from "./attachments/utility/thruster-attachment";
 import { ShipPodOptions } from "./ship-pod-options";
 import { AttachmentLocation } from "./attachments/attachment-location";
 import { ShipAttachment } from './attachments/ship-attachment';
+import { DamageOptions } from './damage-options';
 
 export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<GameObjects.Container>, HasIntegrity, HasTemperature, HasFuel {
     readonly id: string; // UUID
@@ -26,21 +27,24 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     private _flareParticles: GameObjects.Particles.ParticleEmitterManager;
     private _explosionParticles: GameObjects.Particles.ParticleEmitterManager;
     private _containerGameObj: GameObjects.Container;
+    private _lastDamagedBy: DamageOptions[];
 
     active: boolean = true;
     
-    constructor(scene: Scene, config?: ShipPodOptions) {
-        this.id = config?.id || Phaser.Math.RND.uuid();
-        this._scene = scene;
-        this._target = config?.target;
-        this._integrity = config?.integrity || Constants.MAX_INTEGRITY;
-        this._remainingFuel = config?.remainingFuel || Constants.MAX_FUEL;
-        this._temperature = config?.temperature || 0;
+    constructor(options: ShipPodOptions) {
+        this.id = options?.id || Phaser.Math.RND.uuid();
+        this._scene = options.scene;
+        this._target = options?.target;
+        this._integrity = options?.integrity || Constants.MAX_INTEGRITY;
+        this._remainingFuel = options?.remainingFuel || Constants.MAX_FUEL;
+        this._temperature = options?.temperature || 0;
 
         // create ship-pod sprite and add to container
-        this._createGameObj(config);
+        this._createGameObj(options);
         
         this._attachmentMgr = new AttachmentManager(this, this._scene.game);
+
+        this._lastDamagedBy = [];
     }
 
     get attachments(): AttachmentManager {
@@ -79,10 +83,14 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
             }
             if (this._temperature > Constants.MAX_SAFE_TEMPERATURE) {
                 // reduce integrity based on degrees over safe operating temp
-                let damage: number = (this._temperature - Constants.MAX_SAFE_TEMPERATURE) / delta;
-                this.sustainDamage(damage);
+                let damage: number = (this._temperature - Constants.MAX_SAFE_TEMPERATURE) * (delta / 1000);
+                this.sustainDamage({
+                    amount: damage, 
+                    timestamp: this._scene.time.now,
+                    message: 'ship overheat damage'
+                });
             }
-            let amountCooled: number = Constants.COOLING_RATE / delta;
+            let amountCooled: number = Constants.COOLING_RATE * (delta / 1000);
             this.applyCooling(amountCooled);
         }
     }
@@ -208,16 +216,12 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return this._integrity;
     }
 
-    private _lastDamaged: number = 0;
-    sustainDamage(amount: number): void {
-        if (this._scene.time.now - this._lastDamaged > Constants.DAMAGE_IMMUNITY) {
-            this._lastDamaged = this._scene.time.now;
-            this._integrity -= amount;
-            if (this._integrity <= 0) {
-                this._integrity = 0;
-                this.destroy(); // we are dead
-                // TODO: return to menu scene
-            }
+    sustainDamage(damageOpts: DamageOptions): void {
+        this._updateLastDamagedBy(damageOpts);
+        this._integrity -= damageOpts.amount;
+        if (this._integrity <= 0) {
+            this._integrity = 0;
+            this.destroy(); // we are dead
         }
     }
 
@@ -242,7 +246,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this.getGameObject().destroy();
         this._containerGameObj = null;
 
-        this._scene.events.emit('player-death', this);
+        this._scene.events.emit(Constants.EVENT_PLAYER_DEATH, this);
     }
 
     private _createGameObj(config?: ShipPodOptions): void {
@@ -295,5 +299,12 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
             blendMode: 'ADD',
             maxParticles: 10
         });
+    }
+
+    private _updateLastDamagedBy(damageOpts: DamageOptions): void {
+        this._lastDamagedBy.push(damageOpts);
+        if (this._lastDamagedBy.length > 5) {
+            this._lastDamagedBy.shift();
+        }
     }
 }

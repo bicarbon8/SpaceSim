@@ -1,29 +1,38 @@
 import { CanShoot } from "../../../interfaces/can-shoot";
 import { ShipAttachment } from "../ship-attachment";
+import { OffenceAttachmentOptions } from "./offence-attachment-options";
 
 export abstract class OffenceAttachment extends ShipAttachment implements CanShoot {
     protected maxAmmo: number;
-    protected remainingAmmo: number;
-    protected lastFired: number;
     protected firingDelay: number;
+    protected remainingAmmo: number;
+    protected heatPerSecond: number;
     
-    reload(amount: number): void {
-        this.remainingAmmo += amount;
-        if (this.remainingAmmo > this.maxAmmo) {
-            this.remainingAmmo = this.maxAmmo;
-        }
+    private _lastFired: number;
+
+    constructor(options: OffenceAttachmentOptions) {
+        super(options);
+        this._lastFired = 0;
     }
 
-    getRemainingAmmo(): number {
+    get ammo(): number {
         return this.remainingAmmo;
     }
 
     trigger(): void {
         if (this.active) {
-            this.fire();
+            if (this.remainingAmmo > 0) {
+                if (this.scene.time.now >= +this._lastFired + +this.firingDelay) {
+                    console.info('calling fire method');
+                    this.fire();
+                    this.ship.applyHeating(+this.heatPerSecond * (+this.firingDelay / 1000));
+                    this._lastFired = this.scene.time.now;
+                }
+            }
         }
     }
 
-    abstract fire(direction?: Phaser.Math.Vector2): void;
+    protected abstract fire(): void;
+
     abstract update(time: number, delta: number): void;
 }

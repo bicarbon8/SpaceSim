@@ -86,15 +86,28 @@ export class GameplayScene extends Phaser.Scene {
                 Phaser.Math.RND.realInRange(tl.x, br.x), 
                 Phaser.Math.RND.realInRange(tl.y, br.y)
             );
-            var p: ShipPod = new ShipPod(this, {location: pos});
+            var p: ShipPod = new ShipPod({scene: this, location: pos});
             SpaceSim.opponents.push(p);
 
             this.physics.add.collider(p.getGameObject(), SpaceSim.map.getGameObject(), () => {
-                p.sustainDamage((p.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33));
+                p.sustainDamage({
+                    amount: (p.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33),
+                    timestamp: this.time.now
+                });
             });
             this.physics.add.collider(p.getGameObject(), SpaceSim.player.getGameObject(), () => {
-                p.sustainDamage(1); // TODO: set based on opposing speeds
-                SpaceSim.player.sustainDamage(1);
+                p.sustainDamage({
+                    amount: 1, 
+                    timestamp: this.time.now,
+                    attackerId: SpaceSim.player.id,
+                    message: 'ship collision'
+                }); // TODO: set based on opposing speeds
+                SpaceSim.player.sustainDamage({
+                    amount: 1, 
+                    timestamp: this.time.now,
+                    attackerId: p.id,
+                    message: 'ship collision'
+                });
             });
         });
     }
@@ -124,19 +137,22 @@ export class GameplayScene extends Phaser.Scene {
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
         );
-        SpaceSim.player = new ShipPod(this, {location: playerStartingPosition});
+        SpaceSim.player = new ShipPod({scene: this, location: playerStartingPosition});
         
         // TODO: have menu allowing selection of attachments
-        let thruster: ThrusterAttachment = new ThrusterAttachment(this);
+        let thruster: ThrusterAttachment = new ThrusterAttachment({scene: this});
         SpaceSim.player.attachments.addAttachment(thruster);
-        let cannon: CannonAttachment = new CannonAttachment(this);
+        let cannon: CannonAttachment = new CannonAttachment({scene: this});
         SpaceSim.player.attachments.addAttachment(cannon);
 
         this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject(), () => {
-            SpaceSim.player.sustainDamage((SpaceSim.player.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33));
+            SpaceSim.player.sustainDamage({
+                amount:(SpaceSim.player.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33),
+                timestamp: this.time.now
+            });
         });
 
-        this.events.addListener('player-death', (ship: ShipPod) => {
+        this.events.addListener(Constants.EVENT_PLAYER_DEATH, (ship: ShipPod) => {
             if (SpaceSim.player.id == ship?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
@@ -195,7 +211,7 @@ export class GameplayScene extends Phaser.Scene {
             `Integrity: ${SpaceSim.player.getIntegrity().toFixed(1)}`,
             `Heat: ${SpaceSim.player.getTemperature().toFixed(1)}`,
             `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
-            `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.getRemainingAmmo()}`
+            `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo || 0}`
         ];
         if (SpaceSim.debug) {
             info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);

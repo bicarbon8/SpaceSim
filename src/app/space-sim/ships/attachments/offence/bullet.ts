@@ -2,11 +2,10 @@ import { HasGameObject } from "../../../interfaces/has-game-object";
 import { BulletOptions } from "../../../interfaces/bullet-options";
 import { HasLocation } from "../../../interfaces/has-location";
 import { Helpers } from "../../../utilities/helpers";
-import { HasIntegrity } from "src/app/space-sim/interfaces/has-integrity";
-import { Physics } from "phaser";
 import { SpaceSim } from "src/app/space-sim/space-sim";
 import { ShipPod } from "../../ship-pod";
 import { Constants } from "src/app/space-sim/utilities/constants";
+import { OffenceAttachment } from "./offence-attachment";
 
 export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLocation {
     readonly id: string;
@@ -14,13 +13,15 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
     private _force: number;
     private _gameObj: Phaser.GameObjects.Sprite;
     private _scale: number;
+    private _origin: OffenceAttachment;
 
     active: boolean;
     
-    constructor(scene: Phaser.Scene, options: BulletOptions) {
+    constructor(options: BulletOptions) {
         this.id = Phaser.Math.RND.uuid();
         this.active = true;
-        this._scene = scene;
+        this._scene = options.scene;
+        this._origin = options.attachment;
         this._force = (options.force === undefined) ? 1 : options.force;
         this._scale = (options.scale === undefined) ? 1 : options.scale;
         
@@ -44,7 +45,12 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
             this._scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
                 this.getGameObject().active = false;
                 this.getGameObject().destroy();
-                opp.sustainDamage(10);
+                opp.sustainDamage({
+                    amount: 10, 
+                    timestamp: this._scene.time.now,
+                    attackerId: this._origin.ship.id,
+                    message: `projectile hit`
+                });
             });
         });
     }

@@ -1,26 +1,21 @@
 import { CanThrust } from "../../../interfaces/can-thrust";
-import { ShipPod } from "../../ship-pod";
 import { Constants } from "../../../utilities/constants";
 import { ShipAttachment } from "../ship-attachment";
 import { Helpers } from "src/app/space-sim/utilities/helpers";
+import { ThrusterAttachmentOptions } from "./thruster-attachment-options";
 
 export class ThrusterAttachment extends ShipAttachment implements CanThrust {
-    ship: ShipPod;
-    scene: Phaser.Scene;
     private flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
     private _lastThrusted: number;
-    private _delayBetweenThrusts: number;
     
-    constructor(scene: Phaser.Scene) {
-        super(scene);
-        this.scene = scene;
-        this.flareParticles = scene.add.particles('flares');
+    constructor(options: ThrusterAttachmentOptions) {
+        super(options);
+        this.flareParticles = this.scene.add.particles('flares');
         this.flareParticles.setDepth(Constants.DEPTH_PLAYER);
         this.gameObj = this.scene.add.sprite(0, 0, 'thruster');
         this.gameObj.setDepth(Constants.DEPTH_PLAYER);
         this.scene.physics.add.existing(this.gameObj);
         this._lastThrusted = 0;
-        this._delayBetweenThrusts = 10; // ms
     }
 
     update(time: number, delta: number): void {
@@ -56,7 +51,7 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
     }
 
     private applyThrust(force: number, fuel: number, heat: number, heading: Phaser.Math.Vector2): void {
-        if (this.ship.getRemainingFuel() > 0 && this.scene.game.getTime() > this._lastThrusted + this._delayBetweenThrusts) {
+        if (this.ship?.getRemainingFuel() > 0 && this.scene.game.getTime() > this._lastThrusted + Constants.THRUSTER_DELAY) {
             // let heading: Phaser.Math.Vector2 = this.ship.getHeading();
             let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(force, force));
             let newV: Phaser.Math.Vector2 = this.ship.getVelocity().add(deltaV);

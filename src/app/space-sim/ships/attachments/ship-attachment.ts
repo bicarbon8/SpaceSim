@@ -6,35 +6,50 @@ import { HasIntegrity } from "../../interfaces/has-integrity";
 import { Constants } from "../../utilities/constants";
 import { AttachmentLocation } from "./attachment-location";
 import { Helpers } from "../../utilities/helpers";
+import { DamageOptions } from "../damage-options";
+import { ShipAttachmentOptions } from "./ship-attachment-options";
 
 export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Sprite>, HasLocation, HasIntegrity {
-    protected ship: ShipPod;
-    protected scene: Phaser.Scene;
+    private _ship: ShipPod;
+    private _scene: Phaser.Scene;
+    private _attachmentLocation: AttachmentLocation;
+
     protected gameObj: Phaser.GameObjects.Sprite;
     protected integrity: number;
-    protected attachmentLocation: AttachmentLocation;
     
     isThrown: boolean;
     active: boolean;
     
-    constructor(scene: Phaser.Scene) {
-        this.scene = scene;
-        this.active = true;
-        this.integrity = Constants.MAX_INTEGRITY;
+    constructor(options: ShipAttachmentOptions) {
+        this._scene = options.scene;
+        this.integrity = options.integrity || Constants.MAX_INTEGRITY;
         this.isThrown = false;
+        this.active = true;
+    }
+
+    get ship(): ShipPod {
+        return this._ship;
+    }
+
+    get scene(): Phaser.Scene {
+        return this._scene;
+    }
+
+    get attachmentLocation(): AttachmentLocation {
+        return this._attachmentLocation;
     }
 
     attach(ship: ShipPod, location: AttachmentLocation = AttachmentLocation.front): void {
-        this.ship = ship;
-        this.setAttachmentLocation(location);
+        this._ship = ship;
+        this._attachmentLocation = location;
         let centre: Phaser.Math.Vector2 = this.ship.getLocation();
         this.getPhysicsBody().position = centre; // centre on ship location
         this.getPhysicsBody().rotation = this.ship.getRotation(); // set heading to match ship
     }
 
     detach(): void {
-        this.ship = null;
-        this.attachmentLocation = null;
+        this._ship = null;
+        this._attachmentLocation = null;
         let go: Phaser.GameObjects.GameObject = this.getGameObject();
         go.setActive(true);
         this.scene.add.existing(go);
@@ -122,8 +137,8 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         return this.integrity;
     }
 
-    sustainDamage(amount: number): void {
-        this.integrity -= amount;
+    sustainDamage(damageOpts: DamageOptions): void {
+        this.integrity -= damageOpts.amount;
         if (this.integrity <= 0) {
             this.integrity = 0;
             this.active = false;
@@ -142,9 +157,5 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         this.active = false;
         this.ship.attachments.removeAttachmentAt(this.attachmentLocation);
         this.getGameObject().destroy();
-    }
-
-    setAttachmentLocation(loc: AttachmentLocation): void {
-        this.attachmentLocation = loc;
     }
 }
