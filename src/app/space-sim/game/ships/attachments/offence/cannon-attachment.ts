@@ -1,4 +1,4 @@
-import { Constants } from "src/app/space-sim/utilities/constants";
+import { Constants } from "../../../utilities/constants";
 import { Bullet } from "./bullet";
 import { OffenceAttachment } from "./offence-attachment";
 import { OffenceAttachmentOptions } from "./offence-attachment-options";

@@ -1,10 +1,10 @@
-import { CanThrust } from "../../../interfaces/can-thrust";
+import { HasThruster } from "../../../interfaces/has-thruster";
 import { Constants } from "../../../utilities/constants";
 import { ShipAttachment } from "../ship-attachment";
-import { Helpers } from "src/app/space-sim/utilities/helpers";
+import { Helpers } from "../../../utilities/helpers";
 import { ThrusterAttachmentOptions } from "./thruster-attachment-options";
 
-export class ThrusterAttachment extends ShipAttachment implements CanThrust {
+export class ThrusterAttachment extends ShipAttachment implements HasThruster {
     private flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
     private _lastThrusted: number;
     
@@ -14,7 +14,6 @@ export class ThrusterAttachment extends ShipAttachment implements CanThrust {
         this.flareParticles.setDepth(Constants.DEPTH_PLAYER);
         this.gameObj = this.scene.add.sprite(0, 0, 'thruster');
         this.gameObj.setDepth(Constants.DEPTH_PLAYER);
-        this.scene.physics.add.existing(this.gameObj);
         this._lastThrusted = 0;
     }
 

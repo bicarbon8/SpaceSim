@@ -66,5 +66,8 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
         this._gameObj.setScale(scale, scale);
         this._gameObj.setScrollFactor(scrollFactor);
         this._gameObj.setDepth(Constants.DEPTH_STELLAR);
+        if (options.spriteName === 'sun') {
+            this._gameObj.setDepth(this._gameObj.depth - 0.1); // ensure Sun is behind planets always
+        }
     }
 }

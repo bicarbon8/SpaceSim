@@ -8,8 +8,9 @@ import { AttachmentLocation } from "./attachment-location";
 import { Helpers } from "../../utilities/helpers";
 import { DamageOptions } from "../damage-options";
 import { ShipAttachmentOptions } from "./ship-attachment-options";
+import { HasPhysicsBody } from "../../interfaces/has-physics-body";
 
-export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Sprite>, HasLocation, HasIntegrity {
+export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Sprite>, HasPhysicsBody, HasLocation, HasIntegrity {
     private _ship: ShipPod;
     private _scene: Phaser.Scene;
     private _attachmentLocation: AttachmentLocation;
@@ -42,17 +43,15 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     attach(ship: ShipPod, location: AttachmentLocation = AttachmentLocation.front): void {
         this._ship = ship;
         this._attachmentLocation = location;
-        let centre: Phaser.Math.Vector2 = this.ship.getLocation();
-        this.getPhysicsBody().position = centre; // centre on ship location
-        this.getPhysicsBody().rotation = this.ship.getRotation(); // set heading to match ship
+        this._ship.getGameObject().add(this.getGameObject());
     }
 
     detach(): void {
+        let loc: Phaser.Math.Vector2 = this.ship.getLocation();
+        this.ship.getGameObject().remove(this.getGameObject());
+        this.getGameObject().setPosition(loc.x, loc.y);
         this._ship = null;
         this._attachmentLocation = null;
-        let go: Phaser.GameObjects.GameObject = this.getGameObject();
-        go.setActive(true);
-        this.scene.add.existing(go);
     }
     
     getGameObject(): Phaser.GameObjects.Sprite {
@@ -60,11 +59,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     }
 
     getPhysicsBody(): Phaser.Physics.Arcade.Body {
-        let go: Phaser.GameObjects.Sprite = this.getGameObject();
-        if (go) {
-            return go.body as Phaser.Physics.Arcade.Body;
-        }
-        return null;
+        return this.getGameObject()?.body as Phaser.Physics.Arcade.Body;
     }
 
     abstract update(time: number, delta: number): void;
@@ -104,7 +99,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
             }
             return velocity;
         }
-        return Phaser.Math.Vector2.ZERO;
+        return Helpers.vector2();
     }
 
     getLocationInView(): Phaser.Math.Vector2 {
@@ -122,15 +117,11 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
             }
             return realLoc;
         }
-        return Phaser.Math.Vector2.ZERO;
+        return Helpers.vector2();
     }
 
     setLocation(location: Phaser.Math.Vector2): void {
-        let go: Phaser.GameObjects.Sprite = this.getGameObject();
-        if (go) {
-            go.x = location.x;
-            go.y = location.y;
-        }
+        this.getGameObject()?.setPosition(location.x, location.y);
     }
 
     getIntegrity(): number {

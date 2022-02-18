@@ -2,10 +2,11 @@ import { HasGameObject } from "../../../interfaces/has-game-object";
 import { BulletOptions } from "../../../interfaces/bullet-options";
 import { HasLocation } from "../../../interfaces/has-location";
 import { Helpers } from "../../../utilities/helpers";
-import { SpaceSim } from "src/app/space-sim/space-sim";
+import { SpaceSim } from "../../../space-sim";
 import { ShipPod } from "../../ship-pod";
-import { Constants } from "src/app/space-sim/utilities/constants";
+import { Constants } from "../../../utilities/constants";
 import { OffenceAttachment } from "./offence-attachment";
+import { GameScoreTracker } from "../../../utilities/game-score-tracker";
 
 export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLocation {
     readonly id: string;
@@ -34,6 +35,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
         this.getPhysicsBody().setBounce(0, 0);
         this.addCollisionDetection();
         this._setInMotion();
+        GameScoreTracker.shotFired();
     }
 
     private addCollisionDetection(): void {
@@ -51,6 +53,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
                     attackerId: this._origin.ship.id,
                     message: `projectile hit`
                 });
+                GameScoreTracker.shotLanded();
             });
         });
     }

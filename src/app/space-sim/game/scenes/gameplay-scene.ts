@@ -7,7 +7,7 @@ import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { StellarBody } from "../star-systems/stellar-body";
 import { GameMap } from "../map/game-map";
-import { environment } from "../../../environments/environment";
+import { environment } from "../../../../environments/environment";
 import { Constants } from "../utilities/constants";
 import { SpaceSim } from "../space-sim";
 import { Helpers } from "../utilities/helpers";
@@ -15,6 +15,8 @@ import { Room } from "@mikewesthad/dungeon";
 import { AttachmentLocation } from "../ships/attachments/attachment-location";
 import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
+import { GameScoreTracker } from "../utilities/game-score-tracker";
+import { GameStats } from "../utilities/game-stats";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -23,9 +25,13 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 };
 
 export class GameplayScene extends Phaser.Scene {
+    private _width: number;
+    private _height: number;
     private _controller: InputController;
     private _hudText: Phaser.GameObjects.Text;
+    private _scoreText: Phaser.GameObjects.Text;
     private _stellarBodies: StellarBody[];
+    private _enemiesDestroyed: number;
 
     debug: boolean;
 
@@ -34,6 +40,7 @@ export class GameplayScene extends Phaser.Scene {
 
         this.debug = SpaceSim.debug;
         this._stellarBodies = [];
+        this._enemiesDestroyed = 0;
     }
 
     preload(): void {
@@ -60,6 +67,9 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     create(): void {
+        this._width = this.game.canvas.width;
+        this._height = this.game.canvas.height;
+
         this._createHUD();
         this._createMapAndPlayer();
         this._setupCamera();
@@ -67,6 +77,8 @@ export class GameplayScene extends Phaser.Scene {
         this._createStellarBodiesLayer();
         this._createBackground();
         this._createOpponents();
+
+        GameScoreTracker.start();
     }
 
     update(time: number, delta: number): void {
@@ -113,9 +125,16 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     private _createHUD(): void {
-        this._hudText = this.add.text(10, 10, '', { font: '12px Courier', fontStyle: 'color: #ffdddd' });
+        this._hudText = this.add.text(10, 10, '', { font: '12px Courier', color: '#ffdddd' });
         this._hudText.setScrollFactor(0); // keep fixed in original location on screen
         this._hudText.setDepth(Constants.DEPTH_HUD);
+
+        this._scoreText = this.add.text(0, 0, 'SAMPLE TEXT', {font: '20px Courier', color: '#808080', stroke: '#ffff00', strokeThickness: 4});
+        this._scoreText.setDepth(Constants.DEPTH_CONTROLS);
+        this._scoreText.setX((this._width/2)-(this._scoreText.width/2));
+        this._scoreText.setY(this._scoreText.height);
+        this._scoreText.setScrollFactor(0); // keep fixed in original location on screen
+        this._scoreText.setDepth(Constants.DEPTH_HUD);
     }
 
     private _createController(): void {
@@ -127,7 +146,7 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     private _createMapAndPlayer(): void {
-        SpaceSim.map = new GameMap(this);
+        SpaceSim.map = new GameMap({scene: this});
         
         // Place the player in random empty tile in the first room
         const startingRoom = SpaceSim.map.getRooms()[0];
@@ -160,6 +179,8 @@ export class GameplayScene extends Phaser.Scene {
                         this.game.scene.stop(this);
                     }
                 });
+            } else {
+                GameScoreTracker.opponentDestroyed();
             }
         })
     }
@@ -205,17 +226,29 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     private _displayHUDInfo(): void {
-        let loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
-        let info: string[] = [
-            `Speed: ${SpaceSim.player.getSpeed().toFixed(1)}`,
-            `Integrity: ${SpaceSim.player.getIntegrity().toFixed(1)}`,
-            `Heat: ${SpaceSim.player.getTemperature().toFixed(1)}`,
-            `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
-            `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo || 0}`
-        ];
-        if (SpaceSim.debug) {
-            info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
+        try {
+            let loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
+            let info: string[] = [
+                `Speed: ${SpaceSim.player.getSpeed().toFixed(1)}`,
+                `Integrity: ${SpaceSim.player.getIntegrity().toFixed(1)}`,
+                `Heat: ${SpaceSim.player.getTemperature().toFixed(1)}`,
+                `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
+                `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo || 0}`
+            ];
+            if (SpaceSim.debug) {
+                info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
+            }
+            this._hudText.setText(info);
+
+            let stats: GameStats = GameScoreTracker.getStats();
+            let score: string[] = [
+                `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
+                `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`,
+                `Score: ${GameScoreTracker.getScore().toFixed(0)}`
+            ]
+            this._scoreText.setText(score);
+        } catch (e) {
+            // do nothing
         }
-        this._hudText.setText(info);
     }
 }

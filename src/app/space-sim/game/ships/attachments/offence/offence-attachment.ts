@@ -23,7 +23,6 @@ export abstract class OffenceAttachment extends ShipAttachment implements CanSho
         if (this.active) {
             if (this.remainingAmmo > 0) {
                 if (this.scene.time.now >= +this._lastFired + +this.firingDelay) {
-                    console.info('calling fire method');
                     this.fire();
                     this.ship.applyHeating(+this.heatPerSecond * (+this.firingDelay / 1000));
                     this._lastFired = this.scene.time.now;

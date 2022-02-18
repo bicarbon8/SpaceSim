@@ -10,8 +10,8 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
     private _layer: Phaser.Tilemaps.TilemapLayer;
     private _tileMap: Phaser.Tilemaps.Tilemap;
 
-    constructor(scene: Phaser.Scene, options?: GameMapOptions) {
-        this._scene = scene;
+    constructor(options: GameMapOptions) {
+        this._scene = options.scene;
         this._createGameObj(options);
     }
 
@@ -25,22 +25,23 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
 
     private _createGameObj(options: GameMapOptions): void {
         this._dungeon = new Dungeon({
-            randomSeed: 'bicarbon8',
-            width: 500, // in tiles, not pixels
-            height: 500,
+            randomSeed: options.seed || 'bicarbon8',
+            width: options.width || 500, // in tiles, not pixels
+            height: options.height || 500,
             rooms: {
                 width: {
-                    min: 10, // in tiles, not pixels
-                    max: 25,
+                    min: options.roomMinWidth || 10, // in tiles, not pixels
+                    max: options.roomMaxWidth || 25,
                     onlyOdd: true
                 },
                 height: {
-                    min: 10,
-                    max: 25,
+                    min: options.roomMinHeight || 10,
+                    max: options.roomMaxHeight || 25,
                     onlyOdd: true
-                }
+                },
+                maxRooms: options.maxRooms || 100
             },
-            doorPadding: 2
+            doorPadding: options.doorPadding || 2
         });
 
         this._tileMap = this._scene.make.tilemap({
@@ -52,7 +53,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
 
         let tileset: Phaser.Tilemaps.Tileset = this._tileMap.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
         this._layer = this._tileMap.createBlankLayer('Map Layer', tileset);
-        this._layer.setDepth(options?.layerDepth || Constants.DEPTH_PLAYER);
+        this._layer.setDepth(options.layerDepth || Constants.DEPTH_PLAYER);
 
         this._dungeon.rooms.forEach(room => {
           const { x, y, width, height, left, right, top, bottom } = room;

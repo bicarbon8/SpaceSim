@@ -1,13 +1,14 @@
 import { environment } from "src/environments/environment";
 import { Constants } from "../utilities/constants";
+import { GameScoreTracker } from "../utilities/game-score-tracker";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
-    active: true,
-    visible: true,
-    key: 'startup-scene'
+    active: false,
+    visible: false,
+    key: 'game-over-scene'
 };
 
-export class StartupScene extends Phaser.Scene {
+export class GameOverScene extends Phaser.Scene {
     private _width: number;
 	private _height: number;
     private _sun: Phaser.GameObjects.Sprite;
@@ -19,8 +20,6 @@ export class StartupScene extends Phaser.Scene {
 
     preload(): void {
         this.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
-        this.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
-        this.load.image('mercury', `${environment.baseUrl}/assets/backgrounds/mercury.png`);
 
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
     }
@@ -31,6 +30,7 @@ export class StartupScene extends Phaser.Scene {
 
         this._createBackground();
         this._createStellarBodies();
+        this._createScore();
         this._createTitle();
         this._createMenuItems();
     }
@@ -50,23 +50,23 @@ export class StartupScene extends Phaser.Scene {
     }
 
     private _createStellarBodies(): void {
-        this._sun = this.add.sprite(0, 0, 'sun');
+        this._sun = this.add.sprite(this._width / 2, this._height / 2, 'sun');
         this._sun.setDepth(Constants.DEPTH_STELLAR);
+        const smallestDimension: number = (this._width <= this._height) ? this._width : this._height;
         const sunRadius: number = this._sun.width/2;
-        const sunScaleFactor: number = sunRadius / this._width; // ex: 100 / 300 = 0.33
-        let scaleFactor: number = 1.5 - sunScaleFactor;
-        this._sun.setScale(1 + scaleFactor);
+        const sunScaleFactor: number = smallestDimension / sunRadius;
+        this._sun.setScale(sunScaleFactor);
+    }
 
-        const mercury = this.add.sprite(this._width, this._height, 'mercury');
-        mercury.setDepth(Constants.DEPTH_STELLAR);
-        const mercuryRadius: number = mercury.width/2;
-        const mercuryScaleFactor: number = mercuryRadius / this._width; // ex: 100 / 300 = 0.33
-        scaleFactor = 0.25 - mercuryScaleFactor;
-        mercury.setScale(1 + scaleFactor);
+    private _createScore(): void {
+        const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, `Score: ${GameScoreTracker.getScore().toFixed(0)}`, {font: '40px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4});
+        titleText.setDepth(Constants.DEPTH_CONTROLS);
+        titleText.setX((this._width/2)-(titleText.width/2));
+        titleText.setY(titleText.height);
     }
 
     private _createTitle(): void {
-        const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Spaceship Game', {font: '40px Courier', color: '#6d6dff', stroke: '#ffffff', strokeThickness: 4});
+        const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, 'GAME OVER', {font: '40px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4});
         titleText.setDepth(Constants.DEPTH_CONTROLS);
         titleText.setX((this._width/2)-(titleText.width/2));
         titleText.setY((this._height/2)-(titleText.height/2)-(titleText.height*2));
@@ -79,33 +79,38 @@ export class StartupScene extends Phaser.Scene {
             align: 'center'
         };
 
-        const startText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Press to Start', style);
+        const startText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Press to Restart', style);
         startText.setDepth(Constants.DEPTH_CONTROLS);
         startText.setX((this._width/2)-(startText.width/2));
         startText.setY((this._height/2)-(startText.height/2));
-        const startButton: Phaser.GameObjects.Rectangle = this.add.rectangle(this._width / 2, this._height / 2, startText.width + 10, startText.height + 10, 0x808080, 0.2);
-        startButton.setDepth(Constants.DEPTH_CONTROLS);
+        const startButton: Phaser.GameObjects.Rectangle = this.add.rectangle(this._width / 2, this._height / 2, startText.width + 10, startText.height + 10, 0xff6060, 0.5);
+        startButton.setDepth(Constants.DEPTH_CONTROLS - 0.1);
         startButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('gameplay-scene');
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            startButton.setFillStyle(0x80ff80, 0.5);
+            startButton.setFillStyle(0x80ff80, 1);
+            startText.setColor('8d8d8d');
         }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            startButton.setFillStyle(0x808080, 0.2);
+            startButton.setFillStyle(0xff6060, 0.5);
+            startText.setColor(style.color);
         });
 
-        const controlsText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Controls', style);
+        const controlsText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Return to Menu', style);
         controlsText.setDepth(Constants.DEPTH_CONTROLS);
         controlsText.setX((this._width/2)-(controlsText.width/2));
         controlsText.setY((this._height/2)-(controlsText.height/2)+(controlsText.height*2));
-        const controlsButton: Phaser.GameObjects.Rectangle = this.add.rectangle(this._width / 2, (this._height / 2) + (controlsText.height*2), startText.width + 10, startText.height + 10, 0x808080, 0.2);
-        controlsButton.setDepth(Constants.DEPTH_CONTROLS);
+        const controlsButton: Phaser.GameObjects.Rectangle = this.add.rectangle(this._width / 2, (this._height / 2) + (controlsText.height*2), startText.width + 10, startText.height + 10, 0xff6060, 0.5);
+        controlsButton.setDepth(Constants.DEPTH_CONTROLS - 0.1);
         controlsButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
-            // display controls menu
+            this.game.scene.start('startup-scene');
+            this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            controlsButton.setFillStyle(0x80ff80, 0.5);
+            controlsButton.setFillStyle(0x80ff80, 1);
+            controlsText.setColor('8d8d8d');
         }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            controlsButton.setFillStyle(0x808080, 0.2);
+            controlsButton.setFillStyle(0xff6060, 0.5);
+            controlsText.setColor(style.color);
         });
     }
 }

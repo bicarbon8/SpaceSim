@@ -15,8 +15,9 @@ import { ShipPodOptions } from "./ship-pod-options";
 import { AttachmentLocation } from "./attachments/attachment-location";
 import { ShipAttachment } from './attachments/ship-attachment';
 import { DamageOptions } from './damage-options';
+import { HasPhysicsBody } from '../interfaces/has-physics-body';
 
-export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<GameObjects.Container>, HasIntegrity, HasTemperature, HasFuel {
+export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     readonly id: string; // UUID
     private _scene: Scene;
     private _target: HasLocation;

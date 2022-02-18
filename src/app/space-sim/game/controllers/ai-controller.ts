@@ -1,4 +1,4 @@
-import { ShipPod } from "../ships/ship-pod";
+import { ShipPod } from "../../ships/ship-pod";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {

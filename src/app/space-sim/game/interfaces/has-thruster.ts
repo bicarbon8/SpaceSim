@@ -1,4 +1,4 @@
-export interface CanThrust {
+export interface HasThruster {
     thrustFowards(): void;
     boostForwards(): void;
     strafeLeft(): void;
