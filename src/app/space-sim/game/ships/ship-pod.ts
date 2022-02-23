@@ -29,6 +29,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     private _explosionParticles: GameObjects.Particles.ParticleEmitterManager;
     private _containerGameObj: GameObjects.Container;
     private _lastDamagedBy: DamageOptions[];
+    private _destroyedSound: Phaser.Sound.BaseSound;
 
     active: boolean = true;
     
@@ -46,6 +47,8 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this._attachmentMgr = new AttachmentManager(this, this._scene.game);
 
         this._lastDamagedBy = [];
+
+        this._destroyedSound = this._scene.sound.add('explosion', {volume: 0.1});
     }
 
     get attachments(): AttachmentManager {
@@ -234,6 +237,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     destroy(): void {
+        this._destroyedSound.play();
         this.active = false;
         this._displayShipExplosion();
         this.getGameObject().active = false;

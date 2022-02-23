@@ -15,6 +15,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
     private _gameObj: Phaser.GameObjects.Sprite;
     private _scale: number;
     private _origin: OffenceAttachment;
+    private _hitSound: Phaser.Sound.BaseSound;
 
     active: boolean;
     
@@ -35,6 +36,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
         this.getPhysicsBody().setBounce(0, 0);
         this.addCollisionDetection();
         this._setInMotion();
+        this._hitSound = this._scene.sound.add('bullet-hit');
         GameScoreTracker.shotFired();
     }
 
@@ -45,6 +47,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
         });
         SpaceSim.opponents.forEach((opp: ShipPod) => {
             this._scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
+                this._hitSound.play();
                 this.getGameObject().active = false;
                 this.getGameObject().destroy();
                 opp.sustainDamage({

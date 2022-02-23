@@ -4,6 +4,8 @@ import { OffenceAttachment } from "./offence-attachment";
 import { OffenceAttachmentOptions } from "./offence-attachment-options";
 
 export class CannonAttachment extends OffenceAttachment {
+    private _cannonSound: Phaser.Sound.BaseSound;
+    
     constructor(options: OffenceAttachmentOptions) {
         super(options);
 
@@ -15,6 +17,8 @@ export class CannonAttachment extends OffenceAttachment {
         this.gameObj = this.scene.add.sprite(0, 0, 'cannon');
         this.gameObj.setDepth(Constants.DEPTH_PLAYER);
         this.scene.physics.add.existing(this.gameObj);
+
+        this._cannonSound = this.scene.sound.add('cannon-fire');
     }
 
     update(time: number, delta: number): void {
@@ -22,6 +26,7 @@ export class CannonAttachment extends OffenceAttachment {
     }
     
     protected fire(): void {
+        this._cannonSound.play();
         let bulletOffset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(-20, 0).add(this.getLocation());
         let shipRealLocation: Phaser.Math.Vector2 = this.ship.getLocation();
         let adjustedLocation: Phaser.Math.Vector2 = Phaser.Math.RotateAround(bulletOffset, shipRealLocation.x, shipRealLocation.y, Phaser.Math.DegToRad(this.getRotation()));

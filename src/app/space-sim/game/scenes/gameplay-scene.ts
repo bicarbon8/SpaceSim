@@ -31,7 +31,7 @@ export class GameplayScene extends Phaser.Scene {
     private _hudText: Phaser.GameObjects.Text;
     private _scoreText: Phaser.GameObjects.Text;
     private _stellarBodies: StellarBody[];
-    private _enemiesDestroyed: number;
+    private _backgroundMusic: Phaser.Sound.BaseSound;
 
     debug: boolean;
 
@@ -40,7 +40,6 @@ export class GameplayScene extends Phaser.Scene {
 
         this.debug = SpaceSim.debug;
         this._stellarBodies = [];
-        this._enemiesDestroyed = 0;
     }
 
     preload(): void {
@@ -64,6 +63,13 @@ export class GameplayScene extends Phaser.Scene {
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
 
         this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
+
+        this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
+        this.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
+        this.load.audio('booster-fire', `${environment.baseUrl}/assets/audio/effects/booster-fire.ogg`);
+        this.load.audio('cannon-fire', `${environment.baseUrl}/assets/audio/effects/cannon-fire.ogg`);
+        this.load.audio('bullet-hit', `${environment.baseUrl}/assets/audio/effects/bullet-hit.ogg`);
+        this.load.audio('explosion', `${environment.baseUrl}/assets/audio/effects/ship-explosion.ogg`);
     }
 
     create(): void {
@@ -77,6 +83,7 @@ export class GameplayScene extends Phaser.Scene {
         this._createStellarBodiesLayer();
         this._createBackground();
         this._createOpponents();
+        this._playBackgroundMusic();
 
         GameScoreTracker.start();
     }
@@ -176,6 +183,7 @@ export class GameplayScene extends Phaser.Scene {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start('game-over-scene');
+                        this._backgroundMusic.stop();
                         this.game.scene.stop(this);
                     }
                 });
@@ -250,5 +258,10 @@ export class GameplayScene extends Phaser.Scene {
         } catch (e) {
             // do nothing
         }
+    }
+
+    private _playBackgroundMusic(): void {
+        this._backgroundMusic = this.sound.add('background-music', {loop: true, volume: 0.1});
+        this._backgroundMusic.play();
     }
 }

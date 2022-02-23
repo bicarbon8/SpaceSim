@@ -7,6 +7,8 @@ import { ThrusterAttachmentOptions } from "./thruster-attachment-options";
 export class ThrusterAttachment extends ShipAttachment implements HasThruster {
     private flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
     private _lastThrusted: number;
+    private _thrusterSound: Phaser.Sound.BaseSound;
+    private _boosterSound: Phaser.Sound.BaseSound;
     
     constructor(options: ThrusterAttachmentOptions) {
         super(options);
@@ -15,6 +17,8 @@ export class ThrusterAttachment extends ShipAttachment implements HasThruster {
         this.gameObj = this.scene.add.sprite(0, 0, 'thruster');
         this.gameObj.setDepth(Constants.DEPTH_PLAYER);
         this._lastThrusted = 0;
+        this._thrusterSound = this.scene.sound.add('thruster-fire');
+        this._boosterSound = this.scene.sound.add('booster-fire');
     }
 
     update(time: number, delta: number): void {
@@ -51,7 +55,17 @@ export class ThrusterAttachment extends ShipAttachment implements HasThruster {
 
     private applyThrust(force: number, fuel: number, heat: number, heading: Phaser.Math.Vector2): void {
         if (this.ship?.getRemainingFuel() > 0 && this.scene.game.getTime() > this._lastThrusted + Constants.THRUSTER_DELAY) {
-            // let heading: Phaser.Math.Vector2 = this.ship.getHeading();
+            if (force === Constants.THRUSTER_FORCE) {
+                if (!this._thrusterSound.isPlaying) {
+                    this._thrusterSound.play({seek:0.3, volume: 0.2});
+                    setTimeout(() => {
+                        this._thrusterSound.stop();
+                    }, 250);
+                }
+            }
+            if (force === Constants.BOOSTER_FORCE) {
+                this._boosterSound.play({volume: 0.2});
+            }
             let deltaV: Phaser.Math.Vector2 = heading.multiply(new Phaser.Math.Vector2(force, force));
             let newV: Phaser.Math.Vector2 = this.ship.getVelocity().add(deltaV);
             this.ship?.getPhysicsBody()?.setVelocity(newV.x, newV.y);
