@@ -1,12 +1,5 @@
-const ModuleFederationPlugin = require("webpack/lib/container/ModuleFederationPlugin");
-const mf = require("@angular-architects/module-federation/webpack");
-const path = require("path");
-const share = mf.share;
-
-const sharedMappings = new mf.SharedMappings();
-sharedMappings.register(
-  path.join(__dirname, 'tsconfig.json'),
-  [/* mapped paths to share */]);
+const ModuleFederationPlugin = require("webpack").container.ModuleFederationPlugin;
+const deps = require('./package.json').dependencies;
  
 module.exports = {
   output: {
@@ -15,11 +8,6 @@ module.exports = {
   },
   optimization: {
     runtimeChunk: false
-  },
-  resolve: {
-    alias: {
-      ...sharedMappings.getAliases(),
-    }
   },
   experiments: {
     outputModule: true
@@ -34,16 +22,13 @@ module.exports = {
         exposes: {
             './Module': './src/app/space-sim/space-sim.module.ts',
         },     
-        shared: share({
-          "@angular/core": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
-          "@angular/common": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
-          "@angular/common/http": { singleton: true, strictVersion: true, requiredVersion: 'auto' }, 
-          "@angular/router": { singleton: true, strictVersion: true, requiredVersion: 'auto' },
-
-          ...sharedMappings.getDescriptors()
-        })
-        
-    }),
-    sharedMappings.getPlugin()
+        shared: {
+          "@angular/core": { singleton: true, eager: true, requiredVersion: '^13.0.0', version: deps["@angular/core"] }, 
+          "@angular/common": { singleton: true, eager: true, requiredVersion: '^13.0.0', version: deps["@angular/common"] }, 
+          "@angular/common/http": { singleton: true, eager: true, requiredVersion: '^13.0.0', version: deps["@angular/common/http"] }, 
+          "@angular/router": { singleton: true, eager: true, requiredVersion: '^13.0.0', version: deps["@angular/router"] },
+          bootstrap: { singleton: true, eager: true, requiredVersion: '^5.0.0', version: deps.bootstrap }
+        }
+    })
   ],
 };
