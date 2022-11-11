@@ -11,10 +11,10 @@ export class SpaceSim {
         let conf: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
             width: options?.width || window.innerWidth,
-            height: options?.height || window.innerHeight * 0.8,
+            height: options?.height || window.innerHeight,
             scale: {
                 mode: Phaser.Scale.NONE,
-                autoCenter: Phaser.Scale.CENTER_BOTH
+                autoCenter: Phaser.Scale.NONE
             },
             backgroundColor: '#000000',
             parent: options?.parentElementId || 'space-sim',
@@ -29,22 +29,19 @@ export class SpaceSim {
             scene: [StartupScene, GameplayScene, GameOverScene]
         };
         SpaceSim.game = new Phaser.Game(conf);
-          
-        window.addEventListener('resize', () => {
-            SpaceSim.game.canvas.width = options?.width || window.innerWidth;
-            SpaceSim.game.canvas.height = options?.height || window.innerHeight * 0.8;
-            SpaceSim.game.scale.refresh();
+        SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSim.resize());
+        SpaceSim.game.events.on(Phaser.Core.Events.HIDDEN, () => {
+            SpaceSim.game.scene.getScenes(true).forEach(s => {
+                SpaceSim.game.scene.pause(s);
+            });
         });
-
-        document.addEventListener("visibilitychange", () => {
-            SpaceSim.game.scene.getScenes(false).forEach((scene: Phaser.Scene) => {
-                if (document.hidden) {
-                    SpaceSim.game.scene.pause(scene);
-                } else {
-                    SpaceSim.game.scene.resume(scene);
+        SpaceSim.game.events.on(Phaser.Core.Events.VISIBLE, () => {
+            SpaceSim.game.scene.getScenes(false).forEach(s => {
+                if (s.scene.isPaused(s)) {
+                    SpaceSim.game.scene.resume(s);
                 }
             });
-        }, false);
+        });
     }
 }
 
@@ -61,6 +58,22 @@ export module SpaceSim {
         if (game) {
             game.destroy(true, true);
         }
+    }
+    export function resize(): void {
+        const canvas: HTMLCanvasElement = SpaceSim.game?.canvas;
+        if (canvas) {
+            canvas.style.margin = '0px';
+            canvas.style.padding = '0px';
+            canvas.style.width='100%';
+            canvas.style.height='100%';
+            const bounds = canvas.getBoundingClientRect();
+            canvas.width  = bounds.width;
+            canvas.height = bounds.height;
+            SpaceSim.game?.scale.setGameSize(bounds.width, bounds.height);
+        }
+        SpaceSim.game?.scene.getScenes(true).forEach(s => {
+            s.scene.restart();
+        });
     }
     export var player: ShipPod;
     export var opponents: ShipPod[] = [];

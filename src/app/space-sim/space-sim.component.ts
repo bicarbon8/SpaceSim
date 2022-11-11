@@ -1,4 +1,4 @@
-import { Component, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { SpaceSim } from './game/space-sim';
 
 @Component({
@@ -7,11 +7,18 @@ import { SpaceSim } from './game/space-sim';
   styleUrls: ['./space-sim.component.css']
 })
 export class SpaceSimComponent implements OnInit, OnDestroy {
+  @HostListener('window:resize', ['$event'])
+  onResize(event) {
+    SpaceSim.resize();
+  }
+  
   constructor(private zone: NgZone) { }
   
   ngOnInit(): void {
     this.zone.runOutsideAngular(() => {
-      SpaceSim.start({debug: false});
+      SpaceSim.start({
+        debug: false
+      });
     });
   }
 
