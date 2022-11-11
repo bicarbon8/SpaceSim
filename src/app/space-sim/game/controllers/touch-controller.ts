@@ -2,7 +2,6 @@ import { ShipPod } from "../ships/ship-pod";
 import { InputController } from "./input-controller";
 import { Helpers } from "../utilities/helpers";
 import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { ShipAttachment } from "../ships/attachments/ship-attachment";
 import { HasGameObject } from "../interfaces/has-game-object";
 import { Constants } from "../utilities/constants";
 

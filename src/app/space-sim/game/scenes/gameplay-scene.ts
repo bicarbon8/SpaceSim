@@ -17,6 +17,7 @@ import { OffenceAttachment } from "../ships/attachments/offence/offence-attachme
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { GameStats } from "../utilities/game-stats";
+import { Resizable } from "../interfaces/resizable";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -24,7 +25,7 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     key: 'gameplay-scene'
 };
 
-export class GameplayScene extends Phaser.Scene {
+export class GameplayScene extends Phaser.Scene implements Resizable {
     private _width: number;
     private _height: number;
     private _controller: InputController;
@@ -73,19 +74,23 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     create(): void {
-        this._width = this.game.canvas.width;
-        this._height = this.game.canvas.height;
-
-        this._createHUD();
         this._createMapAndPlayer();
-        this._setupCamera();
-        this._createController();
+        this.resize();
         this._createStellarBodiesLayer();
         this._createBackground();
         this._createOpponents();
         this._playBackgroundMusic();
 
         GameScoreTracker.start();
+    }
+
+    resize(): void {
+        this._width = this.game.canvas.width;
+        this._height = this.game.canvas.height;
+
+        this._createHUD();
+        this._setupCamera();
+        this._createController();
     }
 
     update(time: number, delta: number): void {
@@ -132,10 +137,16 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     private _createHUD(): void {
+        if (this._hudText) {
+            this._hudText.destroy();
+        }
         this._hudText = this.add.text(10, 10, '', { font: '12px Courier', color: '#ffdddd' });
         this._hudText.setScrollFactor(0); // keep fixed in original location on screen
         this._hudText.setDepth(Constants.DEPTH_HUD);
 
+        if (this._scoreText) {
+            this._scoreText.destroy();
+        }
         this._scoreText = this.add.text(0, 0, 'SAMPLE TEXT', {font: '20px Courier', color: '#808080', stroke: '#ffff00', strokeThickness: 4});
         this._scoreText.setDepth(Constants.DEPTH_CONTROLS);
         this._scoreText.setX((this._width/2)-(this._scoreText.width/2));
@@ -145,6 +156,10 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     private _createController(): void {
+        if (this._controller) {
+            (this._controller as TouchController)?.getGameObject()?.destroy();
+        }
+        
         if (this.game.device.os.desktop) {
             this._controller = new KbmController(this, SpaceSim.player);
         } else {
