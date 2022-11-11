@@ -13,7 +13,7 @@ export class StartupScene extends Phaser.Scene {
 	private _height: number;
     private _sun: Phaser.GameObjects.Sprite;
     private _stars: Phaser.GameObjects.TileSprite;
-    private _themeSong: Phaser.Sound.BaseSound;
+    private _music: Phaser.Sound.BaseSound;
     private _controlsMenu: TextButton;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
@@ -39,7 +39,7 @@ export class StartupScene extends Phaser.Scene {
         this._createTitle();
         this._createMenuItems();
         this._createControlsMenu();
-        this._playThemeSong();
+        this._createMusic();
     }
 
     update(time: number, delta: number): void {
@@ -100,7 +100,7 @@ export class StartupScene extends Phaser.Scene {
         startTextButton.setPosition((this._width/2), (this._height/2));
         startTextButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('gameplay-scene');
-            this._themeSong.stop();
+            this._music.stop();
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
             startTextButton.setButtonColor(0x80ff80, 0.5);
@@ -167,8 +167,10 @@ Touch / Mobile Controls:\n
         this._controlsMenu.setActive(false);
     }
 
-    private _playThemeSong(): void {
-        this._themeSong = this.sound.add('startup-theme', {loop: true, volume: 0.1});
-        this._themeSong.play();
+    private _createMusic(): void {
+        this._music = this.sound.add('startup-theme', {loop: true, volume: 0.1});
+        this._music.play();
+        this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music.pause());
+        this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
     }
 }

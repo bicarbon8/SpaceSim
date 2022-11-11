@@ -69,7 +69,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
 
     private _createController(): void {
         if (this._controller) {
-            (this._controller as TouchController)?.getGameObject()?.destroy();
+            this._controller.getGameObject()?.destroy();
         }
         if (this.game.device.os.desktop) {
             this._controller = new KbmController(this, SpaceSim.player);

@@ -2,9 +2,6 @@ import { Vector2 } from "phaser/src/math";
 import { ShipPod } from "../ships/ship-pod";
 import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
 import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
-import { InputController } from "../controllers/input-controller";
-import { TouchController } from "../controllers/touch-controller";
-import { KbmController } from "../controllers/kbm-controller";
 import { StellarBody } from "../star-systems/stellar-body";
 import { GameMap } from "../map/game-map";
 import { environment } from "../../../../environments/environment";
@@ -12,8 +9,6 @@ import { Constants } from "../utilities/constants";
 import { SpaceSim } from "../space-sim";
 import { Helpers } from "../utilities/helpers";
 import { Room } from "@mikewesthad/dungeon";
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { GameStats } from "../utilities/game-stats";
@@ -29,7 +24,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _width: number;
     private _height: number;
     private _stellarBodies: StellarBody[];
-    private _backgroundMusic: Phaser.Sound.BaseSound;
+    private _backgroundStars: Phaser.GameObjects.TileSprite;
+    private _music: Phaser.Sound.BaseSound;
 
     debug: boolean;
 
@@ -76,7 +72,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this._createStellarBodiesLayer();
         this._createBackground();
         this._createOpponents();
-        this._playBackgroundMusic();
+        this._playMusic();
 
         SpaceSim.game.scene.start('gameplay-hud-scene');
         SpaceSim.game.scene.bringToTop('gameplay-hud-scene');
@@ -85,6 +81,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     resize(): void {
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
+        this._createBackground();
         this._setupCamera();
     }
 
@@ -160,7 +157,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start('game-over-scene');
-                        this._backgroundMusic.stop();
+                        this._music.stop();
                         this.game.scene.stop('gameplay-hud-scene');
                         this.game.scene.stop(this);
                     }
@@ -194,11 +191,12 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     private _createBackground(): void {
-        const width = this.game.canvas.width;
-	    const height = this.game.canvas.height;
-        const starField = this.add.tileSprite(width/2, height/2, width*3, height*3, 'far-stars');
-        starField.setDepth(Constants.DEPTH_BACKGROUND);
-        starField.setScrollFactor(0.01); // slight movement to appear very far away
+        if (this._backgroundStars) {
+            this._backgroundStars.destroy();
+        }
+        this._backgroundStars = this.add.tileSprite(this._width/2, this._height/2, this._width*3, this._height*3, 'far-stars');
+        this._backgroundStars.setDepth(Constants.DEPTH_BACKGROUND);
+        this._backgroundStars.setScrollFactor(0.01); // slight movement to appear very far away
     }
 
     private _setupCamera(): void {
@@ -215,8 +213,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.cameras.main.startFollow(SpaceSim.player.getGameObject(), true, 1, 1);
     }
 
-    private _playBackgroundMusic(): void {
-        this._backgroundMusic = this.sound.add('background-music', {loop: true, volume: 0.1});
-        this._backgroundMusic.play();
+    private _playMusic(): void {
+        this._music = this.sound.add('background-music', {loop: true, volume: 0.1});
+        this._music.play();
+        this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music.pause());
+        this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
     }
 }

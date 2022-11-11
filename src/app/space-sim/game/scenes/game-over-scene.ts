@@ -16,7 +16,7 @@ export class GameOverScene extends Phaser.Scene {
 	private _height: number;
     private _sun: Phaser.GameObjects.Sprite;
     private _stars: Phaser.GameObjects.TileSprite;
-    private _gameOverSong: Phaser.Sound.BaseSound;
+    private _music: Phaser.Sound.BaseSound;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
@@ -39,7 +39,7 @@ export class GameOverScene extends Phaser.Scene {
         this._createScore();
         this._createTitle();
         this._createMenuItems();
-        this._createBackgroundMusic();
+        this._createMusic();
     }
 
     update(time: number, delta: number): void {
@@ -112,7 +112,7 @@ export class GameOverScene extends Phaser.Scene {
         restartButton.setPosition(this._width-(restartButton.width/2)-5, this._height-restartButton.height);
         restartButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('gameplay-scene');
-            this._gameOverSong.stop();
+            this._music.stop();
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
             restartButton.setButtonColor(0x80ff80, 1);
@@ -137,7 +137,7 @@ export class GameOverScene extends Phaser.Scene {
         returnToMenuButton.setPosition((returnToMenuButton.width/2)+5, this._height-returnToMenuButton.height);
         returnToMenuButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('startup-scene');
-            this._gameOverSong.stop();
+            this._music.stop();
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
             returnToMenuButton.setButtonColor(0x80ff80, 1);
@@ -148,8 +148,10 @@ export class GameOverScene extends Phaser.Scene {
         });
     }
 
-    private _createBackgroundMusic(): void {
-        this._gameOverSong = this.sound.add('game-over-song', {loop: true, volume: 0.1});
-        this._gameOverSong.play();
+    private _createMusic(): void {
+        this._music = this.sound.add('game-over-song', {loop: true, volume: 0.1});
+        this._music.play();
+        this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music.pause());
+        this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
     }
 }
