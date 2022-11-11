@@ -1,8 +1,9 @@
+import { HasGameObject } from "../interfaces/has-game-object";
 import { Updatable } from "../interfaces/updatable";
 import { ShipPod } from "../ships/ship-pod";
 import { SpaceSim } from "../space-sim";
 
-export abstract class InputController implements Updatable {
+export abstract class InputController implements Updatable, HasGameObject<Phaser.GameObjects.Container> {
     private _scene: Phaser.Scene;
     private _player: ShipPod;
     
@@ -31,4 +32,5 @@ export abstract class InputController implements Updatable {
     }
 
     abstract update(time: number, delta: number): void;
+    abstract getGameObject(): Phaser.GameObjects.Container;
 }

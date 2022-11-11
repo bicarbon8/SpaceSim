@@ -17,13 +17,17 @@ export class KbmController extends InputController {
     private _detachAttachmentKey: Phaser.Input.Keyboard.Key;
     private _throwAttachmentKey: Phaser.Input.Keyboard.Key;
     private _grabAttachmentKey: Phaser.Input.Keyboard.Key;
+
+    private _container: Phaser.GameObjects.Container;
     
     constructor(scene: Phaser.Scene, player?: ShipPod) {
         super(scene, player);
 
+        this._createGameObject();
+
         this._setupInputHandling();
 
-        this._mouseTracker = new MouseTracker(this.scene);
+        this._mouseTracker = new MouseTracker(this.player.getGameObject().scene);
         this.player.setTarget(this._mouseTracker);
     }
         
@@ -73,6 +77,10 @@ export class KbmController extends InputController {
             }
         }
     }
+
+    getGameObject(): Phaser.GameObjects.Container {
+        return this._container;
+    }
     
     private _setupInputHandling(): void {
         this._thrustForwardsKey = this.scene.input.keyboard.addKey('SPACE', true, true);
@@ -90,5 +98,9 @@ export class KbmController extends InputController {
         this.game.canvas.oncontextmenu = (e) => {
             e.preventDefault();
         }
+    }
+
+    _createGameObject(): void {
+        this._container = this.scene.add.container();
     }
 }

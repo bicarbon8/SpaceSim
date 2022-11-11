@@ -2,6 +2,7 @@ import "phaser";
 import { Size } from "./interfaces/size";
 import { GameMap } from "./map/game-map";
 import { GameOverScene } from "./scenes/game-over-scene";
+import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
 import { StartupScene } from "./scenes/startup-scene";
 import { ShipPod } from "./ships/ship-pod";
@@ -29,7 +30,7 @@ export class SpaceSim {
                 }
             },
             roundPixels: true,
-            scene: [StartupScene, GameplayScene, GameOverScene]
+            scene: [StartupScene, GameplayScene, GameplayHudScene, GameOverScene]
         };
         SpaceSim.game = new Phaser.Game(conf);
         SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSim.resize());

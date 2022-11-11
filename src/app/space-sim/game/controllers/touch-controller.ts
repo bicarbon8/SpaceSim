@@ -2,10 +2,9 @@ import { ShipPod } from "../ships/ship-pod";
 import { InputController } from "./input-controller";
 import { Helpers } from "../utilities/helpers";
 import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { HasGameObject } from "../interfaces/has-game-object";
 import { Constants } from "../utilities/constants";
 
-export class TouchController extends InputController implements HasGameObject<Phaser.GameObjects.Container> {
+export class TouchController extends InputController {
     private _container: Phaser.GameObjects.Container;
     private _fireButtonActive: boolean;
     private _thrusterButtonActive: boolean;
@@ -19,16 +18,10 @@ export class TouchController extends InputController implements HasGameObject<Ph
     }
 
     update(time: number, delta: number): void {
-        this._handleLocationUpdate();
         this._handleFireTouch();
         this._handleThrusterTouch();
         this._handleThrowTouch();
         this._handleBoostTouch();
-    }
-
-    private _handleLocationUpdate(): void {
-        let cameraCentre: Phaser.Math.Vector2 = this.scene.cameras.main?.getWorldPoint(0, 0) || Helpers.vector2();
-        this.getGameObject().setPosition(cameraCentre.x, cameraCentre.y);
     }
 
     /**
