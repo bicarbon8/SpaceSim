@@ -1,6 +1,7 @@
 {
   "name": "space-sim",
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -22,7 +23,7 @@
     "@angular/platform-browser-dynamic": "13.2.0",
     "@angular/router": "13.2.0",
     "@mikewesthad/dungeon": "^2.0.1",
-    "bootstrap": "^4.6.0",
+    "bootstrap": "^5.2.2",
     "phaser": "^3.54.0",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
