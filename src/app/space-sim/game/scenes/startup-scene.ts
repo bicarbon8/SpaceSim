@@ -100,7 +100,6 @@ export class StartupScene extends Phaser.Scene {
         startTextButton.setPosition((this._width/2), (this._height/2));
         startTextButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('gameplay-scene');
-            this._music.stop();
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
             startTextButton.setButtonColor(0x80ff80, 0.5);
@@ -172,5 +171,7 @@ Touch / Mobile Controls:\n
         this._music.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
+        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music.stop());
+        this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music.destroy());
     }
 }

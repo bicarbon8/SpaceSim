@@ -157,7 +157,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start('game-over-scene');
-                        this._music.stop();
                         this.game.scene.stop('gameplay-hud-scene');
                         this.game.scene.stop(this);
                     }
@@ -218,5 +217,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this._music.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
+        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music.stop());
+        this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music.destroy());
     }
 }
