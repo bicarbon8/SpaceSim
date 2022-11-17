@@ -38,7 +38,6 @@ export class StartupScene extends Phaser.Scene {
 
         this._createBackground();
         this._createStellarBodies();
-        this._createTitle();
         this._createMenuItems();
         this._createControlsMenu();
         this._createMusic();
@@ -71,10 +70,6 @@ export class StartupScene extends Phaser.Scene {
         const mercuryRadius: number = mercury.width/2;
         const mercuryScaleFactor: number = (smallestDimension / 3) / mercuryRadius; // ex: mercuryRadius * x = canvasSize / 3
         mercury.setScale(mercuryScaleFactor);
-    }
-
-    private _createTitle(): void {
-        
     }
 
     private _createMenuItems(): void {
