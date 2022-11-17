@@ -1,5 +1,5 @@
+import { Card, CardHeader, FlexLayout, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
-import { TextButton } from "../ui/text-button";
 import { Constants } from "../utilities/constants";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
@@ -14,7 +14,7 @@ export class StartupScene extends Phaser.Scene {
     private _sun: Phaser.GameObjects.Sprite;
     private _stars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
-    private _controlsMenu: TextButton;
+    private _controlsMenu: Card;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
@@ -34,6 +34,8 @@ export class StartupScene extends Phaser.Scene {
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
+        this.cameras.main.centerOn(0, 0);
+
         this._createBackground();
         this._createStellarBodies();
         this._createTitle();
@@ -52,19 +54,19 @@ export class StartupScene extends Phaser.Scene {
     }
 
     private _createBackground(): void {
-        this._stars = this.add.tileSprite(this._width/2, this._height/2, this._width, this._height, 'far-stars');
+        this._stars = this.add.tileSprite(0, 0, this._width, this._height, 'far-stars');
         this._stars.setDepth(Constants.DEPTH_BACKGROUND);
     }
 
     private _createStellarBodies(): void {
         const smallestDimension: number = (this._width <= this._height) ? this._width : this._height;
-        this._sun = this.add.sprite(0, 0, 'sun'); // top left
+        this._sun = this.add.sprite(-this._width/2, -this._height/2, 'sun'); // top left
         this._sun.setDepth(Constants.DEPTH_STELLAR);
         const sunRadius: number = this._sun.width/2;
         const sunScaleFactor: number = smallestDimension / sunRadius; // ex: sunRadius * x = canvasSize
         this._sun.setScale(sunScaleFactor);
 
-        const mercury = this.add.sprite(this._width, this._height, 'mercury'); // bottom right
+        const mercury = this.add.sprite(this._width/2, this._height/2, 'mercury'); // bottom right
         mercury.setDepth(Constants.DEPTH_STELLAR);
         const mercuryRadius: number = mercury.width/2;
         const mercuryScaleFactor: number = (smallestDimension / 3) / mercuryRadius; // ex: mercuryRadius * x = canvasSize / 3
@@ -72,98 +74,153 @@ export class StartupScene extends Phaser.Scene {
     }
 
     private _createTitle(): void {
-        const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Spaceship Game', {font: '40px Courier', color: '#6d6dff', stroke: '#ffffff', strokeThickness: 4});
-        titleText.setDepth(Constants.DEPTH_CONTROLS);
-        titleText.setX((this._width/2)-(titleText.width/2));
-        titleText.setY((this._height/2)-(titleText.height/2)-(titleText.height*2));
+        
     }
 
     private _createMenuItems(): void {
-        const style = { 
+        const layout = new LinearLayout(this, {
+            alignment: { horizontal: 'center', vertical: 'middle' },
+            orientation: 'vertical',
+            x: 0,
+            y: 0,
+            padding: 10
+        });
+        layout.setDepth(Constants.DEPTH_CONTROLS);
+        this.add.existing(layout);
+
+        const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Spaceship Game', {font: '40px Courier', color: '#6d6dff', stroke: '#ffffff', strokeThickness: 4});
+        layout.addContents(titleText);
+
+        const buttonTextStyle = { 
             font: '20px Courier', 
             color: '#ddffdd',
             align: 'center'
         };
 
-        const startTextButton: TextButton = new TextButton({
-            scene: this,
-            x: 0,
-            y: 0,
-            text: 'Press to Start',
-            textStyle: style,
-            colour: 0x808080,
-            alpha: 0.2,
+        const startTextButton: TextButton = new TextButton(this, {
+            desiredWidth: 250,
+            text: {
+                text: 'Press to Start',
+                style: buttonTextStyle,
+            },
+            background: {fillStyle: {color: 0x808080, alpha: 0.2}},
             padding: 5,
-            cornerRadius: 5
+            cornerRadius: 15,
+            interactive: true
         });
-        startTextButton.setDepth(Constants.DEPTH_CONTROLS);
         startTextButton.setPosition((this._width/2), (this._height/2));
-        startTextButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
+        startTextButton.on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('gameplay-scene');
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            startTextButton.setButtonColor(0x80ff80, 0.5);
+            startTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
         }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            startTextButton.setButtonColor(0x808080, 0.2);
+            startTextButton.setBackground({fillStyle: {color: 0x808080, alpha: 0.2}});
         });
+        layout.addContents(startTextButton);
 
-        const controlsTextButton: TextButton = new TextButton({
-            scene: this,
-            x: 0,
-            y: 0,
-            text: 'Controls',
-            textStyle: style,
-            colour: 0x808080,
-            alpha: 0.2,
-            padding: {left: 20, top: 5},
-            cornerRadius: 5
+        const controlsTextButton: TextButton = new TextButton(this, {
+            desiredWidth: 250,
+            text: {text: 'Controls', style: buttonTextStyle},
+            background: {fillStyle: {color: 0x808080, alpha: 0.2}},
+            padding: 5,
+            cornerRadius: 15,
+            interactive: true
         });
-        controlsTextButton.setDepth(Constants.DEPTH_CONTROLS);
         controlsTextButton.setPosition((this._width/2), (this._height/2)+(controlsTextButton.height*2));
-        controlsTextButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
+        controlsTextButton.on(Phaser.Input.Events.POINTER_DOWN, () => {
             this._controlsMenu.setActive(true);
             this._controlsMenu.setVisible(true);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            controlsTextButton.setButtonColor(0x80ff80, 0.5);
+            controlsTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
         }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            controlsTextButton.setButtonColor(0x808080, 0.2);
+            controlsTextButton.setBackground({fillStyle: {color: 0x808080, alpha: 0.2}});
         });
+        layout.addContents(controlsTextButton);
     }
 
     private _createControlsMenu(): void {
-        this._controlsMenu = new TextButton({
-            scene: this,
-            x: this._width/2,
-            y: this._height/2,
-            text: `Keyboard & Mouse Controls:\n
-\tThruster: SPACE\n
-\tFire: LEFT MOUSE\n
-\tBoost: TAB\n
-\tAim: MOVE MOUSE\n
-Touch / Mobile Controls:\n
-\tThruster: GREEN\n
-\tFire: BLUE\n
-\tBoost: RED\n
-\tAim: LEFT STICK`,
-            textStyle: { 
-                font: '20px Courier', 
-                color: '#ddffdd',
-                align: 'left'
-            },
-            colour: 0x808080,
-            alpha: 1,
-            padding: 20,
+        const closeButton = new TextButton(this, {
+            text: {text: 'Close', style: Styles.Outline.success().text},
+            background: Styles.Outline.success().graphics,
             cornerRadius: 20,
-            minHeight: this._height - 10,
-            minWidth: this._width - 10
+            interactive: true,
+            desiredWidth: 300,
+            padding: 10
         });
-        this._controlsMenu.setDepth(Constants.DEPTH_CONTROLS);
-        this._controlsMenu.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
+        closeButton.on(Phaser.Input.Events.POINTER_DOWN, () => {
             this._controlsMenu.setVisible(false);
             this._controlsMenu.setActive(false);
+        }).on(Phaser.Input.Events.POINTER_OVER, () => {
+            closeButton.setBackground(Styles.success().graphics)
+                .setText({style: Styles.success().text});
+        }).on(Phaser.Input.Events.POINTER_OUT, () => {
+            closeButton.setBackground(Styles.Outline.success().graphics)
+            .setText({style: Styles.Outline.success().text});
         });
+
+        this._controlsMenu = new Card(this, {
+            desiredWidth: this._width * 0.98,
+            desiredHeight: this._height * 0.98,
+            cornerRadius: 20,
+            padding: 10,
+            header: {
+                text: {text: 'Game Controls:', style: Styles.info().text},
+                background: Styles.info().graphics
+            },
+            body: {
+                background: Styles.light().graphics,
+                contents: [
+                    new FlexLayout(this, {
+                        padding: 5,
+                        contents: [
+                            new Card(this, {
+                                desiredWidth: 300,
+                                header: {
+                                    text: {text: 'Keyboard & Mouse:', style: Styles.warning().text },
+                                    background: Styles.warning().graphics
+                                },
+                                body: {
+                                    background: Styles.Outline.dark().graphics,
+                                    contents: [
+                                        this.make.text({
+                                            text: `Thruster: SPACE\nFire: LEFT MOUSE\nBoost: TAB\nAim: MOVE MOUSE`,
+                                            style: Styles.light().text
+                                        }, false),
+                                    ]
+                                },
+                                padding: 5,
+                                cornerRadius: 10
+                            }),
+                            new Card(this, {
+                                desiredWidth: 300,
+                                header: {
+                                    text: {text: 'Touch / Mobile:', style: Styles.warning().text },
+                                    background: Styles.warning().graphics
+                                },
+                                body: {
+                                    background: Styles.Outline.dark().graphics,
+                                    contents: [
+                                        this.make.text({
+                                            text: `Thruster: GREEN\nFire: BLUE\nBoost: RED\nAim: LEFT STICK`,
+                                            style: Styles.light().text
+                                        }, false)
+                                    ]
+                                },
+                                padding: 5,
+                                cornerRadius: 10
+                            })
+                        ]
+                    }),
+                    closeButton
+                ]
+            }
+        });
+        this._controlsMenu.cardbody.refreshLayout();
+        this._controlsMenu.setDepth(Constants.DEPTH_CONTROLS);
         this._controlsMenu.setVisible(false);
         this._controlsMenu.setActive(false);
+        this.add.existing(this._controlsMenu);
     }
 
     private _createMusic(): void {

@@ -1,6 +1,6 @@
+import { TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSim } from "../space-sim";
-import { TextButton } from "../ui/text-button";
 import { Constants } from "../utilities/constants";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { GameStats } from "../utilities/game-stats";
@@ -97,14 +97,11 @@ export class GameOverScene extends Phaser.Scene {
             align: 'center'
         };
 
-        const restartButton: TextButton = new TextButton({
-            scene: this,
+        const restartButton: TextButton = new TextButton(this, {
             x: 0,
             y: 0,
-            text: 'Press to Restart',
-            textStyle: style,
-            colour: 0xff6060,
-            alpha: 0.5,
+            text: {text: 'Press to Restart', style: style},
+            background: {fillStyle: {color: 0xff6060, alpha: 0.5}},
             padding: 5,
             cornerRadius: 5
         });
@@ -115,21 +112,18 @@ export class GameOverScene extends Phaser.Scene {
             this._music.stop();
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            restartButton.setButtonColor(0x80ff80, 1);
-            restartButton.setTextStyle({color: '8d8d8d'});
+            restartButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
+            restartButton.setText({style: {color: '8d8d8d'}});
         }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            restartButton.setButtonColor(0xff6060, 0.5);
-            restartButton.setTextStyle(style);
+            restartButton.setBackground({fillStyle: {color: 0xff6060, alpha: 0.5}});
+            restartButton.setText({style: style});
         });
 
-        const returnToMenuButton: TextButton = new TextButton({
-            scene: this,
+        const returnToMenuButton: TextButton = new TextButton(this, {
             x: 0,
             y: 0,
-            text: 'Return to Menu',
-            textStyle: style,
-            colour: 0xff6060,
-            alpha: 0.5,
+            text: {text: 'Return to Menu', style: style},
+            background: {fillStyle: {color: 0xff6060, alpha: 0.5}},
             padding: 5,
             cornerRadius: 5
         });
@@ -139,11 +133,11 @@ export class GameOverScene extends Phaser.Scene {
             this.game.scene.start('startup-scene');
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            returnToMenuButton.setButtonColor(0x80ff80, 1);
-            returnToMenuButton.setTextStyle({color: '8d8d8d'});
+            returnToMenuButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
+            returnToMenuButton.setText({style: {color: '8d8d8d'}});
         }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            returnToMenuButton.setButtonColor(0xff6060, 0.5);
-            returnToMenuButton.setTextStyle(style);
+            returnToMenuButton.setBackground({fillStyle: {color: 0xff6060, alpha: 0.5}});
+            returnToMenuButton.setText({style: style});
         });
     }
 
