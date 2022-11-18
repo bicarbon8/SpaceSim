@@ -240,7 +240,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this._destroyedSound.play();
         this.active = false;
         this._displayShipExplosion();
-        this.getGameObject().active = false;
+        this.getGameObject()?.setActive(false);
         this._attachmentMgr.active = false;
         this._attachmentMgr.getAttachments().forEach((attachment: ShipAttachment) => {
             if (attachment) {

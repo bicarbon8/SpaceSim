@@ -8,6 +8,7 @@ import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { Resizable } from "../interfaces/resizable";
+import { GridLayout, LinearLayout } from "phaser-ui-components";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -20,6 +21,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _height: number;
     private _hudText: Phaser.GameObjects.Text;
     private _scoreText: Phaser.GameObjects.Text;
+    private _hudLayout: GridLayout;
     private _controller: InputController;
 
     debug: boolean;
@@ -39,6 +41,8 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
+        this.cameras.main.centerOn(0, 0);
+
         this._createHUD();
         this._createController();
     }
@@ -52,19 +56,35 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
         if (this._hudText) {
             this._hudText.destroy();
         }
-        this._hudText = this.add.text(10, 10, '', { font: '12px Courier', color: '#ffdddd' });
-        this._hudText.setScrollFactor(0); // keep fixed in original location on screen
-        this._hudText.setDepth(Constants.DEPTH_HUD);
+        this._hudText = this.make.text({
+            text: '', 
+            style: { font: '14px Courier', color: '#ffff00' }
+        }, false);
 
         if (this._scoreText) {
             this._scoreText.destroy();
         }
-        this._scoreText = this.add.text(0, 0, 'SAMPLE TEXT', {font: '20px Courier', color: '#808080', stroke: '#ffff00', strokeThickness: 4});
-        this._scoreText.setDepth(Constants.DEPTH_CONTROLS);
-        this._scoreText.setX((this._width/2)-(this._scoreText.width/2));
-        this._scoreText.setY(this._scoreText.height);
-        this._scoreText.setScrollFactor(0); // keep fixed in original location on screen
-        this._scoreText.setDepth(Constants.DEPTH_HUD);
+        this._scoreText = this.make.text({
+            text: '', 
+            style: {font: '14px Courier', color: '#ffff00'}
+        }, false);
+
+        const rows = Math.floor(this._height / 150);
+        const cols = Math.floor(this._width / 150);
+        if (this._hudLayout) {
+            this._hudLayout.destroy();
+        }
+        this._hudLayout = new GridLayout(this, {
+            height: this._height,
+            width: this._width,
+            rows: rows,
+            columns: cols,
+            padding: 5,
+            alignment: {vertical: 'top'}
+        }).addContentAt(0, 0, this._hudText)
+        .addContentAt(0, cols-1, this._scoreText)
+        .setDepth(Constants.DEPTH_CONTROLS);
+        this.add.existing(this._hudLayout);
     }
 
     private _createController(): void {
@@ -75,6 +95,10 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             this._controller = new KbmController(this, SpaceSim.player);
         } else {
             this._controller = new TouchController(this, SpaceSim.player);
+        }
+        const obj = this._controller.getGameObject();
+        if (obj) {
+            this.add.existing(obj);
         }
     }
 
@@ -100,6 +124,8 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
                 `Score: ${GameScoreTracker.getScore().toFixed(0)}`
             ]
             this._scoreText.setText(score);
+
+            this._hudLayout.updateSize(this._width, this._height);
         } catch (e) {
             // do nothing
         }
