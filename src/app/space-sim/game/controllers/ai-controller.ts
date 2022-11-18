@@ -1,7 +1,8 @@
-import { ShipPod } from "../../ships/ship-pod";
+import { ShipPod } from "../ships/ship-pod";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {
+    private _container: Phaser.GameObjects.Container;
     private _aiShip: ShipPod;
     private _lastKnownPlayerLocation: Phaser.Math.Vector2;
     
@@ -32,6 +33,10 @@ export class AiController extends InputController {
         this._aiShip.lookAt(location);
         this._aiShip.getThruster().thrustFowards();
         
+    }
+
+    getGameObject(): Phaser.GameObjects.Container {
+        return this._container;
     }
 
     private _patrol(): void {

@@ -1,6 +1,6 @@
+import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSim } from "../space-sim";
-import { TextButton } from "../ui/text-button";
 import { Constants } from "../utilities/constants";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { GameStats } from "../utilities/game-stats";
@@ -17,6 +17,7 @@ export class GameOverScene extends Phaser.Scene {
     private _sun: Phaser.GameObjects.Sprite;
     private _stars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
+    private _layout: LinearLayout;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
@@ -34,10 +35,13 @@ export class GameOverScene extends Phaser.Scene {
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
+        this.cameras.main.centerOn(0, 0);
+
         this._createBackground();
         this._createStellarBodies();
-        this._createScore();
+        this._createLayout();
         this._createTitle();
+        this._createScore();
         this._createMenuItems();
         this._createMusic();
     }
@@ -52,12 +56,13 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _createBackground(): void {
-        this._stars = this.add.tileSprite(this._width/2, this._height/2, this._width*3, this._height*3, 'far-stars');
+        this._stars = this.add.tileSprite(0, 0, this._width, this._height, 'far-stars');
         this._stars.setDepth(Constants.DEPTH_BACKGROUND);
     }
 
     private _createStellarBodies(): void {
-        this._sun = this.add.sprite(this._width / 2, this._height / 2, 'sun');
+        this._sun = this.add.sprite(0, 0, 'sun');
+        this._sun.setOrigin(0.5);
         this._sun.setDepth(Constants.DEPTH_STELLAR);
         const smallestDimension: number = (this._width <= this._height) ? this._width : this._height;
         const sunRadius: number = this._sun.width/2;
@@ -65,29 +70,42 @@ export class GameOverScene extends Phaser.Scene {
         this._sun.setScale(sunScaleFactor);
     }
 
+    private _createLayout(): void {
+        this._layout = new LinearLayout(this, {
+            orientation: 'vertical',
+            padding: 10,
+            desiredWidth: this._width,
+            desiredHeight: this._height
+        });
+        this._layout.setDepth(Constants.DEPTH_CONTROLS);
+        this.add.existing(this._layout);
+    }
+
+    private _createTitle(): void {
+        const titleText: Phaser.GameObjects.Text = this.make.text({ 
+            text: 'GAME OVER', 
+            style: {font: '40px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4}
+        }, false);
+        this._layout.addContents(titleText);
+    }
+
     private _createScore(): void {
-        const scoreText: Phaser.GameObjects.Text = this.add.text(0, 0, ``, {font: '30px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4});
         const stats: GameStats = GameScoreTracker.getStats();
         let accuracy: number = (stats.shotsLanded / stats.shotsFired) * 100;
         if (isNaN(accuracy)) {
             accuracy = 0;
         }
+        const scoreText: Phaser.GameObjects.Text = this.make.text({
+            text: '', 
+            style: {font: '30px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4}
+        }, false);
         scoreText.setText([
             `Score: ${GameScoreTracker.getScore().toFixed(0)}`,
             `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
             `Accuracy: ${accuracy.toFixed(0)}%`,
             `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`
         ]);
-        scoreText.setDepth(Constants.DEPTH_CONTROLS);
-        scoreText.setX((this._width/2)-(scoreText.width/2));
-        scoreText.setY((this._height/2)-(scoreText.height/2));
-    }
-
-    private _createTitle(): void {
-        const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, 'GAME OVER', {font: '40px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4});
-        titleText.setDepth(Constants.DEPTH_CONTROLS);
-        titleText.setX((this._width/2)-(titleText.width/2));
-        titleText.setY(5);
+        this._layout.addContents(scoreText);
     }
 
     private _createMenuItems(): void {
@@ -97,16 +115,12 @@ export class GameOverScene extends Phaser.Scene {
             align: 'center'
         };
 
-        const restartButton: TextButton = new TextButton({
-            scene: this,
-            x: 0,
-            y: 0,
-            text: 'Press to Restart',
-            textStyle: style,
-            colour: 0xff6060,
-            alpha: 0.5,
+        const restartButton: TextButton = new TextButton(this, {
+            desiredWidth: 250,
+            text: {text: 'Press to Restart', style: style},
+            background: {fillStyle: {color: 0xff6060, alpha: 0.5}},
             padding: 5,
-            cornerRadius: 5
+            cornerRadius: 10
         });
         restartButton.setDepth(Constants.DEPTH_CONTROLS);
         restartButton.setPosition(this._width-(restartButton.width/2)-5, this._height-restartButton.height);
@@ -115,37 +129,42 @@ export class GameOverScene extends Phaser.Scene {
             this._music.stop();
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            restartButton.setButtonColor(0x80ff80, 1);
-            restartButton.setTextStyle({color: '8d8d8d'});
+            restartButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
+            restartButton.setText({style: {color: '8d8d8d'}});
         }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            restartButton.setButtonColor(0xff6060, 0.5);
-            restartButton.setTextStyle(style);
+            restartButton.setBackground({fillStyle: {color: 0xff6060, alpha: 0.5}});
+            restartButton.setText({style: style});
         });
 
-        const returnToMenuButton: TextButton = new TextButton({
-            scene: this,
-            x: 0,
-            y: 0,
-            text: 'Return to Menu',
-            textStyle: style,
-            colour: 0xff6060,
-            alpha: 0.5,
+        const returnToMenuButton: TextButton = new TextButton(this, {
+            desiredWidth: 250,
+            text: {text: 'Return to Menu', style: style},
+            background: {fillStyle: {color: 0xff6060, alpha: 0.5}},
             padding: 5,
-            cornerRadius: 5
+            cornerRadius: 10
         });
         returnToMenuButton.setDepth(Constants.DEPTH_CONTROLS);
         returnToMenuButton.setPosition((returnToMenuButton.width/2)+5, this._height-returnToMenuButton.height);
         returnToMenuButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('startup-scene');
-            this._music.stop();
             this.game.scene.stop(this);
         }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            returnToMenuButton.setButtonColor(0x80ff80, 1);
-            returnToMenuButton.setTextStyle({color: '8d8d8d'});
+            returnToMenuButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
+            returnToMenuButton.setText({style: {color: '8d8d8d'}});
         }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            returnToMenuButton.setButtonColor(0xff6060, 0.5);
-            returnToMenuButton.setTextStyle(style);
+            returnToMenuButton.setBackground({fillStyle: {color: 0xff6060, alpha: 0.5}});
+            returnToMenuButton.setText({style: style});
         });
+
+        const flex = new FlexLayout(this, {
+            width: this._width,
+            padding: 10,
+            contents: [
+                restartButton,
+                returnToMenuButton
+            ]
+        });
+        this._layout.addContents(flex);
     }
 
     private _createMusic(): void {
@@ -153,5 +172,7 @@ export class GameOverScene extends Phaser.Scene {
         this._music.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
+        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music.stop());
+        this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music.destroy());
     }
 }

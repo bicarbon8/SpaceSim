@@ -75,7 +75,7 @@ export module SpaceSim {
             const size = SpaceSim.getSize();
             canvas.width  = size.width;
             canvas.height = size.height;
-            SpaceSim.game?.scale.setGameSize(size.width, size.height);
+            SpaceSim.game?.scale.resize(size.width, size.height);
         }
         SpaceSim.game?.scene.getScenes(true).forEach(s => {
             if (s['resize']) {
