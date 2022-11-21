@@ -15,6 +15,7 @@ import { AttachmentLocation } from "./attachments/attachment-location";
 import { ShipAttachment } from './attachments/ship-attachment';
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
+import { CardBody, LinearLayout } from "phaser-ui-components";
 
 export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     readonly id: string; // UUID
@@ -29,6 +30,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     private _shipSprite: Phaser.GameObjects.Sprite;
     private _shipContainer: Phaser.GameObjects.Container;
     private _shipGroup: Phaser.GameObjects.Group;
+    private _shipIntegrityLayout: LinearLayout;
     private _lastDamagedBy: DamageOptions[];
     private _destroyedSound: Phaser.Sound.BaseSound;
 
@@ -227,7 +229,33 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         if (this._integrity <= 0) {
             this._integrity = 0;
             this.destroy(); // we are dead
+            return;
         }
+
+        // keep the health bar visible by killing any active fade out tweens
+        this._scene.tweens.killTweensOf(this._shipIntegrityLayout);
+
+        this._updateIntegrityIndicator();
+        this._shipIntegrityLayout.setAlpha(1); // make visible
+        this._scene.tweens.add({ // fade out after 5 seconds
+            targets: [this._shipIntegrityLayout],
+            alpha: 0,
+            yoyo: false,
+            loop: 0,
+            delay: 5000,
+            duration: 1000
+        });
+
+        this._scene.tweens.add({
+            targets: this._shipGroup.getChildren(),
+            alpha: 0.5,
+            yoyo: true,
+            loop: 4,
+            duration: 100,
+            onComplete: () => {
+                Phaser.Actions.SetAlpha(this._shipGroup.getChildren(), 1);
+            }
+        });
     }
 
     repair(amount: number): void {
@@ -280,10 +308,35 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
 
         this._shipGroup = this._scene.add.group([this._shipSprite, this._attachmentMgr]);
+
+        this._createIntegrityIndicator();
     }
 
     private _createIntegrityIndicator(): void {
+        this._shipIntegrityLayout = new CardBody(this._scene, {
+            y: -20,
+            orientation: 'horizontal',
+            padding: 1,
+            desiredWidth: 102,
+            alignment: {horizontal: 'left'},
+            background: {fillStyle: {color: 0xffffff}}
+        });
+        this._shipIntegrityLayout.setAlpha(0); // only visible when damage sustained
+        this._shipContainer.add(this._shipIntegrityLayout);
+        
+        this._shipContainer.add(this._shipIntegrityLayout);
+    }
 
+    private _updateIntegrityIndicator(): void {
+        if (this._shipIntegrityLayout) {
+            this._shipIntegrityLayout.removeAllContent(true);
+
+            let square: Phaser.GameObjects.Graphics = this._scene.add.graphics({fillStyle: {color: 0xff6060}});
+            square.fillRect(-Math.floor(this._integrity/2), -2, this._integrity, 4);
+            let squareContainer: Phaser.GameObjects.Container = this._scene.add.container(0, 0, [square]);
+            squareContainer.setSize(4, 4);
+            this._shipIntegrityLayout.addContents(squareContainer);
+        }
     }
 
     private _displayShipExplosion(): void {

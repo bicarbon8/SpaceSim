@@ -107,7 +107,6 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             let loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
             let info: string[] = [
                 `Speed: ${SpaceSim.player.getSpeed().toFixed(1)}`,
-                `Integrity: ${SpaceSim.player.getIntegrity().toFixed(1)}`,
                 `Heat: ${SpaceSim.player.getTemperature().toFixed(1)}`,
                 `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
                 `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo || 0}`
