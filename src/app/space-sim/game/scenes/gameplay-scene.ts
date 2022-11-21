@@ -11,8 +11,9 @@ import { Helpers } from "../utilities/helpers";
 import { Room } from "@mikewesthad/dungeon";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
-import { GameStats } from "../utilities/game-stats";
 import { Resizable } from "../interfaces/resizable";
+import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
+import { MachineGunAttachment } from "../ships/attachments/offence/machine-gun-attachment";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -39,6 +40,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     preload(): void {
         this.load.image('ship-pod', `${environment.baseUrl}/assets/sprites/ship-pod.png`);
         this.load.image('thruster', `${environment.baseUrl}/assets/sprites/thruster.png`);
+        this.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
         this.load.image('cannon', `${environment.baseUrl}/assets/sprites/cannon.png`);
         this.load.spritesheet('flares', `${environment.baseUrl}/assets/particles/flares.png`, {
             frameWidth: 130,
@@ -93,6 +95,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     private _createOpponents(): void {
+        // remove all pre-existing (happens on replay)
+        SpaceSim.opponents.splice(0, SpaceSim.opponents.length);
+        
+        // add opponent in each room
         SpaceSim.map.getRooms().forEach((room: Room) => {
             var tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
             var br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
@@ -142,8 +148,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         // TODO: have menu allowing selection of attachments
         let thruster: ThrusterAttachment = new ThrusterAttachment({scene: this});
         SpaceSim.player.attachments.addAttachment(thruster);
-        let cannon: CannonAttachment = new CannonAttachment({scene: this});
-        SpaceSim.player.attachments.addAttachment(cannon);
+        let weapon: OffenceAttachment; 
+        // weapon = new CannonAttachment({scene: this});
+        weapon = new MachineGunAttachment({scene: this});
+        SpaceSim.player.attachments.addAttachment(weapon);
 
         this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject(), () => {
             SpaceSim.player.sustainDamage({

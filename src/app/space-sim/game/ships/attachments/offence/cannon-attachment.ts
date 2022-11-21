@@ -34,7 +34,8 @@ export class CannonAttachment extends OffenceAttachment {
             scene: this.scene,
             location: adjustedLocation,
             attachment: this,
-            force: 1000,
+            force: 800,
+            damage: 20,
             angle: this.getRotation(),
             startingV: this.getVelocity(),
             spriteName: 'bullet'

@@ -12,10 +12,12 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
     readonly id: string;
     private _scene: Phaser.Scene;
     private _force: number;
+    private _damage: number;
     private _gameObj: Phaser.GameObjects.Sprite;
     private _scale: number;
     private _origin: OffenceAttachment;
     private _hitSound: Phaser.Sound.BaseSound;
+    private _timeout: number;
 
     active: boolean;
     
@@ -24,20 +26,24 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
         this.active = true;
         this._scene = options.scene;
         this._origin = options.attachment;
-        this._force = (options.force === undefined) ? 1 : options.force;
-        this._scale = (options.scale === undefined) ? 1 : options.scale;
+        this._force = options.force ?? 1;
+        this._damage = options.damage ?? 1;
+        this._scale = options.scale ?? 1;
+        this._timeout = options.timeout ?? 5000;
         
         this._createGameObj(options);
 
+        this._hitSound = this._scene.sound.add('bullet-hit');
+        
         const startingA: number = options.angle || 0;
         this.getGameObject().setAngle(startingA);
         const startingV: Phaser.Math.Vector2 = options.startingV || Phaser.Math.Vector2.ZERO;
         this.getPhysicsBody().setVelocity(startingV.x, startingV.y);
         this.getPhysicsBody().setBounce(0, 0);
         this.addCollisionDetection();
-        this._setInMotion();
-        this._hitSound = this._scene.sound.add('bullet-hit');
+
         GameScoreTracker.shotFired();
+        this._setInMotion();
     }
 
     private addCollisionDetection(): void {
@@ -51,7 +57,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
                 this.getGameObject().active = false;
                 this.getGameObject().destroy();
                 opp.sustainDamage({
-                    amount: 10, 
+                    amount: this._damage, 
                     timestamp: this._scene.time.now,
                     attackerId: this._origin.ship.id,
                     message: `projectile hit`
@@ -112,6 +118,8 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
         let deltaV: Phaser.Math.Vector2 = heading.multiply(Helpers.vector2(this._force));
         // add deltaV to current Velocity
         this.getPhysicsBody().velocity.add(deltaV);
+
+        setTimeout(() => this.getGameObject()?.destroy(), this._timeout);
     }
 
     private _createGameObj(options: BulletOptions): void {
@@ -120,5 +128,7 @@ export class Bullet implements HasGameObject<Phaser.GameObjects.Sprite>, HasLoca
         this.setLocation(options.location);
         this._gameObj.setScale(this._scale);
         this._scene.physics.add.existing(this._gameObj);
+
+        this.getPhysicsBody().setMass(0.01);
     }
 }

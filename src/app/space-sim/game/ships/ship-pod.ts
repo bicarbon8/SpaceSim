@@ -30,7 +30,9 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     private _shipSprite: Phaser.GameObjects.Sprite;
     private _shipContainer: Phaser.GameObjects.Container;
     private _shipGroup: Phaser.GameObjects.Group;
-    private _shipIntegrityLayout: LinearLayout;
+    private _shipIntegrityIndicator: LinearLayout;
+    private _shipHeatIndicator: Phaser.GameObjects.Sprite;
+    private _shipOverheatIndicator: Phaser.GameObjects.Text;
     private _lastDamagedBy: DamageOptions[];
     private _destroyedSound: Phaser.Sound.BaseSound;
 
@@ -85,17 +87,33 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      */
     private _checkOverheatCondition(time: number, delta: number): void {
         if (this.active) {
+            const alpha = this._temperature / Constants.MAX_SAFE_TEMPERATURE;
+            this._shipHeatIndicator.setAlpha(alpha);
+            
             if (this._temperature > Constants.MAX_TEMPERATURE) {
                 this.destroy(); // we are dead
             }
             if (this._temperature > Constants.MAX_SAFE_TEMPERATURE) {
-                // reduce integrity based on degrees over safe operating temp
-                let damage: number = (this._temperature - Constants.MAX_SAFE_TEMPERATURE) * (delta / 1000);
+                if (!this._scene.tweens.getTweensOf(this._shipOverheatIndicator)?.length) {
+                    this._shipOverheatIndicator.setAlpha(1);
+                    this._scene.tweens.add({
+                        targets: this._shipOverheatIndicator,
+                        alpha: 0,
+                        yoyo: true,
+                        duration: 200,
+                        loop: -1
+                    });
+                }
+                // reduce integrity at a fixed rate of 1 per second
+                let damage: number = 1 * (delta / 1000);
                 this.sustainDamage({
                     amount: damage, 
                     timestamp: this._scene.time.now,
                     message: 'ship overheat damage'
                 });
+            } else {
+                this._scene.tweens.killTweensOf(this._shipOverheatIndicator);
+                this._shipOverheatIndicator.setAlpha(0);
             }
             let amountCooled: number = Constants.COOLING_RATE * (delta / 1000);
             this.applyCooling(amountCooled);
@@ -233,12 +251,12 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         }
 
         // keep the health bar visible by killing any active fade out tweens
-        this._scene.tweens.killTweensOf(this._shipIntegrityLayout);
+        this._scene.tweens.killTweensOf(this._shipIntegrityIndicator);
 
         this._updateIntegrityIndicator();
-        this._shipIntegrityLayout.setAlpha(1); // make visible
+        this._shipIntegrityIndicator.setAlpha(1); // make visible
         this._scene.tweens.add({ // fade out after 5 seconds
-            targets: [this._shipIntegrityLayout],
+            targets: [this._shipIntegrityIndicator],
             alpha: 0,
             yoyo: false,
             loop: 0,
@@ -310,32 +328,58 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this._shipGroup = this._scene.add.group([this._shipSprite, this._attachmentMgr]);
 
         this._createIntegrityIndicator();
+
+        this._createHeatIndicator();
+
+        this._createOverheatIndicator();
     }
 
     private _createIntegrityIndicator(): void {
-        this._shipIntegrityLayout = new CardBody(this._scene, {
-            y: -20,
+        this._shipIntegrityIndicator = new CardBody(this._scene, {
+            y: -30,
             orientation: 'horizontal',
             padding: 1,
             desiredWidth: 102,
             alignment: {horizontal: 'left'},
             background: {fillStyle: {color: 0xffffff}}
         });
-        this._shipIntegrityLayout.setAlpha(0); // only visible when damage sustained
-        this._shipContainer.add(this._shipIntegrityLayout);
+        this._shipIntegrityIndicator.setAlpha(0); // only visible when damage sustained
+        this._shipContainer.add(this._shipIntegrityIndicator);
         
-        this._shipContainer.add(this._shipIntegrityLayout);
+        this._shipContainer.add(this._shipIntegrityIndicator);
+    }
+
+    private _createHeatIndicator(): void {
+        this._shipHeatIndicator = this._scene.add.sprite(0, 0, 'overheat-glow');
+        this._shipHeatIndicator.setAlpha(0); // no heat
+        this._shipContainer.add(this._shipHeatIndicator);
+        this._shipContainer.sendToBack(this._shipHeatIndicator);
+        this._scene.tweens.add({
+            targets: this._shipHeatIndicator,
+            scale: 1.05,
+            angle: 45,
+            yoyo: true,
+            duration: 500,
+            loop: -1
+        });
+    }
+
+    private _createOverheatIndicator(): void {
+        this._shipOverheatIndicator = this._scene.add.text(0, -75, 'OVERHEAT', {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4});
+        this._shipOverheatIndicator.setAlpha(0);
+        this._shipOverheatIndicator.setX(-this._shipOverheatIndicator.width / 2);
+        this._shipContainer.add(this._shipOverheatIndicator);
     }
 
     private _updateIntegrityIndicator(): void {
-        if (this._shipIntegrityLayout) {
-            this._shipIntegrityLayout.removeAllContent(true);
+        if (this._shipIntegrityIndicator) {
+            this._shipIntegrityIndicator.removeAllContent(true);
 
             let square: Phaser.GameObjects.Graphics = this._scene.add.graphics({fillStyle: {color: 0xff6060}});
             square.fillRect(-Math.floor(this._integrity/2), -2, this._integrity, 4);
             let squareContainer: Phaser.GameObjects.Container = this._scene.add.container(0, 0, [square]);
             squareContainer.setSize(4, 4);
-            this._shipIntegrityLayout.addContents(squareContainer);
+            this._shipIntegrityIndicator.addContents(squareContainer);
         }
     }
 

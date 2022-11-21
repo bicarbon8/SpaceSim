@@ -1,8 +1,8 @@
 export module Constants {
     export const MAX_INTEGRITY: number = 100;
     export const MAX_FUEL: number = 100;
-    export const MAX_SAFE_TEMPERATURE: number = 100;
-    export const MAX_TEMPERATURE: number = 200;
+    export const MAX_SAFE_TEMPERATURE: number = 50;
+    export const MAX_TEMPERATURE: number = 100;
     export const MAX_VELOCITY: number = 500;
     export const COOLING_RATE: number = 1; // degrees per second
     export const THRUSTER_FORCE: number = 10;

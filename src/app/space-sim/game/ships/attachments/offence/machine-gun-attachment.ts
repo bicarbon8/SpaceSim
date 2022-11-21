@@ -1,4 +1,4 @@
-import { Constants } from "src/app/space-sim/utilities/constants";
+import { Constants } from "../../../utilities/constants";
 import { Bullet } from "./bullet";
 import { OffenceAttachment } from "./offence-attachment";
 import { OffenceAttachmentOptions } from "./offence-attachment-options";
@@ -9,10 +9,10 @@ export class MachineGunAttachment extends OffenceAttachment {
 
         this.maxAmmo = 1500;
         this.remainingAmmo = this.maxAmmo;
-        this.firingDelay = 1; // milliseconds
+        this.firingDelay = 200; // milliseconds
         this.heatPerSecond = 5;
 
-        this.gameObj = this.scene.add.sprite(0, 0, 'machine-gun');
+        this.gameObj = this.scene.add.sprite(0, 0, 'cannon');
         this.gameObj.setDepth(Constants.DEPTH_PLAYER);
         this.scene.physics.add.existing(this.gameObj);
     }
@@ -29,10 +29,11 @@ export class MachineGunAttachment extends OffenceAttachment {
             scene: this.scene,
             attachment: this,
             location: adjustedLocation,
-            force: 1500,
+            force: 1000,
+            damage: 3,
             angle: this.getRotation(),
             startingV: this.getVelocity(),
-            scale: 0.25,
+            scale: 1,
             spriteName: 'bullet'
         });
         this.remainingAmmo--;
