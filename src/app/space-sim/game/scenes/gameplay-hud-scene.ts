@@ -8,7 +8,7 @@ import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { Resizable } from "../interfaces/resizable";
-import { GridLayout, LinearLayout } from "phaser-ui-components";
+import { GridLayout } from "phaser-ui-components";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
