@@ -10,7 +10,7 @@ import { ThrusterAttachment } from "./utility/thruster-attachment";
 import { Constants } from "../../utilities/constants";
 import { SpaceSim } from "../../space-sim";
 
-export class AttachmentManager implements HasAttachments, Updatable {
+export class AttachmentManager extends Phaser.GameObjects.Container implements HasAttachments, Updatable {
     private _attachments: ShipAttachment[] = [];
     private _ship: ShipPod;
     private _game: Game;
@@ -19,10 +19,11 @@ export class AttachmentManager implements HasAttachments, Updatable {
 
     active: boolean;
 
-    constructor(parent: ShipPod, game?: Game) {
+    constructor(scene: Phaser.Scene, parent: ShipPod) {
+        super(scene, 0, 0);
         this.active = true;
         this._ship = parent;
-        this._game = game || SpaceSim.game;
+        this._game = scene.game || SpaceSim.game;
         this._lastRotatedTime = 0;
         this._rotationDelay = 100; // milliseconds
         for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
@@ -111,8 +112,6 @@ export class AttachmentManager implements HasAttachments, Updatable {
                 attachment.attach(this._ship, AttachmentLocation.front);
             }
         }
-
-        this._ship.getGameObject().add(attachment.getGameObject());
         this._updateAttachmentAngles();
     }
     

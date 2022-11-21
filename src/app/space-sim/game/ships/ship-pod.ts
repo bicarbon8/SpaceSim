@@ -1,5 +1,4 @@
-import Phaser from 'phaser';
-import { GameObjects, Scene } from "phaser";
+import { Scene } from "phaser";
 import { Updatable } from "../interfaces/updatable";
 import { CanTarget } from "../interfaces/can-target";
 import { HasLocation } from "../interfaces/has-location";
@@ -17,7 +16,7 @@ import { ShipAttachment } from './attachments/ship-attachment';
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
 
-export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
+export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     readonly id: string; // UUID
     private _scene: Scene;
     private _target: HasLocation;
@@ -25,9 +24,11 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     private _remainingFuel: number;
     private _temperature: number; // in Celcius
     private _attachmentMgr: AttachmentManager;
-    private _flareParticles: GameObjects.Particles.ParticleEmitterManager;
-    private _explosionParticles: GameObjects.Particles.ParticleEmitterManager;
-    private _containerGameObj: GameObjects.Container;
+    private _flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
+    private _explosionParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
+    private _shipSprite: Phaser.GameObjects.Sprite;
+    private _shipContainer: Phaser.GameObjects.Container;
+    private _shipGroup: Phaser.GameObjects.Group;
     private _lastDamagedBy: DamageOptions[];
     private _destroyedSound: Phaser.Sound.BaseSound;
 
@@ -41,11 +42,11 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this._remainingFuel = options?.remainingFuel || Constants.MAX_FUEL;
         this._temperature = options?.temperature || 0;
 
-        // create ship-pod sprite and add to container
+        this._attachmentMgr = new AttachmentManager(this._scene, this);
+
+        // create ship-pod sprite, group and container
         this._createGameObj(options);
         
-        this._attachmentMgr = new AttachmentManager(this, this._scene.game);
-
         this._lastDamagedBy = [];
 
         this._destroyedSound = this._scene.sound.add('explosion', {volume: 0.1});
@@ -106,7 +107,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      * location on screen
      */
     getLocation(): Phaser.Math.Vector2 {
-        let go: Phaser.GameObjects.Container = this.getGameObject();
+        let go: Phaser.GameObjects.Container = this._shipContainer;
         if (go) {
             return new Phaser.Math.Vector2(go.x, go.y);
         }
@@ -114,7 +115,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     setLocation(location: Phaser.Math.Vector2): void {
-        let go: Phaser.GameObjects.Container = this.getGameObject();
+        let go: Phaser.GameObjects.Container = this._shipContainer;
         go.x = location.x;
         go.y = location.y;
     }
@@ -129,12 +130,12 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return Helpers.convertLocToLocInView(this.getLocation(), this._scene);
     }
 
-    getGameObject(): GameObjects.Container {
-        return this._containerGameObj;
+    getGameObject(): Phaser.GameObjects.Container {
+        return this._shipContainer;
     }
 
     getPhysicsBody(): Phaser.Physics.Arcade.Body {
-        return this.getGameObject()?.body as Phaser.Physics.Arcade.Body;
+        return this._shipContainer?.body as Phaser.Physics.Arcade.Body;
     }
 
     setTarget<T extends HasLocation>(target: T): void {
@@ -146,12 +147,12 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     lookAt(location: Phaser.Math.Vector2): void {
-        if (this.getPhysicsBody()) {
+        if (this.getGameObject()) {
             if (location) {
                 let shipPos = this.getLocation();
                 let radians: number = Phaser.Math.Angle.Between(location.x, location.y, shipPos.x, shipPos.y);
                 let degrees: number = Phaser.Math.RadToDeg(radians);
-                this.getPhysicsBody().rotation = degrees;
+                this.setRotation(degrees);
             }
         }
     }
@@ -160,7 +161,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      * the rotation of the Ship's {GameObject.body} in degrees
      */
     getRotation(): number {
-        return this.getGameObject()?.angle || 0;
+        return this._shipSprite?.angle || 0;
     }
 
     /**
@@ -168,7 +169,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      * @param angle the angle in degrees
      */
     setRotation(angle: number): void {
-        this.getGameObject()?.setAngle(angle);
+        Phaser.Actions.SetRotation(this._shipGroup.getChildren(), Phaser.Math.DegToRad(angle));
     }
 
     getHeading(): Phaser.Math.Vector2 {
@@ -180,7 +181,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     getVelocity(): Phaser.Math.Vector2 {
-        return this.getPhysicsBody()?.velocity?.clone() || Helpers.vector2();
+        return this.getPhysicsBody()?.velocity ?? Helpers.vector2();
     }
 
     getTemperature(): number {
@@ -245,34 +246,44 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this._attachmentMgr.getAttachments().forEach((attachment: ShipAttachment) => {
             if (attachment) {
                 attachment.active = false;
-                attachment.getGameObject().destroy();
+                attachment.getGameObject()?.destroy();
             }
         });
-        this.getGameObject().destroy();
-        this._containerGameObj = null;
+        this.getGameObject()?.destroy();
+        this._shipContainer = null;
 
         this._scene.events.emit(Constants.EVENT_PLAYER_DEATH, this);
     }
 
     private _createGameObj(config?: ShipPodOptions): void {
-        // create container
-        let loc: Phaser.Math.Vector2 = config?.location || Helpers.vector2();
-        this._containerGameObj = this._scene.add.container(loc.x, loc.y);
-        this._containerGameObj.setDepth(Constants.DEPTH_PLAYER);
+        // create container as parent to all ship parts
+        let loc: Phaser.Math.Vector2 = config?.location ?? Helpers.vector2();
+        this._shipContainer = this._scene.add.container(loc.x, loc.y);
+        this._shipContainer.setDepth(Constants.DEPTH_PLAYER);
+
+        // create particle systems for destruction
         this._flareParticles = this._scene.add.particles('flares');
         this._flareParticles.setDepth(Constants.DEPTH_PLAYER);
         this._explosionParticles = this._scene.add.particles('explosion');
         this._explosionParticles.setDepth(Constants.DEPTH_PLAYER);
 
-        let ship: GameObjects.Sprite = this._scene.add.sprite(0, 0, 'ship-pod');
-        this._containerGameObj.add(ship);
-        const containerBounds: Phaser.Geom.Rectangle = this._containerGameObj.getBounds();
-        this._containerGameObj.setSize(containerBounds.width, containerBounds.height);
+        // create ship sprite and set container bounds based on sprite size
+        this._shipSprite = this._scene.add.sprite(0, 0, 'ship-pod');
+        this._shipContainer.add(this._shipSprite);
+        this._shipContainer.add(this._attachmentMgr);
+        const containerBounds: Phaser.Geom.Rectangle = this._shipContainer.getBounds();
+        this._shipContainer.setSize(containerBounds.width, containerBounds.height);
 
         // setup physics for container
-        this._scene.physics.add.existing(this._containerGameObj);
+        this._scene.physics.add.existing(this._shipContainer);
         this.getPhysicsBody().setBounce(0.2, 0.2);
         this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
+
+        this._shipGroup = this._scene.add.group([this._shipSprite, this._attachmentMgr]);
+    }
+
+    private _createIntegrityIndicator(): void {
+
     }
 
     private _displayShipExplosion(): void {

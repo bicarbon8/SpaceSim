@@ -41,14 +41,17 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     }
 
     attach(ship: ShipPod, location: AttachmentLocation = AttachmentLocation.front): void {
+        if (this._ship) {
+            this.detach();
+        }
         this._ship = ship;
         this._attachmentLocation = location;
-        this._ship.getGameObject().add(this.getGameObject());
+        this._ship.attachments.add(this.getGameObject());
     }
 
     detach(): void {
         let loc: Phaser.Math.Vector2 = this.ship.getLocation();
-        this.ship.getGameObject().remove(this.getGameObject());
+        this.ship.attachments.remove(this.getGameObject());
         this.getGameObject().setPosition(loc.x, loc.y);
         this._ship = null;
         this._attachmentLocation = null;
@@ -67,9 +70,9 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     abstract trigger(): void;
 
     getRotation(): number {
-        let rotation: number = this.getGameObject().angle;
+        let rotation: number = this.getGameObject()?.angle;
         if (this.ship) {
-            rotation += this.ship.getRotation();
+            rotation += this.ship.attachments.angle;
         }
         return rotation;
     }
