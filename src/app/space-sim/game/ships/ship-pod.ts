@@ -300,13 +300,13 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
         this._displayShipExplosion();
         this.getGameObject()?.setActive(false);
         this._attachmentMgr.active = false;
-        this._attachmentMgr.getAttachments().forEach((attachment: ShipAttachment) => {
-            if (attachment) {
-                attachment.active = false;
-                attachment.getGameObject()?.destroy();
-            }
-        });
-        this.getGameObject()?.destroy();
+        this._attachmentMgr.getAttachments()
+            .forEach(attachment => attachment?.destroy());
+        try {
+            this.getGameObject()?.destroy();
+        } catch (e) {
+            /* ignore */
+        }
         this._shipContainer = null;
 
         this.scene.events.emit(Constants.EVENT_PLAYER_DEATH, this);

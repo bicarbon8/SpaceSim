@@ -154,6 +154,10 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     destroy(): void {
         this.active = false;
         this.ship.attachments.removeAttachmentAt(this.attachmentLocation);
-        this.getGameObject().destroy();
+        try {
+            this.getGameObject().destroy();
+        } catch (e) {
+            /* ignore */
+        }
     }
 }

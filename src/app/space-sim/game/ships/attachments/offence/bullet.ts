@@ -54,14 +54,13 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
 
     private addCollisionDetection(): void {
         this.scene.physics.add.collider(this.getGameObject(), SpaceSim.map.getGameObject(), () => {
-            this.getGameObject().active = false;
-            this.getGameObject().destroy();
+            this.destroy();
         });
         SpaceSim.opponents.forEach((opp: ShipPod) => {
             this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
                 this._hitSound.play();
-                this.getGameObject().active = false;
-                this.getGameObject().destroy();
+                this._createHitParticles();
+                this.destroy();
                 opp.sustainDamage({
                     amount: this.damage, 
                     timestamp: this.scene.time.now,
@@ -118,14 +117,23 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
         }
     }
 
+    destroy() {
+        try {
+            this.getGameObject().active = false;
+            this.getGameObject().destroy();
+        } catch (e) {
+            /* ignore */
+        }
+    }
+
     private _setInMotion(): void {
         let heading: Phaser.Math.Vector2 = this.getHeading();
         // add force to heading
         let deltaV: Phaser.Math.Vector2 = heading.multiply(Helpers.vector2(this.force));
         // add deltaV to current Velocity
         this.getPhysicsBody().velocity.add(deltaV);
-
-        setTimeout(() => this.getGameObject()?.destroy(), this.timeout);
+        // ensure bullet is destroyed after `timeout` milliseconds if no collisions
+        setTimeout(() => this.destroy(), this.timeout);
     }
 
     private _createGameObj(options: BulletOptions): void {
@@ -136,5 +144,23 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
         this.scene.physics.add.existing(this._gameObj);
 
         this.getPhysicsBody().setMass(this.mass);
+    }
+
+    private _createHitParticles(): void {
+        const explosion = this.scene.add.particles('explosion');
+        let pos: Phaser.Math.Vector2 = this.getLocation();
+        explosion.createEmitter({
+            x: pos.x,
+            y: pos.y,
+            lifespan: { min: 200, max: 300 },
+            speedX: { min: -1, max: 1 },
+            speedY: { min: -1, max: 1 },
+            angle: { min: -180, max: 179 },
+            gravityX: 0,
+            gravityY: 0,
+            scale: { start: 0.5, end: 0 },
+            blendMode: 'ADD',
+            maxParticles: 3
+        });
     }
 }
