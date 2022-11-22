@@ -21,7 +21,7 @@ export class MachineGunAttachment extends OffenceAttachment {
         
     }
     
-    protected fire(): void {
+    protected _fire(): void {
         let bulletOffset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(-20, 0).add(this.getLocation());
         let shipRealLocation: Phaser.Math.Vector2 = this.ship.getLocation();
         let adjustedLocation: Phaser.Math.Vector2 = Phaser.Math.RotateAround(bulletOffset, shipRealLocation.x, shipRealLocation.y, Phaser.Math.DegToRad(this.getRotation()));
@@ -30,10 +30,11 @@ export class MachineGunAttachment extends OffenceAttachment {
             attachment: this,
             location: adjustedLocation,
             force: 1000,
-            damage: 3,
+            damage: 10,
             angle: this.getRotation(),
             startingV: this.getVelocity(),
             scale: 1,
+            mass: 0.01,
             spriteName: 'bullet'
         });
         this.remainingAmmo--;

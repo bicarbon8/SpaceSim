@@ -16,14 +16,14 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     private _attachmentLocation: AttachmentLocation;
 
     protected gameObj: Phaser.GameObjects.Sprite;
-    protected integrity: number;
+    protected _integrity: number;
     
     isThrown: boolean;
     active: boolean;
     
     constructor(options: ShipAttachmentOptions) {
         this._scene = options.scene;
-        this.integrity = options.integrity || Constants.MAX_INTEGRITY;
+        this._integrity = options.integrity || Constants.MAX_INTEGRITY;
         this.isThrown = false;
         this.active = true;
     }
@@ -34,6 +34,10 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
 
     get scene(): Phaser.Scene {
         return this._scene;
+    }
+
+    get integrity(): number {
+        return this._integrity;
     }
 
     get attachmentLocation(): AttachmentLocation {
@@ -132,18 +136,18 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     }
 
     sustainDamage(damageOpts: DamageOptions): void {
-        this.integrity -= damageOpts.amount;
+        this._integrity -= damageOpts.amount;
         if (this.integrity <= 0) {
-            this.integrity = 0;
+            this._integrity = 0;
             this.active = false;
             this.destroy();
         }
     }
 
     repair(amount: number): void {
-        this.integrity = amount;
+        this._integrity = amount;
         if (this.integrity > Constants.MAX_INTEGRITY) {
-            this.integrity = Constants.MAX_INTEGRITY;
+            this._integrity = Constants.MAX_INTEGRITY;
         }
     }
 

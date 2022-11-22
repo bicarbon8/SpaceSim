@@ -23,7 +23,7 @@ export abstract class OffenceAttachment extends ShipAttachment implements CanSho
         if (this.active) {
             if (this.remainingAmmo > 0) {
                 if (this.scene.time.now >= +this._lastFired + +this.firingDelay) {
-                    this.fire();
+                    this._fire();
                     this.ship.applyHeating(+this.heatPerSecond * (+this.firingDelay / 1000));
                     this._lastFired = this.scene.time.now;
                 }
@@ -31,7 +31,7 @@ export abstract class OffenceAttachment extends ShipAttachment implements CanSho
         }
     }
 
-    protected abstract fire(): void;
+    protected abstract _fire(): void;
 
     abstract update(time: number, delta: number): void;
 }

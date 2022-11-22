@@ -17,13 +17,16 @@ import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
 import { CardBody, LinearLayout } from "phaser-ui-components";
 
-export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
+export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
+    /** ShipPodOptions */
     readonly id: string; // UUID
-    private _scene: Scene;
-    private _target: HasLocation;
+    readonly scene: Scene;
+    readonly mass: number;
+    target: HasLocation;
+    private _temperature: number; // in Celcius
     private _integrity: number;
     private _remainingFuel: number;
-    private _temperature: number; // in Celcius
+
     private _attachmentMgr: AttachmentManager;
     private _flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
     private _explosionParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
@@ -40,20 +43,29 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     
     constructor(options: ShipPodOptions) {
         this.id = options?.id || Phaser.Math.RND.uuid();
-        this._scene = options.scene;
-        this._target = options?.target;
-        this._integrity = options?.integrity || Constants.MAX_INTEGRITY;
-        this._remainingFuel = options?.remainingFuel || Constants.MAX_FUEL;
-        this._temperature = options?.temperature || 0;
+        this.scene = options.scene;
+        this.target = options?.target;
+        this._integrity = options?.integrity ?? Constants.MAX_INTEGRITY;
+        this._remainingFuel = options?.remainingFuel ?? Constants.MAX_FUEL;
+        this._temperature = options?.temperature ?? 0;
+        this.mass = options?.mass ?? 100;
 
-        this._attachmentMgr = new AttachmentManager(this._scene, this);
+        this._attachmentMgr = new AttachmentManager(this.scene, this);
 
         // create ship-pod sprite, group and container
         this._createGameObj(options);
         
         this._lastDamagedBy = [];
 
-        this._destroyedSound = this._scene.sound.add('explosion', {volume: 0.1});
+        this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1});
+    }
+
+    get temperature(): number {
+        return this._temperature;
+    }
+
+    get integrity(): number {
+        return this._integrity;
     }
 
     get attachments(): AttachmentManager {
@@ -72,7 +84,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      */
     update(time: number, delta: number): void {
         if (this.active) {
-            this.lookAt(this._target?.getLocation());
+            this.lookAtTarget();
             this._checkOverheatCondition(time, delta);
             this.attachments.update(time, delta);
         }
@@ -90,34 +102,42 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
             const alpha = this._temperature / Constants.MAX_SAFE_TEMPERATURE;
             this._shipHeatIndicator.setAlpha(alpha);
             
-            if (this._temperature > Constants.MAX_TEMPERATURE) {
-                this.destroy(); // we are dead
-            }
-            if (this._temperature > Constants.MAX_SAFE_TEMPERATURE) {
-                if (!this._scene.tweens.getTweensOf(this._shipOverheatIndicator)?.length) {
-                    this._shipOverheatIndicator.setAlpha(1);
-                    this._scene.tweens.add({
-                        targets: this._shipOverheatIndicator,
-                        alpha: 0,
-                        yoyo: true,
-                        duration: 200,
-                        loop: -1
+            if (this.isOverheating()) {
+                if (this._temperature > Constants.MAX_TEMPERATURE) {
+                    this.destroy(); // we are dead
+                    return;
+                } else {
+                    if (!this.scene.tweens.getTweensOf(this._shipOverheatIndicator)?.length) {
+                        this._shipOverheatIndicator.setAlpha(1);
+                        this.scene.tweens.add({
+                            targets: this._shipOverheatIndicator,
+                            alpha: 0,
+                            yoyo: true,
+                            duration: 200,
+                            loop: -1
+                        });
+                    }
+                    // reduce integrity at a fixed rate of 1 per second
+                    let damage: number = 1 * (delta / 1000);
+                    this.sustainDamage({
+                        amount: damage, 
+                        timestamp: this.scene.time.now,
+                        message: 'ship overheat damage'
                     });
                 }
-                // reduce integrity at a fixed rate of 1 per second
-                let damage: number = 1 * (delta / 1000);
-                this.sustainDamage({
-                    amount: damage, 
-                    timestamp: this._scene.time.now,
-                    message: 'ship overheat damage'
-                });
             } else {
-                this._scene.tweens.killTweensOf(this._shipOverheatIndicator);
+                // ensure "OVERHEAT" warning is off
+                this.scene.tweens.killTweensOf(this._shipOverheatIndicator);
                 this._shipOverheatIndicator.setAlpha(0);
             }
+
             let amountCooled: number = Constants.COOLING_RATE * (delta / 1000);
             this.applyCooling(amountCooled);
         }
+    }
+
+    isOverheating(): boolean {
+        return this._temperature > Constants.MAX_SAFE_TEMPERATURE;
     }
 
     /**
@@ -147,7 +167,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
      * camera follows the Player
      */
     getLocationInView(): Phaser.Math.Vector2 {
-        return Helpers.convertLocToLocInView(this.getLocation(), this._scene);
+        return Helpers.convertLocToLocInView(this.getLocation(), this.scene);
     }
 
     getGameObject(): Phaser.GameObjects.Container {
@@ -158,22 +178,13 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         return this._shipContainer?.body as Phaser.Physics.Arcade.Body;
     }
 
-    setTarget<T extends HasLocation>(target: T): void {
-        this._target = target;
-    }
-
-    getTarget<T extends HasLocation>(): T {
-        return this._target as T;
-    }
-
-    lookAt(location: Phaser.Math.Vector2): void {
-        if (this.getGameObject()) {
-            if (location) {
-                let shipPos = this.getLocation();
-                let radians: number = Phaser.Math.Angle.Between(location.x, location.y, shipPos.x, shipPos.y);
-                let degrees: number = Phaser.Math.RadToDeg(radians);
-                this.setRotation(degrees);
-            }
+    lookAtTarget(): void {
+        if (this.target && this.getGameObject()) {
+            const loc = this.target.getLocation();
+            const shipPos = this.getLocation();
+            const radians: number = Phaser.Math.Angle.Between(loc.x, loc.y, shipPos.x, shipPos.y);
+            const degrees: number = Phaser.Math.RadToDeg(radians);
+            this.setRotation(degrees);
         }
     }
 
@@ -238,24 +249,24 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     getIntegrity(): number {
-        return this._integrity;
+        return this.integrity;
     }
 
     sustainDamage(damageOpts: DamageOptions): void {
         this._updateLastDamagedBy(damageOpts);
         this._integrity -= damageOpts.amount;
-        if (this._integrity <= 0) {
+        if (this.integrity <= 0) {
             this._integrity = 0;
             this.destroy(); // we are dead
             return;
         }
 
         // keep the health bar visible by killing any active fade out tweens
-        this._scene.tweens.killTweensOf(this._shipIntegrityIndicator);
+        this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
 
         this._updateIntegrityIndicator();
         this._shipIntegrityIndicator.setAlpha(1); // make visible
-        this._scene.tweens.add({ // fade out after 5 seconds
+        this.scene.tweens.add({ // fade out after 5 seconds
             targets: [this._shipIntegrityIndicator],
             alpha: 0,
             yoyo: false,
@@ -264,7 +275,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
             duration: 1000
         });
 
-        this._scene.tweens.add({
+        this.scene.tweens.add({
             targets: this._shipGroup.getChildren(),
             alpha: 0.5,
             yoyo: true,
@@ -278,7 +289,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
 
     repair(amount: number): void {
         this._integrity = amount;
-        if (this._integrity > Constants.MAX_INTEGRITY) {
+        if (this.integrity > Constants.MAX_INTEGRITY) {
             this._integrity = Constants.MAX_INTEGRITY;
         }
     }
@@ -298,34 +309,36 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         this.getGameObject()?.destroy();
         this._shipContainer = null;
 
-        this._scene.events.emit(Constants.EVENT_PLAYER_DEATH, this);
+        this.scene.events.emit(Constants.EVENT_PLAYER_DEATH, this);
     }
 
     private _createGameObj(config?: ShipPodOptions): void {
         // create container as parent to all ship parts
         let loc: Phaser.Math.Vector2 = config?.location ?? Helpers.vector2();
-        this._shipContainer = this._scene.add.container(loc.x, loc.y);
+        this._shipContainer = this.scene.add.container(loc.x, loc.y);
         this._shipContainer.setDepth(Constants.DEPTH_PLAYER);
 
         // create particle systems for destruction
-        this._flareParticles = this._scene.add.particles('flares');
+        this._flareParticles = this.scene.add.particles('flares');
         this._flareParticles.setDepth(Constants.DEPTH_PLAYER);
-        this._explosionParticles = this._scene.add.particles('explosion');
+        this._explosionParticles = this.scene.add.particles('explosion');
         this._explosionParticles.setDepth(Constants.DEPTH_PLAYER);
 
         // create ship sprite and set container bounds based on sprite size
-        this._shipSprite = this._scene.add.sprite(0, 0, 'ship-pod');
+        this._shipSprite = this.scene.add.sprite(0, 0, 'ship-pod');
         this._shipContainer.add(this._shipSprite);
         this._shipContainer.add(this._attachmentMgr);
         const containerBounds: Phaser.Geom.Rectangle = this._shipContainer.getBounds();
         this._shipContainer.setSize(containerBounds.width, containerBounds.height);
 
         // setup physics for container
-        this._scene.physics.add.existing(this._shipContainer);
+        this.scene.physics.add.existing(this._shipContainer);
+
+        this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setBounce(0.2, 0.2);
         this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
 
-        this._shipGroup = this._scene.add.group([this._shipSprite, this._attachmentMgr]);
+        this._shipGroup = this.scene.add.group([this._shipSprite, this._attachmentMgr]);
 
         this._createIntegrityIndicator();
 
@@ -335,7 +348,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     private _createIntegrityIndicator(): void {
-        this._shipIntegrityIndicator = new CardBody(this._scene, {
+        this._shipIntegrityIndicator = new CardBody(this.scene, {
             y: -30,
             orientation: 'horizontal',
             padding: 1,
@@ -350,11 +363,11 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     private _createHeatIndicator(): void {
-        this._shipHeatIndicator = this._scene.add.sprite(0, 0, 'overheat-glow');
+        this._shipHeatIndicator = this.scene.add.sprite(0, 0, 'overheat-glow');
         this._shipHeatIndicator.setAlpha(0); // no heat
         this._shipContainer.add(this._shipHeatIndicator);
         this._shipContainer.sendToBack(this._shipHeatIndicator);
-        this._scene.tweens.add({
+        this.scene.tweens.add({
             targets: this._shipHeatIndicator,
             scale: 1.05,
             angle: 45,
@@ -365,7 +378,7 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
     }
 
     private _createOverheatIndicator(): void {
-        this._shipOverheatIndicator = this._scene.add.text(0, -75, 'OVERHEAT', {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4});
+        this._shipOverheatIndicator = this.scene.add.text(0, -75, 'OVERHEAT', {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4});
         this._shipOverheatIndicator.setAlpha(0);
         this._shipOverheatIndicator.setX(-this._shipOverheatIndicator.width / 2);
         this._shipContainer.add(this._shipOverheatIndicator);
@@ -375,9 +388,9 @@ export class ShipPod implements Updatable, CanTarget, HasLocation, HasGameObject
         if (this._shipIntegrityIndicator) {
             this._shipIntegrityIndicator.removeAllContent(true);
 
-            let square: Phaser.GameObjects.Graphics = this._scene.add.graphics({fillStyle: {color: 0xff6060}});
-            square.fillRect(-Math.floor(this._integrity/2), -2, this._integrity, 4);
-            let squareContainer: Phaser.GameObjects.Container = this._scene.add.container(0, 0, [square]);
+            let square: Phaser.GameObjects.Graphics = this.scene.add.graphics({fillStyle: {color: 0xff6060}});
+            square.fillRect(-Math.floor(this.integrity/2), -2, this.integrity, 4);
+            let squareContainer: Phaser.GameObjects.Container = this.scene.add.container(0, 0, [square]);
             squareContainer.setSize(4, 4);
             this._shipIntegrityIndicator.addContents(squareContainer);
         }

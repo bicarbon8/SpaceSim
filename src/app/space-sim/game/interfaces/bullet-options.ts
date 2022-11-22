@@ -1,28 +1,32 @@
 import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
 
 export interface BulletOptions {
-    scene: Phaser.Scene;
-    location: Phaser.Math.Vector2;
-    attachment: OffenceAttachment;
+    readonly scene: Phaser.Scene;
+    readonly location: Phaser.Math.Vector2;
+    readonly attachment: OffenceAttachment;
+    readonly spriteName: string;
     /**
      * the force imparted on the bullet when fired. larger numbers
      * travel faster
      */
-    force?: number;
+    readonly force?: number;
     /**
      * amount of damage this bullet causes if it hits a target
      */
-    damage?: number;
-    angle?: number;
-    startingV?: Phaser.Math.Vector2;
+    readonly damage?: number;
+    readonly angle?: number;
+    readonly startingV?: Phaser.Math.Vector2;
     /**
      * the size of this bullet
      */
-    scale?: number;
-    spriteName: string;
+    readonly scale?: number;
     /**
      * number of milliseconds before the bullet self-destructs
      * after being fired
      */
-    timeout?: number;
+    readonly timeout?: number;
+    /**
+     * how much influence the impact will have on targets
+     */
+    readonly mass?: number;
 }

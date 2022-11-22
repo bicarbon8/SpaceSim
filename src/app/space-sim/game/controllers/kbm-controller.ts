@@ -28,7 +28,7 @@ export class KbmController extends InputController {
         this._setupInputHandling();
 
         this._mouseTracker = new MouseTracker(this.player.getGameObject().scene);
-        this.player.setTarget(this._mouseTracker);
+        this.player.target = this._mouseTracker;
     }
         
     update(time: number, delta: number): void {

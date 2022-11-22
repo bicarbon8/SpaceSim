@@ -12,7 +12,7 @@ export class CannonAttachment extends OffenceAttachment {
         this.maxAmmo = 500;
         this.remainingAmmo = options.remainingAmmo || this.maxAmmo;
         this.firingDelay = 1000;
-        this.heatPerSecond = 1;
+        this.heatPerSecond = 5;
 
         this.gameObj = this.scene.add.sprite(0, 0, 'cannon');
         this.gameObj.setDepth(Constants.DEPTH_PLAYER);
@@ -25,7 +25,7 @@ export class CannonAttachment extends OffenceAttachment {
 
     }
     
-    protected fire(): void {
+    protected _fire(): void {
         this._cannonSound.play();
         let bulletOffset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(-20, 0).add(this.getLocation());
         let shipRealLocation: Phaser.Math.Vector2 = this.ship.getLocation();
@@ -34,8 +34,10 @@ export class CannonAttachment extends OffenceAttachment {
             scene: this.scene,
             location: adjustedLocation,
             attachment: this,
-            force: 800,
-            damage: 20,
+            force: 600,
+            damage: 40,
+            scale: 2, 
+            mass: 1,
             angle: this.getRotation(),
             startingV: this.getVelocity(),
             spriteName: 'bullet'

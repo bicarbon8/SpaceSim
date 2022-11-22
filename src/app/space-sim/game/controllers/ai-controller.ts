@@ -30,7 +30,7 @@ export class AiController extends InputController {
     async goTo(location: Phaser.Math.Vector2): Promise<void> {
         let startingPos: Phaser.Math.Vector2 = this._aiShip.getLocation();
         let distance: number = location.distance(startingPos);
-        this._aiShip.lookAt(location);
+        this._aiShip.lookAtTarget();
         this._aiShip.getThruster().thrustFowards();
         
     }
