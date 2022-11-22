@@ -179,7 +179,7 @@ export class StartupScene extends Phaser.Scene {
                                     background: Styles.Outline.dark().graphics,
                                     contents: [
                                         this.make.text({
-                                            text: `Thruster: SPACE\nFire: LEFT MOUSE\nBoost: TAB\nAim: MOVE MOUSE`,
+                                            text: `Thruster: SPACE\nFire: LEFT MOUSE\nAim: MOVE MOUSE`,
                                             style: Styles.light().text
                                         }, false),
                                     ]
@@ -197,7 +197,7 @@ export class StartupScene extends Phaser.Scene {
                                     background: Styles.Outline.dark().graphics,
                                     contents: [
                                         this.make.text({
-                                            text: `Thruster: GREEN\nFire: BLUE\nBoost: RED\nAim: LEFT STICK`,
+                                            text: `Thruster: GREEN\nFire: BLUE\nAim: LEFT STICK`,
                                             style: Styles.light().text
                                         }, false)
                                     ]

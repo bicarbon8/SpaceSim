@@ -133,7 +133,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
         // add deltaV to current Velocity
         this.getPhysicsBody().velocity.add(deltaV);
         // ensure bullet is destroyed after `timeout` milliseconds if no collisions
-        setTimeout(() => this.destroy(), this.timeout);
+        window.setTimeout(() => this.destroy(), this.timeout);
     }
 
     private _createGameObj(options: BulletOptions): void {

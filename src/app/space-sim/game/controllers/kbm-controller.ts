@@ -35,7 +35,7 @@ export class KbmController extends InputController {
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
-                this.player.getThruster()?.thrustFowards();
+                this.player.getThruster()?.trigger();
             }
             // reverse Thruster
             if (this._thrustBackwardsKey.isDown) {
@@ -51,7 +51,7 @@ export class KbmController extends InputController {
             }
             // activate Booster
             if (this._boostKey.isDown) {
-                this.player.getThruster()?.boostForwards();
+                // this.player.getThruster()?.boostForwards();
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {

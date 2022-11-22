@@ -111,7 +111,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
 
             this.physics.add.collider(p.getGameObject(), SpaceSim.map.getGameObject(), () => {
                 p.sustainDamage({
-                    amount: (p.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33),
+                    amount: (p.getSpeed() / Constants.Ship.MAX_VELOCITY) * (Constants.Ship.MAX_INTEGRITY / 33),
                     timestamp: this.time.now
                 });
             });
@@ -155,7 +155,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
 
         this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject(), () => {
             SpaceSim.player.sustainDamage({
-                amount:(SpaceSim.player.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33),
+                amount:(SpaceSim.player.getSpeed() / Constants.Ship.MAX_VELOCITY) * (Constants.Ship.MAX_INTEGRITY / 33),
                 timestamp: this.time.now
             });
         });

@@ -10,12 +10,12 @@ import { DamageOptions } from "../damage-options";
 import { ShipAttachmentOptions } from "./ship-attachment-options";
 import { HasPhysicsBody } from "../../interfaces/has-physics-body";
 
-export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Sprite>, HasPhysicsBody, HasLocation, HasIntegrity {
+export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasLocation, HasIntegrity {
     private _ship: ShipPod;
     private _scene: Phaser.Scene;
     private _attachmentLocation: AttachmentLocation;
 
-    protected gameObj: Phaser.GameObjects.Sprite;
+    protected gameObj: Phaser.GameObjects.Container;
     protected _integrity: number;
     
     isThrown: boolean;
@@ -23,7 +23,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     
     constructor(options: ShipAttachmentOptions) {
         this._scene = options.scene;
-        this._integrity = options.integrity || Constants.MAX_INTEGRITY;
+        this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
         this.isThrown = false;
         this.active = true;
     }
@@ -61,7 +61,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         this._attachmentLocation = null;
     }
     
-    getGameObject(): Phaser.GameObjects.Sprite {
+    getGameObject(): Phaser.GameObjects.Container {
         return this.gameObj;
     }
 
@@ -116,7 +116,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
     }
 
     getLocation(): Phaser.Math.Vector2 {
-        let go: Phaser.GameObjects.Sprite = this.getGameObject();
+        let go: Phaser.GameObjects.Container = this.getGameObject();
         if (go) {
             let realLoc: Phaser.Math.Vector2 = new Phaser.Math.Vector2(go.x, go.y);
             if (this.ship) {
@@ -146,8 +146,8 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
 
     repair(amount: number): void {
         this._integrity = amount;
-        if (this.integrity > Constants.MAX_INTEGRITY) {
-            this._integrity = Constants.MAX_INTEGRITY;
+        if (this.integrity > Constants.Ship.MAX_INTEGRITY) {
+            this._integrity = Constants.Ship.MAX_INTEGRITY;
         }
     }
 

@@ -45,8 +45,8 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
         this.id = options?.id || Phaser.Math.RND.uuid();
         this.scene = options.scene;
         this.target = options?.target;
-        this._integrity = options?.integrity ?? Constants.MAX_INTEGRITY;
-        this._remainingFuel = options?.remainingFuel ?? Constants.MAX_FUEL;
+        this._integrity = options?.integrity ?? Constants.Ship.MAX_INTEGRITY;
+        this._remainingFuel = options?.remainingFuel ?? Constants.Ship.MAX_FUEL;
         this._temperature = options?.temperature ?? 0;
         this.mass = options?.mass ?? 100;
 
@@ -99,11 +99,11 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
      */
     private _checkOverheatCondition(time: number, delta: number): void {
         if (this.active) {
-            const alpha = this._temperature / Constants.MAX_SAFE_TEMPERATURE;
-            this._shipHeatIndicator.setAlpha(alpha);
+            const alpha = this._temperature / Constants.Ship.MAX_SAFE_TEMPERATURE;
+            this._shipHeatIndicator.setAlpha(Math.min(alpha, 1));
             
             if (this.isOverheating()) {
-                if (this._temperature > Constants.MAX_TEMPERATURE) {
+                if (this._temperature > Constants.Ship.MAX_TEMPERATURE) {
                     this.destroy(); // we are dead
                     return;
                 } else {
@@ -131,13 +131,9 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
                 this._shipOverheatIndicator.setAlpha(0);
             }
 
-            let amountCooled: number = Constants.COOLING_RATE * (delta / 1000);
+            let amountCooled: number = Constants.Ship.COOLING_RATE_PER_SECOND * (delta / 1000);
             this.applyCooling(amountCooled);
         }
-    }
-
-    isOverheating(): boolean {
-        return this._temperature > Constants.MAX_SAFE_TEMPERATURE;
     }
 
     /**
@@ -215,10 +211,6 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
         return this.getPhysicsBody()?.velocity ?? Helpers.vector2();
     }
 
-    getTemperature(): number {
-        return this._temperature;
-    }
-
     applyHeating(degrees: number): void {
         this._temperature += degrees;
     }
@@ -230,6 +222,14 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
         }
     }
 
+    /**
+     * determines if the current `temperature` is over the maximum safe value
+     * @returns `true` if the current `temperature` is over the maximum safe value; otherwise `false`
+     */
+    isOverheating(): boolean {
+        return this._temperature > Constants.Ship.MAX_SAFE_TEMPERATURE;
+    }
+
     reduceFuel(amount: number): void {
         this._remainingFuel -= amount;
         if (this._remainingFuel < 0) {
@@ -239,8 +239,8 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
 
     addFuel(amount: number): void {
         this._remainingFuel += amount;
-        if (this._remainingFuel > Constants.MAX_FUEL) {
-            this._remainingFuel = Constants.MAX_FUEL;
+        if (this._remainingFuel > Constants.Ship.MAX_FUEL) {
+            this._remainingFuel = Constants.Ship.MAX_FUEL;
         }
     }
 
@@ -289,8 +289,8 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
 
     repair(amount: number): void {
         this._integrity = amount;
-        if (this.integrity > Constants.MAX_INTEGRITY) {
-            this._integrity = Constants.MAX_INTEGRITY;
+        if (this.integrity > Constants.Ship.MAX_INTEGRITY) {
+            this._integrity = Constants.Ship.MAX_INTEGRITY;
         }
     }
 
@@ -337,7 +337,7 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
         this.getPhysicsBody().setCircle(16);
         this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setBounce(0.2, 0.2);
-        this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);
+        this.getPhysicsBody().setMaxVelocity(Constants.Ship.MAX_VELOCITY, Constants.Ship.MAX_VELOCITY);
 
         this._shipGroup = this.scene.add.group([this._shipSprite, this._attachmentMgr]);
 

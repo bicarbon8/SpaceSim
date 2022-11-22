@@ -6,9 +6,11 @@ export abstract class OffenceAttachment extends ShipAttachment implements CanSho
     protected maxAmmo: number;
     protected firingDelay: number;
     protected remainingAmmo: number;
-    protected heatPerSecond: number;
+    protected heatPerShot: number;
     
     private _lastFired: number;
+    private _isFiring: boolean;
+    private _firingTimeout: number;
 
     constructor(options: OffenceAttachmentOptions) {
         super(options);
@@ -19,19 +21,27 @@ export abstract class OffenceAttachment extends ShipAttachment implements CanSho
         return this.remainingAmmo;
     }
 
-    trigger(): void {
-        if (this.active) {
-            if (this.remainingAmmo > 0) {
-                if (this.scene.time.now >= +this._lastFired + +this.firingDelay) {
-                    this._fire();
-                    this.ship.applyHeating(+this.heatPerSecond * (+this.firingDelay / 1000));
-                    this._lastFired = this.scene.time.now;
-                }
-            }
+    update(time: number, delta: number): void {
+        if (this._isFiring && this._canFire()) {
+            this._fire();
+            const heat = this.heatPerShot ?? 1;
+            this.ship?.applyHeating(heat);
+            this._lastFired = time;
         }
+    }
+
+    trigger(): void {
+        window.clearTimeout(this._firingTimeout);
+        this._isFiring = true;
+        this._firingTimeout = window.setTimeout(() => this._isFiring = false, 100);
     }
 
     protected abstract _fire(): void;
 
-    abstract update(time: number, delta: number): void;
+    private _canFire(): boolean {
+        return this.active
+            && this.remainingAmmo > 0
+            && this.scene.time.now >= +this._lastFired + +this.firingDelay
+            && !this.ship?.isOverheating();
+    }
 }

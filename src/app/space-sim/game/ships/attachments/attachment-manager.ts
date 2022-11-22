@@ -33,12 +33,7 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
 
     update(time: number, delta: number): void {
         if (this.active) {
-            for (var i=0; i<this._attachments.length; i++) {
-                let a: ShipAttachment = this._attachments[i];
-                if (a) {
-                    a.update(time, delta);
-                }
-            }
+            this.getAttachments().forEach(a => a?.update(time, delta));
         }
     }
     
@@ -119,16 +114,16 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
         if (this._attachments[location]) {
             let attachment: ShipAttachment = this._attachments[location];
             this._attachments[location] = null;
-            this._ship.getGameObject().remove(attachment.getGameObject(), false);
+            this._ship?.getGameObject()?.remove(attachment.getGameObject(), false);
             attachment.detach();
 
             // move attachment to ship location and rotation and apply current velocity
-            let shipRealLocation: Vector2 = this._ship.getLocation();
+            let shipRealLocation: Vector2 = this._ship?.getLocation();
             let newLocation: Vector2 = shipRealLocation;
-            attachment.getGameObject().setPosition(newLocation.x, newLocation.y);
+            attachment.getGameObject()?.setPosition(newLocation.x, newLocation.y);
             let shipVelocityVector: Vector2 = this._ship.getVelocity();
-            attachment.getPhysicsBody().velocity = shipVelocityVector;
-            attachment.getPhysicsBody().rotation += this._ship.getRotation();
+            attachment.getPhysicsBody()?.setVelocity(shipVelocityVector);
+            attachment.getGameObject()?.setAngle(this._ship.getRotation());
         }
     }
     
@@ -146,7 +141,7 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
     }
     
     getAttachments(): ShipAttachment[] {
-        return this._attachments;
+        return [...this._attachments];
     }
     
     getAttachmentAt<T extends ShipAttachment>(location: AttachmentLocation): T {

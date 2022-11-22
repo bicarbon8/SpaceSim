@@ -45,7 +45,7 @@ export class TouchController extends InputController {
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
-            this.player.getThruster()?.thrustFowards();
+            this.player.getThruster()?.trigger();
         }
     }
 
@@ -57,7 +57,7 @@ export class TouchController extends InputController {
 
     private _handleBoostTouch(): void {
         if (this._boostButtonActive) {
-            this.player.getThruster()?.boostForwards();
+            // this.player.getThruster()?.boostForwards();
         }
     }
 

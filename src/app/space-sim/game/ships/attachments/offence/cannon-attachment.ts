@@ -12,17 +12,15 @@ export class CannonAttachment extends OffenceAttachment {
         this.maxAmmo = 500;
         this.remainingAmmo = options.remainingAmmo || this.maxAmmo;
         this.firingDelay = 1000;
-        this.heatPerSecond = 5;
+        this.heatPerShot = 1;
 
-        this.gameObj = this.scene.add.sprite(0, 0, 'cannon');
+        const sprite = this.scene.add.sprite(0, 0, 'cannon');
+        this.gameObj = this.scene.add.container(0, 0, [sprite]);
+        this.gameObj.setSize(sprite.width, sprite.height);
         this.gameObj.setDepth(Constants.DEPTH_PLAYER);
         this.scene.physics.add.existing(this.gameObj);
 
         this._cannonSound = this.scene.sound.add('cannon-fire');
-    }
-
-    update(time: number, delta: number): void {
-
     }
     
     protected _fire(): void {
