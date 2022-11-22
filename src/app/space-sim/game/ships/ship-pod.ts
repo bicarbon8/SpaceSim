@@ -334,6 +334,7 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
         // setup physics for container
         this.scene.physics.add.existing(this._shipContainer);
 
+        this.getPhysicsBody().setCircle(16);
         this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setBounce(0.2, 0.2);
         this.getPhysicsBody().setMaxVelocity(Constants.MAX_VELOCITY, Constants.MAX_VELOCITY);

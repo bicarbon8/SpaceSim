@@ -38,7 +38,7 @@ export class ThrusterAttachment extends ShipAttachment implements HasThruster {
     
     boostForwards(): void {
         this._applyThrust(Constants.BOOSTER_FORCE, Constants.FUEL_PER_BOOST, Constants.HEAT_PER_BOOST, this.ship.getHeading());
-        this._displayThrusterFire(Constants.Flare.blue, 0.75);
+        this._displayThrusterFire(Constants.Flare.blue, 0.5);
     }
 
     strafeLeft(): void {
@@ -86,12 +86,12 @@ export class ThrusterAttachment extends ShipAttachment implements HasThruster {
                 frame: colour as number,
                 x: adjustedEmissionPosition.x,
                 y: adjustedEmissionPosition.y,
-                lifespan: 250,
+                lifespan: {min: 50, max: 100},
                 gravityX: 0,
                 gravityY: 0,
                 scale: { start: startScale, end: 0 },
                 blendMode: 'ADD',
-                maxParticles: 1,
+                maxParticles: 3,
                 quantity: 1,
                 radial: false
             });
