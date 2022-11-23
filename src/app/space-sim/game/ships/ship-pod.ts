@@ -12,10 +12,9 @@ import { AttachmentManager } from "./attachments/attachment-manager";
 import { ThrusterAttachment } from "./attachments/utility/thruster-attachment";
 import { ShipPodOptions } from "./ship-pod-options";
 import { AttachmentLocation } from "./attachments/attachment-location";
-import { ShipAttachment } from './attachments/ship-attachment';
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
-import { CardBody, LayoutContainer, LinearLayout } from "phaser-ui-components";
+import { LayoutContainer } from "phaser-ui-components";
 
 export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     /** ShipPodOptions */
@@ -28,8 +27,6 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
     private _remainingFuel: number;
 
     private _attachmentMgr: AttachmentManager;
-    private _flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
-    private _explosionParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
     private _shipSprite: Phaser.GameObjects.Sprite;
     private _shipContainer: Phaser.GameObjects.Container;
     private _shipGroup: Phaser.GameObjects.Group;
@@ -309,20 +306,14 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
         }
         this._shipContainer = null;
 
-        this.scene.events.emit(Constants.EVENT_PLAYER_DEATH, this);
+        this.scene.events.emit(Constants.Events.PLAYER_DEATH, this);
     }
 
     private _createGameObj(config?: ShipPodOptions): void {
         // create container as parent to all ship parts
         let loc: Phaser.Math.Vector2 = config?.location ?? Helpers.vector2();
         this._shipContainer = this.scene.add.container(loc.x, loc.y);
-        this._shipContainer.setDepth(Constants.DEPTH_PLAYER);
-
-        // create particle systems for destruction
-        this._flareParticles = this.scene.add.particles('flares');
-        this._flareParticles.setDepth(Constants.DEPTH_PLAYER);
-        this._explosionParticles = this.scene.add.particles('explosion');
-        this._explosionParticles.setDepth(Constants.DEPTH_PLAYER);
+        this._shipContainer.setDepth(Constants.UI.Layers.PLAYER);
 
         // create ship sprite and set container bounds based on sprite size
         this._shipSprite = this.scene.add.sprite(0, 0, 'ship-pod');
@@ -398,10 +389,16 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
     }
 
     private _displayShipExplosion(): void {
+        // create particle systems for destruction
         let pos: Phaser.Math.Vector2 = this.getLocation();
-        this._explosionParticles.createEmitter({
-            x: pos.x,
-            y: pos.y,
+        const flare = this.scene.add.particles('flares');
+        flare.setPosition(pos.x, pos.y);
+        flare.setDepth(Constants.UI.Layers.PLAYER);
+        const explosion = this.scene.add.particles('explosion');
+        explosion.setPosition(pos.x, pos.y);
+        explosion.setDepth(Constants.UI.Layers.PLAYER);
+
+        const explosionEmitter = explosion.createEmitter({
             lifespan: { min: 500, max: 1000 },
             speedX: { min: -1, max: 1 },
             speedY: { min: -1, max: 1 },
@@ -412,10 +409,8 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
             blendMode: 'ADD',
             maxParticles: 3
         });
-        this._flareParticles.createEmitter({
-            frame: Constants.Flare.red as number,
-            x: pos.x,
-            y: pos.y,
+        const flareEmitter = flare.createEmitter({
+            frame: Constants.UI.SpriteMaps.Flares.red as number,
             lifespan: { min: 100, max: 500 },
             speedX: { min: -600, max: 600 },
             speedY: { min: -600, max: 600 },

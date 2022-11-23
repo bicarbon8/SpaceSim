@@ -66,7 +66,7 @@ export class ThrusterAttachment extends ShipAttachment {
     private _displayThrusterFire(): void {
         // make thruster fire
         this._flareParticles.createEmitter({
-            frame: Constants.Flare.yellow,
+            frame: Constants.UI.SpriteMaps.Flares.yellow,
             lifespan: {min: 50, max: 100},
             speedX: -500,
             speedY: 0,
@@ -91,10 +91,9 @@ export class ThrusterAttachment extends ShipAttachment {
         const sprite = this.scene.add.sprite(0, 0, 'thruster');
         this._flareParticles = this.scene.add.particles('flares');
         this._flareParticles.setPosition(-20, 0);
-        this._flareParticles.setDepth(Constants.DEPTH_PLAYER);
         this.gameObj = this.scene.add.container(0, 0, [sprite, this._flareParticles]);
         this.gameObj.setSize(sprite.width, sprite.height);
-        this.gameObj.setDepth(Constants.DEPTH_PLAYER);
+        this.gameObj.setDepth(Constants.UI.Layers.PLAYER);
         this.gameObj.sendToBack(this._flareParticles);
     }
 }

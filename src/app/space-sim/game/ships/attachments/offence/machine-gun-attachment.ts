@@ -15,7 +15,7 @@ export class MachineGunAttachment extends OffenceAttachment {
         const sprite = this.scene.add.sprite(0, 0, 'cannon');
         this.gameObj = this.scene.add.container(0, 0, [sprite]);
         this.gameObj.setSize(sprite.width, sprite.height);
-        this.gameObj.setDepth(Constants.DEPTH_PLAYER);
+        this.gameObj.setDepth(Constants.UI.Layers.PLAYER);
         this.scene.physics.add.existing(this.gameObj);
     }
     

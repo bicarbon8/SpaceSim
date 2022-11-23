@@ -83,7 +83,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             alignment: {vertical: 'top'}
         }).addContentAt(0, 0, this._hudText)
         .addContentAt(0, cols-1, this._scoreText)
-        .setDepth(Constants.DEPTH_CONTROLS);
+        .setDepth(Constants.UI.Layers.HUD);
         this.add.existing(this._hudLayout);
     }
 

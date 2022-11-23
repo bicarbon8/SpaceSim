@@ -103,8 +103,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             var tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
             var br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
             var pos: Phaser.Math.Vector2 = Helpers.vector2(
-                Phaser.Math.RND.realInRange(tl.x, br.x), 
-                Phaser.Math.RND.realInRange(tl.y, br.y)
+                Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
+                Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
             var p: ShipPod = new ShipPod({scene: this, location: pos});
             SpaceSim.opponents.push(p);
@@ -136,7 +136,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         SpaceSim.map = new GameMap({scene: this});
         
         // Place the player in random empty tile in the first room
-        const startingRoom = SpaceSim.map.getRooms()[0];
+        const startingRoom = SpaceSim.map.getRoomClosestToOrigin();
         const startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
         const startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
         const playerStartingPosition: Phaser.Math.Vector2 = Helpers.vector2(
@@ -160,7 +160,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             });
         });
 
-        this.events.addListener(Constants.EVENT_PLAYER_DEATH, (ship: ShipPod) => {
+        this.events.addListener(Constants.Events.PLAYER_DEATH, (ship: ShipPod) => {
             if (SpaceSim.player.id == ship?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
@@ -202,7 +202,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             this._backgroundStars.destroy();
         }
         this._backgroundStars = this.add.tileSprite(this._width/2, this._height/2, this._width*3, this._height*3, 'far-stars');
-        this._backgroundStars.setDepth(Constants.DEPTH_BACKGROUND);
+        this._backgroundStars.setDepth(Constants.UI.Layers.BACKGROUND);
         this._backgroundStars.setScrollFactor(0.01); // slight movement to appear very far away
     }
 

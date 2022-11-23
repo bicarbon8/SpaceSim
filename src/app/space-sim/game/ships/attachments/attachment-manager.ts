@@ -133,7 +133,7 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
             let heading = attachment.getHeading();
             this.removeAttachmentAt(location);
             attachment.isThrown = true;
-            let deltaV: Vector2 = heading.multiply(new Vector2(Constants.THROW_FORCE, Constants.THROW_FORCE));
+            let deltaV: Vector2 = heading.multiply(new Vector2(Constants.Ship.Attachments.THROW_FORCE, Constants.Ship.Attachments.THROW_FORCE));
             let newV: Vector2 = deltaV.add(attachment.getVelocity());
             // add throw force to current velocity
             attachment.getPhysicsBody().setVelocity(newV.x, newV.y);

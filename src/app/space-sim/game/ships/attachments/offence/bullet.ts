@@ -138,7 +138,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
 
     private _createGameObj(options: BulletOptions): void {
         this._gameObj = this.scene.add.sprite(0, 0, options.spriteName);
-        this._gameObj.setDepth(Constants.DEPTH_PLAYER);
+        this._gameObj.setDepth(Constants.UI.Layers.PLAYER);
         this.setLocation(options.location);
         this._gameObj.setScale(this.scale);
         this.scene.physics.add.existing(this._gameObj);

@@ -16,7 +16,7 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
         this.id = Phaser.Math.RND.uuid();
         this.active = true;
         this._scene = scene;
-        this._rotationSpeed = (options.rotationSpeed === undefined) ? Phaser.Math.RND.between(0.1, 1) : options.rotationSpeed;
+        this._rotationSpeed = options.rotationSpeed ?? Phaser.Math.RND.between(0.1, 1);
         
         this._createGameObj(options);
     }
@@ -58,14 +58,14 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
     }
 
     private _createGameObj(options: StellarBodyOptions): void {
-        const location = options.location || Helpers.vector2();
-        const scale = (options.scale === undefined) ? Phaser.Math.RND.realInRange(0.1, 3) : options.scale;
-        const scrollFactor = (options.scrollFactor === undefined) ? Phaser.Math.RND.realInRange(0.05, 0.5) : options.scrollFactor;
+        options.location ??= Helpers.vector2();
+        options.scale ??= Phaser.Math.RND.realInRange(0.1, 3);
+        options.scrollFactor ??= Phaser.Math.RND.realInRange(0.05, 0.5);
 
-        this._gameObj = this._scene.add.sprite(location.x, location.y, options.spriteName);
-        this._gameObj.setScale(scale, scale);
-        this._gameObj.setScrollFactor(scrollFactor);
-        this._gameObj.setDepth(Constants.DEPTH_STELLAR);
+        this._gameObj = this._scene.add.sprite(options.location.x, options.location.y, options.spriteName);
+        this._gameObj.setScale(options.scale, options.scale);
+        this._gameObj.setScrollFactor(options.scrollFactor);
+        this._gameObj.setDepth(Constants.UI.Layers.STELLAR);
         if (options.spriteName === 'sun') {
             this._gameObj.setDepth(this._gameObj.depth - 0.1); // ensure Sun is behind planets always
         }

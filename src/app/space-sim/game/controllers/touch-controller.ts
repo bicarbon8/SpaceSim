@@ -91,7 +91,7 @@ export class TouchController extends InputController {
                 [this._createFireButton(),,this._createBoostButton()],
                 [,this._createThrusterButton(),]
             ]
-        })).setDepth(Constants.DEPTH_CONTROLS);
+        })).setDepth(Constants.UI.Layers.HUD);
         this.scene.input.addPointer(9); // maximum input handling (10 total)
     }
 
