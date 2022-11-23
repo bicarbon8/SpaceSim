@@ -31,7 +31,7 @@ export class MachineGunAttachment extends OffenceAttachment {
             damage: 10,
             angle: this.getRotation(),
             startingV: this.getVelocity(),
-            scale: 1,
+            scale: 0.25,
             mass: 0.01,
             spriteName: 'bullet'
         });

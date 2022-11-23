@@ -8,7 +8,7 @@ import { Constants } from "../../../utilities/constants";
 import { OffenceAttachment } from "./offence-attachment";
 import { GameScoreTracker } from "../../../utilities/game-score-tracker";
 
-export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.Sprite>, HasLocation {
+export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.Container>, HasLocation {
     readonly id: string;
     readonly scene: Phaser.Scene;
     readonly location: Phaser.Math.Vector2;
@@ -22,13 +22,14 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
 
     active: boolean;
 
-    private _gameObj: Phaser.GameObjects.Sprite;
+    private _gameObj: Phaser.GameObjects.Container;
     private _hitSound: Phaser.Sound.BaseSound;
     
     constructor(options: BulletOptions) {
         this.id = Phaser.Math.RND.uuid();
         this.active = true;
         this.scene = options.scene;
+        this.location = options.location || Helpers.vector2();
         this.attachment = options.attachment;
         this.spriteName = options.spriteName;
         this.force = options.force ?? 1;
@@ -37,7 +38,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
         this.timeout = options.timeout ?? 5000;
         this.mass = options.mass ?? 0;
         
-        this._createGameObj(options);
+        this._createGameObj();
 
         this._hitSound = this.scene.sound.add('bullet-hit');
         
@@ -72,7 +73,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
         });
     }
 
-    getGameObject(): Phaser.GameObjects.Sprite {
+    getGameObject(): Phaser.GameObjects.Container {
         return this._gameObj;
     }
 
@@ -103,27 +104,18 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
     }
 
     getLocation(): Phaser.Math.Vector2 {
-        if (this.getGameObject()) {
-            return Helpers.vector2(this.getGameObject().x, this.getGameObject().y);
-        }
-        return Helpers.vector2();
+        const go = this.getGameObject();
+        return Helpers.vector2(go?.x ?? 0, go?.y ?? 0);
     }
 
     setLocation(location: Phaser.Math.Vector2): void {
-        let go: Phaser.GameObjects.Sprite = this.getGameObject();
-        if (go) {
-            go.x = location.x;
-            go.y = location.y;
-        }
+        const go: Phaser.GameObjects.Container = this.getGameObject();
+        go?.setPosition(location.x, location.y);
     }
 
     destroy() {
-        try {
-            this.getGameObject().active = false;
-            this.getGameObject().destroy();
-        } catch (e) {
-            /* ignore */
-        }
+        this.getGameObject()?.setActive(false);
+        this.getGameObject()?.destroy();
     }
 
     private _setInMotion(): void {
@@ -136,19 +128,31 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.S
         window.setTimeout(() => this.destroy(), this.timeout);
     }
 
-    private _createGameObj(options: BulletOptions): void {
-        this._gameObj = this.scene.add.sprite(0, 0, options.spriteName);
+    private _createGameObj(): void {
+        const ball = this.scene.add.sprite(0, 0, 'bullet');
+        const glow = this.scene.add.sprite(0, 0, 'flares', Constants.UI.SpriteMaps.Flares.green);
+        glow.setScale(this.scale);
+        const maxScale = this.scale + 0.1;
+        this.scene.add.tween({
+            targets: glow,
+            scale: maxScale,
+            angle: 359,
+            yoyo: true,
+            duration: 250
+        });
+        this._gameObj = this.scene.add.container(0, 0, [ball, glow]);
+        this._gameObj.setSize(ball.displayWidth, ball.displayHeight);
         this._gameObj.setDepth(Constants.UI.Layers.PLAYER);
-        this.setLocation(options.location);
-        this._gameObj.setScale(this.scale);
+        this.setLocation(this.location);
         this.scene.physics.add.existing(this._gameObj);
 
         this.getPhysicsBody().setMass(this.mass);
+        this.getPhysicsBody().setCircle(ball.displayWidth / 2);
     }
 
     private _createHitParticles(): void {
-        const explosion = this.scene.add.particles('explosion');
         let pos: Phaser.Math.Vector2 = this.getLocation();
+        const explosion = this.scene.add.particles('explosion');
         explosion.createEmitter({
             x: pos.x,
             y: pos.y,

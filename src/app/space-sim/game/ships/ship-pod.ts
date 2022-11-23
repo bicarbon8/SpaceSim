@@ -277,7 +277,7 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
             alpha: 0.5,
             yoyo: true,
             loop: 4,
-            duration: 100,
+            duration: 50,
             onComplete: () => {
                 Phaser.Actions.SetAlpha(this._shipGroup.getChildren(), 1);
             }

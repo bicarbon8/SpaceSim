@@ -61,14 +61,6 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             style: { font: '14px Courier', color: '#ffff00' }
         }, false);
 
-        if (this._scoreText) {
-            this._scoreText.destroy();
-        }
-        this._scoreText = this.make.text({
-            text: '', 
-            style: {font: '14px Courier', color: '#ffff00'}
-        }, false);
-
         const rows = Math.floor(this._height / 150);
         const cols = Math.floor(this._width / 150);
         if (this._hudLayout) {
@@ -82,7 +74,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             padding: 5,
             alignment: {vertical: 'top'}
         }).addContentAt(0, 0, this._hudText)
-        .addContentAt(0, cols-1, this._scoreText)
+        // .addContentAt(0, cols-1, ) // map
         .setDepth(Constants.UI.Layers.HUD);
         this.add.existing(this._hudLayout);
     }
@@ -104,25 +96,19 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            let loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
-            let info: string[] = [
-                `Speed: ${SpaceSim.player.getSpeed().toFixed(1)}`,
+            const stats: GameStats = GameScoreTracker.getStats();
+            const info: string[] = [
+                `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
+                `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`,
                 `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo || 0}`
+                `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo || 0}`,
+                `Score: ${GameScoreTracker.getScore().toFixed(0)}`
             ];
             if (SpaceSim.debug) {
+                const loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             this._hudText.setText(info);
-
-            let stats: GameStats = GameScoreTracker.getStats();
-            let score: string[] = [
-                `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
-                `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`,
-                `Score: ${GameScoreTracker.getScore().toFixed(0)}`
-            ]
-            this._scoreText.setText(score);
-
             this._hudLayout.updateSize(this._width, this._height);
         } catch (e) {
             // do nothing

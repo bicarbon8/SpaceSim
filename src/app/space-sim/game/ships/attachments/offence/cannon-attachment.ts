@@ -34,7 +34,7 @@ export class CannonAttachment extends OffenceAttachment {
             attachment: this,
             force: 600,
             damage: 40,
-            scale: 2, 
+            scale: 1, 
             mass: 1,
             angle: this.getRotation(),
             startingV: this.getVelocity(),
