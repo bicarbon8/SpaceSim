@@ -87,19 +87,23 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     update(time: number, delta: number): void {
-        SpaceSim.player?.update(time, delta);
-        const shipPos = SpaceSim.player?.getLocation();
-        const tile = SpaceSim.map?.getLayer()?.worldToTileXY(shipPos.x, shipPos.y);
-        const room = SpaceSim.map?.getRoomAt(tile.x, tile.y);
+        try {
+            SpaceSim.player?.update(time, delta);
+            const shipPos = SpaceSim.player?.getLocation();
+            const tile = SpaceSim.map?.getLayer()?.worldToTileXY(shipPos.x, shipPos.y);
+            const room = SpaceSim.map?.getRoomAt(tile.x, tile.y);
 
-        // If the player has entered a new room, make it visible and dim the last room
-        if (room) {
-            SpaceSim.map?.showRoom(room);
+            // If the player has entered a new room, make it visible and dim the last room
+            if (room) {
+                SpaceSim.map?.showRoom(room);
+            }
+
+            this._stellarBodies.forEach((body) => {
+                body.update(time, delta);
+            });
+        } catch (e) {
+            /* ignore */
         }
-
-        this._stellarBodies.forEach((body) => {
-            body.update(time, delta);
-        });
     }
 
     private _createOpponents(): void {
