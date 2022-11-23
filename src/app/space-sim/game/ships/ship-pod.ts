@@ -15,7 +15,7 @@ import { AttachmentLocation } from "./attachments/attachment-location";
 import { ShipAttachment } from './attachments/ship-attachment';
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
-import { CardBody, LinearLayout } from "phaser-ui-components";
+import { CardBody, LayoutContainer, LinearLayout } from "phaser-ui-components";
 
 export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     /** ShipPodOptions */
@@ -33,7 +33,7 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
     private _shipSprite: Phaser.GameObjects.Sprite;
     private _shipContainer: Phaser.GameObjects.Container;
     private _shipGroup: Phaser.GameObjects.Group;
-    private _shipIntegrityIndicator: LinearLayout;
+    private _shipIntegrityIndicator: LayoutContainer;
     private _shipHeatIndicator: Phaser.GameObjects.Sprite;
     private _shipOverheatIndicator: Phaser.GameObjects.Text;
     private _lastDamagedBy: DamageOptions[];
@@ -349,11 +349,11 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
     }
 
     private _createIntegrityIndicator(): void {
-        this._shipIntegrityIndicator = new CardBody(this.scene, {
+        this._shipIntegrityIndicator = new LayoutContainer(this.scene, {
             y: -30,
-            orientation: 'horizontal',
             padding: 1,
             desiredWidth: 102,
+            desiredHeight: 6,
             alignment: {horizontal: 'left'},
             background: {fillStyle: {color: 0xffffff}}
         });
@@ -387,13 +387,13 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
 
     private _updateIntegrityIndicator(): void {
         if (this._shipIntegrityIndicator) {
-            this._shipIntegrityIndicator.removeAllContent(true);
+            this._shipIntegrityIndicator.removeContent(true);
 
             let square: Phaser.GameObjects.Graphics = this.scene.add.graphics({fillStyle: {color: 0xff6060}});
             square.fillRect(-Math.floor(this.integrity/2), -2, this.integrity, 4);
             let squareContainer: Phaser.GameObjects.Container = this.scene.add.container(0, 0, [square]);
-            squareContainer.setSize(4, 4);
-            this._shipIntegrityIndicator.addContents(squareContainer);
+            squareContainer.setSize(this.integrity, 4);
+            this._shipIntegrityIndicator.setContent(squareContainer);
         }
     }
 
