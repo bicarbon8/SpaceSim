@@ -3,12 +3,11 @@ import { ShipPod } from "../ships/ship-pod";
 import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
 import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
 import { StellarBody } from "../star-systems/stellar-body";
-import { GameMap } from "../map/game-map";
+import { GameMap, RoomPlus } from "../map/game-map";
 import { environment } from "../../../../environments/environment";
 import { Constants } from "../utilities/constants";
 import { SpaceSim } from "../space-sim";
 import { Helpers } from "../utilities/helpers";
-import { Room } from "@mikewesthad/dungeon";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { Resizable } from "../interfaces/resizable";
@@ -89,6 +88,15 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
 
     update(time: number, delta: number): void {
         SpaceSim.player?.update(time, delta);
+        const shipPos = SpaceSim.player?.getLocation();
+        const tile = SpaceSim.map?.getLayer()?.worldToTileXY(shipPos.x, shipPos.y);
+        const room = SpaceSim.map?.getRoomAt(tile.x, tile.y);
+
+        // If the player has entered a new room, make it visible and dim the last room
+        if (room) {
+            SpaceSim.map?.showRoom(room);
+        }
+
         this._stellarBodies.forEach((body) => {
             body.update(time, delta);
         });
@@ -99,7 +107,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         SpaceSim.opponents.splice(0, SpaceSim.opponents.length);
         
         // add opponent in each room
-        SpaceSim.map.getRooms().forEach((room: Room) => {
+        SpaceSim.map.getRooms().forEach((room: RoomPlus) => {
             var tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
             var br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
             var pos: Phaser.Math.Vector2 = Helpers.vector2(
@@ -107,7 +115,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
             var p: ShipPod = new ShipPod({scene: this, location: pos});
+            p.getGameObject().setAlpha(0); // hidden until player enters room
             SpaceSim.opponents.push(p);
+            room.opponents = new Array<ShipPod>(p);
 
             this.physics.add.collider(p.getGameObject(), SpaceSim.map.getGameObject(), () => {
                 p.sustainDamage({
@@ -133,7 +143,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     private _createMapAndPlayer(): void {
-        SpaceSim.map = new GameMap({scene: this});
+        SpaceSim.map = new GameMap(this);
         
         // Place the player in random empty tile in the first room
         const startingRoom = SpaceSim.map.getRoomClosestToOrigin();
