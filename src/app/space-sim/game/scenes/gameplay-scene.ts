@@ -202,9 +202,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         let bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
             {spriteName: 'venus', rotationSpeed: 0}, 
-            {spriteName: 'mercury', rotationSpeed: 0}
+            {spriteName: 'mercury', rotationSpeed: 0},
+            {spriteName: 'asteroids', scale: {min: 4, max: 10}}
         ];
-        for (var i=0; i<rooms.length; i+=3) {
+        for (var i=0; i<rooms.length; i++) {
             let room = rooms[i];
             let startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
             let startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
@@ -212,7 +213,12 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
                 Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
             );
-            let opts: StellarBodyOptions = bodies[Phaser.Math.RND.between(0, 2)];
+            let opts: StellarBodyOptions;
+            if (i%3 === 0) {
+                opts = bodies[Phaser.Math.RND.between(0, 2)];
+            } else {
+                opts = bodies[3];
+            }
             opts.location = location;
             let body = new StellarBody(this, opts);
             this._stellarBodies.push(body);

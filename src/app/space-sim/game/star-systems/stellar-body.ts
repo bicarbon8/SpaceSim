@@ -10,22 +10,32 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
 
     private _scene: Phaser.Scene;
     private _gameObj: Phaser.GameObjects.Sprite;
-    private _rotationSpeed: number; // in degrees per second
+    
+    readonly spriteName: string;
+    readonly location: Phaser.Math.Vector2;
+    readonly scale: number;
+    readonly scrollFactor: number;
+    readonly rotationSpeed: number; // in degrees per second
     
     constructor(scene: Phaser.Scene, options: StellarBodyOptions) {
         this.id = Phaser.Math.RND.uuid();
         this.active = true;
         this._scene = scene;
-        this._rotationSpeed = options.rotationSpeed ?? Phaser.Math.RND.between(0.1, 1);
+
+        this.spriteName = options.spriteName;
+        this.location = options.location || Helpers.vector2();
+        this.rotationSpeed = Helpers.getRealNumber(options.rotationSpeed) ?? Phaser.Math.RND.realInRange(0.1, 1);
+        this.scale = Helpers.getRealNumber(options.scale) ?? Phaser.Math.RND.realInRange(0.1, 3);
+        this.scrollFactor = Helpers.getRealNumber(options.scrollFactor) ?? Phaser.Math.RND.realInRange(0.05, 0.5);
         
-        this._createGameObj(options);
+        this._createGameObj();
     }
 
     update(time: number, delta: number): void {
-        if (this.active) {
+        if (this.active && this.rotationSpeed !== 0) {
             let go: Phaser.GameObjects.Sprite = this.getGameObject();
             if (go) {
-                go.angle += this._rotationSpeed / delta;
+                go.angle += this.rotationSpeed / delta;
                 if (go.angle >= 360) {
                     go.angle = 0;
                 }
@@ -34,7 +44,7 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
     }
 
     getRotation(): number {
-        return this.getGameObject()?.angle || 0;
+        return this.getGameObject()?.angle ?? 0;
     }
     
     getLocationInView(): Phaser.Math.Vector2 {
@@ -57,20 +67,23 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
         return undefined;
     }
 
-    private _createGameObj(options: StellarBodyOptions): void {
-        options.location ??= Helpers.vector2();
-        options.scale ??= Phaser.Math.RND.realInRange(0.1, 3);
-        options.scrollFactor ??= Phaser.Math.RND.realInRange(0.05, 0.5);
-
-        this._gameObj = this._scene.add.sprite(options.location.x, options.location.y, options.spriteName);
-        this._gameObj.setScale(options.scale, options.scale);
-        this._gameObj.setScrollFactor(options.scrollFactor);
-        this._gameObj.setDepth(Constants.UI.Layers.STELLAR);
-        if (options.spriteName === 'sun') {
-            this._gameObj.setDepth(this._gameObj.depth - 0.2); // ensure Sun is behind planets always
+    private _createGameObj(): void {
+        if (this.spriteName === 'asteroids') {
+            this._gameObj = this._scene.add.sprite(this.location.x, this.location.y, this.spriteName, Phaser.Math.RND.between(0, 63));
+        } else {
+            this._gameObj = this._scene.add.sprite(this.location.x, this.location.y, this.spriteName);
         }
-        if (options.spriteName === 'venus') {
-            this._gameObj.setDepth(this._gameObj.depth - 0.1); // ensure Venus is behind rocky planets
+        this._gameObj.setScale(this.scale, this.scale);
+        this._gameObj.setScrollFactor(this.scrollFactor);
+        this._gameObj.setDepth(Constants.UI.Layers.STELLAR);
+        if (this.spriteName === 'sun') {
+            this._gameObj.setDepth(this._gameObj.depth - 0.3); // ensure Sun is behind planets always
+        }
+        if (this.spriteName === 'venus') {
+            this._gameObj.setDepth(this._gameObj.depth - 0.2); // ensure Venus is behind rocky planets
+        }
+        if (this.spriteName === 'mercury') {
+            this._gameObj.setDepth(this._gameObj.depth - 0.1); // ensure Mercury is behind asteroids
         }
     }
 }

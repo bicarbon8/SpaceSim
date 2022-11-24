@@ -1,3 +1,5 @@
+import { NumberOrRange } from "../interfaces/number-range";
+
 export module Helpers {
     /**
      * get the number of elements in an enum.
@@ -56,5 +58,11 @@ export module Helpers {
         // NOTE: point 0,0 for the camera is the centre of the canvas where the ship appears
         let cameraPos: Phaser.Math.Vector2 = scene.cameras.main.getWorldPoint(0, 0);
         return new Phaser.Math.Vector2(location.x - cameraPos.x, location.y - cameraPos.y).negate();
+    }
+
+    export function getRealNumber(input: NumberOrRange): number {
+        return (typeof input === 'object') 
+            ? Phaser.Math.RND.realInRange(input.min, input.max)
+            : input;
     }
 }
