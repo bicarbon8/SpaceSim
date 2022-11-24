@@ -8,7 +8,7 @@ import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { Resizable } from "../interfaces/resizable";
-import { GridLayout } from "phaser-ui-components";
+import { GridLayout, LayoutContainer, Styles, TextButton, TextButtonOptions } from "phaser-ui-components";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -20,7 +20,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _width: number;
     private _height: number;
     private _hudText: Phaser.GameObjects.Text;
-    private _scoreText: Phaser.GameObjects.Text;
+    private _quitButton: LayoutContainer;
     private _hudLayout: GridLayout;
     private _controller: InputController;
 
@@ -61,6 +61,32 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             style: { font: '14px Courier', color: '#ffff00' }
         }, false);
 
+        if (this._quitButton) {
+            this._quitButton.destroy();
+        }
+        const button = new TextButton(this, TextButtonOptions.Outline.warning({
+            text: {text: 'QUIT'},
+            padding: 5,
+            cornerRadius: 5,
+            interactive: true
+        })).on(Phaser.Input.Events.POINTER_OVER, () => {
+            button.setText({style: Styles.warning().text});
+            button.setBackground(Styles.warning().graphics);
+        }).on(Phaser.Input.Events.POINTER_OUT, () => {
+            button.setText({style: Styles.Outline.warning().text});
+            button.setBackground(Styles.Outline.warning().graphics);
+        }).on(Phaser.Input.Events.POINTER_DOWN, () => {
+            this.game.scene.start('startup-scene');
+            this.game.scene.stop('gameplay-scene');
+            this.game.scene.stop('gameplay-hud-scene');
+        });
+        this._quitButton = new LayoutContainer(this, {
+            padding: 5,
+            background: Styles.dark().graphics,
+            cornerRadius: 5,
+            content: button
+        });
+
         const rows = Math.floor(this._height / 150);
         const cols = Math.floor(this._width / 150);
         if (this._hudLayout) {
@@ -74,7 +100,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             padding: 5,
             alignment: {vertical: 'top'}
         }).addContentAt(0, 0, this._hudText)
-        // .addContentAt(0, cols-1, ) // map
+        .addContentAt(0, cols-1, this._quitButton) // quit button
         .setDepth(Constants.UI.Layers.HUD);
         this.add.existing(this._hudLayout);
     }

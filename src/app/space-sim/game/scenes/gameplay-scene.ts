@@ -175,13 +175,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         weapon = new MachineGunAttachment({scene: this});
         SpaceSim.player.attachments.addAttachment(weapon);
 
-        this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject(), () => {
-            SpaceSim.player.sustainDamage({
-                amount:(SpaceSim.player.getSpeed() / Constants.Ship.MAX_VELOCITY) * (Constants.Ship.MAX_INTEGRITY / 33),
-                timestamp: this.time.now
-            });
-        });
+        // setup collision with map walls
+        this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject());
 
+        // setup listener for player death event
         this.events.addListener(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
             if (SpaceSim.player.id == ship?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
