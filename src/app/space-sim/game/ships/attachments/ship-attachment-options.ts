@@ -1,4 +1,4 @@
-import { ShipPod } from "../ship-pod";
+import { Ship } from "../ship";
 
 export interface ShipAttachmentOptions {
     scene: Phaser.Scene;

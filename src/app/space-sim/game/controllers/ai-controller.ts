@@ -1,12 +1,12 @@
-import { ShipPod } from "../ships/ship-pod";
+import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {
     private _container: Phaser.GameObjects.Container;
-    private _aiShip: ShipPod;
+    private _aiShip: Ship;
     private _lastKnownPlayerLocation: Phaser.Math.Vector2;
     
-    constructor(scene: Phaser.Scene, aiShip: ShipPod) {
+    constructor(scene: Phaser.Scene, aiShip: Ship) {
         super(scene);
         this._aiShip = aiShip;
     }

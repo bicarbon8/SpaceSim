@@ -1,13 +1,13 @@
 import Dungeon, { Room } from "@mikewesthad/dungeon";
 import { HasGameObject } from "../interfaces/has-game-object";
-import { ShipPod } from "../ships/ship-pod";
+import { Ship } from "../ships/ship";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { GameMapOptions } from "./game-map-options";
 
 export type RoomPlus = Room & {
     visible?: boolean;
-    opponents?: Array<ShipPod>;
+    opponents?: Array<Ship>;
 };
 
 export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {

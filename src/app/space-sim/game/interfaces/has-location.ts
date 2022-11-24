@@ -12,7 +12,7 @@ export interface HasLocation {
     /**
      * the location within coordinate space
      * @returns a {Phaser.Math.Vector2} for the location of this
-     * {ShipPod} in coordinate space. this is different from the
+     * {Ship} in coordinate space. this is different from the
      * location on screen which is found using {getLocationInView}
      */
     getLocation(): Phaser.Math.Vector2;

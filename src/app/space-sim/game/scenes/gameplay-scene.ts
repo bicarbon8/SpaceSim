@@ -1,5 +1,5 @@
 import { Vector2 } from "phaser/src/math";
-import { ShipPod } from "../ships/ship-pod";
+import { Ship } from "../ships/ship";
 import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
 import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
 import { StellarBody } from "../star-systems/stellar-body";
@@ -126,10 +126,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
-            var p: ShipPod = new ShipPod({scene: this, location: pos});
+            var p: Ship = new Ship({scene: this, location: pos});
             p.getGameObject().setAlpha(0); // hidden until player enters room
             SpaceSim.opponents.push(p);
-            room.opponents = new Array<ShipPod>(p);
+            room.opponents = new Array<Ship>(p);
 
             this.physics.add.collider(p.getGameObject(), SpaceSim.map.getGameObject(), () => {
                 p.sustainDamage({
@@ -165,7 +165,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
         );
-        SpaceSim.player = new ShipPod({scene: this, location: playerStartingPosition});
+        SpaceSim.player = new Ship({scene: this, location: playerStartingPosition});
         
         // TODO: have menu allowing selection of attachments
         let thruster: ThrusterAttachment = new ThrusterAttachment({scene: this});
@@ -182,7 +182,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             });
         });
 
-        this.events.addListener(Constants.Events.PLAYER_DEATH, (ship: ShipPod) => {
+        this.events.addListener(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
             if (SpaceSim.player.id == ship?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {

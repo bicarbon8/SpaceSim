@@ -1,4 +1,4 @@
-import { ShipPod } from "../ship-pod";
+import { Ship } from "../ship";
 import { HasGameObject } from "../../interfaces/has-game-object";
 import { Updatable } from "../../interfaces/updatable";
 import { HasLocation } from "../../interfaces/has-location";
@@ -11,7 +11,7 @@ import { ShipAttachmentOptions } from "./ship-attachment-options";
 import { HasPhysicsBody } from "../../interfaces/has-physics-body";
 
 export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasLocation, HasIntegrity {
-    private _ship: ShipPod;
+    private _ship: Ship;
     private _scene: Phaser.Scene;
     private _attachmentLocation: AttachmentLocation;
 
@@ -28,7 +28,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         this.active = true;
     }
 
-    get ship(): ShipPod {
+    get ship(): Ship {
         return this._ship;
     }
 
@@ -44,7 +44,7 @@ export abstract class ShipAttachment implements Updatable, HasGameObject<Phaser.
         return this._attachmentLocation;
     }
 
-    attach(ship: ShipPod, location: AttachmentLocation = AttachmentLocation.front): void {
+    attach(ship: Ship, location: AttachmentLocation = AttachmentLocation.front): void {
         if (this._ship) {
             this.detach();
         }

@@ -10,14 +10,14 @@ import { HasTemperature } from "../interfaces/has-temperature";
 import { HasFuel } from "../interfaces/has-fuel";
 import { AttachmentManager } from "./attachments/attachment-manager";
 import { ThrusterAttachment } from "./attachments/utility/thruster-attachment";
-import { ShipPodOptions } from "./ship-pod-options";
+import { ShipOptions } from "./ship-options";
 import { AttachmentLocation } from "./attachments/attachment-location";
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
 import { LayoutContainer } from "phaser-ui-components";
 
-export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
-    /** ShipPodOptions */
+export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
+    /** ShipOptions */
     readonly id: string; // UUID
     readonly scene: Scene;
     readonly mass: number;
@@ -38,7 +38,7 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
 
     active: boolean = true;
     
-    constructor(options: ShipPodOptions) {
+    constructor(options: ShipOptions) {
         this.id = options?.id || Phaser.Math.RND.uuid();
         this.scene = options.scene;
         this.target = options?.target;
@@ -136,7 +136,7 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
     /**
      * the location within coordinate space
      * @returns a {Phaser.Math.Vector2} for the location of this
-     * {ShipPod} in coordinate space. this is different from the
+     * {Ship} in coordinate space. this is different from the
      * location on screen
      */
     getLocation(): Phaser.Math.Vector2 {
@@ -309,7 +309,7 @@ export class ShipPod implements ShipPodOptions, Updatable, CanTarget, HasLocatio
         this.scene.events.emit(Constants.Events.PLAYER_DEATH, this);
     }
 
-    private _createGameObj(config?: ShipPodOptions): void {
+    private _createGameObj(config?: ShipOptions): void {
         // create container as parent to all ship parts
         let loc: Phaser.Math.Vector2 = config?.location ?? Helpers.vector2();
         this._shipContainer = this.scene.add.container(loc.x, loc.y);

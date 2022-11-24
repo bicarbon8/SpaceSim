@@ -5,7 +5,7 @@ import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
 import { StartupScene } from "./scenes/startup-scene";
-import { ShipPod } from "./ships/ship-pod";
+import { Ship } from "./ships/ship";
 import { SpaceSimOptions } from "./space-sim-options";
 
 export class SpaceSim {
@@ -101,8 +101,8 @@ export module SpaceSim {
         }
         return size;
     }
-    export var player: ShipPod;
-    export var opponents: ShipPod[] = [];
+    export var player: Ship;
+    export var opponents: Ship[] = [];
     export var game: Phaser.Game;
     export var map: GameMap;
     export var debug: boolean = false;

@@ -5,21 +5,21 @@ import { ShipAttachment } from "./ship-attachment";
 import { Helpers } from "../../utilities/helpers";
 import { AttachmentLocation } from "./attachment-location";
 import { Updatable } from "../../interfaces/updatable";
-import { ShipPod } from "../ship-pod";
+import { Ship } from "../ship";
 import { ThrusterAttachment } from "./utility/thruster-attachment";
 import { Constants } from "../../utilities/constants";
 import { SpaceSim } from "../../space-sim";
 
 export class AttachmentManager extends Phaser.GameObjects.Container implements HasAttachments, Updatable {
     private _attachments: ShipAttachment[] = [];
-    private _ship: ShipPod;
+    private _ship: Ship;
     private _game: Game;
     private _lastRotatedTime: number;
     private _rotationDelay: number;
 
     active: boolean;
 
-    constructor(scene: Phaser.Scene, parent: ShipPod) {
+    constructor(scene: Phaser.Scene, parent: Ship) {
         super(scene, 0, 0);
         this.active = true;
         this._ship = parent;

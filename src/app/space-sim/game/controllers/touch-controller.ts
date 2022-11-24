@@ -1,4 +1,4 @@
-import { ShipPod } from "../ships/ship-pod";
+import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 import { Helpers } from "../utilities/helpers";
 import { AttachmentLocation } from "../ships/attachments/attachment-location";
@@ -12,7 +12,7 @@ export class TouchController extends InputController {
     private _throwButtonActive: boolean;
     private _boostButtonActive: boolean;
     
-    constructor(scene: Phaser.Scene, player?: ShipPod) {
+    constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
 
         this._createGameObj();

@@ -1,5 +1,5 @@
 import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { ShipPod } from "../ships/ship-pod";
+import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
 
@@ -20,7 +20,7 @@ export class KbmController extends InputController {
 
     private _container: Phaser.GameObjects.Container;
     
-    constructor(scene: Phaser.Scene, player?: ShipPod) {
+    constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
 
         this._createGameObject();

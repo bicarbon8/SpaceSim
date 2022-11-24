@@ -1,6 +1,6 @@
 import { HasLocation } from "../interfaces/has-location";
 
-export interface ShipPodOptions {
+export interface ShipOptions {
     readonly scene: Phaser.Scene;
     readonly id?: string;
     location?: Phaser.Math.Vector2;

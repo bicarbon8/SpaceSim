@@ -3,7 +3,7 @@ import { BulletOptions } from "../../../interfaces/bullet-options";
 import { HasLocation } from "../../../interfaces/has-location";
 import { Helpers } from "../../../utilities/helpers";
 import { SpaceSim } from "../../../space-sim";
-import { ShipPod } from "../../ship-pod";
+import { Ship } from "../../ship";
 import { Constants } from "../../../utilities/constants";
 import { OffenceAttachment } from "./offence-attachment";
 import { GameScoreTracker } from "../../../utilities/game-score-tracker";
@@ -57,7 +57,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.scene.physics.add.collider(this.getGameObject(), SpaceSim.map.getGameObject(), () => {
             this.destroy();
         });
-        SpaceSim.opponents.forEach((opp: ShipPod) => {
+        SpaceSim.opponents.forEach((opp: Ship) => {
             this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
                 this._hitSound.play();
                 this._createHitParticles();
