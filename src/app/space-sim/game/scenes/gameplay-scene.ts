@@ -93,7 +93,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             const tile = SpaceSim.map?.getLayer()?.worldToTileXY(shipPos.x, shipPos.y);
             const room = SpaceSim.map?.getRoomAt(tile.x, tile.y);
 
-            // If the player has entered a new room, make it visible and dim the last room
+            // If the player has entered a new room, make it visible
             if (room) {
                 SpaceSim.map?.showRoom(room);
             }
