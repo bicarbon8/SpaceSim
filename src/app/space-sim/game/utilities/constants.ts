@@ -36,27 +36,7 @@ export module Constants {
             }
             export module Tiles {
                 export module Map {
-                    export module WALL {
-                        export const TOP_LEFT = 12;
-                        export const TOP_RIGHT = 12;
-                        export const BOTTOM_RIGHT = 12;
-                        export const BOTTOM_LEFT = 12;
-                        // Let's add some randomization to the walls while we are refactoring:
-                        export const TOP = [{ index: 6, weight: 4 }, { index: [11, 9, 10], weight: 1 }];
-                        export const LEFT = [{ index: 6, weight: 4 }, { index: [11, 9, 10], weight: 1 }];
-                        export const RIGHT = [{ index: 6, weight: 4 }, { index: [11, 9, 10], weight: 1 }];
-                        export const BOTTOM = [{ index: 6, weight: 4 }, { index: [11, 9, 10], weight: 1 }];
-                    }
-                    // FLOOR: [{ index: 7, weight: 1 }, { index: 0, weight: 9 }],
-                    export const FLOOR = [{ index: 0, weight: 10 }];
-                    export module DOOR {
-                        export const TOP = [0];
-                        // prettier-ignore
-                        export const LEFT = [0];
-                        export const BOTTOM = [0];
-                        // prettier-ignore
-                        export const RIGHT = [0];
-                    }
+                    export const WALL = [{ index: [1,2,3,4,5,6,7,8,9,10,11,12,13,14], weight: 1 }];
                 }
             }
         }

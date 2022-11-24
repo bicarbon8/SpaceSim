@@ -47,9 +47,17 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             startFrame: 0,
             endFrame: 4
         });
+        this.load.spritesheet('asteroids', `${environment.baseUrl}/assets/tiles/asteroids-tile.png`, {
+            frameWidth: 100,
+            frameHeight: 100,
+            startFrame: 0,
+            endFrame: 63,
+            margin: 14,
+            spacing: 28
+        });
+        
         this.load.image('explosion', `${environment.baseUrl}/assets/particles/explosion.png`);
         this.load.image('bullet', `${environment.baseUrl}/assets/sprites/bullet.png`);
-        this.load.image('box', `${environment.baseUrl}/assets/sprites/box.png`);
 
         this.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
         this.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
@@ -58,7 +66,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
 
         this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
-
+        
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
         this.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
         this.load.audio('booster-fire', `${environment.baseUrl}/assets/audio/effects/booster-fire.ogg`);
