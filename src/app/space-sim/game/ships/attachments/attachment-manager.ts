@@ -1,4 +1,3 @@
-import { Game } from "phaser";
 import { Vector2 } from "phaser/src/math";
 import { HasAttachments } from "../../interfaces/has-attachments";
 import { ShipAttachment } from "./ship-attachment";
@@ -8,24 +7,25 @@ import { Updatable } from "../../interfaces/updatable";
 import { Ship } from "../ship";
 import { ThrusterAttachment } from "./utility/thruster-attachment";
 import { Constants } from "../../utilities/constants";
-import { SpaceSim } from "../../space-sim";
+import { HasGameObject } from "../../interfaces/has-game-object";
 
-export class AttachmentManager extends Phaser.GameObjects.Container implements HasAttachments, Updatable {
+export class AttachmentManager implements HasGameObject<Phaser.GameObjects.Container>, HasAttachments, Updatable {
+    private _gameObj: Phaser.GameObjects.Container;
     private _attachments: ShipAttachment[] = [];
-    private _ship: Ship;
-    private _game: Game;
+    readonly ship: Ship;
     private _lastRotatedTime: number;
     private _rotationDelay: number;
 
     active: boolean;
 
-    constructor(scene: Phaser.Scene, parent: Ship) {
-        super(scene, 0, 0);
+    constructor(parent: Ship) {
         this.active = true;
-        this._ship = parent;
-        this._game = scene.game || SpaceSim.game;
+        this.ship = parent;
         this._lastRotatedTime = 0;
         this._rotationDelay = 100; // milliseconds
+
+        this._createGameObject();
+
         for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
             this._attachments.push(null);
         }
@@ -36,9 +36,14 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
             this.getAttachments().forEach(a => a?.update(time, delta));
         }
     }
+
+    getGameObject(): Phaser.GameObjects.Container {
+        return this._gameObj;
+    }
     
     rotateAttachmentsClockwise(): void {
-        if (this._game.getTime() > this._lastRotatedTime + this._rotationDelay) {
+        const game = this.ship.scene.game;
+        if (game.getTime() > this._lastRotatedTime + this._rotationDelay) {
             let tmp: ShipAttachment = this.getAttachmentAt(Helpers.enumLength(AttachmentLocation)-1);
             for (var i=Helpers.enumLength(AttachmentLocation)-1; i>=0; i--) {
                 if (i == AttachmentLocation.back) {
@@ -52,12 +57,13 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
             }
             this._attachments[0] = tmp;
             this._updateAttachmentAngles();
-            this._lastRotatedTime = this._game.getTime();
+            this._lastRotatedTime = game.getTime();
         }
     }
     
     rotateAttachmentsAntiClockwise(): void {
-        if (this._game.getTime() > this._lastRotatedTime + this._rotationDelay) {
+        const game = this.ship.scene.game;
+        if (game.getTime() > this._lastRotatedTime + this._rotationDelay) {
             let tmp: ShipAttachment = this.getAttachmentAt(0);
             for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
                 if (i == AttachmentLocation.back) {
@@ -71,7 +77,7 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
             }
             this._attachments[Helpers.enumLength(AttachmentLocation)-1] = tmp;
             this._updateAttachmentAngles();
-            this._lastRotatedTime = this._game.getTime();
+            this._lastRotatedTime = game.getTime();
         }
     }
     
@@ -86,14 +92,14 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
         if (attachment instanceof ThrusterAttachment) {
             this.removeAttachmentAt(AttachmentLocation.back);
             this._attachments[AttachmentLocation.back] = attachment;
-            attachment.attach(this._ship, AttachmentLocation.back);
+            attachment.attach(this.ship, AttachmentLocation.back);
         } else {
             let attached: boolean = false;
 
             for (var i=0; i<Helpers.enumLength(AttachmentLocation); i++) {
                 if (!this._attachments[i]) {
                     this._attachments[i] = attachment;
-                    attachment.attach(this._ship, i);
+                    attachment.attach(this.ship, i);
                     attached = true;
                     break;
                 }
@@ -104,9 +110,10 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
                 // detach current front attachment
                 this.removeAttachmentAt(AttachmentLocation.front);
                 this._attachments[AttachmentLocation.front] = attachment;
-                attachment.attach(this._ship, AttachmentLocation.front);
+                attachment.attach(this.ship, AttachmentLocation.front);
             }
         }
+        this.getGameObject()?.add(attachment?.getGameObject());
         this._updateAttachmentAngles();
     }
     
@@ -114,16 +121,17 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
         if (this._attachments[location]) {
             let attachment: ShipAttachment = this._attachments[location];
             this._attachments[location] = null;
-            this._ship?.getGameObject()?.remove(attachment.getGameObject(), false);
-            attachment.detach();
+            this.ship?.getGameObject()?.remove(attachment.getGameObject(), false);
+            attachment?.detach();
+            this.getGameObject()?.remove(attachment?.getGameObject());
 
             // move attachment to ship location and rotation and apply current velocity
-            let shipRealLocation: Vector2 = this._ship?.getLocation();
+            let shipRealLocation: Vector2 = this.ship?.getLocation();
             let newLocation: Vector2 = shipRealLocation;
             attachment.getGameObject()?.setPosition(newLocation.x, newLocation.y);
-            let shipVelocityVector: Vector2 = this._ship.getVelocity();
+            let shipVelocityVector: Vector2 = this.ship.getVelocity();
             attachment.getPhysicsBody()?.setVelocity(shipVelocityVector);
-            attachment.getGameObject()?.setAngle(this._ship.getRotation());
+            attachment.getGameObject()?.setAngle(this.ship.getRotation());
         }
     }
     
@@ -183,5 +191,9 @@ export class AttachmentManager extends Phaser.GameObjects.Container implements H
                 att.getGameObject().setAngle(rot);
             }
         }
+    }
+
+    private _createGameObject(): void {
+        this._gameObj = this.ship.scene.add.container(0, 0);
     }
 }

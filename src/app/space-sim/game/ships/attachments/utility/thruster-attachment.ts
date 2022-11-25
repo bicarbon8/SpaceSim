@@ -20,7 +20,6 @@ export class ThrusterAttachment extends ShipAttachment {
         super(options);
         this._elapsedSinceApplied = Constants.Ship.Attachments.Utility.Thruster.USAGE_DELAY_MS;
         this._createGameObject();
-        this._thrusterSound = this.scene.sound.add('thruster-fire');
     }
 
     update(time: number, delta: number): void {
@@ -28,9 +27,9 @@ export class ThrusterAttachment extends ShipAttachment {
         if (this._canThrust()) {
             if (this._isThrusterActive) {
                 this._applyThrust({
-                    force: Constants.Ship.Attachments.Utility.Thruster.FORCE, // THRUSTER_FORCE_PER_SECOND * (delta / 1000), 
-                    fuel: Constants.Ship.Attachments.Utility.Thruster.FUEL_PER_USE, // THRUSTER_FUEL_PER_SECOND * (delta / 1000), 
-                    heat: Constants.Ship.Attachments.Utility.Thruster.HEAT_PER_USE, // THRUSTER_HEAT_PER_SECOND * (delta / 1000), 
+                    force: Constants.Ship.Attachments.Utility.Thruster.FORCE,
+                    fuel: Constants.Ship.Attachments.Utility.Thruster.FUEL_PER_USE,
+                    heat: Constants.Ship.Attachments.Utility.Thruster.HEAT_PER_USE,
                     heading: this.ship?.getHeading()
                 });
                 this._elapsedSinceApplied = 0;
@@ -88,6 +87,7 @@ export class ThrusterAttachment extends ShipAttachment {
     }
 
     private _createGameObject(): void {
+        this._thrusterSound = this.scene.sound.add('thruster-fire');
         const sprite = this.scene.add.sprite(0, 0, 'thruster');
         this._flareParticles = this.scene.add.particles('flares');
         this._flareParticles.setPosition(-20, 0);

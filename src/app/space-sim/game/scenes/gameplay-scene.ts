@@ -58,6 +58,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         
         this.load.image('explosion', `${environment.baseUrl}/assets/particles/explosion.png`);
         this.load.image('bullet', `${environment.baseUrl}/assets/sprites/bullet.png`);
+        this.load.image('ammo', `${environment.baseUrl}/assets/sprites/ammo.png`);
+        this.load.image('fuel-canister', `${environment.baseUrl}/assets/sprites/fuel-canister.png`);
+        this.load.image('coolant-canister', `${environment.baseUrl}/assets/sprites/coolant-canister.png`);
 
         this.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
         this.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
@@ -131,21 +134,20 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             SpaceSim.opponents.push(p);
             room.opponents = new Array<Ship>(p);
 
-            this.physics.add.collider(p.getGameObject(), SpaceSim.map.getGameObject(), () => {
-                p.sustainDamage({
-                    amount: (p.getSpeed() / Constants.Ship.MAX_VELOCITY) * (Constants.Ship.MAX_INTEGRITY / 33),
-                    timestamp: this.time.now
-                });
-            });
+            // setup collision with map walls
+            this.physics.add.collider(p.getGameObject(), SpaceSim.map.getGameObject());
+            // setup collision with player
             this.physics.add.collider(p.getGameObject(), SpaceSim.player.getGameObject(), () => {
+                const collisionSpeed = p.getVelocity().clone().subtract(SpaceSim.player.getVelocity()).length();
+                const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
                 p.sustainDamage({
-                    amount: 1, 
+                    amount: damage, 
                     timestamp: this.time.now,
                     attackerId: SpaceSim.player.id,
                     message: 'ship collision'
                 }); // TODO: set based on opposing speeds
                 SpaceSim.player.sustainDamage({
-                    amount: 1, 
+                    amount: damage, 
                     timestamp: this.time.now,
                     attackerId: p.id,
                     message: 'ship collision'

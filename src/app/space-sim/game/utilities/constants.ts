@@ -1,21 +1,25 @@
 export module Constants {
     export module Ship {
-        export const MAX_INTEGRITY: number = 100;
-        export const MAX_FUEL: number = 100;
-        export const MAX_SAFE_TEMPERATURE: number = 50;
-        export const MAX_TEMPERATURE: number = 100;
-        export const MAX_VELOCITY: number = 500;
-        export const COOLING_RATE_PER_SECOND: number = 2; // degrees per second
+        export const MAX_INTEGRITY = 100;
+        export const MAX_FUEL = 100;
+        export const MAX_FUEL_PER_CONTAINER = 20;
+        export const MAX_SAFE_TEMPERATURE = 50;
+        export const MAX_TEMPERATURE = 100;
+        export const MAX_SPEED = 500;
+        export const COOLING_RATE_PER_SECOND = 2; // degrees per second
 
         export module Attachments {
-            export const THROW_FORCE: number = 100;
+            export const THROW_FORCE = 100;
             export module Utility {
                 export module Thruster {
-                    export const FORCE: number = 50;
-                    export const FUEL_PER_USE: number = 0.001; // units
-                    export const HEAT_PER_USE: number = 0.2; // degree
-                    export const USAGE_DELAY_MS: number = 100; 
+                    export const FORCE = 50;
+                    export const FUEL_PER_USE = 0.01; // units
+                    export const HEAT_PER_USE = 0.2; // degree
+                    export const USAGE_DELAY_MS = 100; 
                 }
+            }
+            export module Offence {
+                export const MAX_AMMO_PER_CONTAINER = 100;
             }
         }
     }
@@ -36,6 +40,7 @@ export module Constants {
             }
             export module Tiles {
                 export module Map {
+                    // frame 0 is empty so don't use it for walls
                     export const WALL = [{ index: [1,2,3,4,5,6,7,8,9,10,11,12,13,14], weight: 1 }];
                 }
             }

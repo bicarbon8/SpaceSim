@@ -9,10 +9,10 @@ export class CannonAttachment extends OffenceAttachment {
     constructor(options: OffenceAttachmentOptions) {
         super(options);
 
-        this.maxAmmo = 500;
-        this.remainingAmmo = options.remainingAmmo || this.maxAmmo;
-        this.firingDelay = 1000;
-        this.heatPerShot = 1;
+        this._maxAmmo = 500;
+        this._remainingAmmo = options.remainingAmmo || this._maxAmmo;
+        this._firingDelay = 1000;
+        this._heatPerShot = 1;
 
         const sprite = this.scene.add.sprite(0, 0, 'cannon');
         this.gameObj = this.scene.add.container(0, 0, [sprite]);
@@ -40,6 +40,6 @@ export class CannonAttachment extends OffenceAttachment {
             startingV: this.getVelocity(),
             spriteName: 'bullet'
         });
-        this.remainingAmmo--;
+        this._remainingAmmo--;
     }
 }

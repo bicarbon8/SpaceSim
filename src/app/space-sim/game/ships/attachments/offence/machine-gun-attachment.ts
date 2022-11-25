@@ -7,10 +7,10 @@ export class MachineGunAttachment extends OffenceAttachment {
     constructor(options: OffenceAttachmentOptions) {
         super(options);
 
-        this.maxAmmo = 1500;
-        this.remainingAmmo = this.maxAmmo;
-        this.firingDelay = 200; // milliseconds
-        this.heatPerShot = 1;
+        this._maxAmmo = 1500;
+        this._remainingAmmo = this._maxAmmo;
+        this._firingDelay = 200; // milliseconds
+        this._heatPerShot = 1;
 
         const sprite = this.scene.add.sprite(0, 0, 'cannon');
         this.gameObj = this.scene.add.container(0, 0, [sprite]);
@@ -35,6 +35,6 @@ export class MachineGunAttachment extends OffenceAttachment {
             mass: 0.01,
             spriteName: 'bullet'
         });
-        this.remainingAmmo--;
+        this._remainingAmmo--;
     }
 }

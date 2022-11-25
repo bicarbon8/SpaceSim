@@ -15,6 +15,10 @@ import { AttachmentLocation } from "./attachments/attachment-location";
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
 import { LayoutContainer } from "phaser-ui-components";
+import { OffenceAttachment } from "./attachments/offence/offence-attachment";
+import { FuelSupply } from "./supplies/fuel-supply";
+import { SpaceSim } from "../space-sim";
+import { AmmoSupply } from "./supplies/ammo-supply";
 
 export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     /** ShipOptions */
@@ -35,19 +39,20 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
     private _shipOverheatIndicator: Phaser.GameObjects.Text;
     private _lastDamagedBy: DamageOptions[];
     private _destroyedSound: Phaser.Sound.BaseSound;
+    private _shipDamageFlicker: Phaser.Tweens.Tween;
 
     active: boolean = true;
     
     constructor(options: ShipOptions) {
-        this.id = options?.id || Phaser.Math.RND.uuid();
+        this.id = options.id ?? Phaser.Math.RND.uuid();
         this.scene = options.scene;
-        this.target = options?.target;
-        this._integrity = options?.integrity ?? Constants.Ship.MAX_INTEGRITY;
-        this._remainingFuel = options?.remainingFuel ?? Constants.Ship.MAX_FUEL;
-        this._temperature = options?.temperature ?? 0;
-        this.mass = options?.mass ?? 100;
+        this.target = options.target;
+        this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
+        this._remainingFuel = options.remainingFuel ?? Constants.Ship.MAX_FUEL;
+        this._temperature = options.temperature ?? 0;
+        this.mass = options.mass ?? 100;
 
-        this._attachmentMgr = new AttachmentManager(this.scene, this);
+        this._attachmentMgr = new AttachmentManager(this);
 
         // create ship-pod sprite, group and container
         this._createGameObj(options);
@@ -272,16 +277,18 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
             duration: 1000
         });
 
-        this.scene.tweens.add({
-            targets: this._shipGroup.getChildren(),
-            alpha: 0.5,
-            yoyo: true,
-            loop: 4,
-            duration: 50,
-            onComplete: () => {
-                Phaser.Actions.SetAlpha(this._shipGroup.getChildren(), 1);
-            }
-        });
+        if (!this._shipDamageFlicker?.isPlaying()) {
+            this._shipDamageFlicker = this.scene.tweens.add({
+                targets: this._shipGroup.getChildren(),
+                alpha: 0.5,
+                yoyo: true,
+                loop: 4,
+                duration: 50,
+                onComplete: () => {
+                    Phaser.Actions.SetAlpha(this._shipGroup.getChildren(), 1);
+                }
+            });
+        }
     }
 
     repair(amount: number): void {
@@ -295,6 +302,7 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
         this._destroyedSound.play();
         this.active = false;
         this._displayShipExplosion();
+        this._expelSupplies();
         this.getGameObject()?.setActive(false);
         this._attachmentMgr.active = false;
         this._attachmentMgr.getAttachments()
@@ -318,7 +326,7 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
         // create ship sprite and set container bounds based on sprite size
         this._shipSprite = this.scene.add.sprite(0, 0, 'ship-pod');
         this._shipContainer.add(this._shipSprite);
-        this._shipContainer.add(this._attachmentMgr);
+        this._shipContainer.add(this._attachmentMgr.getGameObject());
         const containerBounds: Phaser.Geom.Rectangle = this._shipContainer.getBounds();
         this._shipContainer.setSize(containerBounds.width, containerBounds.height);
 
@@ -328,9 +336,9 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
         this.getPhysicsBody().setCircle(16);
         this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setBounce(0.2, 0.2);
-        this.getPhysicsBody().setMaxVelocity(Constants.Ship.MAX_VELOCITY, Constants.Ship.MAX_VELOCITY);
+        this.getPhysicsBody().setMaxSpeed(Constants.Ship.MAX_SPEED);
 
-        this._shipGroup = this.scene.add.group([this._shipSprite, this._attachmentMgr]);
+        this._shipGroup = this.scene.add.group([this._shipSprite, this._attachmentMgr.getGameObject()]);
 
         this._createIntegrityIndicator();
 
@@ -385,6 +393,34 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
             let squareContainer: Phaser.GameObjects.Container = this.scene.add.container(0, 0, [square]);
             squareContainer.setSize(this.integrity, 4);
             this._shipIntegrityIndicator.setContent(squareContainer);
+        }
+    }
+
+    private _expelSupplies(): void {
+        const loc = this.getLocation();
+        let remainingFuel = this._remainingFuel;
+        const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / Constants.Ship.MAX_FUEL_PER_CONTAINER);
+        for (var i=0; i<fuelContainersCount; i++) {
+            const amount = (remainingFuel > Constants.Ship.MAX_FUEL_PER_CONTAINER) 
+                ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
+                : remainingFuel;
+            remainingFuel -= amount;
+            const fuel = new FuelSupply(this.scene, {
+                amount: amount,
+                location: loc
+            });
+        }
+        let remainingAmmo = (this.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo;
+        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER);
+        for (var i=0; i<ammoContainersCount; i++) {
+            const amount = (remainingAmmo > Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER) 
+                ? Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER 
+                : remainingAmmo;
+            remainingAmmo -= amount;
+            const fuel = new AmmoSupply(this.scene, {
+                amount: amount,
+                location: loc
+            });
         }
     }
 
