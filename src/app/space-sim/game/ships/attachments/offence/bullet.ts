@@ -57,23 +57,22 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.scene.physics.add.collider(this.getGameObject(), SpaceSim.map.getGameObject(), () => {
             this.destroy();
         });
-        // TODO: get opponents in this and connected rooms ONLY (requires keeping updated list of opponents in each room)
         SpaceSim.opponents
             .filter(o => o.active)
             .forEach((opp: Ship) => {
-            this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
-                this._hitSound.play();
-                this._createHitParticles();
-                this.destroy();
-                opp.sustainDamage({
-                    amount: this.damage, 
-                    timestamp: this.scene.time.now,
-                    attackerId: this.attachment.ship.id,
-                    message: `projectile hit`
+                this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
+                    this._hitSound.play();
+                    this._createHitParticles();
+                    this.destroy();
+                    opp.sustainDamage({
+                        amount: this.damage, 
+                        timestamp: this.scene.time.now,
+                        attackerId: this.attachment.ship.id,
+                        message: `projectile hit`
+                    });
+                    GameScoreTracker.shotLanded();
                 });
-                GameScoreTracker.shotLanded();
             });
-        });
     }
 
     getGameObject(): Phaser.GameObjects.Container {

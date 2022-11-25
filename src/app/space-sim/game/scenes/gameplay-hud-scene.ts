@@ -76,9 +76,9 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             button.setText({style: Styles.Outline.warning().text});
             button.setBackground(Styles.Outline.warning().graphics);
         }).on(Phaser.Input.Events.POINTER_DOWN, () => {
-            this.game.scene.start('startup-scene');
+            this.game.scene.start('game-over-scene');
             this.game.scene.stop('gameplay-scene');
-            this.game.scene.stop('gameplay-hud-scene');
+            this.game.scene.stop(this);
         });
         this._quitButton = new LayoutContainer(this, {
             padding: 5,

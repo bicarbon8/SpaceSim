@@ -20,8 +20,10 @@ import { FuelSupply } from "./supplies/fuel-supply";
 import { SpaceSim } from "../space-sim";
 import { AmmoSupply } from "./supplies/ammo-supply";
 import { CoolantSupply } from "./supplies/coolant-supply";
+import { HasRoom } from "../interfaces/has-room";
+import { RoomPlus } from "../map/game-map";
 
-export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
+export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     /** ShipOptions */
     readonly id: string; // UUID
     readonly scene: Scene;
@@ -42,7 +44,7 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
     private _destroyedSound: Phaser.Sound.BaseSound;
     private _shipDamageFlicker: Phaser.Tweens.Tween;
 
-    active: boolean = true;
+    private _active: boolean = true;
     
     constructor(options: ShipOptions) {
         this.id = options.id ?? Phaser.Math.RND.uuid();
@@ -63,6 +65,10 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
         this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1});
     }
 
+    get active(): boolean {
+        return this._active && this.getPhysicsBody()?.enable;
+    }
+
     get temperature(): number {
         return this._temperature;
     }
@@ -73,6 +79,11 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
 
     get attachments(): AttachmentManager {
         return this._attachmentMgr;
+    }
+
+    get room(): RoomPlus {
+        const loc = this.getLocation();
+        return SpaceSim.map.getRoomAtWorldXY(loc.x, loc.y);
     }
 
     getThruster(): ThrusterAttachment {
@@ -301,7 +312,7 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
 
     destroy(): void {
         this._destroyedSound.play();
-        this.active = false;
+        this._active = false;
         this._displayShipExplosion();
         this._expelSupplies();
         this.getGameObject()?.setActive(false);

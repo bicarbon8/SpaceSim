@@ -1,6 +1,5 @@
 import Dungeon, { Room } from "@mikewesthad/dungeon";
 import { HasGameObject } from "../interfaces/has-game-object";
-import { Ship } from "../ships/ship";
 import { SpaceSim } from "../space-sim";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
@@ -8,7 +7,6 @@ import { GameMapOptions } from "./game-map-options";
 
 export type RoomPlus = Room & {
     visible?: boolean;
-    opponents?: Array<Ship>;
 };
 
 export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
@@ -111,6 +109,11 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         return this._dungeon.getRoomAt(tileX, tileY);
     }
 
+    getRoomAtWorldXY(x: number, y: number): RoomPlus {
+        const tile = this._layer?.worldToTileXY(x, y);
+        return this.getRoomAt(tile.x, tile.y);
+    }
+
     getRoomClosestToOrigin(): RoomPlus {
         const zero = Helpers.vector2();
         let closest: RoomPlus;
@@ -148,16 +151,17 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
     showRoom(room: RoomPlus): void {
         if (!room.visible) {
             room.visible = true;
+            const opponentsInRoom = SpaceSim.opponents.filter(o => o.room === room);
             this._scene.add.tween({
                 targets: [
                     ...this._layer.getTilesWithin(room.x, room.y, room.width, room.height), 
-                    ...room.opponents.map(o => o.getGameObject())
+                    ...opponentsInRoom.map(o => o.getGameObject())
                 ],
                 alpha: 1,
                 duration: 250
             });
             // enable physics for enemies in the room
-            room.opponents.forEach(o => {
+            opponentsInRoom.forEach(o => {
                 // setup collision with map walls
                 this._scene.physics.add.collider(o.getGameObject(), this.getGameObject());
                 // setup collision with player

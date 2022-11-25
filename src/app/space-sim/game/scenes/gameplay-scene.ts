@@ -13,6 +13,7 @@ import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { Resizable } from "../interfaces/resizable";
 import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
 import { MachineGunAttachment } from "../ships/attachments/offence/machine-gun-attachment";
+import { GameObjectPlus } from "../interfaces/game-object-plus";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -100,18 +101,39 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     update(time: number, delta: number): void {
         try {
             SpaceSim.player?.update(time, delta);
-            const shipPos = SpaceSim.player?.getLocation();
-            const tile = SpaceSim.map?.getLayer()?.worldToTileXY(shipPos.x, shipPos.y);
-            const room = SpaceSim.map?.getRoomAt(tile.x, tile.y);
 
             // If the player has entered a new room, make it visible
-            if (room) {
-                SpaceSim.map?.showRoom(room);
-            }
+            const currentRoom = SpaceSim.player?.room;
+            SpaceSim.map?.showRoom(currentRoom);
+
+            // disable all objects offscreen (plus margin of error)
+            const loc = SpaceSim.player.getLocation();
+            const width = this.game.scale.gameSize.width;
+            const height = this.game.scale.gameSize.height;
+            const dist = (width > height) ? width : height;
+            const enable = this.children.getAll()
+                .filter(c => {
+                    const gop = c as GameObjectPlus;
+                    const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
+                    return d <= dist * 2;
+                }).filter(c => (c.body as Phaser.Physics.Arcade.Body)?.enable === false);
+            this.physics.world.enable(enable);
+            const disable = this.children.getAll()
+                .filter(c => {
+                    if (c === SpaceSim.map.getGameObject()) {
+                        return false;
+                    }
+                    const gop = c as GameObjectPlus;
+                    const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
+                    return d > dist * 2;
+                });
+            this.physics.world.disable(disable);
 
             this._stellarBodies.forEach((body) => {
                 body.update(time, delta);
             });
+
+            SpaceSim.opponents.forEach(o => o.update(time, delta));
         } catch (e) {
             /* ignore */
         }
@@ -135,7 +157,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             }));
             p.getGameObject().setAlpha(0); // hidden until player enters room
             SpaceSim.opponents.push(p);
-            room.opponents = new Array<Ship>(p);
         });
     }
 
@@ -164,7 +185,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject());
 
         // setup listener for player death event
-        this.events.addListener(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
+        this.events.on(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
             if (SpaceSim.player.id == ship?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
