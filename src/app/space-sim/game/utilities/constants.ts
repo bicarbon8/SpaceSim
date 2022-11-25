@@ -13,7 +13,7 @@ export module Constants {
             export module Utility {
                 export module Thruster {
                     export const FORCE = 50;
-                    export const FUEL_PER_USE = 0.01; // units
+                    export const FUEL_PER_USE = 0.1; // units
                     export const HEAT_PER_USE = 0.2; // degree
                     export const USAGE_DELAY_MS = 100; 
                 }

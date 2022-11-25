@@ -19,6 +19,7 @@ import { OffenceAttachment } from "./attachments/offence/offence-attachment";
 import { FuelSupply } from "./supplies/fuel-supply";
 import { SpaceSim } from "../space-sim";
 import { AmmoSupply } from "./supplies/ammo-supply";
+import { CoolantSupply } from "./supplies/coolant-supply";
 
 export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     /** ShipOptions */
@@ -398,27 +399,33 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
 
     private _expelSupplies(): void {
         const loc = this.getLocation();
-        let remainingFuel = this._remainingFuel;
+        let remainingFuel = this._remainingFuel / 2;
         const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / Constants.Ship.MAX_FUEL_PER_CONTAINER);
         for (var i=0; i<fuelContainersCount; i++) {
             const amount = (remainingFuel > Constants.Ship.MAX_FUEL_PER_CONTAINER) 
                 ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
                 : remainingFuel;
             remainingFuel -= amount;
-            const fuel = new FuelSupply(this.scene, {
+            new FuelSupply(this.scene, {
                 amount: amount,
                 location: loc
             });
         }
-        let remainingAmmo = (this.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo;
+        let remainingAmmo = (this.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo / 2;
         const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER);
         for (var i=0; i<ammoContainersCount; i++) {
             const amount = (remainingAmmo > Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER) 
                 ? Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER 
                 : remainingAmmo;
             remainingAmmo -= amount;
-            const fuel = new AmmoSupply(this.scene, {
+            new AmmoSupply(this.scene, {
                 amount: amount,
+                location: loc
+            });
+        }
+        if (Phaser.Math.RND.between(0, 1)) {
+            new CoolantSupply(this.scene, {
+                amount: 20,
                 location: loc
             });
         }

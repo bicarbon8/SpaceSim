@@ -130,6 +130,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
             var p: Ship = new Ship({scene: this, location: pos});
+            p.attachments.addAttachment(new CannonAttachment({
+                scene: this
+            }));
             p.getGameObject().setAlpha(0); // hidden until player enters room
             SpaceSim.opponents.push(p);
             room.opponents = new Array<Ship>(p);

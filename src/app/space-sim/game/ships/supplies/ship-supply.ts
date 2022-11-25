@@ -28,6 +28,7 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         this.updateSize();
         
         this.scene.physics.add.existing(this);
+        this._body.setMass(0.1);
         this._body.setCircle(this.width / 2);
         this._body.setBounce(0.5, 0.5);
         this._body.setAngularVelocity(Helpers.getRealNumber(options.rotation) ?? Phaser.Math.RND.realInRange(-10, 10));
