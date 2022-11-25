@@ -425,7 +425,7 @@ export class Ship implements ShipOptions, Updatable, CanTarget, HasLocation, Has
         }
         if (Phaser.Math.RND.between(0, 1)) {
             new CoolantSupply(this.scene, {
-                amount: 20,
+                amount: 40,
                 location: loc
             });
         }

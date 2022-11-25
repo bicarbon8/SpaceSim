@@ -32,7 +32,7 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         this._body.setCircle(this.width / 2);
         this._body.setBounce(0.5, 0.5);
         this._body.setAngularVelocity(Helpers.getRealNumber(options.rotation) ?? Phaser.Math.RND.realInRange(-10, 10));
-        const speed = Helpers.getRealNumber(options.speed) ?? Phaser.Math.RND.realInRange(10, 100);
+        const speed = Helpers.getRealNumber(options.speed) ?? Phaser.Math.RND.realInRange(50, 200);
         const heading = options.heading || Helpers.vector2(Phaser.Math.RND.realInRange(-1, 1), Phaser.Math.RND.realInRange(-1, 1));
         const velocity = heading.multiply({x: speed, y: speed});
         this._body.setVelocity(velocity.x, velocity.y);

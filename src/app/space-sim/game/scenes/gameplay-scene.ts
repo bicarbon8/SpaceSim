@@ -136,26 +136,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             p.getGameObject().setAlpha(0); // hidden until player enters room
             SpaceSim.opponents.push(p);
             room.opponents = new Array<Ship>(p);
-
-            // setup collision with map walls
-            this.physics.add.collider(p.getGameObject(), SpaceSim.map.getGameObject());
-            // setup collision with player
-            this.physics.add.collider(p.getGameObject(), SpaceSim.player.getGameObject(), () => {
-                const collisionSpeed = p.getVelocity().clone().subtract(SpaceSim.player.getVelocity()).length();
-                const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
-                p.sustainDamage({
-                    amount: damage, 
-                    timestamp: this.time.now,
-                    attackerId: SpaceSim.player.id,
-                    message: 'ship collision'
-                }); // TODO: set based on opposing speeds
-                SpaceSim.player.sustainDamage({
-                    amount: damage, 
-                    timestamp: this.time.now,
-                    attackerId: p.id,
-                    message: 'ship collision'
-                });
-            });
         });
     }
 
@@ -194,6 +174,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                     }
                 });
             } else {
+                // TODO: remove opponent from SpaceSim.opponents array
                 GameScoreTracker.opponentDestroyed();
             }
         })

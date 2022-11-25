@@ -1,6 +1,7 @@
 import Dungeon, { Room } from "@mikewesthad/dungeon";
 import { HasGameObject } from "../interfaces/has-game-object";
 import { Ship } from "../ships/ship";
+import { SpaceSim } from "../space-sim";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { GameMapOptions } from "./game-map-options";
@@ -154,6 +155,28 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
                 ],
                 alpha: 1,
                 duration: 250
+            });
+            // enable physics for enemies in the room
+            room.opponents.forEach(o => {
+                // setup collision with map walls
+                this._scene.physics.add.collider(o.getGameObject(), this.getGameObject());
+                // setup collision with player
+                this._scene.physics.add.collider(o.getGameObject(), SpaceSim.player.getGameObject(), () => {
+                    const collisionSpeed = o.getVelocity().clone().subtract(SpaceSim.player.getVelocity()).length();
+                    const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
+                    o.sustainDamage({
+                        amount: damage, 
+                        timestamp: this._scene.time.now,
+                        attackerId: SpaceSim.player.id,
+                        message: 'ship collision'
+                    }); // TODO: set based on opposing speeds
+                    SpaceSim.player.sustainDamage({
+                        amount: damage, 
+                        timestamp: this._scene.time.now,
+                        attackerId: o.id,
+                        message: 'ship collision'
+                    });
+                });
             });
         }
     }
