@@ -11,7 +11,7 @@ export module Constants {
         export module Attachments {
             export const THROW_FORCE = 100;
             export module Utility {
-                export module Thruster {
+                export module Engine {
                     export const FORCE = 50;
                     export const FUEL_PER_USE = 0.1; // units
                     export const HEAT_PER_USE = 0.2; // degree

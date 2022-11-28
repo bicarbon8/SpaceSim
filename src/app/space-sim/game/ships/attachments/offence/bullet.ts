@@ -16,7 +16,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
     readonly damage: number;
     readonly scale: number;
     readonly spriteName: string;
-    readonly attachment: OffenceAttachment;
+    readonly weapon: OffenceAttachment;
     readonly timeout: number;
     readonly mass: number;
 
@@ -30,7 +30,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.active = true;
         this.scene = options.scene;
         this.location = options.location || Helpers.vector2();
-        this.attachment = options.attachment;
+        this.weapon = options.weapon;
         this.spriteName = options.spriteName;
         this.force = options.force ?? 1;
         this.damage = options.damage ?? 1;
@@ -67,7 +67,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
                     opp.sustainDamage({
                         amount: this.damage, 
                         timestamp: this.scene.time.now,
-                        attackerId: this.attachment.ship.id,
+                        attackerId: this.weapon.ship.id,
                         message: `projectile hit`
                     });
                     GameScoreTracker.shotLanded();

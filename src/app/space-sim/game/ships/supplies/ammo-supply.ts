@@ -1,12 +1,10 @@
-import { AttachmentLocation } from "../attachments/attachment-location";
-import { OffenceAttachment } from "../attachments/offence/offence-attachment";
 import { Ship } from "../ship";
 import { ShipSupply } from "./ship-supply";
 
 export class AmmoSupply extends ShipSupply {
     override apply(ship: Ship): void {
         if (ship) {
-            const oa = ship.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment;
+            const oa = ship.getWeapons();
             oa?.addAmmo(this.amount);
         }
         this.destroy();

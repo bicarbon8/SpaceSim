@@ -3,7 +3,7 @@ import { OffenceAttachment } from "../ships/attachments/offence/offence-attachme
 export interface BulletOptions {
     readonly scene: Phaser.Scene;
     readonly location: Phaser.Math.Vector2;
-    readonly attachment: OffenceAttachment;
+    readonly weapon: OffenceAttachment;
     readonly spriteName: string;
     /**
      * the force imparted on the bullet when fired. larger numbers

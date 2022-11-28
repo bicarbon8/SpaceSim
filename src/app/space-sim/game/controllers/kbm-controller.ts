@@ -1,4 +1,3 @@
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
 import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
@@ -55,7 +54,7 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                this.player.attachments.getAttachmentAt(AttachmentLocation.front)?.trigger();
+                this.player.getWeapons()?.trigger();
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {
                 // this.player.attachments.rotateAttachmentsClockwise();

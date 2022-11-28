@@ -8,10 +8,8 @@ import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { HasTemperature } from "../interfaces/has-temperature";
 import { HasFuel } from "../interfaces/has-fuel";
-import { AttachmentManager } from "./attachments/attachment-manager";
-import { ThrusterAttachment } from "./attachments/utility/thruster-attachment";
+import { EngineAttachment } from "./attachments/utility/engine-attachment";
 import { ShipOptions } from "./ship-options";
-import { AttachmentLocation } from "./attachments/attachment-location";
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
 import { LayoutContainer } from "phaser-ui-components";
@@ -22,6 +20,7 @@ import { AmmoSupply } from "./supplies/ammo-supply";
 import { CoolantSupply } from "./supplies/coolant-supply";
 import { HasRoom } from "../interfaces/has-room";
 import { RoomPlus } from "../map/game-map";
+import { MachineGunAttachment } from "./attachments/offence/machine-gun-attachment";
 
 export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     /** ShipOptions */
@@ -33,9 +32,11 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
     private _integrity: number;
     private _remainingFuel: number;
 
-    private _attachmentMgr: AttachmentManager;
-    private _shipContainer: Phaser.GameObjects.Container; // used for position and physics
-    private _shipGroup: Phaser.GameObjects.Group; // used for rotation
+    private _engine: EngineAttachment;
+    private _weapons: OffenceAttachment;
+
+    private _positionContainer: Phaser.GameObjects.Container; // used for position and physics
+    private _rotationContainer: Phaser.GameObjects.Container; // used for rotation
     private _shipIntegrityIndicator: LayoutContainer;
     private _shipHeatIndicator: Phaser.GameObjects.Sprite;
     private _shipOverheatIndicator: Phaser.GameObjects.Text;
@@ -54,10 +55,11 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         this._temperature = options.temperature ?? 0;
         this.mass = options.mass ?? 100;
 
-        this._attachmentMgr = new AttachmentManager(this);
-
         // create ship-pod sprite, group and container
         this._createGameObj(options);
+
+        this._engine = new EngineAttachment(this);
+        this._weapons = new MachineGunAttachment(this);
         
         this._lastDamagedBy = [];
 
@@ -76,17 +78,17 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         return this._integrity;
     }
 
-    get attachments(): AttachmentManager {
-        return this._attachmentMgr;
-    }
-
     get room(): RoomPlus {
         const loc = this.getLocation();
         return SpaceSim.map.getRoomAtWorldXY(loc.x, loc.y);
     }
 
-    getThruster(): ThrusterAttachment {
-        return this.attachments.getAttachmentAt<ThrusterAttachment>(AttachmentLocation.back);
+    getWeapons(): OffenceAttachment {
+        return this._weapons;
+    }
+
+    getThruster(): EngineAttachment {
+        return this._engine;
     }
 
     /**
@@ -99,7 +101,8 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         if (this.active) {
             this.lookAtTarget();
             this._checkOverheatCondition(time, delta);
-            this.attachments.update(time, delta);
+            this._engine.update(time, delta);
+            this._weapons.update(time, delta);
         }
     }
 
@@ -156,7 +159,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
      * location on screen
      */
     getLocation(): Phaser.Math.Vector2 {
-        let go: Phaser.GameObjects.Container = this._shipContainer;
+        let go: Phaser.GameObjects.Container = this._positionContainer;
         if (go) {
             return new Phaser.Math.Vector2(go.x, go.y);
         }
@@ -164,7 +167,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
     }
 
     setLocation(location: Phaser.Math.Vector2): void {
-        let go: Phaser.GameObjects.Container = this._shipContainer;
+        let go: Phaser.GameObjects.Container = this._positionContainer;
         go.x = location.x;
         go.y = location.y;
     }
@@ -180,11 +183,15 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
     }
 
     getGameObject(): Phaser.GameObjects.Container {
-        return this._shipContainer;
+        return this._positionContainer;
     }
 
     getPhysicsBody(): Phaser.Physics.Arcade.Body {
-        return this._shipContainer?.body as Phaser.Physics.Arcade.Body;
+        return this._positionContainer?.body as Phaser.Physics.Arcade.Body;
+    }
+
+    getRotationContainer(): Phaser.GameObjects.Container {
+        return this._rotationContainer;
     }
 
     lookAtTarget(): void {
@@ -201,7 +208,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
      * the rotation of the Ship's {GameObject.body} in degrees
      */
     getRotation(): number {
-        return this._shipGroup?.getFirstAlive()?.angle || 0;
+        return this._rotationContainer?.angle || 0;
     }
 
     /**
@@ -209,7 +216,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
      * @param angle the angle in degrees
      */
     setRotation(angle: number): void {
-        Phaser.Actions.SetRotation(this._shipGroup.getChildren(), Phaser.Math.DegToRad(angle));
+        this._rotationContainer.setAngle(angle);
     }
 
     getHeading(): Phaser.Math.Vector2 {
@@ -290,13 +297,13 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
 
         if (!this._shipDamageFlicker?.isPlaying()) {
             this._shipDamageFlicker = this.scene.tweens.add({
-                targets: this._shipGroup.getChildren(),
+                targets: this._rotationContainer,
                 alpha: 0.5,
                 yoyo: true,
                 loop: 4,
                 duration: 50,
                 onComplete: () => {
-                    Phaser.Actions.SetAlpha(this._shipGroup.getChildren(), 1);
+                    this._rotationContainer?.setAlpha(1);
                 }
             });
         }
@@ -315,15 +322,12 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         this._displayShipExplosion();
         this._expelSupplies();
         this.getGameObject()?.setActive(false);
-        this._attachmentMgr.active = false;
-        this._attachmentMgr.getAttachments()
-            .forEach(attachment => attachment?.destroy());
         try {
             this.getGameObject()?.destroy();
         } catch (e) {
             /* ignore */
         }
-        this._shipContainer = null;
+        this._positionContainer = null;
 
         this.scene.events.emit(Constants.Events.PLAYER_DEATH, this);
     }
@@ -331,8 +335,8 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
     private _createGameObj(config?: ShipOptions): void {
         // create container as parent to all ship parts
         let loc: Phaser.Math.Vector2 = config?.location ?? Helpers.vector2();
-        this._shipContainer = this.scene.add.container(loc.x, loc.y);
-        this._shipContainer.setDepth(Constants.UI.Layers.PLAYER);
+        this._positionContainer = this.scene.add.container(loc.x, loc.y);
+        this._positionContainer.setDepth(Constants.UI.Layers.PLAYER);
 
         // create ship sprite and set container bounds based on sprite size
         const weaponsKey = Phaser.Math.RND.between(1, 3);
@@ -344,38 +348,34 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
             y: 0,
             key: `weapons-${weaponsKey}`
         }, false);
-        this._shipContainer.add(weaponsSprite);
         const wingsSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
             key: `wings-${wingsKey}`
         }, false);
-        this._shipContainer.add(wingsSprite);
         const cockpitSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
             key: `cockpit-${cockpitKey}`
         }, false);
-        this._shipContainer.add(cockpitSprite);
         const engineSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
             key: `engine-${engineKey}`
         }, false);
-        this._shipContainer.add(engineSprite);
-        this._shipContainer.add(this._attachmentMgr.getGameObject());
-        const containerBounds: Phaser.Geom.Rectangle = this._shipContainer.getBounds();
-        this._shipContainer.setSize(containerBounds.width, containerBounds.height);
+        this._rotationContainer = this.scene.add.container(0, 0, [weaponsSprite, wingsSprite, cockpitSprite, engineSprite]);
+        this._positionContainer.add(this._rotationContainer);
+        
+        const containerBounds: Phaser.Geom.Rectangle = this._positionContainer.getBounds();
+        this._positionContainer.setSize(containerBounds.width, containerBounds.height);
 
         // setup physics for container
-        this.scene.physics.add.existing(this._shipContainer);
+        this.scene.physics.add.existing(this._positionContainer);
 
         this.getPhysicsBody().setCircle(16);
         this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setBounce(0.2, 0.2);
         this.getPhysicsBody().setMaxSpeed(Constants.Ship.MAX_SPEED);
-
-        this._shipGroup = this.scene.add.group([weaponsSprite, wingsSprite, cockpitSprite, engineSprite, this._attachmentMgr.getGameObject()]);
 
         this._createIntegrityIndicator();
 
@@ -394,16 +394,16 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
             background: {fillStyle: {color: 0xffffff}}
         });
         this._shipIntegrityIndicator.setAlpha(0); // only visible when damage sustained
-        this._shipContainer.add(this._shipIntegrityIndicator);
+        this._positionContainer.add(this._shipIntegrityIndicator);
         
-        this._shipContainer.add(this._shipIntegrityIndicator);
+        this._positionContainer.add(this._shipIntegrityIndicator);
     }
 
     private _createHeatIndicator(): void {
         this._shipHeatIndicator = this.scene.add.sprite(0, 0, 'overheat-glow');
         this._shipHeatIndicator.setAlpha(0); // no heat
-        this._shipContainer.add(this._shipHeatIndicator);
-        this._shipContainer.sendToBack(this._shipHeatIndicator);
+        this._positionContainer.add(this._shipHeatIndicator);
+        this._positionContainer.sendToBack(this._shipHeatIndicator);
         this.scene.tweens.add({
             targets: this._shipHeatIndicator,
             scale: 1.05,
@@ -418,7 +418,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         this._shipOverheatIndicator = this.scene.add.text(0, -75, 'OVERHEAT', {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4});
         this._shipOverheatIndicator.setAlpha(0);
         this._shipOverheatIndicator.setX(-this._shipOverheatIndicator.width / 2);
-        this._shipContainer.add(this._shipOverheatIndicator);
+        this._positionContainer.add(this._shipOverheatIndicator);
     }
 
     private _updateIntegrityIndicator(): void {
@@ -447,7 +447,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
                 location: loc
             });
         }
-        let remainingAmmo = (this.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo / 2;
+        let remainingAmmo = this._weapons?.remainingAmmo / 2;
         const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER);
         for (var i=0; i<ammoContainersCount; i++) {
             const amount = (remainingAmmo > Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER) 

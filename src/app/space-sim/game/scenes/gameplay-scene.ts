@@ -1,7 +1,5 @@
 import { Vector2 } from "phaser/src/math";
 import { Ship } from "../ships/ship";
-import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
-import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
 import { StellarBody } from "../star-systems/stellar-body";
 import { GameMap, RoomPlus } from "../map/game-map";
 import { environment } from "../../../../environments/environment";
@@ -11,8 +9,6 @@ import { Helpers } from "../utilities/helpers";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { Resizable } from "../interfaces/resizable";
-import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
-import { MachineGunAttachment } from "../ships/attachments/offence/machine-gun-attachment";
 import { GameObjectPlus } from "../interfaces/game-object-plus";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
@@ -162,9 +158,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
             var p: Ship = new Ship({scene: this, location: pos});
-            p.attachments.addAttachment(new CannonAttachment({
-                scene: this
-            }));
             p.getGameObject().setAlpha(0); // hidden until player enters room
             SpaceSim.opponents.push(p);
         });
@@ -183,14 +176,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         );
         SpaceSim.player = new Ship({scene: this, location: playerStartingPosition});
         
-        // TODO: have menu allowing selection of attachments
-        let thruster: ThrusterAttachment = new ThrusterAttachment({scene: this});
-        SpaceSim.player.attachments.addAttachment(thruster);
-        let weapon: OffenceAttachment; 
-        // weapon = new CannonAttachment({scene: this});
-        weapon = new MachineGunAttachment({scene: this});
-        SpaceSim.player.attachments.addAttachment(weapon);
-
         // setup collision with map walls
         this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject());
 

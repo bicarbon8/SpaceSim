@@ -1,7 +1,6 @@
 import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 import { Helpers } from "../utilities/helpers";
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
 import { Constants } from "../utilities/constants";
 import { GridLayout, LayoutContent } from "phaser-ui-components";
 
@@ -39,7 +38,7 @@ export class TouchController extends InputController {
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
-            this.player.attachments.getAttachmentAt(AttachmentLocation.front)?.trigger();
+            this.player.getWeapons()?.trigger();
         }
     }
 

@@ -1,7 +1,5 @@
 import { Constants } from "../utilities/constants";
 import { SpaceSim } from "../space-sim";
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { GameStats } from "../utilities/game-stats";
 import { InputController } from "../controllers/input-controller";
@@ -127,7 +125,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
                 `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`,
                 `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo || 0}`,
+                `Ammo: ${SpaceSim.player.getWeapons()?.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore().toFixed(0)}`
             ];
             if (SpaceSim.debug) {
