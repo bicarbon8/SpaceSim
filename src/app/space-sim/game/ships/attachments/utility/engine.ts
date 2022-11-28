@@ -9,7 +9,7 @@ type ThrustOptions = {
     heading: Phaser.Math.Vector2;
 };
 
-export class EngineAttachment extends ShipAttachment {
+export class Engine extends ShipAttachment {
     private _flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
     private _isThrusterActive: boolean;
     private _thrusterTimeout: number;
@@ -18,7 +18,7 @@ export class EngineAttachment extends ShipAttachment {
     
     constructor(ship: Ship) {
         super(ship);
-        this._elapsedSinceApplied = Constants.Ship.Attachments.Utility.Engine.USAGE_DELAY_MS;
+        this._elapsedSinceApplied = Constants.Ship.Engine.USAGE_DELAY_MS;
         this._createGameObject();
     }
 
@@ -27,9 +27,9 @@ export class EngineAttachment extends ShipAttachment {
         if (this._canThrust()) {
             if (this._isThrusterActive) {
                 this._applyThrust({
-                    force: Constants.Ship.Attachments.Utility.Engine.FORCE,
-                    fuel: Constants.Ship.Attachments.Utility.Engine.FUEL_PER_USE,
-                    heat: Constants.Ship.Attachments.Utility.Engine.HEAT_PER_USE,
+                    force: Constants.Ship.Engine.FORCE,
+                    fuel: Constants.Ship.Engine.FUEL_PER_USE,
+                    heat: Constants.Ship.Engine.HEAT_PER_USE,
                     heading: this.ship?.getHeading()
                 });
                 this._elapsedSinceApplied = 0;
@@ -82,7 +82,7 @@ export class EngineAttachment extends ShipAttachment {
     private _canThrust(): boolean {
         return this.active
             && this.ship?.getRemainingFuel() > 0 
-            && this._elapsedSinceApplied >= Constants.Ship.Attachments.Utility.Engine.USAGE_DELAY_MS
+            && this._elapsedSinceApplied >= Constants.Ship.Engine.USAGE_DELAY_MS
             && !this.ship.isOverheating();
     }
 

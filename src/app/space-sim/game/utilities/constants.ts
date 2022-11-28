@@ -8,19 +8,14 @@ export module Constants {
         export const MAX_SPEED = 500;
         export const COOLING_RATE_PER_SECOND = 2; // degrees per second
 
-        export module Attachments {
-            export const THROW_FORCE = 100;
-            export module Utility {
-                export module Engine {
-                    export const FORCE = 50;
-                    export const FUEL_PER_USE = 0.1; // units
-                    export const HEAT_PER_USE = 0.2; // degree
-                    export const USAGE_DELAY_MS = 100; 
-                }
-            }
-            export module Offence {
-                export const MAX_AMMO_PER_CONTAINER = 100;
-            }
+        export module Engine {
+            export const FORCE = 50;
+            export const FUEL_PER_USE = 0.1; // units
+            export const HEAT_PER_USE = 0.2; // degree
+            export const USAGE_DELAY_MS = 100; 
+        }
+        export module Weapons {
+            export const MAX_AMMO_PER_CONTAINER = 500;
         }
     }
     export module UI {

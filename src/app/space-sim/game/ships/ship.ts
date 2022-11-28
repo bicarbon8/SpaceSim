@@ -8,19 +8,19 @@ import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { HasTemperature } from "../interfaces/has-temperature";
 import { HasFuel } from "../interfaces/has-fuel";
-import { EngineAttachment } from "./attachments/utility/engine-attachment";
+import { Engine } from "./attachments/utility/engine";
 import { ShipOptions } from "./ship-options";
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
 import { LayoutContainer } from "phaser-ui-components";
-import { OffenceAttachment } from "./attachments/offence/offence-attachment";
+import { Weapons } from "./attachments/offence/weapons";
 import { FuelSupply } from "./supplies/fuel-supply";
 import { SpaceSim } from "../space-sim";
 import { AmmoSupply } from "./supplies/ammo-supply";
 import { CoolantSupply } from "./supplies/coolant-supply";
 import { HasRoom } from "../interfaces/has-room";
 import { RoomPlus } from "../map/game-map";
-import { MachineGunAttachment } from "./attachments/offence/machine-gun-attachment";
+import { MachineGun } from "./attachments/offence/machine-gun";
 
 export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     /** ShipOptions */
@@ -32,8 +32,8 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
     private _integrity: number;
     private _remainingFuel: number;
 
-    private _engine: EngineAttachment;
-    private _weapons: OffenceAttachment;
+    private _engine: Engine;
+    private _weapons: Weapons;
 
     private _positionContainer: Phaser.GameObjects.Container; // used for position and physics
     private _rotationContainer: Phaser.GameObjects.Container; // used for rotation
@@ -58,8 +58,8 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         // create ship-pod sprite, group and container
         this._createGameObj(options);
 
-        this._engine = new EngineAttachment(this);
-        this._weapons = new MachineGunAttachment(this);
+        this._engine = new Engine(this);
+        this._weapons = new MachineGun(this);
         
         this._lastDamagedBy = [];
 
@@ -83,11 +83,11 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         return SpaceSim.map.getRoomAtWorldXY(loc.x, loc.y);
     }
 
-    getWeapons(): OffenceAttachment {
+    getWeapons(): Weapons {
         return this._weapons;
     }
 
-    getThruster(): EngineAttachment {
+    getThruster(): Engine {
         return this._engine;
     }
 
@@ -448,10 +448,10 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
             });
         }
         let remainingAmmo = this._weapons?.remainingAmmo / 2;
-        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER);
+        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
         for (var i=0; i<ammoContainersCount; i++) {
-            const amount = (remainingAmmo > Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER) 
-                ? Constants.Ship.Attachments.Offence.MAX_AMMO_PER_CONTAINER 
+            const amount = (remainingAmmo > Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER) 
+                ? Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
                 : remainingAmmo;
             remainingAmmo -= amount;
             new AmmoSupply(this.scene, {

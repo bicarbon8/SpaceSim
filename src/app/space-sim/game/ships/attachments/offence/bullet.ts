@@ -5,7 +5,7 @@ import { Helpers } from "../../../utilities/helpers";
 import { SpaceSim } from "../../../space-sim";
 import { Ship } from "../../ship";
 import { Constants } from "../../../utilities/constants";
-import { OffenceAttachment } from "./offence-attachment";
+import { Weapons } from "./weapons";
 import { GameScoreTracker } from "../../../utilities/game-score-tracker";
 
 export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.Container>, HasLocation {
@@ -16,7 +16,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
     readonly damage: number;
     readonly scale: number;
     readonly spriteName: string;
-    readonly weapon: OffenceAttachment;
+    readonly weapon: Weapons;
     readonly timeout: number;
     readonly mass: number;
 

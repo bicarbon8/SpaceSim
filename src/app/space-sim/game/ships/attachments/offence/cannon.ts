@@ -1,7 +1,7 @@
 import { Ship } from "../../ship";
-import { OffenceAttachment } from "./offence-attachment";
+import { Weapons } from "./weapons";
 
-export class CannonAttachment extends OffenceAttachment {
+export class Cannon extends Weapons {
     constructor(ship: Ship) {
         super(ship, {
             maxAmmo: 500,

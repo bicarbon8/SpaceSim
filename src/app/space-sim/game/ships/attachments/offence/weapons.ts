@@ -3,7 +3,7 @@ import { Ship } from "../../ship";
 import { ShipAttachment } from "../ship-attachment";
 import { Bullet } from "./bullet";
 
-export type OffenceAttachmentOptions = {
+export type WeaponsOptions = {
     maxAmmo?: number;
     firingDelay?: number;
     remainingAmmo?: number;
@@ -14,7 +14,7 @@ export type OffenceAttachmentOptions = {
     force?: number;
 };
 
-export abstract class OffenceAttachment extends ShipAttachment implements CanShoot {
+export abstract class Weapons extends ShipAttachment implements CanShoot {
     private _maxAmmo: number;
     private _firingDelay: number;
     private _remainingAmmo: number;
@@ -27,7 +27,7 @@ export abstract class OffenceAttachment extends ShipAttachment implements CanSho
     private _damagePerHit: number;
     private _force: number;
 
-    constructor(ship: Ship, options: OffenceAttachmentOptions) {
+    constructor(ship: Ship, options: WeaponsOptions) {
         super(ship);
         this._lastFired = 0;
 

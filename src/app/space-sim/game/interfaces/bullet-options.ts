@@ -1,9 +1,9 @@
-import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
+import { Weapons } from "../ships/attachments/offence/weapons";
 
 export interface BulletOptions {
     readonly scene: Phaser.Scene;
     readonly location: Phaser.Math.Vector2;
-    readonly weapon: OffenceAttachment;
+    readonly weapon: Weapons;
     readonly spriteName: string;
     /**
      * the force imparted on the bullet when fired. larger numbers
