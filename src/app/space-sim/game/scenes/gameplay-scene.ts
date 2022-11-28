@@ -38,10 +38,20 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     preload(): void {
-        this.load.image('ship-pod', `${environment.baseUrl}/assets/sprites/ship-pod.png`);
-        this.load.image('thruster', `${environment.baseUrl}/assets/sprites/thruster.png`);
+        this.load.image('weapons-1', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-1.png`);
+        this.load.image('weapons-2', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-2.png`);
+        this.load.image('weapons-3', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-3.png`);
+        this.load.image('wings-1', `${environment.baseUrl}/assets/sprites/ship-parts/wings-1.png`);
+        this.load.image('wings-2', `${environment.baseUrl}/assets/sprites/ship-parts/wings-2.png`);
+        this.load.image('wings-3', `${environment.baseUrl}/assets/sprites/ship-parts/wings-3.png`);
+        this.load.image('cockpit-1', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-1.png`);
+        this.load.image('cockpit-2', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-2.png`);
+        this.load.image('cockpit-3', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-3.png`);
+        this.load.image('engine-1', `${environment.baseUrl}/assets/sprites/ship-parts/engine-1.png`);
+        this.load.image('engine-2', `${environment.baseUrl}/assets/sprites/ship-parts/engine-2.png`);
+        this.load.image('engine-3', `${environment.baseUrl}/assets/sprites/ship-parts/engine-3.png`);
+
         this.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
-        this.load.image('cannon', `${environment.baseUrl}/assets/sprites/cannon.png`);
         this.load.spritesheet('flares', `${environment.baseUrl}/assets/particles/flares.png`, {
             frameWidth: 130,
             frameHeight: 132,

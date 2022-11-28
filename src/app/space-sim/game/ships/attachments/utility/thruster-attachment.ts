@@ -88,11 +88,10 @@ export class ThrusterAttachment extends ShipAttachment {
 
     private _createGameObject(): void {
         this._thrusterSound = this.scene.sound.add('thruster-fire');
-        const sprite = this.scene.add.sprite(0, 0, 'thruster');
         this._flareParticles = this.scene.add.particles('flares');
         this._flareParticles.setPosition(-20, 0);
-        this.gameObj = this.scene.add.container(0, 0, [sprite, this._flareParticles]);
-        this.gameObj.setSize(sprite.width, sprite.height);
+        this.gameObj = this.scene.add.container(0, 0, [this._flareParticles]);
+        this.gameObj.setSize(32, 32);
         this.gameObj.setDepth(Constants.UI.Layers.PLAYER);
         this.gameObj.sendToBack(this._flareParticles);
     }

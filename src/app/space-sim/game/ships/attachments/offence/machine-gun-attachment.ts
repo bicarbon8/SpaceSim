@@ -12,9 +12,8 @@ export class MachineGunAttachment extends OffenceAttachment {
         this._firingDelay = 200; // milliseconds
         this._heatPerShot = 1;
 
-        const sprite = this.scene.add.sprite(0, 0, 'cannon');
-        this.gameObj = this.scene.add.container(0, 0, [sprite]);
-        this.gameObj.setSize(sprite.width, sprite.height);
+        this.gameObj = this.scene.add.container(0, 0);
+        this.gameObj.setSize(32, 32);
         this.gameObj.setDepth(Constants.UI.Layers.PLAYER);
         this.scene.physics.add.existing(this.gameObj);
     }

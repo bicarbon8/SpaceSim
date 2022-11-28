@@ -34,9 +34,8 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
     private _remainingFuel: number;
 
     private _attachmentMgr: AttachmentManager;
-    private _shipSprite: Phaser.GameObjects.Sprite;
-    private _shipContainer: Phaser.GameObjects.Container;
-    private _shipGroup: Phaser.GameObjects.Group;
+    private _shipContainer: Phaser.GameObjects.Container; // used for position and physics
+    private _shipGroup: Phaser.GameObjects.Group; // used for rotation
     private _shipIntegrityIndicator: LayoutContainer;
     private _shipHeatIndicator: Phaser.GameObjects.Sprite;
     private _shipOverheatIndicator: Phaser.GameObjects.Text;
@@ -202,7 +201,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
      * the rotation of the Ship's {GameObject.body} in degrees
      */
     getRotation(): number {
-        return this._shipSprite?.angle || 0;
+        return this._shipGroup?.getFirstAlive()?.angle || 0;
     }
 
     /**
@@ -336,8 +335,34 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         this._shipContainer.setDepth(Constants.UI.Layers.PLAYER);
 
         // create ship sprite and set container bounds based on sprite size
-        this._shipSprite = this.scene.add.sprite(0, 0, 'ship-pod');
-        this._shipContainer.add(this._shipSprite);
+        const weaponsKey = Phaser.Math.RND.between(1, 3);
+        const wingsKey = Phaser.Math.RND.between(1, 3);
+        const cockpitKey = Phaser.Math.RND.between(1, 3);
+        const engineKey = Phaser.Math.RND.between(1, 3);
+        const weaponsSprite = this.scene.make.sprite({
+            x: 0,
+            y: 0,
+            key: `weapons-${weaponsKey}`
+        }, false);
+        this._shipContainer.add(weaponsSprite);
+        const wingsSprite = this.scene.make.sprite({
+            x: 0,
+            y: 0,
+            key: `wings-${wingsKey}`
+        }, false);
+        this._shipContainer.add(wingsSprite);
+        const cockpitSprite = this.scene.make.sprite({
+            x: 0,
+            y: 0,
+            key: `cockpit-${cockpitKey}`
+        }, false);
+        this._shipContainer.add(cockpitSprite);
+        const engineSprite = this.scene.make.sprite({
+            x: 0,
+            y: 0,
+            key: `engine-${engineKey}`
+        }, false);
+        this._shipContainer.add(engineSprite);
         this._shipContainer.add(this._attachmentMgr.getGameObject());
         const containerBounds: Phaser.Geom.Rectangle = this._shipContainer.getBounds();
         this._shipContainer.setSize(containerBounds.width, containerBounds.height);
@@ -350,7 +375,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         this.getPhysicsBody().setBounce(0.2, 0.2);
         this.getPhysicsBody().setMaxSpeed(Constants.Ship.MAX_SPEED);
 
-        this._shipGroup = this.scene.add.group([this._shipSprite, this._attachmentMgr.getGameObject()]);
+        this._shipGroup = this.scene.add.group([weaponsSprite, wingsSprite, cockpitSprite, engineSprite, this._attachmentMgr.getGameObject()]);
 
         this._createIntegrityIndicator();
 
