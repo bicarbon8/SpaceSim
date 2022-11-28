@@ -24,6 +24,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
 
+    private _updatingPhysics: boolean;
+
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
@@ -113,27 +115,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             SpaceSim.map?.showRoom(currentRoom);
 
             // disable all objects offscreen (plus margin of error)
-            const loc = SpaceSim.player.getLocation();
-            const width = this.game.scale.gameSize.width;
-            const height = this.game.scale.gameSize.height;
-            const dist = (width > height) ? width : height;
-            const enable = this.children.getAll()
-                .filter(c => {
-                    const gop = c as GameObjectPlus;
-                    const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
-                    return d <= dist * 2;
-                }).filter(c => (c.body as Phaser.Physics.Arcade.Body)?.enable === false);
-            this.physics.world.enable(enable);
-            const disable = this.children.getAll()
-                .filter(c => {
-                    if (c === SpaceSim.map.getGameObject()) {
-                        return false;
-                    }
-                    const gop = c as GameObjectPlus;
-                    const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
-                    return d > dist * 2;
-                });
-            this.physics.world.disable(disable);
+            this._updatePhysics();
 
             this._stellarBodies.forEach((body) => {
                 body.update(time, delta);
@@ -142,6 +124,39 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             SpaceSim.opponents.forEach(o => o.update(time, delta));
         } catch (e) {
             /* ignore */
+        }
+    }
+
+    private _updatePhysics(): void {
+        // TODO: move to worker thread
+        if (!this._updatingPhysics) {
+            this._updatingPhysics = true;
+            Helpers.runAsync(() => {
+                const loc = SpaceSim.player.getLocation();
+                const width = this.game.scale.gameSize.width;
+                const height = this.game.scale.gameSize.height;
+                const dist = (width > height) ? width : height;
+                const enable = this.children.getAll()
+                    .filter(c => (c.body as Phaser.Physics.Arcade.Body)?.enable === false)
+                    .filter(c => {
+                        const gop = c as GameObjectPlus;
+                        const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
+                        return d <= dist * 2;
+                    });
+                this.physics.world.enable(enable);
+                const disable = this.children.getAll()
+                    .filter(c => (c.body as Phaser.Physics.Arcade.Body)?.enable === true)    
+                    .filter(c => {
+                        if (c === SpaceSim.map.getGameObject()) {
+                            return false;
+                        }
+                        const gop = c as GameObjectPlus;
+                        const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
+                        return d > dist * 2;
+                    });
+                this.physics.world.disable(disable);
+            }).then(_ => this._updatingPhysics = false)
+            .catch(err => console.warn(err));
         }
     }
 

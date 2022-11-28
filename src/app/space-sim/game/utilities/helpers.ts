@@ -66,4 +66,13 @@ export module Helpers {
             ? Phaser.Math.RND.realInRange(input.min, input.max)
             : input;
     }
+
+    export async function runAsync<T>(func: () => T): Promise<T> {
+        try {
+            return func();
+        } catch (e) {
+            console.error(e);
+            return Promise.reject(e);
+        }
+    }
 }
