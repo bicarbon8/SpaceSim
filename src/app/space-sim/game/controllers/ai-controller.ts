@@ -1,38 +1,23 @@
-import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {
     private _container: Phaser.GameObjects.Container;
-    private _aiShip: Ship;
     private _lastKnownPlayerLocation: Phaser.Math.Vector2;
-    
-    constructor(scene: Phaser.Scene, aiShip: Ship) {
-        super(scene);
-        this._aiShip = aiShip;
-    }
+    private _nextTriggerAt: number;
     
     update(time: number, delta: number): void {
-        if (!this.player) {
-            this._patrol();
-        } else {
-            if (this._canSeePlayer()) {
-                this._lastKnownPlayerLocation = this.player.getLocation();
-            } else {
-                if (this._aiShip.getLocation().fuzzyEquals(this._lastKnownPlayerLocation, 1)) {
-                    this._patrol();
-                } else {
-                    this._goToLocation(this._lastKnownPlayerLocation);
-                }
-            }
-        }
-    }
+        this.ship.update(time, delta);
 
-    async goTo(location: Phaser.Math.Vector2): Promise<void> {
-        let startingPos: Phaser.Math.Vector2 = this._aiShip.getLocation();
-        let distance: number = location.distance(startingPos);
-        this._aiShip.lookAtTarget();
-        this._aiShip.getThruster().thrustFowards();
-        
+        if (this.ship.target) {
+            if (this._nextTriggerAt == null || this._nextTriggerAt <= time) {
+                this.ship.getWeapons().trigger();
+                this._nextTriggerAt = time + 2000; // TODO: set some other way
+            } else {
+                this.ship.getThruster().trigger();
+            }
+        } else {
+            this._patrol();
+        }
     }
 
     getGameObject(): Phaser.GameObjects.Container {
@@ -40,7 +25,7 @@ export class AiController extends InputController {
     }
 
     private _patrol(): void {
-        this._aiShip.setRotation(this._aiShip.getRotation() + 1);
+        this.ship.setRotation(this.ship.getRotation() + 1);
     }
 
     private _canSeePlayer(): boolean {

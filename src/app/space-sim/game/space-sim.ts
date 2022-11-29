@@ -1,4 +1,5 @@
 import "phaser";
+import { AiController } from "./controllers/ai-controller";
 import { Size } from "./interfaces/size";
 import { GameMap } from "./map/game-map";
 import { GameOverScene } from "./scenes/game-over-scene";
@@ -102,7 +103,7 @@ export module SpaceSim {
         return size;
     }
     export var player: Ship;
-    export var opponents: Ship[] = [];
+    export const opponents = new Array<AiController>();
     export var game: Phaser.Game;
     export var map: GameMap;
     export var debug: boolean = false;

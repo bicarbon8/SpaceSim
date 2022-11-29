@@ -1,5 +1,6 @@
 import Dungeon, { Room } from "@mikewesthad/dungeon";
 import { HasGameObject } from "../interfaces/has-game-object";
+import { Ship } from "../ships/ship";
 import { SpaceSim } from "../space-sim";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
@@ -26,6 +27,113 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
 
     getPhysicsBody(): Phaser.Physics.Arcade.Body {
         return this._layer.body as Phaser.Physics.Arcade.Body;
+    }
+
+    getMapTileWorldLocation(tilePositionX: number, tilePositionY: number): Phaser.Math.Vector2 {
+        return this._tileMap.tileToWorldXY(tilePositionX, tilePositionY);
+    }
+
+    getLayer(): Phaser.Tilemaps.TilemapLayer {
+        return this._layer;
+    }
+
+    getRooms(): RoomPlus[] {
+        return this._dungeon.rooms;
+    }
+
+    getRoomAt(tileX: number, tileY: number): RoomPlus {
+        return this._dungeon.getRoomAt(tileX, tileY);
+    }
+
+    getRoomAtWorldXY(x: number, y: number): RoomPlus {
+        const tile = this._layer?.worldToTileXY(x, y);
+        return this.getRoomAt(tile.x, tile.y);
+    }
+
+    getRoomClosestToOrigin(): RoomPlus {
+        const zero = Helpers.vector2();
+        let closest: RoomPlus;
+        this._dungeon.rooms.forEach(room => {
+            if (closest) {
+                const pos = this._tileMap.tileToWorldXY(closest.centerX, closest.centerY);
+                const newPos = this._tileMap.tileToWorldXY(room.centerX, room.centerY);
+                if (Phaser.Math.Distance.BetweenPoints(zero, newPos) < Phaser.Math.Distance.BetweenPoints(zero, pos)) {
+                    closest = room;
+                }
+            } else {
+                closest = room;
+            }
+        });
+        return closest;
+    }
+
+    getRoomFurthestFromOrigin(): RoomPlus {
+        const zero = Helpers.vector2();
+        let furthest: RoomPlus;
+        this._dungeon.rooms.forEach(room => {
+            if (furthest) {
+                const pos = this._tileMap.tileToWorldXY(furthest.centerX, furthest.centerY);
+                const newPos = this._tileMap.tileToWorldXY(room.centerX, room.centerY);
+                if (Phaser.Math.Distance.BetweenPoints(zero, newPos) > Phaser.Math.Distance.BetweenPoints(zero, pos)) {
+                    furthest = room;
+                }
+            } else {
+                furthest = room;
+            }
+        });
+        return furthest;
+    }
+
+    showRoom(room: RoomPlus): void {
+        if (!room.visible) {
+            room.visible = true;
+            const opponentsInRoom = SpaceSim.opponents
+                .map(o => o?.ship)
+                .filter(s => s?.room === room);
+            this._scene.add.tween({
+                targets: [
+                    ...this._layer.getTilesWithin(room.x, room.y, room.width, room.height), 
+                    ...opponentsInRoom.map(o => o.getGameObject())
+                ],
+                alpha: 1,
+                duration: 250
+            });
+            // enable physics for enemies in the room
+            opponentsInRoom.forEach(o => {
+                // setup collision with map walls
+                this._scene.physics.add.collider(o.getGameObject(), this.getGameObject());
+                // setup collision with player
+                this._scene.physics.add.collider(o.getGameObject(), SpaceSim.player.getGameObject(), () => {
+                    const collisionSpeed = o.getVelocity().clone().subtract(SpaceSim.player.getVelocity()).length();
+                    const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
+                    o.sustainDamage({
+                        amount: damage, 
+                        timestamp: this._scene.time.now,
+                        attackerId: SpaceSim.player.id,
+                        message: 'ship collision'
+                    });
+                    o.target = SpaceSim.player;
+                    SpaceSim.player.sustainDamage({
+                        amount: damage, 
+                        timestamp: this._scene.time.now,
+                        attackerId: o.id,
+                        message: 'ship collision'
+                    });
+                });
+            });
+        }
+    }
+
+    getActiveShipsWithinRadius(location: Phaser.Types.Math.Vector2Like, radius: number): Array<Ship> {
+        return [...SpaceSim.opponents.map(o => o.ship), SpaceSim.player]
+            .filter(s => {
+                if (s?.active) {
+                    if (Phaser.Math.Distance.BetweenPoints(s.getLocation(), location) <= radius) {
+                        return true;
+                    }
+                }
+                return false;
+            });
     }
 
     private _createGameObj(options: GameMapOptions): void {
@@ -91,97 +199,5 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         // hide all tiles until we enter the room
         this._layer.forEachTile(function (tile) { tile.alpha = 0; });
         this._layer.setCollisionBetween(1, 14);
-    }
-
-    getMapTileWorldLocation(tilePositionX: number, tilePositionY: number): Phaser.Math.Vector2 {
-        return this._tileMap.tileToWorldXY(tilePositionX, tilePositionY);
-    }
-
-    getLayer(): Phaser.Tilemaps.TilemapLayer {
-        return this._layer;
-    }
-
-    getRooms(): RoomPlus[] {
-        return this._dungeon.rooms;
-    }
-
-    getRoomAt(tileX: number, tileY: number): RoomPlus {
-        return this._dungeon.getRoomAt(tileX, tileY);
-    }
-
-    getRoomAtWorldXY(x: number, y: number): RoomPlus {
-        const tile = this._layer?.worldToTileXY(x, y);
-        return this.getRoomAt(tile.x, tile.y);
-    }
-
-    getRoomClosestToOrigin(): RoomPlus {
-        const zero = Helpers.vector2();
-        let closest: RoomPlus;
-        this._dungeon.rooms.forEach(room => {
-            if (closest) {
-                const pos = this._tileMap.tileToWorldXY(closest.centerX, closest.centerY);
-                const newPos = this._tileMap.tileToWorldXY(room.centerX, room.centerY);
-                if (Phaser.Math.Distance.BetweenPoints(zero, newPos) < Phaser.Math.Distance.BetweenPoints(zero, pos)) {
-                    closest = room;
-                }
-            } else {
-                closest = room;
-            }
-        });
-        return closest;
-    }
-
-    getRoomFurthestFromOrigin(): RoomPlus {
-        const zero = Helpers.vector2();
-        let furthest: RoomPlus;
-        this._dungeon.rooms.forEach(room => {
-            if (furthest) {
-                const pos = this._tileMap.tileToWorldXY(furthest.centerX, furthest.centerY);
-                const newPos = this._tileMap.tileToWorldXY(room.centerX, room.centerY);
-                if (Phaser.Math.Distance.BetweenPoints(zero, newPos) > Phaser.Math.Distance.BetweenPoints(zero, pos)) {
-                    furthest = room;
-                }
-            } else {
-                furthest = room;
-            }
-        });
-        return furthest;
-    }
-
-    showRoom(room: RoomPlus): void {
-        if (!room.visible) {
-            room.visible = true;
-            const opponentsInRoom = SpaceSim.opponents.filter(o => o.room === room);
-            this._scene.add.tween({
-                targets: [
-                    ...this._layer.getTilesWithin(room.x, room.y, room.width, room.height), 
-                    ...opponentsInRoom.map(o => o.getGameObject())
-                ],
-                alpha: 1,
-                duration: 250
-            });
-            // enable physics for enemies in the room
-            opponentsInRoom.forEach(o => {
-                // setup collision with map walls
-                this._scene.physics.add.collider(o.getGameObject(), this.getGameObject());
-                // setup collision with player
-                this._scene.physics.add.collider(o.getGameObject(), SpaceSim.player.getGameObject(), () => {
-                    const collisionSpeed = o.getVelocity().clone().subtract(SpaceSim.player.getVelocity()).length();
-                    const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
-                    o.sustainDamage({
-                        amount: damage, 
-                        timestamp: this._scene.time.now,
-                        attackerId: SpaceSim.player.id,
-                        message: 'ship collision'
-                    }); // TODO: set based on opposing speeds
-                    SpaceSim.player.sustainDamage({
-                        amount: damage, 
-                        timestamp: this._scene.time.now,
-                        attackerId: o.id,
-                        message: 'ship collision'
-                    });
-                });
-            });
-        }
     }
 }

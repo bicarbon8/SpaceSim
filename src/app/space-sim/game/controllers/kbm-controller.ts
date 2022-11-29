@@ -26,15 +26,15 @@ export class KbmController extends InputController {
 
         this._setupInputHandling();
 
-        this._mouseTracker = new MouseTracker(this.player.getGameObject().scene);
-        this.player.target = this._mouseTracker;
+        this._mouseTracker = new MouseTracker(this.ship.scene);
+        this.ship.target = this._mouseTracker;
     }
         
     update(time: number, delta: number): void {
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
-                this.player.getThruster()?.trigger();
+                this.ship.getThruster()?.trigger();
             }
             // reverse Thruster
             if (this._thrustBackwardsKey.isDown) {
@@ -54,7 +54,7 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                this.player.getWeapons()?.trigger();
+                this.ship.getWeapons()?.trigger();
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {
                 // this.player.attachments.rotateAttachmentsClockwise();

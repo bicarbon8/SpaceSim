@@ -7,6 +7,7 @@ import { Ship } from "../../ship";
 import { Constants } from "../../../utilities/constants";
 import { Weapons } from "./weapons";
 import { GameScoreTracker } from "../../../utilities/game-score-tracker";
+import { AiController } from "../../../controllers/ai-controller";
 
 export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.Container>, HasLocation {
     readonly id: string;
@@ -57,21 +58,27 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.scene.physics.add.collider(this.getGameObject(), SpaceSim.map.getGameObject(), () => {
             this.destroy();
         });
-        SpaceSim.opponents
-            .filter(o => o.active)
+        const {width, height} = SpaceSim.getSize();
+        const dist = (width > height) ? width : height;
+        SpaceSim.map.getActiveShipsWithinRadius(this.getLocation(), dist * 2)
             .forEach((opp: Ship) => {
-                this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
-                    this._hitSound.play();
-                    this._createHitParticles();
-                    this.destroy();
-                    opp.sustainDamage({
-                        amount: this.damage, 
-                        timestamp: this.scene.time.now,
-                        attackerId: this.weapon.ship.id,
-                        message: `projectile hit`
+                if (opp.id !== this.weapon.ship.id) {
+                    this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
+                        this._hitSound.play();
+                        this._createHitParticles();
+                        this.destroy();
+                        opp.sustainDamage({
+                            amount: this.damage, 
+                            timestamp: this.scene.time.now,
+                            attackerId: this.weapon.ship.id,
+                            message: `projectile hit`
+                        });
+                        if (opp.id !== SpaceSim.player.id) {
+                            opp.target = this.weapon.ship;
+                        }
+                        GameScoreTracker.shotLanded();
                     });
-                    GameScoreTracker.shotLanded();
-                });
+                }
             });
     }
 

@@ -10,6 +10,8 @@ import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { Resizable } from "../interfaces/resizable";
 import { GameObjectPlus } from "../interfaces/game-object-plus";
+import { AiController } from "../controllers/ai-controller";
+import { TimeDelta } from "../interfaces/time-delta";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -24,7 +26,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
 
-    private _updatingPhysics: boolean;
+    private _physicsUpdator: Generator<void, void, unknown>;
+    private _enemiesUpdator: Generator<TimeDelta, void, TimeDelta>;
 
     debug: boolean;
 
@@ -115,48 +118,51 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             SpaceSim.map?.showRoom(currentRoom);
 
             // disable all objects offscreen (plus margin of error)
-            this._updatePhysics();
+            if (this._physicsUpdator == null || this._physicsUpdator?.next().done) {
+                this._physicsUpdator = this._updatePhysics();
+                this._physicsUpdator?.next();
+            }
+
+            const nearbyEnemies = SpaceSim.opponents.filter(o => o?.ship?.active);
+            nearbyEnemies.forEach(o => o.update(time, delta));
 
             this._stellarBodies.forEach((body) => {
                 body.update(time, delta);
             });
-
-            SpaceSim.opponents.forEach(o => o.update(time, delta));
         } catch (e) {
             /* ignore */
         }
     }
 
-    private _updatePhysics(): void {
-        // TODO: move to worker thread
-        if (!this._updatingPhysics) {
-            this._updatingPhysics = true;
-            Helpers.runAsync(() => {
-                const loc = SpaceSim.player.getLocation();
-                const width = this.game.scale.gameSize.width;
-                const height = this.game.scale.gameSize.height;
-                const dist = (width > height) ? width : height;
-                const enable = this.children.getAll()
-                    .filter(c => (c.body as Phaser.Physics.Arcade.Body)?.enable === false)
-                    .filter(c => {
-                        const gop = c as GameObjectPlus;
-                        const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
-                        return d <= dist * 2;
-                    });
-                this.physics.world.enable(enable);
-                const disable = this.children.getAll()
-                    .filter(c => (c.body as Phaser.Physics.Arcade.Body)?.enable === true)    
-                    .filter(c => {
-                        if (c === SpaceSim.map.getGameObject()) {
-                            return false;
-                        }
-                        const gop = c as GameObjectPlus;
-                        const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
-                        return d > dist * 2;
-                    });
-                this.physics.world.disable(disable);
-            }).then(_ => this._updatingPhysics = false)
-            .catch(err => console.warn(err));
+    /**
+     * use Generator function to allow yielding control while iterating
+     * through all the scene's children to enable / disable physics so we
+     * don't spend too much time and delay the calls to `scene.update`
+     */
+    private *_updatePhysics(): Generator<void, void, unknown> {
+        const loc = SpaceSim.player.getLocation();
+        const {width, height} = SpaceSim.getSize();
+        const dist = (width > height) ? width : height;
+        const children = this.children.getAll();
+        for (var i=0; i<children.length; i++) {
+            const c = children[i];
+            // skip over the map tiles
+            if (c !== SpaceSim.map.getGameObject()) {
+                // and skip over objects that don't have physics bodies 
+                const arcade = c.body as Phaser.Physics.Arcade.Body;
+                if (arcade) {
+                    const gop = c as GameObjectPlus;
+                    const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
+                    if (d <= dist * 2) {
+                        // enable physics on objects close to player
+                        this.physics.world.enable(c);
+                    } else {
+                        // and disable physics on objects far offscreen
+                        this.physics.world.disable(c);
+                    }
+                    yield;
+                }
+            }
         }
     }
 
@@ -166,15 +172,17 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         
         // add opponent in each room
         SpaceSim.map.getRooms().forEach((room: RoomPlus) => {
-            var tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
-            var br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
-            var pos: Phaser.Math.Vector2 = Helpers.vector2(
+            let tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
+            let br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
+            let pos: Phaser.Math.Vector2 = Helpers.vector2(
                 Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
-            var p: Ship = new Ship({scene: this, location: pos});
+            let p = new Ship({scene: this, location: pos});
             p.getGameObject().setAlpha(0); // hidden until player enters room
-            SpaceSim.opponents.push(p);
+            this.physics.world.disable(p.getGameObject()); // disabled until player close to opponent
+            let controller = new AiController(this, p);
+            SpaceSim.opponents.push(controller);
         });
     }
 

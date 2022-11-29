@@ -1,17 +1,19 @@
 import { HasGameObject } from "../interfaces/has-game-object";
 import { Updatable } from "../interfaces/updatable";
 import { Ship } from "../ships/ship";
-import { SpaceSim } from "../space-sim";
 
 export abstract class InputController implements Updatable, HasGameObject<Phaser.GameObjects.Container> {
+    readonly id: string;
+
     private _scene: Phaser.Scene;
-    private _player: Ship;
+    private _ship: Ship;
     
     active: boolean;
 
-    constructor(scene: Phaser.Scene, player?: Ship) {
+    constructor(scene: Phaser.Scene, ship?: Ship) {
+        this.id = Phaser.Math.RND.uuid();
         this._scene = scene;
-        this._player = player;
+        this._ship = ship;
         this.active = true;
     }
 
@@ -23,12 +25,12 @@ export abstract class InputController implements Updatable, HasGameObject<Phaser
         return this._scene;
     }
 
-    get player(): Ship {
-        return this._player || SpaceSim.player;
+    get ship(): Ship {
+        return this._ship;
     }
 
-    set player(player: Ship) {
-        this._player = player;
+    set ship(ship: Ship) {
+        this._ship = ship;
     }
 
     abstract update(time: number, delta: number): void;

@@ -33,18 +33,18 @@ export class TouchController extends InputController {
         let radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
         let degrees: number = Helpers.rad2deg(radians);
         // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
-        this.player.setRotation(degrees);
+        this.ship.setRotation(degrees);
     }
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
-            this.player.getWeapons()?.trigger();
+            this.ship.getWeapons()?.trigger();
         }
     }
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
-            this.player.getThruster()?.trigger();
+            this.ship.getThruster()?.trigger();
         }
     }
 
