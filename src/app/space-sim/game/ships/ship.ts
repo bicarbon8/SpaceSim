@@ -21,6 +21,7 @@ import { CoolantSupply } from "./supplies/coolant-supply";
 import { HasRoom } from "../interfaces/has-room";
 import { RoomPlus } from "../map/game-map";
 import { MachineGun } from "./attachments/offence/machine-gun";
+import { RepairsSupply } from "./supplies/repairs-supply";
 
 export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
     /** ShipOptions */
@@ -285,16 +286,7 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
 
         this._updateIntegrityIndicator();
-        this._shipIntegrityIndicator.setAlpha(1); // make visible
-        this.scene.tweens.add({ // fade out after 5 seconds
-            targets: [this._shipIntegrityIndicator],
-            alpha: 0,
-            yoyo: false,
-            loop: 0,
-            delay: 5000,
-            duration: 1000
-        });
-
+        
         if (!this._shipDamageFlicker?.isPlaying()) {
             this._shipDamageFlicker = this.scene.tweens.add({
                 targets: this._rotationContainer,
@@ -310,10 +302,11 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
     }
 
     repair(amount: number): void {
-        this._integrity = amount;
+        this._integrity += amount;
         if (this.integrity > Constants.Ship.MAX_INTEGRITY) {
             this._integrity = Constants.Ship.MAX_INTEGRITY;
         }
+        this._updateIntegrityIndicator();
     }
 
     destroy(): void {
@@ -430,6 +423,17 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
             let squareContainer: Phaser.GameObjects.Container = this.scene.add.container(0, 0, [square]);
             squareContainer.setSize(this.integrity, 4);
             this._shipIntegrityIndicator.setContent(squareContainer);
+
+            this._shipIntegrityIndicator.setAlpha(1); // make visible
+            this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
+            this.scene.tweens.add({ // fade out after 5 seconds
+                targets: [this._shipIntegrityIndicator],
+                alpha: 0,
+                yoyo: false,
+                loop: 0,
+                delay: 5000,
+                duration: 1000
+            });
         }
     }
 
@@ -462,6 +466,12 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         if (Phaser.Math.RND.between(0, 1)) {
             new CoolantSupply(this.scene, {
                 amount: 40,
+                location: loc
+            });
+        }
+        if (Phaser.Math.RND.between(0, 1)) {
+            new RepairsSupply(this.scene, {
+                amount: 20,
                 location: loc
             });
         }

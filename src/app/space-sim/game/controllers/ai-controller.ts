@@ -1,19 +1,25 @@
+import { SpaceSim } from "../space-sim";
+import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {
     private _container: Phaser.GameObjects.Container;
     private _lastKnownPlayerLocation: Phaser.Math.Vector2;
-    private _nextTriggerAt: number;
+    private _nextWeaponsFireAt: number;
+    private _nextThrusterFireAt: number;
     
     update(time: number, delta: number): void {
         this.ship.update(time, delta);
 
         if (this.ship.target) {
-            if (this._nextTriggerAt == null || this._nextTriggerAt <= time) {
+            if (this._nextWeaponsFireAt == null || this._nextWeaponsFireAt <= time) {
                 this.ship.getWeapons().trigger();
-                this._nextTriggerAt = time + 2000; // TODO: set some other way
+                this._nextWeaponsFireAt = time + ((SpaceSim.opponents.length - GameScoreTracker.getStats().opponentsDestroyed) * 50);
             } else {
-                this.ship.getThruster().trigger();
+                if (this._nextThrusterFireAt == null || this._nextThrusterFireAt <= time) {
+                    this.ship.getThruster().trigger();
+                    this._nextThrusterFireAt = time + ((SpaceSim.opponents.length - GameScoreTracker.getStats().opponentsDestroyed) * 10);
+                }
             }
         } else {
             this._patrol();

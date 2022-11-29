@@ -73,6 +73,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.load.image('ammo', `${environment.baseUrl}/assets/sprites/ammo.png`);
         this.load.image('fuel-canister', `${environment.baseUrl}/assets/sprites/fuel-canister.png`);
         this.load.image('coolant-canister', `${environment.baseUrl}/assets/sprites/coolant-canister.png`);
+        this.load.image('repairs-canister', `${environment.baseUrl}/assets/sprites/repairs-canister.png`);
 
         this.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
         this.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
