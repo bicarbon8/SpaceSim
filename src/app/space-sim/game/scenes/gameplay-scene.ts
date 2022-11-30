@@ -1,18 +1,17 @@
 import { Vector2 } from "phaser/src/math";
-import { ShipPod } from "../ships/ship-pod";
-import { CannonAttachment } from "../ships/attachments/offence/cannon-attachment";
-import { ThrusterAttachment } from "../ships/attachments/utility/thruster-attachment";
+import { Ship } from "../ships/ship";
 import { StellarBody } from "../star-systems/stellar-body";
-import { GameMap } from "../map/game-map";
+import { GameMap, RoomPlus } from "../map/game-map";
 import { environment } from "../../../../environments/environment";
 import { Constants } from "../utilities/constants";
 import { SpaceSim } from "../space-sim";
 import { Helpers } from "../utilities/helpers";
-import { Room } from "@mikewesthad/dungeon";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
-import { GameStats } from "../utilities/game-stats";
 import { Resizable } from "../interfaces/resizable";
+import { GameObjectPlus } from "../interfaces/game-object-plus";
+import { AiController } from "../controllers/ai-controller";
+import { TimeDelta } from "../interfaces/time-delta";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -27,6 +26,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
 
+    private _physicsUpdator: Generator<void, void, unknown>;
+    private _enemiesUpdator: Generator<TimeDelta, void, TimeDelta>;
+
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
@@ -37,18 +39,41 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     preload(): void {
-        this.load.image('ship-pod', `${environment.baseUrl}/assets/sprites/ship-pod.png`);
-        this.load.image('thruster', `${environment.baseUrl}/assets/sprites/thruster.png`);
-        this.load.image('cannon', `${environment.baseUrl}/assets/sprites/cannon.png`);
+        this.load.image('weapons-1', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-1.png`);
+        this.load.image('weapons-2', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-2.png`);
+        this.load.image('weapons-3', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-3.png`);
+        this.load.image('wings-1', `${environment.baseUrl}/assets/sprites/ship-parts/wings-1.png`);
+        this.load.image('wings-2', `${environment.baseUrl}/assets/sprites/ship-parts/wings-2.png`);
+        this.load.image('wings-3', `${environment.baseUrl}/assets/sprites/ship-parts/wings-3.png`);
+        this.load.image('cockpit-1', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-1.png`);
+        this.load.image('cockpit-2', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-2.png`);
+        this.load.image('cockpit-3', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-3.png`);
+        this.load.image('engine-1', `${environment.baseUrl}/assets/sprites/ship-parts/engine-1.png`);
+        this.load.image('engine-2', `${environment.baseUrl}/assets/sprites/ship-parts/engine-2.png`);
+        this.load.image('engine-3', `${environment.baseUrl}/assets/sprites/ship-parts/engine-3.png`);
+
+        this.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
         this.load.spritesheet('flares', `${environment.baseUrl}/assets/particles/flares.png`, {
             frameWidth: 130,
             frameHeight: 132,
             startFrame: 0,
             endFrame: 4
         });
+        this.load.spritesheet('asteroids', `${environment.baseUrl}/assets/tiles/asteroids-tile.png`, {
+            frameWidth: 100,
+            frameHeight: 100,
+            startFrame: 0,
+            endFrame: 63,
+            margin: 14,
+            spacing: 28
+        });
+        
         this.load.image('explosion', `${environment.baseUrl}/assets/particles/explosion.png`);
         this.load.image('bullet', `${environment.baseUrl}/assets/sprites/bullet.png`);
-        this.load.image('box', `${environment.baseUrl}/assets/sprites/box.png`);
+        this.load.image('ammo', `${environment.baseUrl}/assets/sprites/ammo.png`);
+        this.load.image('fuel-canister', `${environment.baseUrl}/assets/sprites/fuel-canister.png`);
+        this.load.image('coolant-canister', `${environment.baseUrl}/assets/sprites/coolant-canister.png`);
+        this.load.image('repairs-canister', `${environment.baseUrl}/assets/sprites/repairs-canister.png`);
 
         this.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
         this.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
@@ -57,7 +82,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
 
         this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
-
+        
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
         this.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
         this.load.audio('booster-fire', `${environment.baseUrl}/assets/audio/effects/booster-fire.ogg`);
@@ -86,73 +111,100 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     update(time: number, delta: number): void {
-        SpaceSim.player?.update(time, delta);
-        this._stellarBodies.forEach((body) => {
-            body.update(time, delta);
-        });
+        try {
+            SpaceSim.player?.update(time, delta);
+
+            // If the player has entered a new room, make it visible
+            const currentRoom = SpaceSim.player?.room;
+            SpaceSim.map?.showRoom(currentRoom);
+
+            // disable all objects offscreen (plus margin of error)
+            if (this._physicsUpdator == null || this._physicsUpdator?.next().done) {
+                this._physicsUpdator = this._updatePhysics();
+                this._physicsUpdator?.next();
+            }
+
+            const nearbyEnemies = SpaceSim.opponents.filter(o => o?.ship?.active);
+            nearbyEnemies.forEach(o => o.update(time, delta));
+
+            this._stellarBodies.forEach((body) => {
+                body.update(time, delta);
+            });
+        } catch (e) {
+            /* ignore */
+        }
+    }
+
+    /**
+     * use Generator function to allow yielding control while iterating
+     * through all the scene's children to enable / disable physics so we
+     * don't spend too much time and delay the calls to `scene.update`
+     */
+    private *_updatePhysics(): Generator<void, void, unknown> {
+        const loc = SpaceSim.player.getLocation();
+        const {width, height} = SpaceSim.getSize();
+        const dist = (width > height) ? width : height;
+        const children = this.children.getAll();
+        for (var i=0; i<children.length; i++) {
+            const c = children[i];
+            // skip over the map tiles
+            if (c !== SpaceSim.map.getGameObject()) {
+                // and skip over objects that don't have physics bodies 
+                const arcade = c.body as Phaser.Physics.Arcade.Body;
+                if (arcade) {
+                    const gop = c as GameObjectPlus;
+                    const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
+                    if (d <= dist * 2) {
+                        // enable physics on objects close to player
+                        this.physics.world.enable(c);
+                    } else {
+                        // and disable physics on objects far offscreen
+                        this.physics.world.disable(c);
+                    }
+                    yield;
+                }
+            }
+        }
     }
 
     private _createOpponents(): void {
-        SpaceSim.map.getRooms().forEach((room: Room) => {
-            var tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
-            var br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
-            var pos: Phaser.Math.Vector2 = Helpers.vector2(
-                Phaser.Math.RND.realInRange(tl.x, br.x), 
-                Phaser.Math.RND.realInRange(tl.y, br.y)
+        // remove all pre-existing (happens on replay)
+        SpaceSim.opponents.splice(0, SpaceSim.opponents.length);
+        
+        // add opponent in each room
+        SpaceSim.map.getRooms().forEach((room: RoomPlus) => {
+            let tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
+            let br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
+            let pos: Phaser.Math.Vector2 = Helpers.vector2(
+                Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
+                Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
-            var p: ShipPod = new ShipPod({scene: this, location: pos});
-            SpaceSim.opponents.push(p);
-
-            this.physics.add.collider(p.getGameObject(), SpaceSim.map.getGameObject(), () => {
-                p.sustainDamage({
-                    amount: (p.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33),
-                    timestamp: this.time.now
-                });
-            });
-            this.physics.add.collider(p.getGameObject(), SpaceSim.player.getGameObject(), () => {
-                p.sustainDamage({
-                    amount: 1, 
-                    timestamp: this.time.now,
-                    attackerId: SpaceSim.player.id,
-                    message: 'ship collision'
-                }); // TODO: set based on opposing speeds
-                SpaceSim.player.sustainDamage({
-                    amount: 1, 
-                    timestamp: this.time.now,
-                    attackerId: p.id,
-                    message: 'ship collision'
-                });
-            });
+            let p = new Ship({scene: this, location: pos});
+            p.getGameObject().setAlpha(0); // hidden until player enters room
+            this.physics.world.disable(p.getGameObject()); // disabled until player close to opponent
+            let controller = new AiController(this, p);
+            SpaceSim.opponents.push(controller);
         });
     }
 
     private _createMapAndPlayer(): void {
-        SpaceSim.map = new GameMap({scene: this});
+        SpaceSim.map = new GameMap(this);
         
         // Place the player in random empty tile in the first room
-        const startingRoom = SpaceSim.map.getRooms()[0];
+        const startingRoom = SpaceSim.map.getRoomClosestToOrigin();
         const startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
         const startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
         const playerStartingPosition: Phaser.Math.Vector2 = Helpers.vector2(
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
         );
-        SpaceSim.player = new ShipPod({scene: this, location: playerStartingPosition});
+        SpaceSim.player = new Ship({scene: this, location: playerStartingPosition});
         
-        // TODO: have menu allowing selection of attachments
-        let thruster: ThrusterAttachment = new ThrusterAttachment({scene: this});
-        SpaceSim.player.attachments.addAttachment(thruster);
-        let cannon: CannonAttachment = new CannonAttachment({scene: this});
-        SpaceSim.player.attachments.addAttachment(cannon);
+        // setup collision with map walls
+        this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject());
 
-        this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject(), () => {
-            SpaceSim.player.sustainDamage({
-                amount:(SpaceSim.player.getSpeed() / Constants.MAX_VELOCITY) * (Constants.MAX_INTEGRITY / 33),
-                timestamp: this.time.now
-            });
-        });
-
-        this.events.addListener(Constants.EVENT_PLAYER_DEATH, (ship: ShipPod) => {
+        // setup listener for player death event
+        this.events.on(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
             if (SpaceSim.player.id == ship?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
@@ -162,6 +214,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                     }
                 });
             } else {
+                // TODO: remove opponent from SpaceSim.opponents array
                 GameScoreTracker.opponentDestroyed();
             }
         })
@@ -172,9 +225,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         let bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
             {spriteName: 'venus', rotationSpeed: 0}, 
-            {spriteName: 'mercury', rotationSpeed: 0}
+            {spriteName: 'mercury', rotationSpeed: 0},
+            {spriteName: 'asteroids', scale: {min: 4, max: 10}}
         ];
-        for (var i=0; i<rooms.length; i+=3) {
+        for (var i=0; i<rooms.length; i++) {
             let room = rooms[i];
             let startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
             let startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
@@ -182,7 +236,12 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
                 Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
             );
-            let opts: StellarBodyOptions = bodies[Phaser.Math.RND.between(0, 2)];
+            let opts: StellarBodyOptions;
+            if (i%3 === 0) {
+                opts = bodies[Phaser.Math.RND.between(0, 2)];
+            } else {
+                opts = bodies[3];
+            }
             opts.location = location;
             let body = new StellarBody(this, opts);
             this._stellarBodies.push(body);
@@ -194,7 +253,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             this._backgroundStars.destroy();
         }
         this._backgroundStars = this.add.tileSprite(this._width/2, this._height/2, this._width*3, this._height*3, 'far-stars');
-        this._backgroundStars.setDepth(Constants.DEPTH_BACKGROUND);
+        this._backgroundStars.setDepth(Constants.UI.Layers.BACKGROUND);
         this._backgroundStars.setScrollFactor(0.01); // slight movement to appear very far away
     }
 

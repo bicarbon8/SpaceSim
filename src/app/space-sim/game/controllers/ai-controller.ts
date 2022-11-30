@@ -1,38 +1,29 @@
-import { ShipPod } from "../ships/ship-pod";
+import { SpaceSim } from "../space-sim";
+import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {
     private _container: Phaser.GameObjects.Container;
-    private _aiShip: ShipPod;
     private _lastKnownPlayerLocation: Phaser.Math.Vector2;
-    
-    constructor(scene: Phaser.Scene, aiShip: ShipPod) {
-        super(scene);
-        this._aiShip = aiShip;
-    }
+    private _nextWeaponsFireAt: number;
+    private _nextThrusterFireAt: number;
     
     update(time: number, delta: number): void {
-        if (!this.player) {
-            this._patrol();
-        } else {
-            if (this._canSeePlayer()) {
-                this._lastKnownPlayerLocation = this.player.getLocation();
+        this.ship.update(time, delta);
+
+        if (this.ship.target) {
+            if (this._nextWeaponsFireAt == null || this._nextWeaponsFireAt <= time) {
+                this.ship.getWeapons().trigger();
+                this._nextWeaponsFireAt = time + ((SpaceSim.opponents.length - GameScoreTracker.getStats().opponentsDestroyed) * 50);
             } else {
-                if (this._aiShip.getLocation().fuzzyEquals(this._lastKnownPlayerLocation, 1)) {
-                    this._patrol();
-                } else {
-                    this._goToLocation(this._lastKnownPlayerLocation);
+                if (this._nextThrusterFireAt == null || this._nextThrusterFireAt <= time) {
+                    this.ship.getThruster().trigger();
+                    this._nextThrusterFireAt = time + ((SpaceSim.opponents.length - GameScoreTracker.getStats().opponentsDestroyed) * 10);
                 }
             }
+        } else {
+            this._patrol();
         }
-    }
-
-    async goTo(location: Phaser.Math.Vector2): Promise<void> {
-        let startingPos: Phaser.Math.Vector2 = this._aiShip.getLocation();
-        let distance: number = location.distance(startingPos);
-        this._aiShip.lookAt(location);
-        this._aiShip.getThruster().thrustFowards();
-        
     }
 
     getGameObject(): Phaser.GameObjects.Container {
@@ -40,7 +31,7 @@ export class AiController extends InputController {
     }
 
     private _patrol(): void {
-        this._aiShip.setRotation(this._aiShip.getRotation() + 1);
+        this.ship.setRotation(this.ship.getRotation() + 1);
     }
 
     private _canSeePlayer(): boolean {

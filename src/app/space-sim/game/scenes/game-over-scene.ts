@@ -57,13 +57,13 @@ export class GameOverScene extends Phaser.Scene {
 
     private _createBackground(): void {
         this._stars = this.add.tileSprite(0, 0, this._width, this._height, 'far-stars');
-        this._stars.setDepth(Constants.DEPTH_BACKGROUND);
+        this._stars.setDepth(Constants.UI.Layers.BACKGROUND);
     }
 
     private _createStellarBodies(): void {
         this._sun = this.add.sprite(0, 0, 'sun');
         this._sun.setOrigin(0.5);
-        this._sun.setDepth(Constants.DEPTH_STELLAR);
+        this._sun.setDepth(Constants.UI.Layers.STELLAR);
         const smallestDimension: number = (this._width <= this._height) ? this._width : this._height;
         const sunRadius: number = this._sun.width/2;
         const sunScaleFactor: number = smallestDimension / sunRadius;
@@ -77,7 +77,7 @@ export class GameOverScene extends Phaser.Scene {
             desiredWidth: this._width,
             desiredHeight: this._height
         });
-        this._layout.setDepth(Constants.DEPTH_CONTROLS);
+        this._layout.setDepth(Constants.UI.Layers.HUD);
         this.add.existing(this._layout);
     }
 
@@ -122,7 +122,7 @@ export class GameOverScene extends Phaser.Scene {
             padding: 5,
             cornerRadius: 10
         });
-        restartButton.setDepth(Constants.DEPTH_CONTROLS);
+        restartButton.setDepth(Constants.UI.Layers.HUD);
         restartButton.setPosition(this._width-(restartButton.width/2)-5, this._height-restartButton.height);
         restartButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('gameplay-scene');
@@ -143,7 +143,7 @@ export class GameOverScene extends Phaser.Scene {
             padding: 5,
             cornerRadius: 10
         });
-        returnToMenuButton.setDepth(Constants.DEPTH_CONTROLS);
+        returnToMenuButton.setDepth(Constants.UI.Layers.HUD);
         returnToMenuButton.setPosition((returnToMenuButton.width/2)+5, this._height-returnToMenuButton.height);
         returnToMenuButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
             this.game.scene.start('startup-scene');

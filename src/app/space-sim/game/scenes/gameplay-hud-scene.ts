@@ -1,14 +1,12 @@
 import { Constants } from "../utilities/constants";
 import { SpaceSim } from "../space-sim";
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { GameStats } from "../utilities/game-stats";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { Resizable } from "../interfaces/resizable";
-import { GridLayout, LinearLayout } from "phaser-ui-components";
+import { GridLayout, LayoutContainer, Styles, TextButton, TextButtonOptions } from "phaser-ui-components";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -20,7 +18,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _width: number;
     private _height: number;
     private _hudText: Phaser.GameObjects.Text;
-    private _scoreText: Phaser.GameObjects.Text;
+    private _quitButton: LayoutContainer;
     private _hudLayout: GridLayout;
     private _controller: InputController;
 
@@ -61,13 +59,37 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             style: { font: '14px Courier', color: '#ffff00' }
         }, false);
 
-        if (this._scoreText) {
-            this._scoreText.destroy();
+        if (this._quitButton) {
+            this._quitButton.destroy();
         }
-        this._scoreText = this.make.text({
-            text: '', 
-            style: {font: '14px Courier', color: '#ffff00'}
-        }, false);
+        const button = new TextButton(this, TextButtonOptions.Outline.warning({
+            text: {text: 'SELF DESTRUCT'},
+            padding: 5,
+            cornerRadius: 5,
+            interactive: true
+        })).on(Phaser.Input.Events.POINTER_OVER, () => {
+            button.setText({style: Styles.warning().text});
+            button.setBackground(Styles.warning().graphics);
+        }).on(Phaser.Input.Events.POINTER_OUT, () => {
+            button.setText({style: Styles.Outline.warning().text});
+            button.setBackground(Styles.Outline.warning().graphics);
+        }).on(Phaser.Input.Events.POINTER_DOWN, () => {
+            if (button.text.text === 'SELF DESTRUCT') {
+                SpaceSim.player.selfDestruct();
+                button.setText({text: 'CANCEL'});
+                this._quitButton.updateSize(null);
+            } else {
+                SpaceSim.player.cancelSelfDestruct();
+                button.setText({text: 'SELF DESTRUCT'});
+                this._quitButton.updateSize(null);
+            }
+        });
+        this._quitButton = new LayoutContainer(this, {
+            padding: 5,
+            background: Styles.dark().graphics,
+            cornerRadius: 5,
+            content: button
+        });
 
         const rows = Math.floor(this._height / 150);
         const cols = Math.floor(this._width / 150);
@@ -82,8 +104,8 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             padding: 5,
             alignment: {vertical: 'top'}
         }).addContentAt(0, 0, this._hudText)
-        .addContentAt(0, cols-1, this._scoreText)
-        .setDepth(Constants.DEPTH_CONTROLS);
+        .addContentAt(0, cols-1, this._quitButton) // quit button
+        .setDepth(Constants.UI.Layers.HUD);
         this.add.existing(this._hudLayout);
     }
 
@@ -104,27 +126,19 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            let loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
-            let info: string[] = [
-                `Speed: ${SpaceSim.player.getSpeed().toFixed(1)}`,
-                `Integrity: ${SpaceSim.player.getIntegrity().toFixed(1)}`,
-                `Heat: ${SpaceSim.player.getTemperature().toFixed(1)}`,
+            const stats: GameStats = GameScoreTracker.getStats();
+            const info: string[] = [
+                `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
+                `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`,
                 `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${(SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo || 0}`
+                `Ammo: ${SpaceSim.player.getWeapons()?.remainingAmmo || 0}`,
+                `Score: ${GameScoreTracker.getScore().toFixed(0)}`
             ];
             if (SpaceSim.debug) {
+                const loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             this._hudText.setText(info);
-
-            let stats: GameStats = GameScoreTracker.getStats();
-            let score: string[] = [
-                `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
-                `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`,
-                `Score: ${GameScoreTracker.getScore().toFixed(0)}`
-            ]
-            this._scoreText.setText(score);
-
             this._hudLayout.updateSize(this._width, this._height);
         } catch (e) {
             // do nothing

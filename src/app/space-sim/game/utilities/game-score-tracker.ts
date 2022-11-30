@@ -1,5 +1,3 @@
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { OffenceAttachment } from "../ships/attachments/offence/offence-attachment";
 import { SpaceSim } from "../space-sim";
 import { GameStats } from "./game-stats";
 
@@ -25,10 +23,7 @@ export module GameScoreTracker {
     export function getScore(): number {
         let score: number = 0;
 
-        score = (_opponentsDestroyed * 1000)
-        + (SpaceSim.player.getRemainingFuel())
-        + (SpaceSim.player.getIntegrity())
-        + (SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo;
+        score = _opponentsDestroyed * 1000;
 
         score += (_shotsFired > 0) ? ((_shotsLanded * 100) / _shotsFired) : 0;
         
@@ -37,7 +32,7 @@ export module GameScoreTracker {
     export function getStats(): GameStats {
         return {
             elapsed: SpaceSim.game.getTime(),
-            ammoRemaining: (SpaceSim.player.attachments.getAttachmentAt(AttachmentLocation.front) as OffenceAttachment)?.ammo,
+            ammoRemaining: SpaceSim.player.getWeapons()?.remainingAmmo,
             integrityRemaining: SpaceSim.player.getIntegrity(),
             opponentsDestroyed: _opponentsDestroyed,
             shotsFired: _shotsFired,

@@ -1,7 +1,6 @@
-import { ShipPod } from "../ships/ship-pod";
+import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 import { Helpers } from "../utilities/helpers";
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
 import { Constants } from "../utilities/constants";
 import { GridLayout, LayoutContent } from "phaser-ui-components";
 
@@ -12,7 +11,7 @@ export class TouchController extends InputController {
     private _throwButtonActive: boolean;
     private _boostButtonActive: boolean;
     
-    constructor(scene: Phaser.Scene, player?: ShipPod) {
+    constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
 
         this._createGameObj();
@@ -34,18 +33,18 @@ export class TouchController extends InputController {
         let radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
         let degrees: number = Helpers.rad2deg(radians);
         // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
-        this.player.setRotation(degrees);
+        this.ship.setRotation(degrees);
     }
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
-            this.player.attachments.getAttachmentAt(AttachmentLocation.front)?.trigger();
+            this.ship.getWeapons()?.trigger();
         }
     }
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
-            this.player.getThruster()?.thrustFowards();
+            this.ship.getThruster()?.trigger();
         }
     }
 
@@ -57,7 +56,7 @@ export class TouchController extends InputController {
 
     private _handleBoostTouch(): void {
         if (this._boostButtonActive) {
-            this.player.getThruster()?.boostForwards();
+            // this.player.getThruster()?.boostForwards();
         }
     }
 
@@ -91,7 +90,7 @@ export class TouchController extends InputController {
                 [this._createFireButton(),,this._createBoostButton()],
                 [,this._createThrusterButton(),]
             ]
-        })).setDepth(Constants.DEPTH_CONTROLS);
+        })).setDepth(Constants.UI.Layers.HUD);
         this.scene.input.addPointer(9); // maximum input handling (10 total)
     }
 

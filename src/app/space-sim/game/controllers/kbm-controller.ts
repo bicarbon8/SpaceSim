@@ -1,5 +1,4 @@
-import { AttachmentLocation } from "../ships/attachments/attachment-location";
-import { ShipPod } from "../ships/ship-pod";
+import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
 
@@ -20,22 +19,22 @@ export class KbmController extends InputController {
 
     private _container: Phaser.GameObjects.Container;
     
-    constructor(scene: Phaser.Scene, player?: ShipPod) {
+    constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
 
         this._createGameObject();
 
         this._setupInputHandling();
 
-        this._mouseTracker = new MouseTracker(this.player.getGameObject().scene);
-        this.player.setTarget(this._mouseTracker);
+        this._mouseTracker = new MouseTracker(this.ship.scene);
+        this.ship.target = this._mouseTracker;
     }
         
     update(time: number, delta: number): void {
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
-                this.player.getThruster()?.thrustFowards();
+                this.ship.getThruster()?.trigger();
             }
             // reverse Thruster
             if (this._thrustBackwardsKey.isDown) {
@@ -51,11 +50,11 @@ export class KbmController extends InputController {
             }
             // activate Booster
             if (this._boostKey.isDown) {
-                this.player.getThruster()?.boostForwards();
+                // this.player.getThruster()?.boostForwards();
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                this.player.attachments.getAttachmentAt(AttachmentLocation.front)?.trigger();
+                this.ship.getWeapons()?.trigger();
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {
                 // this.player.attachments.rotateAttachmentsClockwise();

@@ -1,5 +1,5 @@
 import { GameMapOptions } from "./map/game-map-options";
-import { ShipPodOptions } from "./ships/ship-pod-options";
+import { ShipOptions } from "./ships/ship-options";
 import { StellarBodyOptions } from "./star-systems/stellar-body-options";
 
 export interface SpaceSimOptions {
@@ -7,7 +7,7 @@ export interface SpaceSimOptions {
     width?: number;
     height?: number;
     parentElementId?: string;
-    playerOpts?: ShipPodOptions;
+    playerOpts?: ShipOptions;
     stellarBodyOpts?: StellarBodyOptions;
     mapOpts?: GameMapOptions;
 }

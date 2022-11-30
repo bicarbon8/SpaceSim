@@ -1,7 +1,9 @@
-export interface StellarBodyOptions {
-    spriteName: string;
-    rotationSpeed?: number; // degrees per second
-    scale?: number;
+import { NumberOrRange } from "../interfaces/number-range";
+
+export type StellarBodyOptions = {
+    spriteName: 'sun' | 'mercury' | 'venus' | 'asteroids';
+    rotationSpeed?: NumberOrRange; // degrees per second
+    scale?: NumberOrRange;
     location?: Phaser.Math.Vector2;
-    scrollFactor?: number; // 0 = moves with camera (far away), 1 = moves normally (close)
-}
+    scrollFactor?: NumberOrRange; // 0 = moves with camera (far away), 1 = moves normally (close)
+};

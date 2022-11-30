@@ -1,5 +1,4 @@
 export interface GameMapOptions {
-    scene: Phaser.Scene;
     width?: number;
     height?: number;
     seed?: string;
