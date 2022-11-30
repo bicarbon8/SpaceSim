@@ -75,4 +75,13 @@ export module Helpers {
             return Promise.reject(e);
         }
     }
+
+    export function fadeOut(obj: Phaser.GameObjects.GameObject, duration: number, onComplete: () => void): void {
+        obj.scene.add.tween({
+            targets: obj,
+            alpha: 0,
+            duration: duration,
+            onComplete: onComplete
+        });
+    }
 }

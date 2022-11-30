@@ -63,7 +63,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             this._quitButton.destroy();
         }
         const button = new TextButton(this, TextButtonOptions.Outline.warning({
-            text: {text: 'QUIT'},
+            text: {text: 'SELF DESTRUCT'},
             padding: 5,
             cornerRadius: 5,
             interactive: true
@@ -74,9 +74,15 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             button.setText({style: Styles.Outline.warning().text});
             button.setBackground(Styles.Outline.warning().graphics);
         }).on(Phaser.Input.Events.POINTER_DOWN, () => {
-            this.game.scene.start('game-over-scene');
-            this.game.scene.stop('gameplay-scene');
-            this.game.scene.stop(this);
+            if (button.text.text === 'SELF DESTRUCT') {
+                SpaceSim.player.selfDestruct();
+                button.setText({text: 'CANCEL'});
+                this._quitButton.updateSize(null);
+            } else {
+                SpaceSim.player.cancelSelfDestruct();
+                button.setText({text: 'SELF DESTRUCT'});
+                this._quitButton.updateSize(null);
+            }
         });
         this._quitButton = new LayoutContainer(this, {
             padding: 5,

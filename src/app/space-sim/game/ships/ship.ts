@@ -46,6 +46,8 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
     private _shipDamageFlicker: Phaser.Tweens.Tween;
 
     private _active: boolean = true;
+
+    private _selfDestruct: boolean;
     
     constructor(options: ShipOptions) {
         this.id = options.id ?? Phaser.Math.RND.uuid();
@@ -309,6 +311,39 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         this._updateIntegrityIndicator();
     }
 
+    /**
+     * start a 3 second countdown to ship destruction
+     */
+    selfDestruct(): void {
+        this._selfDestruct = true;
+        const text = this.scene.make.text({
+            x: 0, 
+            y: -75, 
+            text: '3', 
+            style: {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4}
+        });
+        text.setX(-text.width / 2);
+        this._positionContainer.add(text);
+        const onComplete = () => {
+            if (this._selfDestruct) {
+                let countdownTxt: number = +text.text;
+                countdownTxt--;
+                if (countdownTxt <= 0) {
+                    this.destroy();
+                } else {
+                    text.setText(`${countdownTxt}`);
+                    text.setAlpha(1);
+                    Helpers.fadeOut(text, 1000, onComplete);
+                }
+            }
+        }
+        Helpers.fadeOut(text, 1000, onComplete);
+    }
+
+    cancelSelfDestruct(): void {
+        this._selfDestruct = false;
+    }
+
     destroy(): void {
         this._destroyedSound.play();
         this._active = false;
@@ -387,8 +422,6 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
             background: {fillStyle: {color: 0xffffff}}
         });
         this._shipIntegrityIndicator.setAlpha(0); // only visible when damage sustained
-        this._positionContainer.add(this._shipIntegrityIndicator);
-        
         this._positionContainer.add(this._shipIntegrityIndicator);
     }
 
