@@ -93,65 +93,56 @@ export class StartupScene extends Phaser.Scene {
         };
 
         const startTextButton: TextButton = new TextButton(this, {
-            desiredWidth: 250,
-            text: {
+            width: 250,
+            textConfig: {
                 text: 'Press to Start',
                 style: buttonTextStyle,
             },
-            background: {fillStyle: {color: 0x808080, alpha: 0.2}},
+            backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
             padding: 5,
             cornerRadius: 15,
-            interactive: true
-        });
-        startTextButton.setPosition((this._width/2), (this._height/2));
-        startTextButton.on(Phaser.Input.Events.POINTER_DOWN, () => {
-            this.game.scene.start('gameplay-scene');
-            this.game.scene.stop(this);
-        }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            startTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
-        }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            startTextButton.setBackground({fillStyle: {color: 0x808080, alpha: 0.2}});
+            onClick: () => {
+                this.game.scene.start('gameplay-scene');
+                this.game.scene.stop(this);
+            },
+            onHover: () => {
+                startTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
+            }
         });
         layout.addContents(startTextButton);
 
         const controlsTextButton: TextButton = new TextButton(this, {
-            desiredWidth: 250,
-            text: {text: 'Controls', style: buttonTextStyle},
-            background: {fillStyle: {color: 0x808080, alpha: 0.2}},
+            width: 250,
+            textConfig: {text: 'Controls', style: buttonTextStyle},
+            backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
             padding: 5,
             cornerRadius: 15,
-            interactive: true
-        });
-        controlsTextButton.setPosition((this._width/2), (this._height/2)+(controlsTextButton.height*2));
-        controlsTextButton.on(Phaser.Input.Events.POINTER_DOWN, () => {
-            this._controlsMenu.setActive(true);
-            this._controlsMenu.setVisible(true);
-        }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            controlsTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
-        }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            controlsTextButton.setBackground({fillStyle: {color: 0x808080, alpha: 0.2}});
+            onClick: () => {
+                this._controlsMenu.setActive(true);
+                this._controlsMenu.setVisible(true);
+            },
+            onHover: () => {
+                controlsTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
+            }
         });
         layout.addContents(controlsTextButton);
     }
 
     private _createControlsMenu(): void {
         const closeButton = new TextButton(this, {
-            text: {text: 'Close', style: Styles.Outline.success().text},
-            background: Styles.Outline.success().graphics,
+            textConfig: {text: 'Close', style: Styles.Outline.success().text},
+            backgroundStyles: Styles.Outline.success().graphics,
             cornerRadius: 20,
-            interactive: true,
-            desiredWidth: 300,
-            padding: 10
-        });
-        closeButton.on(Phaser.Input.Events.POINTER_DOWN, () => {
-            this._controlsMenu.setVisible(false);
-            this._controlsMenu.setActive(false);
-        }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            closeButton.setBackground(Styles.success().graphics)
-                .setText({style: Styles.success().text});
-        }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            closeButton.setBackground(Styles.Outline.success().graphics)
-            .setText({style: Styles.Outline.success().text});
+            width: 300,
+            padding: 10,
+            onClick: () => {
+                this._controlsMenu.setVisible(false);
+                this._controlsMenu.setActive(false);
+            },
+            onHover: () => {
+                closeButton.setText({style: Styles.success().text})
+                    .setBackground(Styles.success().graphics);
+            }
         });
 
         this._controlsMenu = new Card(this, {
@@ -160,8 +151,8 @@ export class StartupScene extends Phaser.Scene {
             cornerRadius: 20,
             padding: 10,
             header: {
-                text: {text: 'Game Controls:', style: Styles.info().text},
-                background: Styles.info().graphics
+                textConfig: {text: 'Game Controls:', style: Styles.info().text},
+                backgroundStyles: Styles.info().graphics
             },
             body: {
                 background: Styles.light().graphics,
@@ -172,8 +163,8 @@ export class StartupScene extends Phaser.Scene {
                             new Card(this, {
                                 desiredWidth: 300,
                                 header: {
-                                    text: {text: 'Keyboard & Mouse:', style: Styles.warning().text },
-                                    background: Styles.warning().graphics
+                                    textConfig: {text: 'Keyboard & Mouse:', style: Styles.warning().text },
+                                    backgroundStyles: Styles.warning().graphics
                                 },
                                 body: {
                                     background: Styles.Outline.dark().graphics,
@@ -190,8 +181,8 @@ export class StartupScene extends Phaser.Scene {
                             new Card(this, {
                                 desiredWidth: 300,
                                 header: {
-                                    text: {text: 'Touch / Mobile:', style: Styles.warning().text },
-                                    background: Styles.warning().graphics
+                                    textConfig: {text: 'Touch / Mobile:', style: Styles.warning().text },
+                                    backgroundStyles: Styles.warning().graphics
                                 },
                                 body: {
                                     background: Styles.Outline.dark().graphics,

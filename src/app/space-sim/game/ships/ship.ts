@@ -416,10 +416,10 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
         this._shipIntegrityIndicator = new LayoutContainer(this.scene, {
             y: -30,
             padding: 1,
-            desiredWidth: 102,
-            desiredHeight: 6,
+            width: 102,
+            height: 6,
             alignment: {horizontal: 'left'},
-            background: {fillStyle: {color: 0xffffff}}
+            backgroundStyles: {fillStyle: {color: 0xffffff}}
         });
         this._shipIntegrityIndicator.setAlpha(0); // only visible when damage sustained
         this._positionContainer.add(this._shipIntegrityIndicator);

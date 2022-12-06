@@ -116,44 +116,36 @@ export class GameOverScene extends Phaser.Scene {
         };
 
         const restartButton: TextButton = new TextButton(this, {
-            desiredWidth: 250,
-            text: {text: 'Press to Restart', style: style},
-            background: {fillStyle: {color: 0xff6060, alpha: 0.5}},
+            width: 250,
+            textConfig: {text: 'Press to Restart', style: style},
+            backgroundStyles: {fillStyle: {color: 0xff6060, alpha: 0.5}},
             padding: 5,
-            cornerRadius: 10
-        });
-        restartButton.setDepth(Constants.UI.Layers.HUD);
-        restartButton.setPosition(this._width-(restartButton.width/2)-5, this._height-restartButton.height);
-        restartButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
-            this.game.scene.start('gameplay-scene');
-            this._music.stop();
-            this.game.scene.stop(this);
-        }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            restartButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
-            restartButton.setText({style: {color: '8d8d8d'}});
-        }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            restartButton.setBackground({fillStyle: {color: 0xff6060, alpha: 0.5}});
-            restartButton.setText({style: style});
+            cornerRadius: 10,
+            onHover: () => {
+                restartButton.setText({style: {color: '8d8d8d'}})
+                    .setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
+            },
+            onClick: () => {
+                this.game.scene.start('gameplay-scene');
+                this._music.stop();
+                this.game.scene.stop(this);
+            }
         });
 
         const returnToMenuButton: TextButton = new TextButton(this, {
-            desiredWidth: 250,
-            text: {text: 'Return to Menu', style: style},
-            background: {fillStyle: {color: 0xff6060, alpha: 0.5}},
+            width: 250,
+            textConfig: {text: 'Return to Menu', style: style},
+            backgroundStyles: {fillStyle: {color: 0xff6060, alpha: 0.5}},
             padding: 5,
-            cornerRadius: 10
-        });
-        returnToMenuButton.setDepth(Constants.UI.Layers.HUD);
-        returnToMenuButton.setPosition((returnToMenuButton.width/2)+5, this._height-returnToMenuButton.height);
-        returnToMenuButton.setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
-            this.game.scene.start('startup-scene');
-            this.game.scene.stop(this);
-        }).on(Phaser.Input.Events.POINTER_OVER, () => {
-            returnToMenuButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
-            returnToMenuButton.setText({style: {color: '8d8d8d'}});
-        }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            returnToMenuButton.setBackground({fillStyle: {color: 0xff6060, alpha: 0.5}});
-            returnToMenuButton.setText({style: style});
+            cornerRadius: 10,
+            onHover: () => {
+                returnToMenuButton.setText({style: {color: '8d8d8d'}})
+                    .setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
+            },
+            onClick: () => {
+                this.game.scene.start('startup-scene');
+                this.game.scene.stop(this);
+            }
         });
 
         const flex = new FlexLayout(this, {
@@ -164,6 +156,7 @@ export class GameOverScene extends Phaser.Scene {
                 returnToMenuButton
             ]
         });
+        flex.setDepth(Constants.UI.Layers.HUD);
         this._layout.addContents(flex);
     }
 

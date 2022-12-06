@@ -18,7 +18,9 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _width: number;
     private _height: number;
     private _hudText: Phaser.GameObjects.Text;
-    private _quitButton: LayoutContainer;
+    private _quitContainer: LayoutContainer;
+    private _destructButton: TextButton;
+    private _cancelDestructButton: TextButton;
     private _hudLayout: GridLayout;
     private _controller: InputController;
 
@@ -59,37 +61,60 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             style: { font: '14px Courier', color: '#ffff00' }
         }, false);
 
-        if (this._quitButton) {
-            this._quitButton.destroy();
+        if (this._quitContainer) {
+            this._quitContainer.destroy();
         }
-        const button = new TextButton(this, TextButtonOptions.Outline.warning({
-            text: {text: 'SELF DESTRUCT'},
+        this._quitContainer = new LayoutContainer(this, {
+            padding: 5,
+            backgroundStyles: Styles.dark().graphics,
+            cornerRadius: 5
+        });
+
+        if (this._destructButton) {
+            this._destructButton.destroy();
+        }
+        this._destructButton = new TextButton(this, TextButtonOptions.Outline.warning({
+            textConfig: {text: 'SELF DESTRUCT'},
             padding: 5,
             cornerRadius: 5,
-            interactive: true
-        })).on(Phaser.Input.Events.POINTER_OVER, () => {
-            button.setText({style: Styles.warning().text});
-            button.setBackground(Styles.warning().graphics);
-        }).on(Phaser.Input.Events.POINTER_OUT, () => {
-            button.setText({style: Styles.Outline.warning().text});
-            button.setBackground(Styles.Outline.warning().graphics);
-        }).on(Phaser.Input.Events.POINTER_DOWN, () => {
-            if (button.text.text === 'SELF DESTRUCT') {
+            onHover: () => {
+                this._destructButton.setText({style: Styles.warning().text})
+                    .setBackground(Styles.warning().graphics);
+            },
+            onClick: () => {
                 SpaceSim.player.selfDestruct();
-                button.setText({text: 'CANCEL'});
-                this._quitButton.updateSize(null);
-            } else {
-                SpaceSim.player.cancelSelfDestruct();
-                button.setText({text: 'SELF DESTRUCT'});
-                this._quitButton.updateSize(null);
+                this._quitContainer.removeContent(false);
+                this._cancelDestructButton.setActive(true)
+                    .setVisible(true);
+                this._quitContainer.setContent(this._cancelDestructButton);
+                this._destructButton.setActive(false)
+                    .setVisible(false);
             }
-        });
-        this._quitButton = new LayoutContainer(this, {
+        }));
+
+        if (this._cancelDestructButton) {
+            this._cancelDestructButton.destroy();
+        }
+        this._cancelDestructButton = new TextButton(this, TextButtonOptions.Outline.danger({
+            textConfig: {text: 'CANCEL'},
             padding: 5,
-            background: Styles.dark().graphics,
             cornerRadius: 5,
-            content: button
-        });
+            onHover: () => {
+                this._cancelDestructButton.setText({style: Styles.danger().text})
+                    .setBackground(Styles.danger().graphics);
+            },
+            onClick: () => {
+                SpaceSim.player.cancelSelfDestruct();
+                this._quitContainer.removeContent(false);
+                this._destructButton.setActive(true)
+                    .setVisible(true);
+                this._quitContainer.setContent(this._destructButton);
+                this._cancelDestructButton.setActive(false)
+                    .setVisible(false);
+            }
+        })).setActive(false).setVisible(false);
+
+        this._quitContainer.setContent(this._destructButton);
 
         const rows = Math.floor(this._height / 150);
         const cols = Math.floor(this._width / 150);
@@ -104,7 +129,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             padding: 5,
             alignment: {vertical: 'top'}
         }).addContentAt(0, 0, this._hudText)
-        .addContentAt(0, cols-1, this._quitButton) // quit button
+        .addContentAt(0, cols-1, this._quitContainer) // quit button
         .setDepth(Constants.UI.Layers.HUD);
         this.add.existing(this._hudLayout);
     }
