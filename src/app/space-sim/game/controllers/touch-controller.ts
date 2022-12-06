@@ -97,6 +97,7 @@ export class TouchController extends InputController {
     private _createLeftStick(): LayoutContent {
         const radius: number = 60;
         const leftStick: Phaser.GameObjects.Arc = this.scene.add.circle(0, 0, radius, 0xf0f0f0, 0.2)
+            .setStrokeStyle(2, 0xffffff)
             .setInteractive().on(Phaser.Input.Events.POINTER_MOVE, (pointer: Phaser.Input.Pointer, localX: number, localY: number, event: any) => {
                 if (pointer.isDown) {
                     this._handleAimTouch(localX, localY);
