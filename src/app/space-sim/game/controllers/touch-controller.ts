@@ -2,7 +2,7 @@ import { Ship } from "../ships/ship";
 import { InputController } from "./input-controller";
 import { Helpers } from "../utilities/helpers";
 import { Constants } from "../utilities/constants";
-import { GridLayout, LayoutContent } from "phaser-ui-components";
+import { GridLayout, LayoutContent, TextButton } from "phaser-ui-components";
 
 export class TouchController extends InputController {
     private _mainContainer: GridLayout;
@@ -29,7 +29,7 @@ export class TouchController extends InputController {
      * @param y the y location of the touch
      */
     private _handleAimTouch(x: number, y: number): void {
-        let pos: Phaser.Math.Vector2 = Helpers.vector2(x, y).subtract(Helpers.vector2(40));
+        let pos: Phaser.Math.Vector2 = Helpers.vector2(x, y).subtract(Helpers.vector2(60));
         let radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
         let degrees: number = Helpers.rad2deg(radians);
         // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
@@ -71,8 +71,8 @@ export class TouchController extends InputController {
     private _createGameObj(): void {
         const width = this.scene.sys.game.scale.gameSize.width;
         const height = this.scene.sys.game.scale.gameSize.height;
-        const rows = Math.floor(height / 100);
-        const cols = Math.floor(width / 100);
+        const rows = Math.floor(height / 150);
+        const cols = Math.floor(width / 150);
         this._mainContainer = new GridLayout(this.scene, {
             width: width,
             height: height,
@@ -81,8 +81,8 @@ export class TouchController extends InputController {
             padding: 10,
         }).addContentAt(rows-1, 0, this._createLeftStick())
         .addContentAt(rows-1, cols-1, new GridLayout(this.scene, {
-            width: 100,
-            height: 100,
+            width: 150,
+            height: 150,
             rows: 3,
             columns: 3,
             contents: [
@@ -95,7 +95,7 @@ export class TouchController extends InputController {
     }
 
     private _createLeftStick(): LayoutContent {
-        const radius: number = 40;
+        const radius: number = 60;
         const leftStick: Phaser.GameObjects.Arc = this.scene.add.circle(0, 0, radius, 0xf0f0f0, 0.2)
             .setInteractive().on(Phaser.Input.Events.POINTER_MOVE, (pointer: Phaser.Input.Pointer, localX: number, localY: number, event: any) => {
                 if (pointer.isDown) {
@@ -115,15 +115,22 @@ export class TouchController extends InputController {
      * YELLOW / TOP button (Y)
      */
     private _createThrowButton(): LayoutContent {
-        const radius: number = 20;
-        const throwButton: Phaser.GameObjects.Arc = this.scene.add.circle(0, 0, radius, 0xffff00, 0.2)
-            .setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
+        const throwButton = new TextButton(this.scene, {
+            width: 50,
+            height: 50,
+            cornerRadius: 25,
+            textConfig: {text: 'Y', style: {color: '#ffff00'}},
+            backgroundStyles: {fillStyle: {color: 0x000000, alpha: 0.3}, lineStyle: {color: 0xffff00, width: 2}},
+            onClick: () => {
+                throwButton.setText({style: {color: '#000000'}})
+                    .setBackground({fillStyle: {color: 0xffff00}});
                 this._throwButtonActive = true;
-            }).on(Phaser.Input.Events.POINTER_UP, () => {
-                this._throwButtonActive = false;
-            }).on(Phaser.Input.Events.POINTER_OUT, () => {
-                this._throwButtonActive = false;
-            });
+            }
+        }).on(Phaser.Input.Events.POINTER_UP, () => {
+            this._throwButtonActive = false;
+        }).on(Phaser.Input.Events.POINTER_OUT, () => {
+            this._throwButtonActive = false;
+        });
         return throwButton;
     }
 
@@ -131,15 +138,22 @@ export class TouchController extends InputController {
      * RED / RIGHT button (B)
      */
     private _createBoostButton(): LayoutContent {
-        const radius: number = 20;
-        const boostButton: Phaser.GameObjects.Arc = this.scene.add.circle(0, 0, radius, 0xff0000, 0.2)
-            .setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
+        const boostButton = new TextButton(this.scene, {
+            width: 50,
+            height: 50,
+            cornerRadius: 25,
+            textConfig: {text: 'B', style: {color: '#ff0000'}},
+            backgroundStyles: {fillStyle: {color: 0x000000, alpha: 0.3}, lineStyle: {color: 0xff0000, width: 2}},
+            onClick: () => {
+                boostButton.setText({style: {color: '#000000'}})
+                    .setBackground({fillStyle: {color: 0xff0000}});
                 this._boostButtonActive = true;
-            }).on(Phaser.Input.Events.POINTER_UP, () => {
-                this._boostButtonActive = false;
-            }).on(Phaser.Input.Events.POINTER_OUT, () => {
-                this._boostButtonActive = false;
-            });
+            }
+        }).on(Phaser.Input.Events.POINTER_UP, () => {
+            this._boostButtonActive = false;
+        }).on(Phaser.Input.Events.POINTER_OUT, () => {
+            this._boostButtonActive = false;
+        });
         return boostButton;
     }
 
@@ -147,15 +161,22 @@ export class TouchController extends InputController {
      * GREEN / BOTTOM button (A)
      */
     private _createThrusterButton(): LayoutContent {
-        const radius: number = 20;
-        const thrusterButton: Phaser.GameObjects.Arc = this.scene.add.circle(0, 0, radius, 0x00ff00, 0.2)
-            .setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
+        const thrusterButton = new TextButton(this.scene, {
+            width: 50,
+            height: 50,
+            cornerRadius: 25,
+            textConfig: {text: 'A', style: {color: '#00ff00'}},
+            backgroundStyles: {fillStyle: {color: 0x000000, alpha: 0.3}, lineStyle: {color: 0x00ff00, width: 2}},
+            onClick: () => {
+                thrusterButton.setText({style: {color: '#000000'}})
+                    .setBackground({fillStyle: {color: 0x00ff00}});
                 this._thrusterButtonActive = true;
-            }).on(Phaser.Input.Events.POINTER_UP, () => {
-                this._thrusterButtonActive = false;
-            }).on(Phaser.Input.Events.POINTER_OUT, () => {
-                this._thrusterButtonActive = false;
-            });
+            }
+        }).on(Phaser.Input.Events.POINTER_UP, () => {
+            this._thrusterButtonActive = false;
+        }).on(Phaser.Input.Events.POINTER_OUT, () => {
+            this._thrusterButtonActive = false;
+        });
         return thrusterButton;
     }
 
@@ -163,15 +184,22 @@ export class TouchController extends InputController {
      * BLUE / LEFT button (X)
      */
     private _createFireButton(): LayoutContent {
-        const radius: number = 20;
-        const fireButton: Phaser.GameObjects.Arc = this.scene.add.circle(0, 0, radius, 0x0000ff, 0.2)
-            .setInteractive().on(Phaser.Input.Events.POINTER_DOWN, () => {
+        const fireButton = new TextButton(this.scene, {
+            width: 50,
+            height: 50,
+            cornerRadius: 25,
+            textConfig: {text: 'X', style: {color: '#0000ff'}},
+            backgroundStyles: {fillStyle: {color: 0x000000, alpha: 0.3}, lineStyle: {color: 0x0000ff, width: 2}},
+            onClick: () => {
+                fireButton.setText({style: {color: '#ffffff'}})
+                    .setBackground({fillStyle: {color: 0x0000ff}});
                 this._fireButtonActive = true;
-            }).on(Phaser.Input.Events.POINTER_UP, () => {
-                this._fireButtonActive = false;
-            }).on(Phaser.Input.Events.POINTER_OUT, () => {
-                this._fireButtonActive = false;
-            });
+            }
+        }).on(Phaser.Input.Events.POINTER_UP, () => {
+            this._fireButtonActive = false;
+        }).on(Phaser.Input.Events.POINTER_OUT, () => {
+            this._fireButtonActive = false;
+        });
         return fireButton;
     }
 }
