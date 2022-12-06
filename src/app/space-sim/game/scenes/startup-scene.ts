@@ -188,7 +188,7 @@ export class StartupScene extends Phaser.Scene {
                                     background: Styles.Outline.dark().graphics,
                                     contents: [
                                         this.make.text({
-                                            text: `Thruster: GREEN\nFire: BLUE\nAim: LEFT STICK`,
+                                            text: `Thruster: GREEN (A)\nFire: BLUE (X)\nAim: LEFT STICK`,
                                             style: Styles.light().text
                                         }, false)
                                     ]
