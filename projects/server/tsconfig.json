@@ -1,0 +1,24 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "sourceMap": true,
+    "declaration": false,
+    "downlevelIteration": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "node",
+    "importHelpers": true,
+    "target": "ES2020",
+    "module": "ES2020",
+    "lib": [
+      "es2018",
+      "dom",
+      "scripthost"
+    ],
+    "allowSyntheticDefaultImports": true
+  },
+  "exclude": [
+    "./src/app/**/*"
+  ]
+}
