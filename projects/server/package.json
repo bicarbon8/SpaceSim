@@ -6,7 +6,9 @@
   "main": "./dist/server.js",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && tsc -b && webpack --config ./webpack.config.cjs && npm run copy-files",
+    "build": "npm run clean && npm run build:express-server && npm run build:game-bundle && npm run copy-files",
+    "build:express-server": "tsc -b",
+    "build:game-bundle": "webpack --config ./webpack.prod.config.cjs",
     "copy-files": "copyfiles -E -V -u 1 ./src/**/*.html ./dist/",
     "start": "npm run build && node ./dist/server.js",
     "test": ""
