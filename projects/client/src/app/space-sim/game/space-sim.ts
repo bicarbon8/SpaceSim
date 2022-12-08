@@ -8,6 +8,7 @@ import { GameplayScene } from "./scenes/gameplay-scene";
 import { StartupScene } from "./scenes/startup-scene";
 import { Ship } from "./ships/ship";
 import { SpaceSimOptions } from "./space-sim-options";
+import { Socket } from "socket.io-client";
 
 export class SpaceSim {
     constructor(options?: SpaceSimOptions) {
@@ -107,4 +108,5 @@ export module SpaceSim {
     export var game: Phaser.Game;
     export var map: GameMap;
     export var debug: boolean = false;
+    export var socket: Socket;
 }

@@ -2,6 +2,7 @@ import express from 'express';
 import * as http from 'http';
 import * as path from 'path';
 import { JSDOM, VirtualConsole } from 'jsdom';
+import { Server } from 'socket.io';
 
 const app = express();
 app.use(express.static(path.join(process.cwd(), 'dist')));
@@ -10,6 +11,8 @@ app.get('/', function (req, res) {
 });
 
 const server = new http.Server(app);
+
+const io = new Server(server);
 
 const setupAuthoritativePhaser = () => {
     const virtualConsole = new VirtualConsole();
@@ -26,9 +29,12 @@ const setupAuthoritativePhaser = () => {
         virtualConsole: virtualConsole
     }).then((dom) => {
         console.debug('Virtual DOM loaded...');
-        server.listen(8081, function () {
-            console.log(`Game Server Listening on ${server.address()?.['port']}`);
-        });
+        dom.window.gameServerReady = () => {
+            server.listen(8081, function () {
+                console.log(`Game Server Listening on ${server.address()?.['port']}`);
+            });
+            dom.window.io = io;
+        };
     }).catch((error) => {
         console.error(error.message);
     });

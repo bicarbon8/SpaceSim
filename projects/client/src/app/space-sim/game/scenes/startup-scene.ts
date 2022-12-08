@@ -1,6 +1,8 @@
-import { Card, CardHeader, FlexLayout, LinearLayout, Styles, TextButton } from "phaser-ui-components";
+import { Card, FlexLayout, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
+import { SpaceSim } from "../space-sim";
 import { Constants } from "../utilities/constants";
+import { io } from "socket.io-client";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -41,6 +43,7 @@ export class StartupScene extends Phaser.Scene {
         this._createMenuItems();
         this._createControlsMenu();
         this._createMusic();
+        this._createSocket();
     }
 
     update(time: number, delta: number): void {
@@ -216,5 +219,14 @@ export class StartupScene extends Phaser.Scene {
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
         this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music.stop());
         this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music.destroy());
+    }
+
+    private _createSocket(): void {
+        if (!SpaceSim.socket || SpaceSim.socket.disconnected) {
+            SpaceSim.socket = io(`ws://${environment.websocket}`);
+            SpaceSim.socket.on('connect', () => {
+                console.debug(`connected to server at: ${environment.websocket}`);
+            });
+        }
     }
 }

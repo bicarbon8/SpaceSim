@@ -1,4 +1,11 @@
 import * as Phaser from "phaser";
+import { Server } from "socket.io";
+
+declare global {
+    interface Window { gameServerReady: () => void; }
+}
+
+declare const io: Server;
 
 type SpaceSimServerOptions = {
     debug?: boolean;
@@ -46,7 +53,14 @@ class SpaceSimServer {
     }
 
     private _create(): void {
+        window.gameServerReady();
         console.debug('Game Server is ready');
+        io.on('connection', (socket) => {
+            console.debug('a user connected');
+            socket.on('disconnect', () => {
+                console.debug('user disconnected');
+            });
+        });
     }
 
     private _update(): void {

@@ -5,7 +5,7 @@ dist
 tmp
 out-tsc
 # Only exists if Bazel was run
-/bazel-out
+bazel-out
 docs
 
 # dependencies
@@ -16,7 +16,7 @@ chrome-profiler-events*.json
 speed-measure-plugin*.json
 
 # IDEs and editors
-/.idea
+.idea
 .project
 .classpath
 .c9/
@@ -33,11 +33,11 @@ speed-measure-plugin*.json
 .history/*
 
 # misc
-.angular/cache
-/.sass-cache
-/connect.lock
+.angular
+.sass-cache
+connect.lock
 coverage
-/libpeerconnection.log
+libpeerconnection.log
 npm-debug.log
 yarn-error.log
 testem.log
