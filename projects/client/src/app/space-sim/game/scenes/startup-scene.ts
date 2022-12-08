@@ -17,6 +17,7 @@ export class StartupScene extends Phaser.Scene {
     private _stars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _controlsMenu: Card;
+    private _startMultiplayerButton: TextButton;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
@@ -95,10 +96,10 @@ export class StartupScene extends Phaser.Scene {
             align: 'center'
         };
 
-        const startTextButton: TextButton = new TextButton(this, {
+        const startSingleplayerTextButton: TextButton = new TextButton(this, {
             width: 250,
             textConfig: {
-                text: 'Press to Start',
+                text: 'Single-Player',
                 style: buttonTextStyle,
             },
             backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
@@ -109,10 +110,29 @@ export class StartupScene extends Phaser.Scene {
                 this.game.scene.stop(this);
             },
             onHover: () => {
-                startTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
+                startSingleplayerTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
             }
         });
-        layout.addContents(startTextButton);
+        layout.addContents(startSingleplayerTextButton);
+
+        this._startMultiplayerButton = new TextButton(this, {
+            width: 250,
+            textConfig: {
+                text: 'Multi-Player',
+                style: buttonTextStyle,
+            },
+            backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
+            padding: 5,
+            cornerRadius: 15,
+            onClick: () => {
+                this.game.scene.start('multiplayer-scene');
+                this.game.scene.stop(this);
+            },
+            onHover: () => {
+                this._startMultiplayerButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
+            }
+        }).setActive(false);
+        layout.addContents(this._startMultiplayerButton);
 
         const controlsTextButton: TextButton = new TextButton(this, {
             width: 250,
@@ -226,6 +246,7 @@ export class StartupScene extends Phaser.Scene {
             SpaceSim.socket = io(`ws://${environment.websocket}`);
             SpaceSim.socket.on('connect', () => {
                 console.debug(`connected to server at: ${environment.websocket}`);
+                this._startMultiplayerButton.setActive(true);
             });
         }
     }

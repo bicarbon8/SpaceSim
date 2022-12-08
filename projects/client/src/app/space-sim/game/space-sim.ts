@@ -9,6 +9,8 @@ import { StartupScene } from "./scenes/startup-scene";
 import { Ship } from "./ships/ship";
 import { SpaceSimOptions } from "./space-sim-options";
 import { Socket } from "socket.io-client";
+import { MultiplayerScene } from "./scenes/multiplayer-scene";
+import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 
 export class SpaceSim {
     constructor(options?: SpaceSimOptions) {
@@ -32,7 +34,7 @@ export class SpaceSim {
                 }
             },
             roundPixels: true,
-            scene: [StartupScene, GameplayScene, GameplayHudScene, GameOverScene]
+            scene: [StartupScene, GameplayScene, GameplayHudScene, MultiplayerScene, MultiplayerHudScene, GameOverScene]
         };
         SpaceSim.game = new Phaser.Game(conf);
         SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSim.resize());

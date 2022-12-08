@@ -11,14 +11,15 @@ import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { Resizable } from "../interfaces/resizable";
 import { GameObjectPlus } from "../interfaces/game-object-plus";
 import { AiController } from "../controllers/ai-controller";
+import { GameMapOptions } from "../map/game-map-options";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
-    key: 'gameplay-scene'
+    key: 'multiplayer-scene'
 };
 
-export class GameplayScene extends Phaser.Scene implements Resizable {
+export class MultiplayerScene extends Phaser.Scene implements Resizable {
     private _width: number;
     private _height: number;
     private _stellarBodies: StellarBody[];
@@ -90,15 +91,15 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     create(): void {
-        this._createMapAndPlayer();
+        this._getMapFromServer();
+        this._createPlayer();
         this.resize();
         this._createStellarBodiesLayer();
         this._createBackground();
-        this._createOpponents();
         this._playMusic();
 
-        SpaceSim.game.scene.start('gameplay-hud-scene');
-        SpaceSim.game.scene.bringToTop('gameplay-hud-scene');
+        SpaceSim.game.scene.start('multiplayer-hud-scene');
+        SpaceSim.game.scene.bringToTop('multiplayer-hud-scene');
     }
 
     resize(): void {
@@ -165,27 +166,17 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         }
     }
 
-    private _createOpponents(): void {
-        // remove all pre-existing (happens on replay)
-        SpaceSim.opponents.splice(0, SpaceSim.opponents.length);
-        
-        // add opponent in each room
-        SpaceSim.map.getRooms().forEach((room: RoomPlus) => {
-            let tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
-            let br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
-            let pos: Phaser.Math.Vector2 = Helpers.vector2(
-                Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
-                Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
-            );
-            let p = new Ship({scene: this, location: pos});
-            p.getGameObject().setAlpha(0); // hidden until player enters room
-            this.physics.world.disable(p.getGameObject()); // disabled until player close to opponent
-            let controller = new AiController(this, p);
-            SpaceSim.opponents.push(controller);
+    private _getMapFromServer(): void {
+        SpaceSim.socket.emit(Constants.Socket.REQUEST_MAP);
+        SpaceSim.socket.on(Constants.Socket.UPDATE_MAP, (opts: GameMapOptions) => {
+            SpaceSim.map = new GameMap(this, opts);
+            if (!SpaceSim.player) {
+                this._createPlayer();
+            }
         });
     }
 
-    private _createMapAndPlayer(): void {
+    private _createPlayer(): void {
         SpaceSim.map = new GameMap(this);
         
         // Place the player in random empty tile in the first room
@@ -207,7 +198,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start('game-over-scene');
-                        this.game.scene.stop('gameplay-hud-scene');
+                        this.game.scene.stop('multiplayer-hud-scene');
                         this.game.scene.stop(this);
                     }
                 });

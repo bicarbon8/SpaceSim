@@ -44,4 +44,8 @@ export module Constants {
     export module Events {
         export const PLAYER_DEATH: string = 'player-death';
     }
+    export module Socket {
+        export const REQUEST_MAP = 'get-map';
+        export const UPDATE_MAP = 'update-map';
+    }
 }

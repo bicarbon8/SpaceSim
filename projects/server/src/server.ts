@@ -3,6 +3,10 @@ import * as http from 'http';
 import * as path from 'path';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { Server } from 'socket.io';
+import * as devenv from './environments/environment.js';
+import * as prodenv from './environments/environment.prod.js';
+
+const env = (process.env.production) ? prodenv : devenv;
 
 const app = express();
 app.use(express.static(path.join(process.cwd(), 'dist')));
@@ -12,19 +16,21 @@ app.get('/', function (req, res) {
 
 const server = new http.Server(app);
 
-const io = new Server(server);
+const io = new Server(server, {
+    cors: {
+        origin: `${env.environment.corsUrl}`,
+        methods: ["GET", "POST"]
+    }
+});
 
-const setupAuthoritativePhaser = () => {
+const setupPhaserServer = () => {
     const virtualConsole = new VirtualConsole();
     virtualConsole.sendTo(console, {
         omitJSDOMErrors: false
     });
     JSDOM.fromFile(path.join(process.cwd(), 'dist', 'index.html'), {
-        // To run the scripts in the html file
         runScripts: "dangerously",
-        // Also load supported external resources
         resources: "usable",
-        // So requestAnimatinFrame events fire
         pretendToBeVisual: true,
         virtualConsole: virtualConsole
     }).then((dom) => {
@@ -39,4 +45,4 @@ const setupAuthoritativePhaser = () => {
         console.error(error.message);
     });
 }
-setupAuthoritativePhaser();
+setupPhaserServer();
