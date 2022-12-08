@@ -1,5 +1,4 @@
-import { Weapons } from "../ships/attachments/offence/weapons";
-
+import { Weapons } from "./weapons";
 export interface BulletOptions {
     readonly scene: Phaser.Scene;
     readonly location: Phaser.Math.Vector2;

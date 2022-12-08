@@ -1,5 +1,5 @@
 import { HasGameObject } from "../../../interfaces/has-game-object";
-import { BulletOptions } from "../../../interfaces/bullet-options";
+import { BulletOptions } from "./bullet-options";
 import { HasLocation } from "../../../interfaces/has-location";
 import { Helpers } from "../../../utilities/helpers";
 import { SpaceSim } from "../../../space-sim";
@@ -7,7 +7,6 @@ import { Ship } from "../../ship";
 import { Constants } from "../../../utilities/constants";
 import { Weapons } from "./weapons";
 import { GameScoreTracker } from "../../../utilities/game-score-tracker";
-import { AiController } from "../../../controllers/ai-controller";
 
 export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.Container>, HasLocation {
     readonly id: string;
@@ -36,7 +35,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.force = options.force ?? 1;
         this.damage = options.damage ?? 1;
         this.scale = options.scale ?? 1;
-        this.timeout = options.timeout ?? 5000;
+        this.timeout = options.timeout ?? 1000;
         this.mass = options.mass ?? 0;
         
         this._createGameObj();
@@ -58,8 +57,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.scene.physics.add.collider(this.getGameObject(), SpaceSim.map.getGameObject(), () => {
             this.destroy();
         });
-        const {width, height} = SpaceSim.getSize();
-        const dist = (width > height) ? width : height;
+        const dist = this.getRange();
         SpaceSim.map.getActiveShipsWithinRadius(this.getLocation(), dist * 2)
             .forEach((opp: Ship) => {
                 if (opp.id !== this.weapon.ship.id) {
@@ -73,9 +71,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
                             attackerId: this.weapon.ship.id,
                             message: `projectile hit`
                         });
-                        if (opp.id !== SpaceSim.player.id) {
-                            opp.target = this.weapon.ship;
-                        }
+                        opp.target = this.weapon.ship;
                         GameScoreTracker.shotLanded();
                     });
                 }
@@ -120,6 +116,10 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
     setLocation(location: Phaser.Math.Vector2): void {
         const go: Phaser.GameObjects.Container = this.getGameObject();
         go?.setPosition(location.x, location.y);
+    }
+
+    getRange(): number {
+        return this.getSpeed() * (this.timeout / 1000);
     }
 
     destroy() {

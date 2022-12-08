@@ -1,6 +1,4 @@
-import { HasGameObject } from "../interfaces/has-game-object";
-import { Updatable } from "../interfaces/updatable";
-import { Ship } from "../ships/ship";
+import { HasGameObject, Updatable, Ship } from "space-sim-server";
 
 export abstract class InputController implements Updatable, HasGameObject<Phaser.GameObjects.Container> {
     readonly id: string;

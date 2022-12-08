@@ -1,4 +1,4 @@
-import { Ship } from "../ships/ship";
+import { Ship } from "space-sim-server";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
 

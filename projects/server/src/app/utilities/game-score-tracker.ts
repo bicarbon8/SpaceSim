@@ -1,3 +1,4 @@
+import { ShipLike } from "../interfaces/ship-like";
 import { SpaceSim } from "../space-sim";
 import { GameStats } from "./game-stats";
 
@@ -29,11 +30,11 @@ export module GameScoreTracker {
         
         return score;
     }
-    export function getStats(): GameStats {
+    export function getStats(ship: ShipLike): GameStats {
         return {
             elapsed: SpaceSim.game.getTime(),
-            ammoRemaining: SpaceSim.player.getWeapons()?.remainingAmmo,
-            integrityRemaining: SpaceSim.player.getIntegrity(),
+            ammoRemaining: ship.getWeapons()?.remainingAmmo,
+            integrityRemaining: ship.integrity,
             opponentsDestroyed: _opponentsDestroyed,
             shotsFired: _shotsFired,
             shotsLanded: _shotsLanded

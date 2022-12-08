@@ -1,7 +1,5 @@
-import { Ship } from "../ships/ship";
+import { Ship, Helpers, Constants } from "space-sim-server";
 import { InputController } from "./input-controller";
-import { Helpers } from "../utilities/helpers";
-import { Constants } from "../utilities/constants";
 import { GridLayout, LayoutContent, TextButton } from "phaser-ui-components";
 
 export class TouchController extends InputController {

@@ -1,21 +1,20 @@
 import "phaser";
 import { AiController } from "./controllers/ai-controller";
-import { Size } from "./interfaces/size";
-import { GameMap } from "./map/game-map";
+import { Size } from "space-sim-server/src/app/interfaces/size";
+import { GameMap, Ship, SpaceSim } from "space-sim-server";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
 import { StartupScene } from "./scenes/startup-scene";
-import { Ship } from "./ships/ship";
-import { SpaceSimOptions } from "./space-sim-options";
+import { SpaceSimClientOptions } from "./space-sim-client-options";
 import { Socket } from "socket.io-client";
 import { MultiplayerScene } from "./scenes/multiplayer-scene";
 import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 
-export class SpaceSim {
-    constructor(options?: SpaceSimOptions) {
+export class SpaceSimClient {
+    constructor(options?: SpaceSimClientOptions) {
         const parent: HTMLDivElement = document.getElementById(options?.parentElementId || 'space-sim') as HTMLDivElement;
-        const size = SpaceSim.getSize(options?.parentElementId);
+        const size = SpaceSimClient.getSize(options?.parentElementId);
         let conf: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
             width: options?.width || size.width,
@@ -37,7 +36,7 @@ export class SpaceSim {
             scene: [StartupScene, GameplayScene, GameplayHudScene, MultiplayerScene, MultiplayerHudScene, GameOverScene]
         };
         SpaceSim.game = new Phaser.Game(conf);
-        SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSim.resize());
+        SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSimClient.resize());
         SpaceSim.game.events.on(Phaser.Core.Events.HIDDEN, () => {
             SpaceSim.game.scene.getScenes(true).forEach(s => {
                 SpaceSim.game.scene.pause(s);
@@ -53,18 +52,18 @@ export class SpaceSim {
     }
 }
 
-export module SpaceSim {
-    var _inst: SpaceSim;
-    export function start(options?: SpaceSimOptions): SpaceSim {
+export module SpaceSimClient {
+    var _inst: SpaceSimClient;
+    export function start(options?: SpaceSimClientOptions): SpaceSimClient {
         SpaceSim.debug = options?.debug || false;
         if (!_inst) {
-            _inst = new SpaceSim(options);
+            _inst = new SpaceSimClient(options);
         }
         return _inst;
     }
     export function stop(): void {
-        if (game) {
-            game.destroy(true, true);
+        if (_inst) {
+            SpaceSim?.destroy(true, true);
         }
     }
     export function resize(): void {
@@ -76,7 +75,7 @@ export module SpaceSim {
             canvas.style.padding = '0px';
             canvas.style.width='100%';
             canvas.style.height='100%';
-            const size = SpaceSim.getSize();
+            const size = SpaceSimClient.getSize();
             canvas.width  = size.width;
             canvas.height = size.height;
             SpaceSim.game?.scale.resize(size.width, size.height);
@@ -105,10 +104,5 @@ export module SpaceSim {
         }
         return size;
     }
-    export var player: Ship;
-    export const opponents = new Array<AiController>();
-    export var game: Phaser.Game;
-    export var map: GameMap;
-    export var debug: boolean = false;
     export var socket: Socket;
 }

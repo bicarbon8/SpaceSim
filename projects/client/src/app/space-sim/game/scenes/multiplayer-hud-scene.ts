@@ -1,7 +1,5 @@
-import { Constants } from "../utilities/constants";
-import { SpaceSim } from "../space-sim";
-import { GameScoreTracker } from "../utilities/game-score-tracker";
-import { GameStats } from "../utilities/game-stats";
+import { Constants, GameScoreTracker, GameStats } from "space-sim-server";
+import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
@@ -29,7 +27,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
 
-        this.debug = SpaceSim.debug;
+        this.debug = SpaceSimClient.debug;
     }
 
     create(): void {
@@ -82,7 +80,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.warning().graphics);
             },
             onClick: () => {
-                SpaceSim.player.selfDestruct();
+                SpaceSimClient.player.selfDestruct();
                 this._quitContainer.removeContent(false);
                 this._cancelDestructButton.setActive(true)
                     .setVisible(true);
@@ -104,7 +102,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.danger().graphics);
             },
             onClick: () => {
-                SpaceSim.player.cancelSelfDestruct();
+                SpaceSimClient.player.cancelSelfDestruct();
                 this._quitContainer.removeContent(false);
                 this._destructButton.setActive(true)
                     .setVisible(true);
@@ -139,9 +137,9 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             this._controller.getGameObject()?.destroy();
         }
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, SpaceSim.player);
+            this._controller = new KbmController(this, SpaceSimClient.player);
         } else {
-            this._controller = new TouchController(this, SpaceSim.player);
+            this._controller = new TouchController(this, SpaceSimClient.player);
         }
         const obj = this._controller.getGameObject();
         if (obj) {
@@ -154,13 +152,13 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             const stats: GameStats = GameScoreTracker.getStats();
             const info: string[] = [
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
-                `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`,
-                `Fuel: ${SpaceSim.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${SpaceSim.player.getWeapons()?.remainingAmmo || 0}`,
+                `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`,
+                `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
+                `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore().toFixed(0)}`
             ];
-            if (SpaceSim.debug) {
-                const loc: Phaser.Math.Vector2 = SpaceSim.player.getLocation();
+            if (SpaceSimClient.debug) {
+                const loc: Phaser.Math.Vector2 = SpaceSimClient.player.getLocation();
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             this._hudText.setText(info);

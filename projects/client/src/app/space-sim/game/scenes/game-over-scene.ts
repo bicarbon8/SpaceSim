@@ -1,9 +1,7 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
-import { SpaceSim } from "../space-sim";
-import { Constants } from "../utilities/constants";
-import { GameScoreTracker } from "../utilities/game-score-tracker";
-import { GameStats } from "../utilities/game-stats";
+import { SpaceSimClient } from "../space-sim-client";
+import { Constants, GameScoreTracker, GameStats } from "space-sim-server";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -103,7 +101,7 @@ export class GameOverScene extends Phaser.Scene {
             `Score: ${GameScoreTracker.getScore().toFixed(0)}`,
             `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
             `Accuracy: ${accuracy.toFixed(0)}%`,
-            `Enemies: ${stats.opponentsDestroyed}/${SpaceSim.opponents.length}`
+            `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`
         ]);
         this._layout.addContents(scoreText);
     }

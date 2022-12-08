@@ -1,17 +1,10 @@
-import { Vector2 } from "phaser/src/math";
-import { Ship } from "../ships/ship";
+import * as Phaser from "phaser";
+import { Ship, GameMap, Constants, Helpers, GameScoreTracker, GameObjectPlus, GameMapOptions } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
-import { GameMap, RoomPlus } from "../map/game-map";
 import { environment } from "../../../../environments/environment";
-import { Constants } from "../utilities/constants";
-import { SpaceSim } from "../space-sim";
-import { Helpers } from "../utilities/helpers";
+import { SpaceSimClient } from "../space-sim-client";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
-import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { Resizable } from "../interfaces/resizable";
-import { GameObjectPlus } from "../interfaces/game-object-plus";
-import { AiController } from "../controllers/ai-controller";
-import { GameMapOptions } from "../map/game-map-options";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -33,7 +26,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
 
-        this.debug = SpaceSim.debug;
+        this.debug = SpaceSimClient.debug;
         this._stellarBodies = [];
     }
 
@@ -98,8 +91,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this._createBackground();
         this._playMusic();
 
-        SpaceSim.game.scene.start('multiplayer-hud-scene');
-        SpaceSim.game.scene.bringToTop('multiplayer-hud-scene');
+        SpaceSimClient.game.scene.start('multiplayer-hud-scene');
+        SpaceSimClient.game.scene.bringToTop('multiplayer-hud-scene');
     }
 
     resize(): void {
@@ -111,11 +104,11 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
 
     update(time: number, delta: number): void {
         try {
-            SpaceSim.player?.update(time, delta);
+            SpaceSimClient.player?.update(time, delta);
 
             // If the player has entered a new room, make it visible
-            const currentRoom = SpaceSim.player?.room;
-            SpaceSim.map?.showRoom(currentRoom);
+            const currentRoom = SpaceSimClient.player?.room;
+            SpaceSimClient.map?.showRoom(currentRoom);
 
             // disable all objects offscreen (plus margin of error)
             if (this._physicsUpdator == null || this._physicsUpdator?.next().done) {
@@ -123,7 +116,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                 this._physicsUpdator?.next();
             }
 
-            const nearbyEnemies = SpaceSim.opponents.filter(o => o?.ship?.active);
+            const nearbyEnemies = SpaceSimClient.opponents.filter(o => o?.ship?.active);
             nearbyEnemies.forEach(o => o.update(time, delta));
 
             this._stellarBodies.forEach((body) => {
@@ -140,14 +133,14 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
      * don't spend too much time and delay the calls to `scene.update`
      */
     private *_updatePhysics(): Generator<void, void, unknown> {
-        const loc = SpaceSim.player.getLocation();
-        const {width, height} = SpaceSim.getSize();
+        const loc = SpaceSimClient.player.getLocation();
+        const {width, height} = SpaceSimClient.getSize();
         const dist = (width > height) ? width : height;
         const children = this.children.getAll();
         for (var i=0; i<children.length; i++) {
             const c = children[i];
             // skip over the map tiles
-            if (c !== SpaceSim.map.getGameObject()) {
+            if (c !== SpaceSimClient.map.getGameObject()) {
                 // and skip over objects that don't have physics bodies 
                 const arcade = c.body as Phaser.Physics.Arcade.Body;
                 if (arcade) {
@@ -167,34 +160,34 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     private _getMapFromServer(): void {
-        SpaceSim.socket.emit(Constants.Socket.REQUEST_MAP);
-        SpaceSim.socket.on(Constants.Socket.UPDATE_MAP, (opts: GameMapOptions) => {
-            SpaceSim.map = new GameMap(this, opts);
-            if (!SpaceSim.player) {
+        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP);
+        SpaceSimClient.socket.on(Constants.Socket.UPDATE_MAP, (opts: GameMapOptions) => {
+            SpaceSimClient.map = new GameMap(this, opts);
+            if (!SpaceSimClient.player) {
                 this._createPlayer();
             }
         });
     }
 
     private _createPlayer(): void {
-        SpaceSim.map = new GameMap(this);
+        SpaceSimClient.map = new GameMap(this);
         
         // Place the player in random empty tile in the first room
-        const startingRoom = SpaceSim.map.getRoomClosestToOrigin();
-        const startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
-        const startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
+        const startingRoom = SpaceSimClient.map.getRoomClosestToOrigin();
+        const startTopLeft: Phaser.Math.Vector2 = SpaceSimClient.map.getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
+        const startBottomRight: Phaser.Math.Vector2 = SpaceSimClient.map.getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
         const playerStartingPosition: Phaser.Math.Vector2 = Helpers.vector2(
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
         );
-        SpaceSim.player = new Ship({scene: this, location: playerStartingPosition});
+        SpaceSimClient.player = new Ship({scene: this, location: playerStartingPosition});
         
         // setup collision with map walls
-        this.physics.add.collider(SpaceSim.player.getGameObject(), SpaceSim.map.getGameObject());
+        this.physics.add.collider(SpaceSimClient.player.getGameObject(), SpaceSimClient.map.getGameObject());
 
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
-            if (SpaceSim.player.id == ship?.id) {
+            if (SpaceSimClient.player.id == ship?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start('game-over-scene');
@@ -210,7 +203,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     private _createStellarBodiesLayer(): void {
-        let rooms = SpaceSim.map.getRooms();
+        let rooms = SpaceSimClient.map.getRooms();
         let bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
             {spriteName: 'venus', rotationSpeed: 0}, 
@@ -219,8 +212,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         ];
         for (var i=0; i<rooms.length; i++) {
             let room = rooms[i];
-            let startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
-            let startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
+            let startTopLeft: Phaser.Math.Vector2 = SpaceSimClient.map.getMapTileWorldLocation(room.left, room.top);
+            let startBottomRight: Phaser.Math.Vector2 = SpaceSimClient.map.getMapTileWorldLocation(room.right, room.bottom);
             let location: Phaser.Math.Vector2 = Helpers.vector2(
                 Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
                 Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
@@ -254,10 +247,10 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             zoom = 0.5;
         }
         this.cameras.main.setZoom(zoom);
-        let playerLoc: Vector2 = SpaceSim.player.getLocation();
+        let playerLoc = SpaceSimClient.player.getLocation();
         this.cameras.main.centerOn(playerLoc.x, playerLoc.y);
 
-        this.cameras.main.startFollow(SpaceSim.player.getGameObject(), true, 1, 1);
+        this.cameras.main.startFollow(SpaceSimClient.player.getGameObject(), true, 1, 1);
     }
 
     private _playMusic(): void {

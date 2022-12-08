@@ -1,4 +1,3 @@
-import { GameObjectPlus } from "../interfaces/game-object-plus";
 import { NumberOrRange } from "../interfaces/number-range";
 
 export module Helpers {

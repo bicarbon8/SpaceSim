@@ -1,10 +1,11 @@
+import * as Phaser from "phaser";
 import Dungeon, { Room } from "@mikewesthad/dungeon";
 import { HasGameObject } from "../interfaces/has-game-object";
-import { Ship } from "../ships/ship";
-import { SpaceSim } from "../space-sim";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { GameMapOptions } from "./game-map-options";
+import { SpaceSim } from "../space-sim";
+import { ShipLike } from "../interfaces/ship-like";
 
 export type RoomPlus = Room & {
     visible?: boolean;
@@ -84,48 +85,8 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         return furthest;
     }
 
-    showRoom(room: RoomPlus): void {
-        if (!room.visible) {
-            room.visible = true;
-            const opponentsInRoom = SpaceSim.opponents
-                .map(o => o?.ship)
-                .filter(s => s?.room === room);
-            this._scene.add.tween({
-                targets: [
-                    ...this._layer.getTilesWithin(room.x, room.y, room.width, room.height), 
-                    ...opponentsInRoom.map(o => o.getGameObject())
-                ],
-                alpha: 1,
-                duration: 250
-            });
-            // enable physics for enemies in the room
-            opponentsInRoom.forEach(o => {
-                // setup collision with map walls
-                this._scene.physics.add.collider(o.getGameObject(), this.getGameObject());
-                // setup collision with player
-                this._scene.physics.add.collider(o.getGameObject(), SpaceSim.player.getGameObject(), () => {
-                    const collisionSpeed = o.getVelocity().clone().subtract(SpaceSim.player.getVelocity()).length();
-                    const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
-                    o.sustainDamage({
-                        amount: damage, 
-                        timestamp: this._scene.time.now,
-                        attackerId: SpaceSim.player.id,
-                        message: 'ship collision'
-                    });
-                    o.target = SpaceSim.player;
-                    SpaceSim.player.sustainDamage({
-                        amount: damage, 
-                        timestamp: this._scene.time.now,
-                        attackerId: o.id,
-                        message: 'ship collision'
-                    });
-                });
-            });
-        }
-    }
-
-    getActiveShipsWithinRadius(location: Phaser.Types.Math.Vector2Like, radius: number): Array<Ship> {
-        return [...SpaceSim.opponents.map(o => o.ship), SpaceSim.player]
+    getActiveShipsWithinRadius(location: Phaser.Types.Math.Vector2Like, radius: number): Array<ShipLike> {
+        return SpaceSim.players
             .filter(s => {
                 if (s?.active) {
                     if (Phaser.Math.Distance.BetweenPoints(s.getLocation(), location) <= radius) {

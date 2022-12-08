@@ -1,13 +1,7 @@
 import { Scene } from "phaser";
-import { Updatable } from "../interfaces/updatable";
-import { CanTarget } from "../interfaces/can-target";
 import { HasLocation } from "../interfaces/has-location";
-import { HasGameObject } from "../interfaces/has-game-object";
-import { HasIntegrity } from "../interfaces/has-integrity";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
-import { HasTemperature } from "../interfaces/has-temperature";
-import { HasFuel } from "../interfaces/has-fuel";
 import { Engine } from "./attachments/utility/engine";
 import { ShipOptions } from "./ship-options";
 import { DamageOptions } from './damage-options';
@@ -15,15 +9,13 @@ import { HasPhysicsBody } from '../interfaces/has-physics-body';
 import { LayoutContainer } from "phaser-ui-components";
 import { Weapons } from "./attachments/offence/weapons";
 import { FuelSupply } from "./supplies/fuel-supply";
-import { SpaceSim } from "../space-sim";
 import { AmmoSupply } from "./supplies/ammo-supply";
 import { CoolantSupply } from "./supplies/coolant-supply";
-import { HasRoom } from "../interfaces/has-room";
-import { RoomPlus } from "../map/game-map";
 import { MachineGun } from "./attachments/offence/machine-gun";
 import { RepairsSupply } from "./supplies/repairs-supply";
+import { ShipLike } from "../interfaces/ship-like";
 
-export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLocation, HasGameObject<Phaser.GameObjects.Container>, HasPhysicsBody, HasIntegrity, HasTemperature, HasFuel {
+export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
     /** ShipOptions */
     readonly id: string; // UUID
     readonly scene: Scene;
@@ -79,11 +71,6 @@ export class Ship implements ShipOptions, HasRoom, Updatable, CanTarget, HasLoca
 
     get integrity(): number {
         return this._integrity;
-    }
-
-    get room(): RoomPlus {
-        const loc = this.getLocation();
-        return SpaceSim.map.getRoomAtWorldXY(loc.x, loc.y);
     }
 
     getWeapons(): Weapons {

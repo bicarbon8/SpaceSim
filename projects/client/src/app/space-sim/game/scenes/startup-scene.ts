@@ -1,7 +1,7 @@
 import { Card, FlexLayout, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
-import { SpaceSim } from "../space-sim";
-import { Constants } from "../utilities/constants";
+import { SpaceSimClient } from "../space-sim-client";
+import { Constants } from "space-sim-server";
 import { io } from "socket.io-client";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
@@ -242,9 +242,9 @@ export class StartupScene extends Phaser.Scene {
     }
 
     private _createSocket(): void {
-        if (!SpaceSim.socket || SpaceSim.socket.disconnected) {
-            SpaceSim.socket = io(`ws://${environment.websocket}`);
-            SpaceSim.socket.on('connect', () => {
+        if (!SpaceSimClient.socket || SpaceSimClient.socket.disconnected) {
+            SpaceSimClient.socket = io(`ws://${environment.websocket}`);
+            SpaceSimClient.socket.on('connect', () => {
                 console.debug(`connected to server at: ${environment.websocket}`);
                 this._startMultiplayerButton.setActive(true);
             });

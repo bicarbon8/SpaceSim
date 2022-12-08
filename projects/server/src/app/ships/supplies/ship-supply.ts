@@ -1,6 +1,6 @@
-import { GameObjectPlus } from "../../interfaces/game-object-plus";
+import { ShipLike } from "src/app/interfaces/ship-like";
+import { SpaceSim } from "src/app/space-sim";
 import { NumberOrRange } from "../../interfaces/number-range";
-import { SpaceSim } from "../../space-sim";
 import { Constants } from "../../utilities/constants";
 import { Helpers } from "../../utilities/helpers";
 import { Ship } from "../ship";
@@ -37,9 +37,21 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         const velocity = heading.multiply({x: speed, y: speed});
         this._body.setVelocity(velocity.x, velocity.y);
         this.scene.physics.add.collider(this, SpaceSim.map.getGameObject());
-        this.scene.physics.add.collider(this, SpaceSim.opponents.map(o => o?.ship.getGameObject()));
-        this.scene.physics.add.collider(this, SpaceSim.player.getGameObject(), () => {
-            this.apply(SpaceSim.player);
+        this.scene.physics.add.collider(this, SpaceSim.players.map(o => o?.getGameObject()), (obj1, obj2) => {
+            let shipGameObj: Phaser.GameObjects.Container;
+            if (obj1 === this) {
+                shipGameObj = obj2 as Phaser.GameObjects.Container;
+            } else {
+                shipGameObj = obj1 as Phaser.GameObjects.Container;
+            }
+            const ship: ShipLike = SpaceSim.players.find(p => {
+                const loc = p.getLocation();
+                if (shipGameObj.x === loc.x && shipGameObj.y === loc.y) {
+                    return true;
+                }
+                return false;
+            });
+            this.apply(ship);
         });
     }
 
@@ -53,7 +65,7 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
 
     protected abstract _createChildren(): this;
 
-    abstract apply(ship: Ship): void;
+    abstract apply(ship: ShipLike): void;
 
     updateSize(): this {
         const bounds: Phaser.Geom.Rectangle = this.getBounds();

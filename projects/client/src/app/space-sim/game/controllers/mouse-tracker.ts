@@ -1,6 +1,5 @@
 import { Scene } from "phaser";
-import { HasLocation } from "../interfaces/has-location";
-import { Helpers } from "../utilities/helpers";
+import { HasLocation, Helpers } from "space-sim-server";
 
 export class MouseTracker implements HasLocation {
     private _scene: Scene;

@@ -1,17 +1,17 @@
-import { Ship } from "../ship";
+import { ShipLike } from "src/app/interfaces/ship-like";
 import { ShipSupply } from "./ship-supply";
 
-export class FuelSupply extends ShipSupply {
-    override apply(ship: Ship): void {
+export class RepairsSupply extends ShipSupply {
+    override apply(ship: ShipLike): void {
         if (ship) {
-            ship.addFuel(this.amount);
+            ship.repair(this.amount);
         }
         this.destroy();
     }
     
     protected _createChildren(): this {
         const sprite = this.scene.make.sprite({
-            key: 'fuel-canister',
+            key: 'repairs-canister',
             origin: 0.5
         }, false);
         this.add(sprite);

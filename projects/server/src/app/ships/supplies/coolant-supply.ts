@@ -1,8 +1,8 @@
-import { Ship } from "../ship";
+import { ShipLike } from "src/app/interfaces/ship-like";
 import { ShipSupply } from "./ship-supply";
 
 export class CoolantSupply extends ShipSupply {
-    override apply(ship: Ship): void {
+    override apply(ship: ShipLike): void {
         if (ship) {
             ship.applyCooling(this.amount);
         }

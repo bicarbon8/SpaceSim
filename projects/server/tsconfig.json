@@ -16,7 +16,8 @@
       "dom",
       "scripthost"
     ],
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": false,
   },
   "exclude": [
     "./src/app/**/*"
