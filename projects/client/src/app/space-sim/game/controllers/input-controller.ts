@@ -1,14 +1,14 @@
-import { HasGameObject, Updatable, Ship } from "space-sim-server";
+import { HasGameObject, Updatable, ShipLike } from "space-sim-server";
 
 export abstract class InputController implements Updatable, HasGameObject<Phaser.GameObjects.Container> {
     readonly id: string;
 
     private _scene: Phaser.Scene;
-    private _ship: Ship;
+    private _ship: ShipLike;
     
     active: boolean;
 
-    constructor(scene: Phaser.Scene, ship?: Ship) {
+    constructor(scene: Phaser.Scene, ship?: ShipLike) {
         this.id = Phaser.Math.RND.uuid();
         this._scene = scene;
         this._ship = ship;
@@ -23,11 +23,11 @@ export abstract class InputController implements Updatable, HasGameObject<Phaser
         return this._scene;
     }
 
-    get ship(): Ship {
+    get ship(): ShipLike {
         return this._ship;
     }
 
-    set ship(ship: Ship) {
+    set ship(ship: ShipLike) {
         this._ship = ship;
     }
 

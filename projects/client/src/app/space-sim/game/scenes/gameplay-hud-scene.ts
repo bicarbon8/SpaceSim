@@ -149,7 +149,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            const stats: GameStats = GameScoreTracker.getStats();
+            const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
             const info: string[] = [
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
                 `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`,

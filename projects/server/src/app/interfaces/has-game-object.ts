@@ -1,3 +1,3 @@
-export interface HasGameObject<T extends Phaser.GameObjects.GameObject> {
+export type HasGameObject<T extends Phaser.GameObjects.GameObject> = {
     getGameObject(): T;
-}
+};

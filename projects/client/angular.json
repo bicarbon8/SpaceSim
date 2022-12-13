@@ -19,9 +19,13 @@
 						"polyfills": "src/polyfills.ts",
 						"tsConfig": "tsconfig.app.json",
 						"assets": [
+							{
+								"glob": "**/*", 
+								"input": "../../server/src/assets", 
+								"output": "./src/assets/"
+							},
 							"src/favicon.ico",
 							"src/assets",
-							"../../server/src/assets",
 							"src/.nojekyll"
 						],
 						"styles": [

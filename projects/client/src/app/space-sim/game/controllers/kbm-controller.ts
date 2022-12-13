@@ -1,4 +1,4 @@
-import { Ship } from "space-sim-server";
+import { ShipLike } from "space-sim-server";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
 
@@ -19,14 +19,14 @@ export class KbmController extends InputController {
 
     private _container: Phaser.GameObjects.Container;
     
-    constructor(scene: Phaser.Scene, player?: Ship) {
+    constructor(scene: Phaser.Scene, player?: ShipLike) {
         super(scene, player);
 
         this._createGameObject();
 
         this._setupInputHandling();
 
-        this._mouseTracker = new MouseTracker(this.ship.scene);
+        this._mouseTracker = new MouseTracker(this.ship.getGameObject().scene);
         this.ship.target = this._mouseTracker;
     }
         

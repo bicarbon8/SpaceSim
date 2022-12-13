@@ -1,9 +1,8 @@
-import { ShipLike } from "src/app/interfaces/ship-like";
-import { SpaceSim } from "src/app/space-sim";
+import { ShipLike } from "../../interfaces/ship-like";
+import { SpaceSim } from "../../space-sim";
 import { NumberOrRange } from "../../interfaces/number-range";
 import { Constants } from "../../utilities/constants";
 import { Helpers } from "../../utilities/helpers";
-import { Ship } from "../ship";
 
 export type ShipSupplyOptions = {
     readonly amount: number;
@@ -37,22 +36,25 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         const velocity = heading.multiply({x: speed, y: speed});
         this._body.setVelocity(velocity.x, velocity.y);
         this.scene.physics.add.collider(this, SpaceSim.map.getGameObject());
-        this.scene.physics.add.collider(this, SpaceSim.players.map(o => o?.getGameObject()), (obj1, obj2) => {
-            let shipGameObj: Phaser.GameObjects.Container;
-            if (obj1 === this) {
-                shipGameObj = obj2 as Phaser.GameObjects.Container;
-            } else {
-                shipGameObj = obj1 as Phaser.GameObjects.Container;
-            }
-            const ship: ShipLike = SpaceSim.players.find(p => {
-                const loc = p.getLocation();
-                if (shipGameObj.x === loc.x && shipGameObj.y === loc.y) {
-                    return true;
+        this.scene.physics.add.collider(this, SpaceSim.players
+            .filter(p => p?.active)
+            .map(o => o?.getGameObject()), (obj1, obj2) => {
+                let shipGameObj: Phaser.GameObjects.Container;
+                if (obj1 === this) {
+                    shipGameObj = obj2 as Phaser.GameObjects.Container;
+                } else {
+                    shipGameObj = obj1 as Phaser.GameObjects.Container;
                 }
-                return false;
-            });
-            this.apply(ship);
-        });
+                const ship: ShipLike = SpaceSim.players.find(p => {
+                    const loc = p.getLocation();
+                    if (shipGameObj.x === loc.x && shipGameObj.y === loc.y) {
+                        return true;
+                    }
+                    return false;
+                });
+                this.apply(ship);
+            }
+        );
     }
 
     get location(): Phaser.Math.Vector2 {

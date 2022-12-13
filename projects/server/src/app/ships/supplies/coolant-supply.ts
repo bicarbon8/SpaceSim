@@ -1,4 +1,4 @@
-import { ShipLike } from "src/app/interfaces/ship-like";
+import { ShipLike } from "../../interfaces/ship-like";
 import { ShipSupply } from "./ship-supply";
 
 export class CoolantSupply extends ShipSupply {

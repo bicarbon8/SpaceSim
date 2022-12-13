@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { Ship, GameMap, RoomPlus, Constants, Helpers, GameScoreTracker, GameObjectPlus, SpaceSim } from "space-sim-server";
+import { Constants, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RoomPlus, Ship, SpaceSim } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -108,7 +108,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             SpaceSim.players?.forEach(p => p.update(time, delta));
 
             // If the player has entered a new room, make it visible
-            const currentRoom = SpaceSimClient.player?.room;
+            const currentLoc = SpaceSimClient.player.getLocation();
+            const currentRoom = SpaceSim.map.getRoomAtWorldXY(currentLoc.x, currentLoc.y);
             this._showRoom(currentRoom);
 
             // disable all objects offscreen (plus margin of error)
@@ -177,6 +178,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             this.physics.world.disable(p.getGameObject()); // disabled until player close to opponent
             let controller = new AiController(this, p);
             SpaceSimClient.opponents.push(controller);
+            SpaceSim.players.push(p);
         });
     }
 
@@ -192,6 +194,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
         );
         SpaceSimClient.player = new Ship({scene: this, location: playerStartingPosition});
+        SpaceSim.players.push(SpaceSimClient.player);
         
         // setup collision with map walls
         this.physics.add.collider(SpaceSimClient.player.getGameObject(), SpaceSim.map.getGameObject());
@@ -276,12 +279,16 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _showRoom(room: RoomPlus): void {
         if (!room.visible) {
             room.visible = true;
-            const opponentsInRoom = SpaceSim.opponents
+            const opponentsInRoom = SpaceSimClient.opponents
                 .map(o => o?.ship)
-                .filter(s => s?.room === room);
+                .filter(s => {
+                    const shipLoc = s.getLocation();
+                    const shipRoom = SpaceSim.map.getRoomAtWorldXY(shipLoc.x, shipLoc.y);
+                    return shipRoom === room;
+                });
             this.add.tween({
                 targets: [
-                    ...SpaceSim.map.layer.getTilesWithin(room.x, room.y, room.width, room.height), 
+                    ...SpaceSim.map.getLayer().getTilesWithin(room.x, room.y, room.width, room.height), 
                     ...opponentsInRoom.map(o => o.getGameObject())
                 ],
                 alpha: 1,
@@ -292,17 +299,17 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 // setup collision with map walls
                 this.physics.add.collider(o.getGameObject(), SpaceSim.map.getGameObject());
                 // setup collision with player
-                this.physics.add.collider(o.getGameObject(), SpaceSim.player.getGameObject(), () => {
-                    const collisionSpeed = o.getVelocity().clone().subtract(SpaceSim.player.getVelocity()).length();
+                this.physics.add.collider(o.getGameObject(), SpaceSimClient.player.getGameObject(), () => {
+                    const collisionSpeed = o.getVelocity().clone().subtract(SpaceSimClient.player.getVelocity()).length();
                     const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
                     o.sustainDamage({
                         amount: damage, 
                         timestamp: this.time.now,
-                        attackerId: SpaceSim.player.id,
+                        attackerId: SpaceSimClient.player.id,
                         message: 'ship collision'
                     });
-                    o.target = SpaceSim.player;
-                    SpaceSim.player.sustainDamage({
+                    o.target = SpaceSimClient.player;
+                    SpaceSimClient.player.sustainDamage({
                         amount: damage, 
                         timestamp: this.time.now,
                         attackerId: o.id,

@@ -1,4 +1,4 @@
-import { Constants, GameScoreTracker, GameStats } from "space-sim-server";
+import { Constants, GameScoreTracker, GameStats, SpaceSim } from "space-sim-server";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
@@ -27,7 +27,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
 
-        this.debug = SpaceSimClient.debug;
+        this.debug = SpaceSim.debug;
     }
 
     create(): void {
@@ -149,7 +149,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            const stats: GameStats = GameScoreTracker.getStats();
+            const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
             const info: string[] = [
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
                 `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`,
@@ -157,7 +157,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                 `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore().toFixed(0)}`
             ];
-            if (SpaceSimClient.debug) {
+            if (SpaceSim.debug) {
                 const loc: Phaser.Math.Vector2 = SpaceSimClient.player.getLocation();
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }

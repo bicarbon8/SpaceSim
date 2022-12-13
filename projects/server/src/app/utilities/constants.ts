@@ -47,5 +47,8 @@ export module Constants {
     export module Socket {
         export const REQUEST_MAP = 'get-map';
         export const UPDATE_MAP = 'update-map';
+        export const REQUEST_PLAYER = 'get-player';
+        export const UPDATE_PLAYERS = 'update-players';
+        export const COMMAND_PLAYER = 'player-command';
     }
 }

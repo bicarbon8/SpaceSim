@@ -1,8 +1,8 @@
-import { Ship } from "../ship";
+import { ShipLike } from "../../interfaces/ship-like";
 import { ShipSupply } from "./ship-supply";
 
 export class AmmoSupply extends ShipSupply {
-    override apply(ship: Ship): void {
+    override apply(ship: ShipLike): void {
         if (ship) {
             const oa = ship.getWeapons();
             oa?.addAmmo(this.amount);

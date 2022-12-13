@@ -14,11 +14,11 @@ export class AiController extends InputController {
         if (this.ship.target) {
             if (this._nextWeaponsFireAt == null || this._nextWeaponsFireAt <= time) {
                 this.ship.getWeapons().trigger();
-                this._nextWeaponsFireAt = time + ((SpaceSimClient.opponents.length - GameScoreTracker.getStats().opponentsDestroyed) * 50);
+                this._nextWeaponsFireAt = time + ((SpaceSimClient.opponents.length - GameScoreTracker.getStats(this.ship).opponentsDestroyed) * 50);
             } else {
                 if (this._nextThrusterFireAt == null || this._nextThrusterFireAt <= time) {
                     this.ship.getThruster().trigger();
-                    this._nextThrusterFireAt = time + ((SpaceSimClient.opponents.length - GameScoreTracker.getStats().opponentsDestroyed) * 10);
+                    this._nextThrusterFireAt = time + ((SpaceSimClient.opponents.length - GameScoreTracker.getStats(this.ship).opponentsDestroyed) * 10);
                 }
             }
         } else {

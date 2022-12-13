@@ -90,6 +90,10 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         return this.getGameObject()?.angle || 0;
     }
 
+    setRotation(degrees: number): void {
+        this.getGameObject()?.setAngle(degrees);
+    }
+
     getHeading(): Phaser.Math.Vector2 {
         return Helpers.getHeading(this.getRotation());
     }

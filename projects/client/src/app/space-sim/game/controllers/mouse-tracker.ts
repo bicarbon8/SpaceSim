@@ -16,6 +16,10 @@ export class MouseTracker implements HasLocation {
         return this.getAngle() * (Math.PI / 180);
     }
 
+    setRotation(degrees: number): void {
+        /* not supported */
+    }
+
     getHeading(): Phaser.Math.Vector2 {
         let rotation: number = this.getAngle();
         let x: number = Math.cos(rotation);

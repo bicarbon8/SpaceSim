@@ -1,6 +1,6 @@
 import { HasLocation } from "./has-location";
 
-export interface CanTarget {
+export type CanTarget = {
     target: HasLocation;
     lookAtTarget(): void;
-}
+};

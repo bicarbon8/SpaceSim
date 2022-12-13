@@ -88,7 +88,7 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _createScore(): void {
-        const stats: GameStats = GameScoreTracker.getStats();
+        const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
         let accuracy: number = (stats.shotsLanded / stats.shotsFired) * 100;
         if (isNaN(accuracy)) {
             accuracy = 0;
