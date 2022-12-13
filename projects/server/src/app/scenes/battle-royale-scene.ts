@@ -1,7 +1,10 @@
 import * as Phaser from "phaser";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { GameMap } from "../map/game-map";
+import { Ship } from "../ships/ship";
 import { SpaceSimServer } from "../space-sim-server";
+import { Constants } from "../utilities/constants";
+import { Helpers } from "../utilities/helpers";
 
 declare global {
     interface Window { gameServerReady: () => void; }
@@ -11,10 +14,7 @@ declare const io: Server;
 
 export class BattleRoyaleScene extends Phaser.Scene {
     private _map: GameMap;
-
-    get map(): GameMap {
-        return this._map;
-    }
+    private readonly _players = new Map<string, Ship>();
     
     preload(): void {
         this.load.image('weapons-1', `assets/sprites/ship-parts/weapons-1.png`);
@@ -40,22 +40,79 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     create(): void {
-        this._createMap();
+        this._map = this._createMap();
+
         window.gameServerReady();
         console.debug('Game Server is ready');
+        
         io.on('connection', (socket) => {
-            console.debug('a user connected');
+            console.debug(`player: ${socket.id} connected`);
             socket.on('disconnect', () => {
-                console.debug('user disconnected');
+                console.debug(`player: ${socket.id} disconnected`);
+            }).on(Constants.Socket.REQUEST_MAP, () => {
+                this._sendMap(socket);
+            }).on(Constants.Socket.REQUEST_PLAYER, () => {
+                if (!this._players.has(socket.id)) {
+                    const id = socket.id;
+                    this._players.set(id, this._createPlayer(id));
+                }
+                this._sendPlayers(socket);
             });
         });
     }
 
     update(): void {
-
+        
     }
 
-    private _createMap(): void {
-        this._map = new GameMap(this, SpaceSimServer.mapOpts);
+    private _createMap(): GameMap {
+        const map = new GameMap(this, SpaceSimServer.mapOpts);
+        return map;
+    }
+
+    private _createPlayer(id: string): Ship {
+        const room = this._map.getRooms()[0];
+        let loc: Phaser.Math.Vector2;
+        do {
+            loc = Helpers.vector2(Phaser.Math.RND.realInRange(room.left, room.right),
+                Phaser.Math.RND.realInRange(room.top, room.bottom));
+        } while (this._isEmpty(loc, 100));
+        const ship = new Ship({
+            scene: this,
+            id: id,
+            location: loc
+        });
+        return ship;
+    }
+
+    private _sendMap(socket: Socket): void {
+        socket.emit(Constants.Socket.UPDATE_MAP, this._map);
+    }
+
+    private _sendPlayers(socket: Socket): void {
+        socket.emit(Constants.Socket.UPDATE_PLAYERS, this._players);
+    }
+
+    private _isEmpty(location: Phaser.Types.Math.Vector2Like, radius: number): boolean {
+        const circleA = new Phaser.Geom.Circle(location.x, location.y, radius);
+
+        // ensure within walls of room
+        const tiles: Array<Phaser.Tilemaps.Tile> = this._map.getLayer().getTilesWithinShape(circleA);
+        if (tiles?.length > 0) {
+            return false;
+        }
+
+        // ensure space not occupied by other player(s)
+        const players = Array.from(this._players.values());
+        for (var i=0; i<players.length; i++) {
+            const p = players[i];
+            const loc = p.getLocation();
+            const circleB = new Phaser.Geom.Circle(loc.x, loc.y, p.getGameObject().width / 2)
+            const occupied = Phaser.Geom.Intersects.CircleToCircle(circleA, circleB);
+            if (occupied) {
+                return false;
+            }
+        }
+        return true;
     }
 }

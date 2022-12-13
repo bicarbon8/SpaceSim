@@ -34,7 +34,8 @@ export module SpaceSimServer {
         roomMinWidth: mapWidth-1,
         roomMaxWidth: mapWidth,
         roomMinHeight: mapHeight-1,
-        roomMaxHeight: mapHeight
+        roomMaxHeight: mapHeight,
+        doorPadding: 0
     };
 
     export const start = () => {

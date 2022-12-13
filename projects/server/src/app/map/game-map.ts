@@ -141,18 +141,20 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
             // right wall
             this._layer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, right, top, 1, height);
 
-            // Dungeons have rooms that are connected with doors. Each door has an x & y relative to the
-            // room's location
-            const doors = room.getDoorLocations();
-            for (let i = 0; i < doors.length; i++) {
-                if (doors[i].y === 0) {
-                    this._layer.removeTileAt(x + doors[i].x - 1, y + doors[i].y);
-                } else if (doors[i].y === room.height - 1) {
-                    this._layer.removeTileAt(x + doors[i].x - 1, y + doors[i].y);
-                } else if (doors[i].x === 0) {
-                    this._layer.removeTileAt(x + doors[i].x, y + doors[i].y - 1);
-                } else if (doors[i].x === room.width - 1) {
-                    this._layer.removeTileAt(x + doors[i].x, y + doors[i].y - 1);
+            if (options.doorPadding > 0) {
+                // Dungeons have rooms that are connected with doors. Each door has an x & y relative to the
+                // room's location
+                const doors = room.getDoorLocations();
+                for (let i = 0; i < doors.length; i++) {
+                    if (doors[i].y === 0) {
+                        this._layer.removeTileAt(x + doors[i].x - 1, y + doors[i].y);
+                    } else if (doors[i].y === room.height - 1) {
+                        this._layer.removeTileAt(x + doors[i].x - 1, y + doors[i].y);
+                    } else if (doors[i].x === 0) {
+                        this._layer.removeTileAt(x + doors[i].x, y + doors[i].y - 1);
+                    } else if (doors[i].x === room.width - 1) {
+                        this._layer.removeTileAt(x + doors[i].x, y + doors[i].y - 1);
+                    }
                 }
             }
         });
