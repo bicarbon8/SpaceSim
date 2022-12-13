@@ -1,7 +1,6 @@
 import * as Phaser from "phaser";
 import { Server } from "socket.io";
 import { GameMap } from "../map/game-map";
-import { GameMapOptions } from "../map/game-map-options";
 import { SpaceSimServer } from "../space-sim-server";
 
 declare global {

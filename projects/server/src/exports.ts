@@ -9,6 +9,8 @@ export * from "./app/interfaces/has-location";
 export * from "./app/interfaces/has-physics-body";
 export * from "./app/interfaces/has-room";
 export * from "./app/interfaces/has-temperature";
+export * from "./app/interfaces/number-range";
+export * from "./app/interfaces/ship-like";
 export * from "./app/interfaces/size";
 export * from "./app/interfaces/updatable";
 /** map */

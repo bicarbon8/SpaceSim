@@ -1,7 +1,6 @@
 import "phaser";
-import { AiController } from "./controllers/ai-controller";
 import { Size } from "space-sim-server/src/app/interfaces/size";
-import { GameMap, Ship, SpaceSim } from "space-sim-server";
+import { SpaceSim, ShipLike } from "space-sim-server";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
@@ -10,11 +9,13 @@ import { SpaceSimClientOptions } from "./space-sim-client-options";
 import { Socket } from "socket.io-client";
 import { MultiplayerScene } from "./scenes/multiplayer-scene";
 import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
+import { AiController } from "./controllers/ai-controller";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
         const parent: HTMLDivElement = document.getElementById(options?.parentElementId || 'space-sim') as HTMLDivElement;
         const size = SpaceSimClient.getSize(options?.parentElementId);
+        SpaceSim.debug = options.debug ?? false;
         let conf: Phaser.Types.Core.GameConfig = {
             type: Phaser.AUTO,
             width: options?.width || size.width,
@@ -28,7 +29,7 @@ export class SpaceSimClient {
             physics: {
                 default: 'arcade',
                 arcade: {
-                    debug: (options?.debug === undefined) ? false : options.debug,
+                    debug: SpaceSim.debug,
                     gravity: { x: 0, y: 0 },
                 }
             },
@@ -63,7 +64,7 @@ export module SpaceSimClient {
     }
     export function stop(): void {
         if (_inst) {
-            SpaceSim?.destroy(true, true);
+            SpaceSim.game?.destroy(true, true);
         }
     }
     export function resize(): void {
@@ -105,4 +106,6 @@ export module SpaceSimClient {
         return size;
     }
     export var socket: Socket;
+    export var player: ShipLike;
+    export var opponents: Array<AiController>;
 }

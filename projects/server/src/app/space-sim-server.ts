@@ -31,9 +31,9 @@ export module SpaceSimServer {
         width: mapWidth, // in tiles, not pixels
         height: mapHeight,
         maxRooms: 1,
-        roomMinWidth: mapWidth,
+        roomMinWidth: mapWidth-1,
         roomMaxWidth: mapWidth,
-        roomMinHeight: mapHeight,
+        roomMinHeight: mapHeight-1,
         roomMaxHeight: mapHeight
     };
 

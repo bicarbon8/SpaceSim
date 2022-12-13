@@ -1,12 +1,15 @@
 import express from 'express';
 import * as http from 'http';
 import * as path from 'path';
+import DataUriParser from 'datauri/parser.js';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { Server } from 'socket.io';
 import * as devenv from './environments/environment.js';
 import * as prodenv from './environments/environment.prod.js';
 
 const env = (process.env.production) ? prodenv : devenv;
+
+const parser = new DataUriParser();
 
 const app = express();
 app.use(express.static(path.join(process.cwd(), 'dist')));
@@ -35,6 +38,13 @@ const setupPhaserServer = () => {
         virtualConsole: virtualConsole
     }).then((dom) => {
         console.debug('Virtual DOM loaded...');
+        dom.window.URL.createObjectURL = (blob: Blob) => {
+            if (blob){
+                return parser.format(blob.type, blob[Object.getOwnPropertySymbols(blob)[0]]._buffer).content;
+            }
+            return null;
+        };
+        dom.window.URL.revokeObjectURL = (objectURL) => {};
         dom.window.gameServerReady = () => {
             server.listen(8081, function () {
                 console.log(`Game Server Listening on ${server.address()?.['port']}`);

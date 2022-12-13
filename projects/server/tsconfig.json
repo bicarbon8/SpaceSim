@@ -4,9 +4,10 @@
     "baseUrl": "./",
     "outDir": "./dist",
     "sourceMap": true,
-    "declaration": false,
+    "declaration": true,
     "downlevelIteration": true,
     "experimentalDecorators": true,
+    "noEmit": false,
     "moduleResolution": "node",
     "importHelpers": true,
     "target": "ES2020",
@@ -18,8 +19,5 @@
     ],
     "allowSyntheticDefaultImports": true,
     "strictNullChecks": false,
-  },
-  "exclude": [
-    "./src/app/**/*"
-  ]
+  }
 }

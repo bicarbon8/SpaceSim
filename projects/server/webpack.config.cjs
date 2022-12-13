@@ -1,9 +1,11 @@
 const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = (env) => {
   return {
     entry: './src/app/space-sim-server.ts',
-    devtool: 'inline-source-map',
+    devtool: 'source-map',
     module: {
       rules: [
         {
@@ -25,10 +27,29 @@ module.exports = (env) => {
       extensions: [ '.tsx', '.ts', '.js' ],
     },
     output: {
-      library: 'bundle',
-      libraryTarget: 'umd',
-      filename: 'space-sim-server-bundle.js',
+      filename: '[name].bundle.js',
+      chunkFilename: '[name].chunk.js',
       path: path.resolve(__dirname, 'dist'),
-    }
+    },
+    optimization: {
+      splitChunks: {
+        cacheGroups: {
+          commons: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            filename: '[name].bundle.js'
+          }
+        }
+      }
+    },
+    plugins: [
+      new HtmlWebpackPlugin({ gameName: 'SpaceSim', template: 'src/index.html' }),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: 'src/assets', to: 'assets' }
+        ]
+      })
+    ]
   };
 };

@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "game server for multiplayer version of Spaceship Game",
   "type": "module",
-  "main": "./dist/server.js",
+  "main": "./dist/exports.js",
+  "types": "./dist/exports.d.ts",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && npm run build:express-server && npm run build:game-bundle && npm run copy-files",
-    "build:dev": "npm run clean && npm run build:express-server && npm run build:game-bundle:dev && npm run copy-files",
+    "build": "npm run clean && npm run build:express-server && npm run build:game-bundle",
+    "build:dev": "npm run clean && npm run build:express-server && npm run build:game-bundle:dev",
     "build:express-server": "tsc -b",
     "build:game-bundle": "webpack --env production --config ./webpack.config.cjs",
     "build:game-bundle:dev": "webpack --config ./webpack.config.cjs",
-    "copy-files": "copyfiles -E -V -u 1 ./src/**/*.html ./dist/",
     "start": "npm run build && production=true node ./dist/server.js",
     "start:dev": "npm run build:dev && node ./dist/server.js",
     "test": ""
@@ -26,6 +26,7 @@
   "license": "MIT",
   "dependencies": {
     "canvas": "^2.10.2",
+    "datauri": "^4.1.0",
     "express": "^4.18.2",
     "jsdom": "^20.0.3",
     "phaser": "^3.55.2",
@@ -34,8 +35,10 @@
   "devDependencies": {
     "@types/express": "^4.17.14",
     "@types/jsdom": "^20.0.1",
+    "copy-webpack-plugin": "^11.0.0",
     "copyfiles": "^2.4.1",
     "file-replace-loader": "^1.4.0",
+    "html-webpack-plugin": "^5.5.0",
     "rimraf": "^3.0.2",
     "ts-loader": "^9.4.2",
     "ts-node": "^10.9.1",
