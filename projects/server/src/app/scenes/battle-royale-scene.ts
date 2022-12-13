@@ -86,7 +86,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _sendMap(socket: Socket): void {
-        socket.emit(Constants.Socket.UPDATE_MAP, this._map);
+        socket.emit(Constants.Socket.UPDATE_MAP, SpaceSimServer.mapOpts);
     }
 
     private _sendPlayers(socket: Socket): void {
@@ -99,6 +99,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
         // ensure within walls of room
         const tiles: Array<Phaser.Tilemaps.Tile> = this._map.getLayer().getTilesWithinShape(circleA);
         if (tiles?.length > 0) {
+            console.debug(`location collides with map: `, location);
             return false;
         }
 
@@ -110,6 +111,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             const circleB = new Phaser.Geom.Circle(loc.x, loc.y, p.getGameObject().width / 2)
             const occupied = Phaser.Geom.Intersects.CircleToCircle(circleA, circleB);
             if (occupied) {
+                console.debug(`location collides with existing player: `, location);
                 return false;
             }
         }

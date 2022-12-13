@@ -35,7 +35,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.force = options.force ?? 1;
         this.damage = options.damage ?? 1;
         this.scale = options.scale ?? 1;
-        this.timeout = options.timeout ?? 1000;
+        this.timeout = options.timeout ?? 500;
         this.mass = options.mass ?? 0;
         
         this._createGameObj();
@@ -71,7 +71,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
                             attackerId: this.weapon.ship.id,
                             message: `projectile hit`
                         });
-                        opp.target = this.weapon.ship;
+                        opp.target ??= this.weapon.ship;
                         GameScoreTracker.shotLanded();
                     });
                 }
@@ -123,7 +123,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
     }
 
     getRange(): number {
-        return this.getSpeed() * (this.timeout / 1000);
+        return this.force * (this.timeout / 1000);
     }
 
     destroy() {

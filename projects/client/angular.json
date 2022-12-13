@@ -21,8 +21,8 @@
 						"assets": [
 							{
 								"glob": "**/*", 
-								"input": "../../server/src/assets", 
-								"output": "./src/assets/"
+								"input": "../server/src/assets", 
+								"output": "./assets/"
 							},
 							"src/favicon.ico",
 							"src/assets",

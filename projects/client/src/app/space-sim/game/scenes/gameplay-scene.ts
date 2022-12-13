@@ -183,7 +183,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     private _createMapAndPlayer(): void {
-        SpaceSim.map = new GameMap(this);
+        SpaceSim.map = new GameMap(this, {
+            doorPadding: 2
+        });
         
         // Place the player in random empty tile in the first room
         const startingRoom = SpaceSim.map.getRoomClosestToOrigin();

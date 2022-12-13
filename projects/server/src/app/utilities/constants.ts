@@ -50,5 +50,6 @@ export module Constants {
         export const REQUEST_PLAYER = 'get-player';
         export const UPDATE_PLAYERS = 'update-players';
         export const COMMAND_PLAYER = 'player-command';
+        export const PLAYER_DEATH = 'player-death';
     }
 }

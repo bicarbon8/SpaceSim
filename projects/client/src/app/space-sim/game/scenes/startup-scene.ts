@@ -131,7 +131,11 @@ export class StartupScene extends Phaser.Scene {
             onHover: () => {
                 this._startMultiplayerButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
             }
-        }).setActive(false);
+        });
+        if (!SpaceSimClient.socket || !SpaceSimClient.socket?.connected) {
+            this._startMultiplayerButton.setActive(false)
+                .setVisible(false);
+        }
         layout.addContents(this._startMultiplayerButton);
 
         const controlsTextButton: TextButton = new TextButton(this, {
@@ -246,7 +250,9 @@ export class StartupScene extends Phaser.Scene {
             SpaceSimClient.socket = io(`ws://${environment.websocket}`);
             SpaceSimClient.socket.on('connect', () => {
                 console.debug(`connected to server at: ${environment.websocket}`);
-                this._startMultiplayerButton.setActive(true);
+                this._startMultiplayerButton
+                    .setActive(true)
+                    .setVisible(true);
             });
         }
     }

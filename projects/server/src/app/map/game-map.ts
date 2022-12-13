@@ -98,6 +98,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
     }
 
     private _createGameObj(options: GameMapOptions): void {
+        const doorPadding = options?.doorPadding ?? 0;
         this._dungeon = new Dungeon({
             randomSeed: options?.seed ?? 'bicarbon8',
             width: options?.width ?? 200, // in tiles, not pixels
@@ -115,7 +116,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
                 },
                 maxRooms: options?.maxRooms ?? 100
             },
-            doorPadding: options?.doorPadding ?? 2
+            doorPadding: doorPadding
         });
 
         this._tileMap = this._scene.make.tilemap({
@@ -141,7 +142,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
             // right wall
             this._layer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, right, top, 1, height);
 
-            if (options.doorPadding > 0) {
+            if (doorPadding > 0) {
                 // Dungeons have rooms that are connected with doors. Each door has an x & y relative to the
                 // room's location
                 const doors = room.getDoorLocations();
