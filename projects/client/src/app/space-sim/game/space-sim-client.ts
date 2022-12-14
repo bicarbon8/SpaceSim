@@ -1,5 +1,5 @@
 import "phaser";
-import { SpaceSim, ShipLike, Size } from "space-sim-server";
+import { SpaceSim, Ship, Size } from "space-sim-server";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
@@ -105,6 +105,6 @@ export module SpaceSimClient {
         return size;
     }
     export var socket: Socket;
-    export var player: ShipLike;
+    export var player: Ship;
     export const opponents = new Array<AiController>();
 }

@@ -12,8 +12,10 @@
     "build:express-server": "tsc -b",
     "build:game-bundle": "webpack --env production --config ./webpack.config.cjs",
     "build:game-bundle:dev": "webpack --config ./webpack.config.cjs",
-    "start": "npm run build && production=true node ./dist/server.js",
-    "start:dev": "npm run build:dev && node ./dist/server.js",
+    "start": "npm run build && npm run open",
+    "start:dev": "npm run build:dev && npm run open:dev",
+    "open": "production=true node ./dist/server.js",
+    "open:dev": "node ./dist/server.js",
     "test": ""
   },
   "keywords": [

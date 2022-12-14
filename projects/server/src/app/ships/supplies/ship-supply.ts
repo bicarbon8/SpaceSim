@@ -36,16 +36,17 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         const velocity = heading.multiply({x: speed, y: speed});
         this._body.setVelocity(velocity.x, velocity.y);
         this.scene.physics.add.collider(this, SpaceSim.map.getGameObject());
-        this.scene.physics.add.collider(this, SpaceSim.players
+        this.scene.physics.add.collider(this, SpaceSim.players()
             .filter(p => p?.active)
-            .map(o => o?.getGameObject()), (obj1, obj2) => {
+            .map(o => o?.getGameObject()), 
+            (obj1, obj2) => {
                 let shipGameObj: Phaser.GameObjects.Container;
                 if (obj1 === this) {
                     shipGameObj = obj2 as Phaser.GameObjects.Container;
                 } else {
                     shipGameObj = obj1 as Phaser.GameObjects.Container;
                 }
-                const ship: ShipLike = SpaceSim.players.find(p => {
+                const ship: ShipLike = SpaceSim.players().find(p => {
                     const loc = p.getLocation();
                     if (shipGameObj.x === loc.x && shipGameObj.y === loc.y) {
                         return true;

@@ -24,8 +24,8 @@ export module SpaceSimServer {
         scene: [BattleRoyaleScene],
         autoFocus: false
     };
-    const mapWidth = 100;
-    const mapHeight = 100;
+    const mapWidth = 50;
+    const mapHeight = 50;
     export const mapOpts: GameMapOptions = {
         seed: 'bicarbon8',
         width: mapWidth, // in tiles, not pixels

@@ -86,7 +86,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
     }
 
     getActiveShipsWithinRadius(location: Phaser.Types.Math.Vector2Like, radius: number): Array<ShipLike> {
-        return SpaceSim.players
+        return SpaceSim.players()
             .filter(s => {
                 if (s?.active) {
                     if (Phaser.Math.Distance.BetweenPoints(s.getLocation(), location) <= radius) {

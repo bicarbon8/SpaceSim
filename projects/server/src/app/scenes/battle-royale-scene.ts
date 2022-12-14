@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import { Server, Socket } from "socket.io";
 import { GameMap } from "../map/game-map";
 import { Ship } from "../ships/ship";
+import { SpaceSim } from "../space-sim";
 import { SpaceSimServer } from "../space-sim-server";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
@@ -13,22 +14,11 @@ declare global {
 declare const io: Server;
 
 export class BattleRoyaleScene extends Phaser.Scene {
-    private _map: GameMap;
-    private readonly _players = new Map<string, Ship>();
-    
     preload(): void {
         this.load.image('weapons-1', `assets/sprites/ship-parts/weapons-1.png`);
-        this.load.image('weapons-2', `assets/sprites/ship-parts/weapons-2.png`);
-        this.load.image('weapons-3', `assets/sprites/ship-parts/weapons-3.png`);
         this.load.image('wings-1', `assets/sprites/ship-parts/wings-1.png`);
-        this.load.image('wings-2', `assets/sprites/ship-parts/wings-2.png`);
-        this.load.image('wings-3', `assets/sprites/ship-parts/wings-3.png`);
         this.load.image('cockpit-1', `assets/sprites/ship-parts/cockpit-1.png`);
-        this.load.image('cockpit-2', `assets/sprites/ship-parts/cockpit-2.png`);
-        this.load.image('cockpit-3', `assets/sprites/ship-parts/cockpit-3.png`);
         this.load.image('engine-1', `assets/sprites/ship-parts/engine-1.png`);
-        this.load.image('engine-2', `assets/sprites/ship-parts/engine-2.png`);
-        this.load.image('engine-3', `assets/sprites/ship-parts/engine-3.png`);
         
         this.load.image('bullet', `assets/sprites/bullet.png`);
         this.load.image('ammo', `assets/sprites/ammo.png`);
@@ -40,71 +30,91 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     create(): void {
-        this._map = this._createMap();
+        this._createMap();
 
         window.gameServerReady();
         console.debug('Game Server is ready');
         
-        io.on('connection', (socket) => {
+        io.on('connection', (socket: Socket) => {
             console.debug(`player: ${socket.id} connected`);
             socket.on('disconnect', () => {
                 console.debug(`player: ${socket.id} disconnected`);
+                this._removePlayer(socket.id);
             }).on(Constants.Socket.REQUEST_MAP, () => {
+                console.debug(`received map request from: ${socket.id}`);
                 this._sendMap(socket);
             }).on(Constants.Socket.REQUEST_PLAYER, () => {
-                if (!this._players.has(socket.id)) {
-                    const id = socket.id;
-                    this._players.set(id, this._createPlayer(id));
+                console.debug(`received new player request from: ${socket.id}`);
+                if (!SpaceSim.playersMap.has(socket.id)) {
+                    this._createPlayer(socket.id);
                 }
-                this._sendPlayers(socket);
             });
         });
     }
 
-    update(): void {
-        
+    update(time: number, delta: number): void {
+        try {
+            SpaceSim.players().forEach(ship => ship?.update(time, delta));
+            this._sendPlayers();
+        } catch (e) {
+            console.error(`error in update: `, e);
+        }
     }
 
-    private _createMap(): GameMap {
+    private _createMap(): void {
         const map = new GameMap(this, SpaceSimServer.mapOpts);
-        return map;
+        SpaceSim.map = map;
     }
 
     private _createPlayer(id: string): Ship {
-        const room = this._map.getRooms()[0];
+        const room = SpaceSim.map.getRooms()[0];
+        const topleft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
+        const botright: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
         let loc: Phaser.Math.Vector2;
-        do {
-            loc = Helpers.vector2(Phaser.Math.RND.realInRange(room.left, room.right),
-                Phaser.Math.RND.realInRange(room.top, room.bottom));
-        } while (this._isEmpty(loc, 100));
-        const ship = new Ship({
-            scene: this,
+        // do {
+            let x = Phaser.Math.RND.realInRange(topleft.x, botright.x);
+            let y = Phaser.Math.RND.realInRange(topleft.y, botright.y);
+            loc = Helpers.vector2(x, y);
+        // } while (this._isEmpty(loc, 100));
+        const ship = new Ship(this, {
             id: id,
             location: loc
         });
+        console.debug(`adding ship: `, ship);
+        SpaceSim.playersMap.set(id, ship);
         return ship;
+    }
+
+    private _removePlayer(id: string): void {
+        if (SpaceSim.playersMap.has(id)) {
+            const player = SpaceSim.playersMap.get(id);
+            SpaceSim.playersMap.delete(id);
+            console.debug(`removing ship: `, player);
+            player?.destroy();
+            io.emit(Constants.Socket.PLAYER_DEATH, id);
+        }
     }
 
     private _sendMap(socket: Socket): void {
         socket.emit(Constants.Socket.UPDATE_MAP, SpaceSimServer.mapOpts);
     }
 
-    private _sendPlayers(socket: Socket): void {
-        socket.emit(Constants.Socket.UPDATE_PLAYERS, this._players);
+    private _sendPlayers(): void {
+        io.emit(Constants.Socket.UPDATE_PLAYERS, SpaceSim.players().map(p => p.config));
     }
 
     private _isEmpty(location: Phaser.Types.Math.Vector2Like, radius: number): boolean {
         const circleA = new Phaser.Geom.Circle(location.x, location.y, radius);
 
         // ensure within walls of room
-        const tiles: Array<Phaser.Tilemaps.Tile> = this._map.getLayer().getTilesWithinShape(circleA);
-        if (tiles?.length > 0) {
-            console.debug(`location collides with map: `, location);
-            return false;
-        }
+        // const tiles: Array<Phaser.Tilemaps.Tile> = SpaceSim.map.getLayer().getTilesWithinShape(circleA);
+        // if (tiles?.length > 0) {
+        //     console.debug(`location ${JSON.stringify(location)} collides with map tiles: `, tiles);
+        //     return false;
+        // }
 
         // ensure space not occupied by other player(s)
-        const players = Array.from(this._players.values());
+        const players = Array.from(SpaceSim.playersMap.values());
         for (var i=0; i<players.length; i++) {
             const p = players[i];
             const loc = p.getLocation();

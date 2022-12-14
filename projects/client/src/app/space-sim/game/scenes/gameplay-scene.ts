@@ -105,7 +105,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
 
     update(time: number, delta: number): void {
         try {
-            SpaceSim.players?.forEach(p => p.update(time, delta));
+            SpaceSim.players().forEach(p => p.update(time, delta));
 
             // If the player has entered a new room, make it visible
             const currentLoc = SpaceSimClient.player.getLocation();
@@ -173,12 +173,18 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
-            let p = new Ship({scene: this, location: pos});
+            let p = new Ship(this, {
+                location: pos,
+                weaponsKey: Phaser.Math.RND.between(1, 3),
+                wingsKey: Phaser.Math.RND.between(1, 3),
+                cockpitKey: Phaser.Math.RND.between(1, 3),
+                engineKey: Phaser.Math.RND.between(1, 3)
+            });
             p.getGameObject().setAlpha(0); // hidden until player enters room
             this.physics.world.disable(p.getGameObject()); // disabled until player close to opponent
             let controller = new AiController(this, p);
             SpaceSimClient.opponents.push(controller);
-            SpaceSim.players.push(p);
+            SpaceSim.playersMap.set(p.id, p);
         });
     }
 
@@ -195,8 +201,14 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
         );
-        SpaceSimClient.player = new Ship({scene: this, location: playerStartingPosition});
-        SpaceSim.players.push(SpaceSimClient.player);
+        SpaceSimClient.player = new Ship(this, {
+            location: playerStartingPosition,
+            weaponsKey: Phaser.Math.RND.between(1, 3),
+            wingsKey: Phaser.Math.RND.between(1, 3),
+            cockpitKey: Phaser.Math.RND.between(1, 3),
+            engineKey: Phaser.Math.RND.between(1, 3)
+        });
+        SpaceSim.playersMap.set(SpaceSimClient.player.id, SpaceSimClient.player);
         
         // setup collision with map walls
         this.physics.add.collider(SpaceSimClient.player.getGameObject(), SpaceSim.map.getGameObject());
@@ -215,7 +227,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 // TODO: remove opponent from SpaceSim.opponents array
                 GameScoreTracker.opponentDestroyed();
             }
-        })
+        });
     }
 
     private _createStellarBodiesLayer(): void {
@@ -310,7 +322,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                         attackerId: SpaceSimClient.player.id,
                         message: 'ship collision'
                     });
-                    o.target = SpaceSimClient.player;
                     SpaceSimClient.player.sustainDamage({
                         amount: damage, 
                         timestamp: this.time.now,

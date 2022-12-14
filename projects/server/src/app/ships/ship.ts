@@ -20,10 +20,16 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
     readonly id: string; // UUID
     readonly scene: Scene;
     readonly mass: number;
-    target: HasLocation;
+    
+    private _active: boolean = true;
+    private _target: HasLocation;
     private _temperature: number; // in Celcius
     private _integrity: number;
     private _remainingFuel: number;
+    private _weaponsKey: number;
+    private _wingsKey: number;
+    private _cockpitKey: number;
+    private _engineKey: number;
 
     private _engine: Engine;
     private _weapons: Weapons;
@@ -37,42 +43,111 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
     private _destroyedSound: Phaser.Sound.BaseSound;
     private _shipDamageFlicker: Phaser.Tweens.Tween;
 
-    private _active: boolean = true;
-
     private _selfDestruct: boolean;
     
-    constructor(options: ShipOptions) {
+    constructor(scene: Phaser.Scene, options: ShipOptions) {
         this.id = options.id ?? Phaser.Math.RND.uuid();
-        this.scene = options.scene;
-        this.target = options.target;
-        this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
-        this._remainingFuel = options.remainingFuel ?? Constants.Ship.MAX_FUEL;
-        this._temperature = options.temperature ?? 0;
+        this.scene = scene;
         this.mass = options.mass ?? 100;
 
         // create ship-pod sprite, group and container
         this._createGameObj(options);
-
-        this._engine = new Engine(this);
-        this._weapons = new MachineGun(this);
         
         this._lastDamagedBy = [];
 
-        this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1});
+        this.configure(options);
+    }
+
+    configure(options: ShipOptions): this {
+        const loc = options.location ?? Helpers.vector2();
+        this.setLocation(loc);
+        const v = options.velocity ?? Helpers.vector2();
+        this.getPhysicsBody().setVelocity(v.x, v.y);
+        const angle = options.angle ?? 0;
+        this.setRotation(angle);
+        this._target = options.target;
+        this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
+        this._remainingFuel = options.remainingFuel ?? Constants.Ship.MAX_FUEL;
+        this._temperature = options.temperature ?? 0;
+        return this;
+    }
+
+    get config(): ShipOptions {
+        return {
+            id: this.id,
+            location: this.location.clone(),
+            velocity: this.velocity.clone(),
+            angle: this.angle,
+            integrity: this.integrity,
+            remainingFuel: this.remainingFuel,
+            temperature: this.temperature,
+            mass: this.mass
+        };
     }
 
     get active(): boolean {
         return this._active && this.getPhysicsBody()?.enable;
     }
 
-    get temperature(): number {
-        return this._temperature;
+    get location(): Phaser.Math.Vector2 {
+        let go: Phaser.GameObjects.Container = this._positionContainer;
+        if (go) {
+            return new Phaser.Math.Vector2(go.x, go.y);
+        }
+        return Phaser.Math.Vector2.ZERO;
+    }
+
+    get velocity(): Phaser.Math.Vector2 {
+        return this.getPhysicsBody()?.velocity ?? Helpers.vector2();
+    }
+
+    get angle(): number {
+        return this._rotationContainer?.angle || 0;
+    }
+
+    get target(): HasLocation {
+        return this._target;
+    }
+
+    setTarget(target: HasLocation): void {
+        this._target = target;
     }
 
     get integrity(): number {
         return this._integrity;
     }
 
+    get remainingFuel(): number {
+        return this._remainingFuel;
+    }
+
+    get temperature(): number {
+        return this._temperature;
+    }
+
+    get damageSources(): Array<DamageOptions> {
+        return this._lastDamagedBy
+            .map(d => {
+                return {...d} as DamageOptions;
+            });
+    }
+
+    get weaponsKey(): number {
+        return this._weaponsKey;
+    }
+
+    get wingsKey(): number {
+        return this._wingsKey;
+    }
+
+    get cockpitKey(): number {
+        return this._cockpitKey;
+    }
+
+    get engineKey(): number {
+        return this._engineKey;
+    }
+    
     getWeapons(): Weapons {
         return this._weapons;
     }
@@ -332,7 +407,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
     }
 
     destroy(): void {
-        this._destroyedSound.play();
+        this._destroyedSound?.play();
         this._active = false;
         this._displayShipExplosion();
         this._expelSupplies();
@@ -347,36 +422,37 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
         this.scene.events.emit(Constants.Events.PLAYER_DEATH, this);
     }
 
-    private _createGameObj(config?: ShipOptions): void {
+    private _createGameObj(options?: ShipOptions): void {
         // create container as parent to all ship parts
-        let loc: Phaser.Math.Vector2 = config?.location ?? Helpers.vector2();
+        let loc: Phaser.Math.Vector2 = options?.location ?? Helpers.vector2();
         this._positionContainer = this.scene.add.container(loc.x, loc.y);
         this._positionContainer.setDepth(Constants.UI.Layers.PLAYER);
 
+        this._weaponsKey = options.weaponsKey ?? 1;
+        this._wingsKey = options.wingsKey ?? 1;
+        this._cockpitKey = options.cockpitKey ?? 1;
+        this._engineKey = options.engineKey ?? 1;
+
         // create ship sprite and set container bounds based on sprite size
-        const weaponsKey = Phaser.Math.RND.between(1, 3);
-        const wingsKey = Phaser.Math.RND.between(1, 3);
-        const cockpitKey = Phaser.Math.RND.between(1, 3);
-        const engineKey = Phaser.Math.RND.between(1, 3);
         const weaponsSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
-            key: `weapons-${weaponsKey}`
+            key: `weapons-${this.weaponsKey}`
         }, false);
         const wingsSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
-            key: `wings-${wingsKey}`
+            key: `wings-${this.wingsKey}`
         }, false);
         const cockpitSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
-            key: `cockpit-${cockpitKey}`
+            key: `cockpit-${this.cockpitKey}`
         }, false);
         const engineSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
-            key: `engine-${engineKey}`
+            key: `engine-${this.engineKey}`
         }, false);
         this._rotationContainer = this.scene.add.container(0, 0, [weaponsSprite, wingsSprite, cockpitSprite, engineSprite]);
         this._positionContainer.add(this._rotationContainer);
@@ -397,6 +473,15 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
         this._createHeatIndicator();
 
         this._createOverheatIndicator();
+
+        this._engine = new Engine(this);
+        this._weapons = new MachineGun(this);
+
+        try {
+            this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1});
+        } catch (e) {
+            // ignore
+        }
     }
 
     private _createIntegrityIndicator(): void {

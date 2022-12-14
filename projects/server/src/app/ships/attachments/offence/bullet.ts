@@ -40,8 +40,6 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         
         this._createGameObj();
 
-        this._hitSound = this.scene.sound.add('bullet-hit');
-        
         const startingA: number = options.angle ?? 0;
         this.getGameObject().setAngle(startingA);
         const startingV: Phaser.Math.Vector2 = options.startingV || Phaser.Math.Vector2.ZERO;
@@ -62,7 +60,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
             .forEach((opp: Ship) => {
                 if (opp.id !== this.weapon.ship.id) {
                     this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
-                        this._hitSound.play();
+                        this._hitSound?.play();
                         this._createHitParticles();
                         this.destroy();
                         opp.sustainDamage({
@@ -71,7 +69,6 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
                             attackerId: this.weapon.ship.id,
                             message: `projectile hit`
                         });
-                        opp.target ??= this.weapon.ship;
                         GameScoreTracker.shotLanded();
                     });
                 }
@@ -161,6 +158,12 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
 
         this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setCircle(ball.displayWidth / 2);
+
+        try {
+            this._hitSound = this.scene.sound.add('bullet-hit');
+        } catch (e) {
+            // ignore
+        }
     }
 
     private _createHitParticles(): void {

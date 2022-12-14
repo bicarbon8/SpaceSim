@@ -45,10 +45,10 @@ export class Engine extends ShipAttachment {
 
     private _applyThrust(opts: ThrustOptions): void {
         // sound effects
-        if (!this._thrusterSound.isPlaying) {
-            this._thrusterSound.play({seek:0.3, volume: 0.2});
+        if (!this._thrusterSound?.isPlaying) {
+            this._thrusterSound?.play({seek:0.3, volume: 0.2});
             setTimeout(() => {
-                this._thrusterSound.stop();
+                this._thrusterSound?.stop();
             }, 250);
         }
         // visual effects
@@ -87,7 +87,11 @@ export class Engine extends ShipAttachment {
     }
 
     private _createGameObject(): void {
-        this._thrusterSound = this.scene.sound.add('thruster-fire');
+        try {
+            this._thrusterSound = this.scene.sound.add('thruster-fire');
+        } catch (e) {
+            // ignore
+        }
         this._flareParticles = this.scene.add.particles('flares');
         this._flareParticles.setPosition(20, 0);
         this.ship.getRotationContainer().add(this._flareParticles);

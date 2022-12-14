@@ -1,6 +1,7 @@
 import { HasLocation } from "./has-location";
 
 export type CanTarget = {
-    target: HasLocation;
+    readonly target: HasLocation;
+    setTarget(target: HasLocation): void;
     lookAtTarget(): void;
 };
