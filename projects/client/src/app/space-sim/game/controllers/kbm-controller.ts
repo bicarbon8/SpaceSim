@@ -1,4 +1,5 @@
-import { Ship } from "space-sim-server";
+import { Constants, Ship } from "space-sim-server";
+import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
 
@@ -26,14 +27,15 @@ export class KbmController extends InputController {
 
         this._setupInputHandling();
 
-        this._mouseTracker = new MouseTracker(this.ship.scene);
-        this.ship.setTarget(this._mouseTracker);
+        this._mouseTracker = new MouseTracker(this.ship);
     }
         
     update(time: number, delta: number): void {
+        this._mouseTracker.update(time, delta);
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
+                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE);
                 this.ship.getThruster()?.trigger();
             }
             // reverse Thruster
@@ -54,6 +56,7 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
+                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON);
                 this.ship.getWeapons()?.trigger();
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {

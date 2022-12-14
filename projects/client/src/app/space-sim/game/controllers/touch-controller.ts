@@ -1,6 +1,7 @@
 import { Helpers, Constants, Ship } from "space-sim-server";
 import { InputController } from "./input-controller";
 import { GridLayout, LayoutContent, TextButton } from "phaser-ui-components";
+import { SpaceSimClient } from "../space-sim-client";
 
 export class TouchController extends InputController {
     private _mainContainer: GridLayout;
@@ -31,7 +32,11 @@ export class TouchController extends InputController {
         let radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
         let degrees: number = Helpers.rad2deg(radians);
         // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
-        this.ship.setRotation(degrees);
+        // only update if angle changed more than minimum allowed degrees
+        if (!Phaser.Math.Fuzzy.Equal(this.ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
+            SpaceSimClient.socket?.emit(Constants.Socket.SET_ANGLE, degrees);
+            this.ship.setRotation(degrees);
+        }
     }
 
     private _handleFireTouch(): void {

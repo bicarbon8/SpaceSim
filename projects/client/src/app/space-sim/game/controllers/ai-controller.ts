@@ -14,14 +14,14 @@ export class AiController extends InputController {
             .map(d => d.attackerId)).values())
             .pop();
         if (attackerId) {
-            const attacker = SpaceSim.players().find(p => p.id === attackerId);
+            const attacker = SpaceSim.playersMap.get(attackerId);
             if (attacker) {
-                this.ship.setTarget(attacker);
+                this.ship.lookAt(attacker.location);
             }
         }
         this.ship.update(time, delta);
 
-        if (this.ship.target) {
+        if (attackerId) {
             if (this._nextWeaponsFireAt == null || this._nextWeaponsFireAt <= time) {
                 this.ship.getWeapons().trigger();
                 this._nextWeaponsFireAt = time + ((SpaceSimClient.opponents.length - GameScoreTracker.getStats(this.ship).opponentsDestroyed) * 50);

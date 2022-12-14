@@ -1,11 +1,22 @@
 import { Scene } from "phaser";
-import { HasLocation, Helpers } from "space-sim-server";
+import { HasLocation, Helpers, Ship, Updatable, Constants } from "space-sim-server";
+import { SpaceSimClient } from "../space-sim-client";
 
-export class MouseTracker implements HasLocation {
+export class MouseTracker implements HasLocation, Updatable {
     private _scene: Scene;
+    private _ship: Ship;
     
-    constructor(scene: Scene) {
-        this._scene = scene;
+    public active: boolean = true;
+
+    constructor(ship: Ship) {
+        this._ship = ship;
+        this._scene = ship.scene;
+    }
+
+    update(time: number, delta: number): void {
+        if (this.active) {
+            this._setShipAngle();
+        }
     }
 
     getAngle(): number {
@@ -59,5 +70,19 @@ export class MouseTracker implements HasLocation {
 
     private _pointer(): Phaser.Input.Pointer {
         return this._scene?.input?.activePointer;
+    }
+
+    private _setShipAngle(): void {
+        if (this._ship) {
+            const loc = this.getLocation();
+            const shipPos = this._ship.getLocation();
+            const radians: number = Phaser.Math.Angle.Between(loc.x, loc.y, shipPos.x, shipPos.y);
+            const degrees: number = Phaser.Math.RadToDeg(radians);
+            // only update if angle changed more than minimum allowed degrees
+            if (!Phaser.Math.Fuzzy.Equal(this._ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
+                SpaceSimClient.socket?.emit(Constants.Socket.SET_ANGLE, degrees);
+                this._ship.setRotation(degrees);
+            }
+        }
     }
 }

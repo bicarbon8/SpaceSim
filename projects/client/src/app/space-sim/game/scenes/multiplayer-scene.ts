@@ -83,6 +83,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     create(): void {
         SpaceSim.map = null;
         SpaceSimClient.player = null;
+        SpaceSim.playersMap.clear();
         this._stellarBodies = new Array<StellarBody>();
 
         this._playMusic();
@@ -124,6 +125,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             }).on(Constants.Socket.PLAYER_DEATH, (id: string) => {
                 const ship = SpaceSim.playersMap.get(id);
                 ship?.destroy();
+                SpaceSim.playersMap.delete(ship.id);
             }).on(Constants.Socket.UPDATE_PLAYERS, (shipOpts: Array<ShipOptions>) => {
                 shipOpts.forEach(o => {
                     let ship = SpaceSim.playersMap.get(o.id);
@@ -147,6 +149,16 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                         SpaceSimClient.player = ship;
                     }
                 });
+            }).on(Constants.Socket.TRIGGER_ENGINE, (id: string) => {
+                const ship = SpaceSim.playersMap.get(id);
+                if (ship) {
+                    ship.getThruster().trigger();
+                }
+            }).on(Constants.Socket.TRIGGER_WEAPON, (id: string) => {
+                const ship = SpaceSim.playersMap.get(id);
+                if (ship) {
+                    ship.getWeapons().trigger();
+                }
             });
     }
 
@@ -154,15 +166,26 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
             if (SpaceSimClient.player.id == ship?.id) {
+                this._turnOffSocketEventHandling();
+                SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH);
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start('game-over-scene');
-                        this.game.scene.stop('gameplay-hud-scene');
+                        this.game.scene.stop('multiplayer-hud-scene');
                         this.game.scene.stop(this);
                     }
                 });
             }
         });
+    }
+
+    private _turnOffSocketEventHandling(): void {
+        SpaceSimClient.socket
+            .off(Constants.Socket.UPDATE_MAP)
+            .off(Constants.Socket.PLAYER_DEATH)
+            .off(Constants.Socket.UPDATE_PLAYERS)
+            .off(Constants.Socket.TRIGGER_ENGINE)
+            .off(Constants.Socket.TRIGGER_WEAPON);
     }
 
     private async _getMapFromServer(): Promise<void> {

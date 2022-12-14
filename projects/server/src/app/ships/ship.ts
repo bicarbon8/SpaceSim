@@ -22,7 +22,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
     readonly mass: number;
     
     private _active: boolean = true;
-    private _target: HasLocation;
     private _temperature: number; // in Celcius
     private _integrity: number;
     private _remainingFuel: number;
@@ -65,7 +64,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
         this.getPhysicsBody().setVelocity(v.x, v.y);
         const angle = options.angle ?? 0;
         this.setRotation(angle);
-        this._target = options.target;
         this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
         this._remainingFuel = options.remainingFuel ?? Constants.Ship.MAX_FUEL;
         this._temperature = options.temperature ?? 0;
@@ -103,14 +101,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
 
     get angle(): number {
         return this._rotationContainer?.angle || 0;
-    }
-
-    get target(): HasLocation {
-        return this._target;
-    }
-
-    setTarget(target: HasLocation): void {
-        this._target = target;
     }
 
     get integrity(): number {
@@ -164,7 +154,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
      */
     update(time: number, delta: number): void {
         if (this.active) {
-            this.lookAtTarget();
             this._checkOverheatCondition(time, delta);
             this._engine.update(time, delta);
             this._weapons.update(time, delta);
@@ -259,11 +248,10 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
         return this._rotationContainer;
     }
 
-    lookAtTarget(): void {
-        if (this.target && this.getGameObject()) {
-            const loc = this.target.getLocation();
+    lookAt(target: Phaser.Types.Math.Vector2Like): void {
+        if (target && this.getGameObject()) {
             const shipPos = this.getLocation();
-            const radians: number = Phaser.Math.Angle.Between(loc.x, loc.y, shipPos.x, shipPos.y);
+            const radians: number = Phaser.Math.Angle.Between(target.x, target.y, shipPos.x, shipPos.y);
             const degrees: number = Phaser.Math.RadToDeg(radians);
             this.setRotation(degrees);
         }

@@ -47,7 +47,9 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     update(time: number, delta: number): void {
         this._displayHUDInfo();
-        this._controller?.update(time, delta);
+        if (SpaceSimClient.player?.active) {
+            this._controller?.update(time, delta);
+        }
     }
 
     private _createHUD(): void {

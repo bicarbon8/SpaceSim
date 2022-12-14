@@ -8,6 +8,8 @@ export module Constants {
         export const MAX_SPEED = 500;
         export const COOLING_RATE_PER_SECOND = 2; // degrees per second
 
+        export const MIN_ROTATION_ANGLE = 0.1; // degrees
+
         export module Engine {
             export const FORCE = 50;
             export const FUEL_PER_USE = 0.1; // units
@@ -51,5 +53,8 @@ export module Constants {
         export const UPDATE_PLAYERS = 'update-players';
         export const COMMAND_PLAYER = 'player-command';
         export const PLAYER_DEATH = 'player-death';
+        export const TRIGGER_ENGINE = 'trigger-engine';
+        export const TRIGGER_WEAPON = 'trigger-weapon';
+        export const SET_ANGLE = 'set-angle';
     }
 }

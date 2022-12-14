@@ -13,8 +13,11 @@ const parser = new DataUriParser();
 
 const app = express();
 app.use(express.static(path.join(process.cwd(), 'dist')));
-app.get('/', function (req, res) {
+app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'dist', 'index.html'));
+});
+app.get('/status', (req, res) => {
+    res.sendStatus(200);
 });
 
 const server = new http.Server(app);

@@ -1,11 +1,10 @@
-import { HasLocation } from "../interfaces/has-location";
+import Phaser from "phaser";
 
 export interface ShipOptions {
     readonly id?: string;
     readonly location?: Phaser.Math.Vector2;
     readonly velocity?: Phaser.Math.Vector2;
     readonly angle?: number;
-    readonly target?: HasLocation;
     readonly integrity?: number;
     readonly remainingFuel?: number;
     readonly temperature?: number;

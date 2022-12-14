@@ -34,7 +34,20 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
         window.gameServerReady();
         console.debug('Game Server is ready');
-        
+
+        this._setupSocketEventHandling();
+    }
+
+    update(time: number, delta: number): void {
+        try {
+            SpaceSim.players().forEach(ship => ship?.update(time, delta));
+            this._sendPlayers();
+        } catch (e) {
+            console.error(`error in update: `, e);
+        }
+    }
+
+    private _setupSocketEventHandling(): void {
         io.on('connection', (socket: Socket) => {
             console.debug(`player: ${socket.id} connected`);
             socket.on('disconnect', () => {
@@ -48,17 +61,36 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 if (!SpaceSim.playersMap.has(socket.id)) {
                     this._createPlayer(socket.id);
                 }
+            }).on(Constants.Socket.TRIGGER_ENGINE, () => {
+                console.debug(`received trigger engine request from: ${socket.id}`);
+                const ship = SpaceSim.playersMap.get(socket.id);
+                if (ship) {
+                    socket.broadcast.emit(Constants.Socket.TRIGGER_ENGINE, ship.id);
+                    ship.getThruster().trigger();
+                }
+            }).on(Constants.Socket.TRIGGER_WEAPON, () => {
+                console.debug(`received trigger weapon request from: ${socket.id}`);
+                const ship = SpaceSim.playersMap.get(socket.id);
+                if (ship) {
+                    socket.broadcast.emit(Constants.Socket.TRIGGER_WEAPON, ship.id);
+                    ship.getWeapons().trigger();
+                }
+            }).on(Constants.Socket.SET_ANGLE, (degrees: number) => {
+                console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
+                const ship = SpaceSim.playersMap.get(socket.id);
+                if (ship) {
+                    ship.setRotation(degrees);
+                }
+            }).on(Constants.Socket.PLAYER_DEATH, () => {
+                console.debug(`received player death notice from: ${socket.id}`);
+                const ship = SpaceSim.playersMap.get(socket.id);
+                if (ship) {
+                    socket.broadcast.emit(Constants.Socket.PLAYER_DEATH, ship.id);
+                    SpaceSim.playersMap.delete(ship.id);
+                    ship.getGameObject()?.destroy();
+                }
             });
         });
-    }
-
-    update(time: number, delta: number): void {
-        try {
-            SpaceSim.players().forEach(ship => ship?.update(time, delta));
-            this._sendPlayers();
-        } catch (e) {
-            console.error(`error in update: `, e);
-        }
     }
 
     private _createMap(): void {
@@ -80,7 +112,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
             id: id,
             location: loc
         });
-        console.debug(`adding ship: `, ship);
+        this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
+        this.physics.add.collider(ship.getGameObject(), SpaceSim.players().map(p => p?.getGameObject()));
+        console.debug(`adding ship: `, ship.config);
         SpaceSim.playersMap.set(id, ship);
         return ship;
     }
@@ -89,7 +123,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
         if (SpaceSim.playersMap.has(id)) {
             const player = SpaceSim.playersMap.get(id);
             SpaceSim.playersMap.delete(id);
-            console.debug(`removing ship: `, player);
+            console.debug(`removing ship: `, player.config);
             player?.destroy();
             io.emit(Constants.Socket.PLAYER_DEATH, id);
         }
