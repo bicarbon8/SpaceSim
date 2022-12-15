@@ -6,7 +6,7 @@ export const environment = {
   production: false,
   baseUrl: 'http://localhost:4500',
   baseHref: '/',
-  websocket: 'localhost:8081'
+  websocket: 'ws://localhost:8081'
 };
 
 /*

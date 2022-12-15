@@ -43,9 +43,9 @@ const setupPhaserServer = () => {
         console.debug('Virtual DOM loaded...');
         dom.window.URL.createObjectURL = (blob: Blob) => {
             if (blob){
-                return parser.format(blob.type, blob[Object.getOwnPropertySymbols(blob)[0]]._buffer).content;
+                return parser.format(blob.type, blob[Object.getOwnPropertySymbols(blob)[0]]._buffer).content ?? '';
             }
-            return null;
+            return '';
         };
         dom.window.URL.revokeObjectURL = (objectURL) => {};
         dom.window.gameServerReady = () => {

@@ -248,7 +248,7 @@ export class StartupScene extends Phaser.Scene {
 
     private _createSocket(): void {
         if (!SpaceSimClient.socket || SpaceSimClient.socket.disconnected) {
-            SpaceSimClient.socket = io(`ws://${environment.websocket}`);
+            SpaceSimClient.socket = io(`${environment.websocket}`);
             SpaceSimClient.socket.on('connect', () => {
                 console.debug(`connected to server at: ${environment.websocket}`);
                 this._startMultiplayerButton
