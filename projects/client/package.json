@@ -5,7 +5,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "clean": "rimraf ./dist && rimfaf ./docs",
+    "clean": "rimraf ./dist && rimraf ./docs",
     "build": "npm run clean && ng build --configuration production --output-path ./docs",
     "build:dev": "npm run clean && ng build",
     "test": "ng test",
