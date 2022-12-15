@@ -41,12 +41,14 @@ export class TouchController extends InputController {
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
+            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON);
             this.ship.getWeapons()?.trigger();
         }
     }
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
+            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE);
             this.ship.getThruster()?.trigger();
         }
     }
