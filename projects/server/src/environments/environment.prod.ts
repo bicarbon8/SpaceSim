@@ -1,5 +1,5 @@
 export const environment = {
     production: true,
     corsUrl: 'https://bicarbon8.github.io',
-    serverPort: 8081
+    serverPort: 80
 };

@@ -159,7 +159,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         });
 
         // hide all tiles until we enter the room
-        this._layer.forEachTile(function (tile) { tile.alpha = 0; });
+        this._layer.forEachTile(tile => tile.setAlpha(0));
         this._layer.setCollisionBetween(1, 14);
     }
 }

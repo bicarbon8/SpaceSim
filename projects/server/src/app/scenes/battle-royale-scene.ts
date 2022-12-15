@@ -105,8 +105,8 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     private _createPlayer(id: string): Ship {
         const room = SpaceSim.map.getRooms()[0];
-        const topleft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
-        const botright: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
+        const topleft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left+1, room.top+1);
+        const botright: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right-1, room.bottom-1);
         let loc: Phaser.Math.Vector2;
         do {
             let x = Phaser.Math.RND.realInRange(topleft.x, botright.x);
@@ -146,8 +146,8 @@ export class BattleRoyaleScene extends Phaser.Scene {
         const circleA = new Phaser.Geom.Circle(location.x, location.y, radius);
 
         // ensure within walls of room
-        const tiles: Array<Phaser.Tilemaps.Tile> = SpaceSim.map.getLayer().getTilesWithinShape(circleA)
-            ?.filter(t => t.canCollide);
+        const tiles: Array<Phaser.Tilemaps.Tile> = SpaceSim.map.getLayer()
+            .getTilesWithinShape(circleA)?.filter(t => t.collides);
         if (tiles?.length > 0) {
             console.debug(`location ${JSON.stringify(location)} collides with map tiles: `, tiles);
             return false;

@@ -152,10 +152,11 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     private _displayHUDInfo(): void {
         try {
             const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
+            const accuracy: string = (stats.shotsFired) ? (stats.shotsLanded / stats.shotsFired).toFixed(1) : 'n/a';
             const info: string[] = [
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
                 `Kills: ${stats.opponentsDestroyed}`,
-                `Accuracy: ${stats.shotsLanded/stats.shotsFired} %`,
+                `Accuracy: ${accuracy} %`,
                 `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
                 `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore().toFixed(0)}`
