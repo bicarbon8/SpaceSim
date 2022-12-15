@@ -2,7 +2,8 @@ import { Card, FlexLayout, LinearLayout, Styles, TextButton } from "phaser-ui-co
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { Constants } from "space-sim-server";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
+import { DisconnectDescription } from "socket.io-client/build/esm/socket";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -253,6 +254,13 @@ export class StartupScene extends Phaser.Scene {
                 this._startMultiplayerButton
                     .setActive(true)
                     .setVisible(true);
+            }).on('disconnect', (reason: Socket.DisconnectReason, description: DisconnectDescription) => {
+                console.warn(`socket disconnect`, reason, description);
+                if (reason === "io server disconnect") {
+                    // the disconnection was initiated by the server, you need to reconnect manually
+                    console.info(`attempting to reconnect to server...`);
+                    SpaceSimClient.socket.connect();
+                }
             });
         }
     }

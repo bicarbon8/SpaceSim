@@ -28,9 +28,9 @@ export class TouchController extends InputController {
      * @param y the y location of the touch
      */
     private _handleAimTouch(x: number, y: number): void {
-        let pos: Phaser.Math.Vector2 = Helpers.vector2(x, y).subtract(Helpers.vector2(60));
-        let radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
-        let degrees: number = Helpers.rad2deg(radians);
+        const pos: Phaser.Math.Vector2 = Helpers.vector2(x, y).subtract(Helpers.vector2(60));
+        const radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
+        const degrees: number = +Helpers.rad2deg(radians).toFixed(0);
         // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
         // only update if angle changed more than minimum allowed degrees
         if (!Phaser.Math.Fuzzy.Equal(this.ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {

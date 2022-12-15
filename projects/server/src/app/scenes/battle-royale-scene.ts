@@ -76,10 +76,15 @@ export class BattleRoyaleScene extends Phaser.Scene {
                     ship.getWeapons().trigger();
                 }
             }).on(Constants.Socket.SET_ANGLE, (degrees: number) => {
-                console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
-                const ship = SpaceSim.playersMap.get(socket.id);
-                if (ship) {
-                    ship.setRotation(degrees);
+                try {
+                    const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
+                    console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
+                    const ship = SpaceSim.playersMap.get(socket.id);
+                    if (ship) {
+                        ship.setRotation(d);
+                    }
+                } catch (e) {
+                    console.error(`error in handling set angle event:`, e);
                 }
             }).on(Constants.Socket.PLAYER_DEATH, () => {
                 console.debug(`received player death notice from: ${socket.id}`);
@@ -103,11 +108,11 @@ export class BattleRoyaleScene extends Phaser.Scene {
         const topleft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
         const botright: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
         let loc: Phaser.Math.Vector2;
-        // do {
+        do {
             let x = Phaser.Math.RND.realInRange(topleft.x, botright.x);
             let y = Phaser.Math.RND.realInRange(topleft.y, botright.y);
             loc = Helpers.vector2(x, y);
-        // } while (this._isEmpty(loc, 100));
+        } while (this._isEmpty(loc, 100));
         const ship = new Ship(this, {
             id: id,
             location: loc
@@ -141,11 +146,12 @@ export class BattleRoyaleScene extends Phaser.Scene {
         const circleA = new Phaser.Geom.Circle(location.x, location.y, radius);
 
         // ensure within walls of room
-        // const tiles: Array<Phaser.Tilemaps.Tile> = SpaceSim.map.getLayer().getTilesWithinShape(circleA);
-        // if (tiles?.length > 0) {
-        //     console.debug(`location ${JSON.stringify(location)} collides with map tiles: `, tiles);
-        //     return false;
-        // }
+        const tiles: Array<Phaser.Tilemaps.Tile> = SpaceSim.map.getLayer().getTilesWithinShape(circleA)
+            ?.filter(t => t.canCollide);
+        if (tiles?.length > 0) {
+            console.debug(`location ${JSON.stringify(location)} collides with map tiles: `, tiles);
+            return false;
+        }
 
         // ensure space not occupied by other player(s)
         const players = Array.from(SpaceSim.playersMap.values());

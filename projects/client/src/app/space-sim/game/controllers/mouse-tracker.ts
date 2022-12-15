@@ -77,7 +77,7 @@ export class MouseTracker implements HasLocation, Updatable {
             const loc = this.getLocation();
             const shipPos = this._ship.getLocation();
             const radians: number = Phaser.Math.Angle.Between(loc.x, loc.y, shipPos.x, shipPos.y);
-            const degrees: number = Phaser.Math.RadToDeg(radians);
+            const degrees: number = +Phaser.Math.RadToDeg(radians).toFixed(0);
             // only update if angle changed more than minimum allowed degrees
             if (!Phaser.Math.Fuzzy.Equal(this._ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
                 SpaceSimClient.socket?.emit(Constants.Socket.SET_ANGLE, degrees);

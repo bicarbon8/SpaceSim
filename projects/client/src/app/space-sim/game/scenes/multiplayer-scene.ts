@@ -90,6 +90,11 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this._setupSocketEventHandling();
         this._setupSceneEventHandling();
         this._getMapFromServer()
+            .then(_ => {
+                // If the player has entered a new room, make it visible
+                const room = SpaceSim.map.getRooms()[0];
+                this._showRoom(room);
+            })
             .then(_ => this._createStellarBodiesLayer())
             .then(_ => this._getPlayerFromServer())
             .then(_ => this.resize())
@@ -281,5 +286,18 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
         this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music.stop());
         this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music.destroy());
+    }
+
+    private _showRoom(room: RoomPlus): void {
+        if (!room.visible) {
+            room.visible = true;
+            this.add.tween({
+                targets: [
+                    ...SpaceSim.map.getLayer().getTilesWithin(room.x, room.y, room.width, room.height)
+                ],
+                alpha: 1,
+                duration: 1
+            });
+        }
     }
 }
