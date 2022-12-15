@@ -154,7 +154,8 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
             const info: string[] = [
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
-                `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`,
+                `Kills: ${stats.opponentsDestroyed}`,
+                `Accuracy: ${stats.shotsLanded/stats.shotsFired} %`,
                 `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
                 `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore().toFixed(0)}`

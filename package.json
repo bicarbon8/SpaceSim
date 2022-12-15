@@ -1,16 +1,20 @@
 {
     "name": "space-sim",
     "workspaces": [
-        "projects/*"
+        "projects/server",
+        "projects/client"
     ],
     "scripts": {
         "clean": "npm run clean --workspaces --if-present",
-        "build": "npm run build --workspaces --if-present",
+        "build": "npm run build --workspaces --if-present && npm run copy-dist-to-root && npm run copy-docs-to-root",
         "build:dev": "npm run build:dev --workspaces --if-present",
+        "copy-dist-to-root": "copyfiles -u 3 \"./projects/**/dist/**/*\"",
+        "copy-docs-to-root": "copyfiles -u 3 \"./projects/**/docs/**/*\"",
         "test": "npm run test --workspaces --if-present",
         "start": "npm run start --workspaces --if-present"
     },
     "devDependencies": {
+        "copyfiles": "^2.4.1",
         "dpdm": "^3.9.0",
         "lerna": "^5.5.2",
         "typedoc": "^0.23.15"
