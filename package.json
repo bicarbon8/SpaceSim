@@ -1,6 +1,7 @@
 {
     "name": "space-sim",
     "workspaces": [
+        "projects/phaser-server",
         "projects/server",
         "projects/client"
     ],

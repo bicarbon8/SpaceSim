@@ -10,8 +10,8 @@
     "noEmit": false,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "ES2020",
-    "module": "ES2020",
+    "target": "ES6",
+    "module": "ES6",
     "lib": [
       "es2018",
       "dom",
@@ -19,10 +19,5 @@
     ],
     "allowSyntheticDefaultImports": true,
     "strictNullChecks": false,
-  },
-  "ts-node": {
-    "esm": true
-  },
-  "include": ["./**/*.ts"],
-  "exclude": ["node_modules"]
+  }
 }

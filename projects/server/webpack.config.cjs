@@ -4,7 +4,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = (env) => {
   return {
-    entry: './src/app/space-sim-server.ts',
+    entry: {
+      engine: './src/app/space-sim-game-engine.ts',
+      // server: './src/server.ts'
+    },
     devtool: 'source-map',
     module: {
       rules: [
@@ -13,11 +16,11 @@ module.exports = (env) => {
           use: 'ts-loader',
           exclude: /node_modules|test/,
         }, {
-          test: /environment\.ts?$/,
+          test: /server\.config\.json?$/,
           loader: 'file-replace-loader',
           options: {
               condition: env.production,
-              replacement: path.resolve('./src/environments/environment.prod.ts'),
+              replacement: path.resolve('./server.config.prod.json'),
               async: true
           }
         }
@@ -44,7 +47,6 @@ module.exports = (env) => {
       }
     },
     plugins: [
-      new HtmlWebpackPlugin({ gameName: 'SpaceSim', template: 'src/index.html' }),
       new CopyWebpackPlugin({
         patterns: [
           { from: 'src/assets', to: 'assets' }
