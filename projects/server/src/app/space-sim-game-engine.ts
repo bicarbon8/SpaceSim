@@ -1,4 +1,5 @@
 import { GameEngine } from "phaser-server-engine";
+import { Server } from "socket.io";
 import { GameMapOptions } from "./map/game-map-options";
 import { BattleRoyaleScene } from "./scenes/battle-royale-scene";
 import { SpaceSim } from "./space-sim";
@@ -19,9 +20,23 @@ export class SpaceSimGameEngine extends GameEngine {
     };
     
     constructor() {
-        super({scene: [BattleRoyaleScene]});
-        SpaceSim.io = this.io;
+        // super({scene: [BattleRoyaleScene]});
+        super({
+            scene: {
+                preload: () => console.info('preload called'),
+                create: () => console.info('create called')
+            }
+        });
+        try {
+            SpaceSimGameEngine.io = this.io;
+        } catch (e) {
+            console.warn(e);
+        }
     }
+}
+
+export module SpaceSimGameEngine {
+    export var io: Server;
 }
 
 SpaceSim.game = new SpaceSimGameEngine().game;

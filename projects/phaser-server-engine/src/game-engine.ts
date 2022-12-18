@@ -26,7 +26,6 @@ export type GameEngineConfig = {
 export class GameEngine {
     private static readonly DEFAULT_CONFIG: Phaser.Types.Core.GameConfig = {
         type: Phaser.HEADLESS,
-        parent: 'phaser-server-engine',
         width: 1,
         height: 1,
         scale: {
@@ -69,8 +68,8 @@ export class GameEngine {
         console.debug('started phaser-game-engine...');
         this._game = new Phaser.Game(this._gameConfig);
         // once the game loop is loaded and running, signal to the server we are ready
-        // this._game.events.once(Phaser.Core.Events.READY, () => window.gameEngineReady());
-        window.gameEngineReady();
+        this._game.events.once(Phaser.Core.Events.READY, () => window.gameEngineReady());
+        
         return this;
     }
 

@@ -69,11 +69,9 @@ export class GameServer {
 <meta charset="utf-8">
 ${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>').join('\n')}
 </head>
-<body>
-<canvas id="phaser-server-engine"></canvas>
-</body>
+<body />
 </html>`;
-        fs.writeFileSync(path.join(process.cwd(), 'dist', 'index.html'), this.html);
+        // fs.writeFileSync(path.join(process.cwd(), 'dist', 'index.html'), this.html);
 
         this._parser = new datauri();
         
@@ -162,7 +160,7 @@ ${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>
                 pretendToBeVisual: true,
                 virtualConsole: virtualConsole
             });
-            console.debug('Virtual DOM loaded...');
+            console.debug('Virtual DOM loaded...', dom.serialize());
             dom.window.URL.createObjectURL = (blob: Blob) => {
                 if (blob){
                     return this._parser.format(
@@ -179,7 +177,7 @@ ${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>
                     console.info(`Game Server Listening on ${this._server.address()?.['port']}`);
                 });
                 dom.window.io = this._io;
-                dom.window.gameEngineReady = null; // prevent re-entry
+                // dom.window.gameEngineReady = null; // prevent re-entry
             };
         } catch(e) {
             console.error('error starting game-server: ', e);
