@@ -7,11 +7,8 @@
   "types": "./dist/exports.d.ts",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && npm run build:express-server && npm run build:game-bundle",
-    "build:dev": "npm run clean && npm run build:express-server && npm run build:game-bundle:dev",
-    "build:express-server": "",
-    "build:game-bundle": "webpack --env production --config ./webpack.config.cjs",
-    "build:game-bundle:dev": "webpack --config ./webpack.config.cjs",
+    "build": "npm run clean && webpack --env production",
+    "build:dev": "npm run clean && webpack",
     "start": "npm run build && npm run open",
     "start:dev": "npm run build:dev && npm run open",
     "open": "npx phaser-server",
