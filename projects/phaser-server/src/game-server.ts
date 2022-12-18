@@ -64,11 +64,15 @@ export class GameServer {
 
         this.html = `<!DOCTYPE html>
 <html>
-<head><meta charset="utf-8"></head>
-<body></body>
-${this._config.scripts.map(s => '<script src="' + s + '"></script>').join('\n')}
+<head>
+<meta charset="utf-8">
+${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>').join('\n')}
+</head>
+<body>
+<canvas id="phaser-server-engine"></canvas>
+</body>
 </html>`;
-        // fs.writeFileSync(path.join(process.cwd(), 'dist', 'index.html'), this.html);
+        fs.writeFileSync(path.join(process.cwd(), 'dist', 'index.html'), this.html);
 
         this._parser = new DataUriParser();
         

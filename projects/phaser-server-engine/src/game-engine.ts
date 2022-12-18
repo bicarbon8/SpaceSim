@@ -26,6 +26,7 @@ export type GameEngineConfig = {
 export class GameEngine {
     private static readonly DEFAULT_CONFIG: Phaser.Types.Core.GameConfig = {
         type: Phaser.HEADLESS,
+        parent: 'phaser-server-engine',
         width: 1,
         height: 1,
         scale: {

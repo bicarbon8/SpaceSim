@@ -2,7 +2,7 @@
     "allowedCorsOrigin": "http://localhost:4500",
     "serverRoot": "./dist",
     "scripts": [
-        "./engine.bundle.js",
-        "./vendors.bundle.js"
+        "engine.bundle.js",
+        "vendors.bundle.js"
     ]
 }
