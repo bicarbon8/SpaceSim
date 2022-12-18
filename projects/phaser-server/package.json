@@ -1,8 +1,8 @@
 {
   "name": "phaser-server",
-  "type": "module",
   "version": "1.0.0",
   "description": "an express.js server that runs a headless phaser game engine using socket.io",
+  "bin": "dist/start-server.js",
   "main": "dist/game-server.js",
   "types": "dist/game-server.d.ts",
   "scripts": {

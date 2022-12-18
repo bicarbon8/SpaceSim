@@ -9,12 +9,12 @@
     "clean": "rimraf ./dist",
     "build": "npm run clean && npm run build:express-server && npm run build:game-bundle",
     "build:dev": "npm run clean && npm run build:express-server && npm run build:game-bundle:dev",
-    "build:express-server": "tsc -b",
+    "build:express-server": "",
     "build:game-bundle": "webpack --env production --config ./webpack.config.cjs",
     "build:game-bundle:dev": "webpack --config ./webpack.config.cjs",
     "start": "npm run build && npm run open",
     "start:dev": "npm run build:dev && npm run open",
-    "open": "node ./dist/server.js",
+    "open": "npx phaser-server",
     "test": ""
   },
   "keywords": [

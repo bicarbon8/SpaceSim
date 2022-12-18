@@ -1,10 +1,11 @@
-import express from 'express';
 import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
-import DataUriParser from 'datauri/parser.js';
 import { JSDOM, VirtualConsole } from 'jsdom';
 import { Server } from 'socket.io';
+
+const express = require('express');
+const datauri = require('datauri/parser');
 
 export type GameServerConfig = {
     /**
@@ -40,7 +41,7 @@ export type GameServerConfig = {
 
 export class GameServer {
     private _config: GameServerConfig;
-    private _parser: DataUriParser;
+    private _parser: any;
     private _app;
     private _server: http.Server;
     private _io: Server;
@@ -74,7 +75,7 @@ ${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>
 </html>`;
         fs.writeFileSync(path.join(process.cwd(), 'dist', 'index.html'), this.html);
 
-        this._parser = new DataUriParser();
+        this._parser = new datauri();
         
         this._app = express();
         this._app.use(express.static(this._config.serverRoot));
