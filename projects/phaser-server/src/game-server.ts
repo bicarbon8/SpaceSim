@@ -129,7 +129,7 @@ ${this._config.scripts.map(s => '<script src="' + s + '"></script>\n')}
                 maybeExists = path.join(this._config.serverRoot, s);
             }
             if (fs.existsSync(maybeExists)) {
-                fullPaths.push(maybeExists);
+                fullPaths.push(s);
             } else {
                 throw `unable to locate script at: ${maybeExists}`;
             }
@@ -138,9 +138,7 @@ ${this._config.scripts.map(s => '<script src="' + s + '"></script>\n')}
     }
 
     /**
-     * loads the `index.html` file specified in the `server.config.json` file
-     * or `./dist/index.html` by default which "should" load in any Javascript
-     * files required to run the `game-engine` and then starts the ExpressJs
+     * loads the virtual DOM hosting the game-engine scripts and starts the ExpressJs
      * server listening on the port specified in the `server.config.json` file
      * or 8081 by default for `socket.io` connections used to send / receive
      * messages to / from game engine clients

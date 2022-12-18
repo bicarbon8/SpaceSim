@@ -1,10 +1,10 @@
 {
-  "name": "phaser-server",
+  "name": "phaser-server-engine",
   "type": "module",
   "version": "1.0.0",
   "description": "an express.js server that runs a headless phaser game engine using socket.io",
-  "main": "dist/game-server.js",
-  "types": "dist/game-server.d.ts",
+  "main": "dist/game-engine.js",
+  "types": "dist/game-engine.d.ts",
   "scripts": {
     "clean": "rimraf ./dist",
     "build": "npm run clean && tsc -b",

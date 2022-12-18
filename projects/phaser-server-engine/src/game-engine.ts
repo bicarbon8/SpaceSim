@@ -61,8 +61,8 @@ export class GameEngine {
     
     start(): GameEngine {
         this._game = new Phaser.Game(this._gameConfig);
-        // once the game loop is loaded and running signal to the server we are ready
-        this._game.events.once(Phaser.Core.Events.STEP, () => window.gameEngineReady());
+        // once the game loop is loaded and running, signal to the server we are ready
+        this._game.events.once(Phaser.Core.Events.READY, () => window.gameEngineReady());
         return this;
     }
 

@@ -1,4 +1,4 @@
-import { GameEngine } from "phaser-server/dist/web/game-engine";
+import { GameEngine } from "phaser-server-engine";
 import { GameMapOptions } from "./map/game-map-options";
 import { BattleRoyaleScene } from "./scenes/battle-royale-scene";
 import { SpaceSim } from "./space-sim";

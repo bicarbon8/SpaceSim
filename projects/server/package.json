@@ -14,7 +14,7 @@
     "build:game-bundle:dev": "webpack --config ./webpack.config.cjs",
     "start": "npm run build && npm run open",
     "start:dev": "npm run build:dev && npm run open",
-    "open": "ts-node ./src/server.ts",
+    "open": "node ./dist/server.js",
     "test": ""
   },
   "keywords": [
@@ -33,6 +33,7 @@
     "jsdom": "^20.0.3",
     "phaser": "^3.55.2",
     "phaser-server": "^1.0.0",
+    "phaser-server-engine": "^1.0.0",
     "phaser-ui-components": "^3.0.0",
     "socket.io": "^4.5.4"
   },
