@@ -20,6 +20,7 @@ export class SpaceSimGameEngine extends GameEngine {
     
     constructor() {
         super({scene: [BattleRoyaleScene]});
+        SpaceSim.io = this.io;
     }
 }
 

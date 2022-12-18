@@ -46,6 +46,7 @@ export class GameEngine {
     private _gameConfig: Phaser.Types.Core.GameConfig;
 
     constructor(config: GameEngineConfig) {
+        console.debug('loaded game-engine file...');
         this._gameConfig = {
             ...GameEngine.DEFAULT_CONFIG,
             scene: config.scene
@@ -58,11 +59,17 @@ export class GameEngine {
         }
         return this._game;
     }
+
+    get io(): Server {
+        return io;
+    }
     
     start(): GameEngine {
+        console.debug('started phaser-game-engine...');
         this._game = new Phaser.Game(this._gameConfig);
         // once the game loop is loaded and running, signal to the server we are ready
-        this._game.events.once(Phaser.Core.Events.READY, () => window.gameEngineReady());
+        // this._game.events.once(Phaser.Core.Events.READY, () => window.gameEngineReady());
+        window.gameEngineReady();
         return this;
     }
 
@@ -72,4 +79,3 @@ export class GameEngine {
         return this;
     }
 }
-console.info('loaded game-engine file...');

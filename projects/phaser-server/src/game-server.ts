@@ -66,8 +66,9 @@ export class GameServer {
 <html>
 <head><meta charset="utf-8"></head>
 <body></body>
-${this._config.scripts.map(s => '<script src="' + s + '"></script>\n')}
+${this._config.scripts.map(s => '<script src="' + s + '"></script>').join('\n')}
 </html>`;
+        // fs.writeFileSync(path.join(process.cwd(), 'dist', 'index.html'), this.html);
 
         this._parser = new DataUriParser();
         
@@ -143,7 +144,7 @@ ${this._config.scripts.map(s => '<script src="' + s + '"></script>\n')}
      * or 8081 by default for `socket.io` connections used to send / receive
      * messages to / from game engine clients
      */
-    startGameEngine = () => {
+    startGameEngine(): void {
         const virtualConsole = new VirtualConsole();
         virtualConsole.sendTo(console, {
             omitJSDOMErrors: false
