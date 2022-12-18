@@ -7,8 +7,8 @@
   "types": "./dist/exports.d.ts",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && webpack --env production",
-    "build:dev": "npm run clean && webpack",
+    "build": "npm run clean && tsc -b && webpack --env production",
+    "build:dev": "npm run clean && tsc -b && webpack",
     "start": "npm run build && npm run open",
     "start:dev": "npm run build:dev && npm run open",
     "open": "npx phaser-server",

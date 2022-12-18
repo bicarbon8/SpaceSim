@@ -30,8 +30,6 @@ export class BattleRoyaleScene extends Phaser.Scene {
         console.debug('Game Server is ready');
 
         this._setupSocketEventHandling();
-
-        window.gameEngineReady();
     }
 
     update(time: number, delta: number): void {

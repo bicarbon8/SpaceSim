@@ -19,13 +19,7 @@ export class SpaceSimGameEngine extends GameEngine {
     };
     
     constructor() {
-        // super({scene: [BattleRoyaleScene]});
-        super({
-            scene: {
-                preload: () => console.info('preload called'),
-                create: () => console.info('create called')
-            }
-        });
+        super({scene: [BattleRoyaleScene]});
     }
 }
 
