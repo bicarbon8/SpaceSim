@@ -93,7 +93,7 @@ ${this.scripts.map(s => '<script defer="defer" src="' + s + '"></script>').join(
             res.sendStatus(200);
         });
 
-        this._server = new http.Server(this._app);
+        this._server = http.createServer(this._app);
 
         this._io = new Server(this._server, {
             cors: {
@@ -101,6 +101,50 @@ ${this.scripts.map(s => '<script defer="defer" src="' + s + '"></script>').join(
                 methods: ["GET", "POST"]
             }
         });
+    }
+
+    /**
+     * loads the virtual DOM hosting the game-engine scripts and starts the ExpressJs
+     * server listening on the port specified in the `server.config.json` file
+     * or 8081 by default for `socket.io` connections used to send / receive
+     * messages to / from game engine clients
+     */
+    startGameEngine(): void {
+        const virtualConsole = new VirtualConsole();
+        virtualConsole.sendTo(console, {
+            omitJSDOMErrors: false
+        });
+        
+        try {
+            JSDOM.fromFile(this.index, {
+                runScripts: "dangerously",
+                resources: "usable",
+                pretendToBeVisual: true,
+                virtualConsole: virtualConsole
+            }).then(dom => {
+                console.debug('Virtual DOM loaded...', dom.serialize());
+                dom.window.URL.createObjectURL = (blob: Blob) => {
+                    if (blob){
+                        return this._parser.format(
+                            blob.type, 
+                            blob[Object.getOwnPropertySymbols(blob)[0]]._buffer
+                        ).content ?? '';
+                    }
+                    return '';
+                };
+                dom.window.URL.revokeObjectURL = (objectURL) => {};
+                dom.window.gameEngineReady = () => {
+                    console.debug('Game Engine is ready');
+                    this._server.listen(8081, () => {
+                        console.info(`Game Server Listening on ${this._server.address()?.['port']}`);
+                    });
+                    dom.window.io = this._io;
+                    dom.window.gameEngineReady = null; // prevent re-entry
+                };
+            });
+        } catch(e) {
+            console.error('error starting game-server: ', e);
+        }
     }
 
     private _loadConfig(): GameServerConfig {
@@ -148,49 +192,5 @@ ${this.scripts.map(s => '<script defer="defer" src="' + s + '"></script>').join(
             }
         });
         return fullPaths;
-    }
-
-    /**
-     * loads the virtual DOM hosting the game-engine scripts and starts the ExpressJs
-     * server listening on the port specified in the `server.config.json` file
-     * or 8081 by default for `socket.io` connections used to send / receive
-     * messages to / from game engine clients
-     */
-    startGameEngine(): void {
-        const virtualConsole = new VirtualConsole();
-        virtualConsole.sendTo(console, {
-            omitJSDOMErrors: false
-        });
-        
-        try {
-            JSDOM.fromFile(this.index, {
-                runScripts: "dangerously",
-                resources: "usable",
-                pretendToBeVisual: true,
-                virtualConsole: virtualConsole
-            }).then(dom => {
-                console.debug('Virtual DOM loaded...', dom.serialize());
-                dom.window.URL.createObjectURL = (blob: Blob) => {
-                    if (blob){
-                        return this._parser.format(
-                            blob.type, 
-                            blob[Object.getOwnPropertySymbols(blob)[0]]._buffer
-                        ).content ?? '';
-                    }
-                    return '';
-                };
-                dom.window.URL.revokeObjectURL = (objectURL) => {};
-                dom.window.gameEngineReady = () => {
-                    console.debug('Game Engine is ready');
-                    this._server.listen(8081, function () {
-                        console.info(`Game Server Listening on ${this._server.address()?.['port']}`);
-                    });
-                    dom.window.io = this._io;
-                    // dom.window.gameEngineReady = null; // prevent re-entry
-                };
-            });
-        } catch(e) {
-            console.error('error starting game-server: ', e);
-        }
     }
 }

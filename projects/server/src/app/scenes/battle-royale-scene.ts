@@ -1,11 +1,13 @@
 import * as Phaser from "phaser";
-import { Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
 import { GameMap } from "../map/game-map";
 import { Ship } from "../ships/ship";
 import { SpaceSim } from "../space-sim";
 import { SpaceSimGameEngine } from "../space-sim-game-engine";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
+
+declare const io: Server;
 
 export class BattleRoyaleScene extends Phaser.Scene {
     preload(): void {
@@ -42,7 +44,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _setupSocketEventHandling(): void {
-        SpaceSimGameEngine.io.on('connection', (socket: Socket) => {
+        io.on('connection', (socket: Socket) => {
             console.debug(`player: ${socket.id} connected`);
             socket.on('disconnect', () => {
                 console.debug(`player: ${socket.id} disconnected`);
@@ -124,7 +126,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             SpaceSim.playersMap.delete(id);
             console.debug(`removing ship: `, player.config);
             player?.destroy();
-            SpaceSimGameEngine.io.emit(Constants.Socket.PLAYER_DEATH, id);
+            io.emit(Constants.Socket.PLAYER_DEATH, id);
         }
     }
 
@@ -133,7 +135,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _sendPlayers(): void {
-        SpaceSimGameEngine.io.emit(Constants.Socket.UPDATE_PLAYERS, SpaceSim.players().map(p => p.config));
+        io.emit(Constants.Socket.UPDATE_PLAYERS, SpaceSim.players().map(p => p.config));
     }
 
     private _isEmpty(location: Phaser.Types.Math.Vector2Like, radius: number): boolean {
