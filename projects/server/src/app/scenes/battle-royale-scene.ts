@@ -3,13 +3,9 @@ import { Server, Socket } from "socket.io";
 import { GameMap } from "../map/game-map";
 import { Ship } from "../ships/ship";
 import { SpaceSim } from "../space-sim";
-import { SpaceSimServer } from "../space-sim-server";
+import { SpaceSimGameEngine } from "../space-sim-game-engine";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
-
-declare global {
-    interface Window { gameServerReady: () => void; }
-}
 
 declare const io: Server;
 
@@ -31,8 +27,6 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     create(): void {
         this._createMap();
-
-        window.gameServerReady();
         console.debug('Game Server is ready');
 
         this._setupSocketEventHandling();
@@ -99,7 +93,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _createMap(): void {
-        const map = new GameMap(this, SpaceSimServer.mapOpts);
+        const map = new GameMap(this, SpaceSimGameEngine.MAP_OPTIONS);
         SpaceSim.map = map;
     }
 
@@ -135,7 +129,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _sendMap(socket: Socket): void {
-        socket.emit(Constants.Socket.UPDATE_MAP, SpaceSimServer.mapOpts);
+        socket.emit(Constants.Socket.UPDATE_MAP, SpaceSimGameEngine.MAP_OPTIONS);
     }
 
     private _sendPlayers(): void {

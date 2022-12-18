@@ -1,3 +1,4 @@
+import { Server } from "socket.io";
 import { GameMap } from "./map/game-map";
 import { Ship } from "./ships/ship";
 

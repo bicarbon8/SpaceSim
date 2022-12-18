@@ -7,15 +7,11 @@
   "types": "./dist/exports.d.ts",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && npm run build:express-server && npm run build:game-bundle",
-    "build:dev": "npm run clean && npm run build:express-server && npm run build:game-bundle:dev",
-    "build:express-server": "tsc -b",
-    "build:game-bundle": "webpack --env production --config ./webpack.config.cjs",
-    "build:game-bundle:dev": "webpack --config ./webpack.config.cjs",
+    "build": "npm run clean && tsc -b && webpack --env production",
+    "build:dev": "npm run clean && tsc -b && webpack",
     "start": "npm run build && npm run open",
-    "start:dev": "npm run build:dev && npm run open:dev",
-    "open": "production=true node ./dist/server.js",
-    "open:dev": "node ./dist/server.js",
+    "start:dev": "npm run build:dev && npm run open",
+    "open": "npx phaser-server",
     "test": ""
   },
   "keywords": [
@@ -33,6 +29,8 @@
     "express": "^4.18.2",
     "jsdom": "^20.0.3",
     "phaser": "^3.55.2",
+    "phaser-server": "^1.0.0",
+    "phaser-server-engine": "^1.0.0",
     "phaser-ui-components": "^3.0.0",
     "socket.io": "^4.5.4"
   },
