@@ -39,4 +39,5 @@ export module SpaceSimGameEngine {
     export var io: Server;
 }
 
+console.info('starting engine');
 SpaceSim.game = new SpaceSimGameEngine().game;

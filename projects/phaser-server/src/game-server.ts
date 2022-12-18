@@ -40,13 +40,18 @@ export type GameServerConfig = {
 };
 
 export class GameServer {
-    private _config: GameServerConfig;
     private _parser: any;
     private _app;
     private _server: http.Server;
     private _io: Server;
+
+    public readonly port: number;
+    public readonly allowedCorsOrigin: string;
+    public readonly scripts: Array<string>;
+    public readonly serverRoot: string;
     
     public readonly html: string;
+    public readonly index: string;
 
     public static readonly DEFAULT_CONFIG: GameServerConfig = {
         port: 8081,
@@ -56,29 +61,33 @@ export class GameServer {
     };
 
     constructor(config?: GameServerConfig) {
-        this._config = {
+        config = {
             ...GameServer.DEFAULT_CONFIG,
             ...config ?? this._loadConfig()
         };
-        this._config.serverRoot = this._validateServerRoot(this._config.serverRoot);
-        this._config.scripts = this._validateScripts(...this._config.scripts);
+
+        this.port = config.port;
+        this.allowedCorsOrigin = config.allowedCorsOrigin;
+        this.serverRoot = this._validateServerRoot(config.serverRoot);
+        this.scripts = this._validateScripts(...config.scripts);
 
         this.html = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>').join('\n')}
+${this.scripts.map(s => '<script defer="defer" src="' + s + '"></script>').join('\n')}
 </head>
 <body />
 </html>`;
-        // fs.writeFileSync(path.join(process.cwd(), 'dist', 'index.html'), this.html);
+        this.index = path.join(this.serverRoot, 'index.html');
+        fs.writeFileSync(this.index, this.html);
 
         this._parser = new datauri();
         
         this._app = express();
-        this._app.use(express.static(this._config.serverRoot));
+        this._app.use(express.static(this.serverRoot));
         this._app.get('/', (req, res) => {
-            res.send(this.html);
+            res.send(this.index);
         });
         this._app.get('/status', (req, res) => {
             res.sendStatus(200);
@@ -88,7 +97,7 @@ ${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>
 
         this._io = new Server(this._server, {
             cors: {
-                origin: `${this._config.allowedCorsOrigin}`,
+                origin: `${this.allowedCorsOrigin}`,
                 methods: ["GET", "POST"]
             }
         });
@@ -130,7 +139,7 @@ ${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>
             if (path.isAbsolute(s)) {
                 maybeExists = s;
             } else {
-                maybeExists = path.join(this._config.serverRoot, s);
+                maybeExists = path.join(this.serverRoot, s);
             }
             if (fs.existsSync(maybeExists)) {
                 fullPaths.push(s);
@@ -154,31 +163,32 @@ ${this._config.scripts.map(s => '<script defer="defer" src="' + s + '"></script>
         });
         
         try {
-            const dom = new JSDOM(this.html, {
+            JSDOM.fromFile(this.index, {
                 runScripts: "dangerously",
                 resources: "usable",
                 pretendToBeVisual: true,
                 virtualConsole: virtualConsole
+            }).then(dom => {
+                console.debug('Virtual DOM loaded...', dom.serialize());
+                dom.window.URL.createObjectURL = (blob: Blob) => {
+                    if (blob){
+                        return this._parser.format(
+                            blob.type, 
+                            blob[Object.getOwnPropertySymbols(blob)[0]]._buffer
+                        ).content ?? '';
+                    }
+                    return '';
+                };
+                dom.window.URL.revokeObjectURL = (objectURL) => {};
+                dom.window.gameEngineReady = () => {
+                    console.debug('Game Engine is ready');
+                    this._server.listen(8081, function () {
+                        console.info(`Game Server Listening on ${this._server.address()?.['port']}`);
+                    });
+                    dom.window.io = this._io;
+                    // dom.window.gameEngineReady = null; // prevent re-entry
+                };
             });
-            console.debug('Virtual DOM loaded...', dom.serialize());
-            dom.window.URL.createObjectURL = (blob: Blob) => {
-                if (blob){
-                    return this._parser.format(
-                        blob.type, 
-                        blob[Object.getOwnPropertySymbols(blob)[0]]._buffer
-                    ).content ?? '';
-                }
-                return '';
-            };
-            dom.window.URL.revokeObjectURL = (objectURL) => {};
-            dom.window.gameEngineReady = () => {
-                console.debug('Game Engine is ready');
-                this._server.listen(8081, function () {
-                    console.info(`Game Server Listening on ${this._server.address()?.['port']}`);
-                });
-                dom.window.io = this._io;
-                // dom.window.gameEngineReady = null; // prevent re-entry
-            };
         } catch(e) {
             console.error('error starting game-server: ', e);
         }
