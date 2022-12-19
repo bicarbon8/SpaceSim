@@ -1,9 +1,9 @@
-import { GameEngine } from "phaser-server-engine";
+import { GameServerEngine } from "phaser-game-server-engine";
 import { GameMapOptions } from "./map/game-map-options";
 import { BattleRoyaleScene } from "./scenes/battle-royale-scene";
 import { SpaceSim } from "./space-sim";
 
-export class SpaceSimGameEngine extends GameEngine {
+export class SpaceSimGameEngine extends GameServerEngine {
     private static readonly MAP_WIDTH = 50; // tiles, not pixels
     private static readonly MAP_HEIGHT = 50;
     public static readonly MAP_OPTIONS: GameMapOptions = {

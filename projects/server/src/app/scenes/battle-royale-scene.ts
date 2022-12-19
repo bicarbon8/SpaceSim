@@ -27,7 +27,6 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     create(): void {
         this._createMap();
-        console.debug('Game Server is ready');
 
         this._setupSocketEventHandling();
     }

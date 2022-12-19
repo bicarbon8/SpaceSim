@@ -1,5 +1,0 @@
-{
-    "port": 8081,
-    "allowedCorsOrigin": "*",
-    "pathToIndexHtml": "./dist/index.html"
-}
