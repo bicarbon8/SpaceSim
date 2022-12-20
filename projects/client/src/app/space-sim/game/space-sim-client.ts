@@ -1,5 +1,5 @@
 import "phaser";
-import { SpaceSim, Ship, Size } from "space-sim-server";
+import { SpaceSim, Ship, Size, SpaceSimPlayerData } from "space-sim-server";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
@@ -10,6 +10,7 @@ import { MultiplayerScene } from "./scenes/multiplayer-scene";
 import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 import { AiController } from "./controllers/ai-controller";
 import { GameMode } from "./interfaces/game-mode";
+import { SetNameScene } from "./scenes/set-name-scene";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -34,7 +35,15 @@ export class SpaceSimClient {
                 }
             },
             roundPixels: true,
-            scene: [StartupScene, GameplayScene, GameplayHudScene, MultiplayerScene, MultiplayerHudScene, GameOverScene]
+            scene: [
+                StartupScene, 
+                GameplayScene, 
+                GameplayHudScene, 
+                SetNameScene, 
+                MultiplayerScene, 
+                MultiplayerHudScene, 
+                GameOverScene
+            ]
         };
         SpaceSim.game = new Phaser.Game(conf);
         SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSimClient.resize());
@@ -107,6 +116,7 @@ export module SpaceSimClient {
     }
     export var socket: Socket;
     export var player: Ship;
+    export var playerData: SpaceSimPlayerData;
     export const opponents = new Array<AiController>();
     export var mode: GameMode = 'singleplayer';
 }

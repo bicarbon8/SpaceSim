@@ -30,6 +30,9 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     create(): void {
+        SpaceSimClient.socket.on(Constants.Socket.UPDATE_STATS, (id: string, stats: Partial<GameStats>) => {
+            GameScoreTracker.updateStats(id, stats);
+        });
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
@@ -98,10 +101,10 @@ export class GameOverScene extends Phaser.Scene {
             style: {font: '30px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4}
         }, false);
         scoreText.setText([
-            `Score: ${GameScoreTracker.getScore().toFixed(0)}`,
+            `Score: ${GameScoreTracker.getScore(SpaceSimClient.player.id).toFixed(0)}`,
             `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
             `Accuracy: ${accuracy.toFixed(0)}%`,
-            `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`
+            `Kills: ${stats.opponentsDestroyed}`
         ]);
         this._layout.addContents(scoreText);
     }

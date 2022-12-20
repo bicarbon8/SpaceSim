@@ -340,15 +340,8 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this._updateIntegrityIndicator();
         
         if (!this._shipDamageFlicker?.isPlaying()) {
-            this._shipDamageFlicker = this.scene.tweens.add({
-                targets: this._rotationContainer,
-                alpha: 0.5,
-                yoyo: true,
-                loop: 4,
-                duration: 50,
-                onComplete: () => {
-                    this._rotationContainer?.setAlpha(1);
-                }
+            this._shipDamageFlicker = Helpers.flicker(this._rotationContainer, 200, () => {
+                this._rotationContainer?.setAlpha(1);
             });
         }
     }

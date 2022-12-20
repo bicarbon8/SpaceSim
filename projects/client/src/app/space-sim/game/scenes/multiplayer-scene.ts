@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply } from "space-sim-server";
+import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameStats, GameScoreTracker } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -150,7 +150,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                         this._addPlayerCollisionPhysicsWithPlayers(ship);
                     }
 
-                    if (ship?.id === SpaceSimClient.socket?.id) {
+                    if (ship?.id === `${SpaceSimClient.playerData.fingerprint}_${SpaceSimClient.playerData.name}`) {
                         SpaceSimClient.player = ship;
                     }
                 });
@@ -199,7 +199,9 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                     supply.destroy();
                     SpaceSim.suppliesMap.delete(id);
                 }
-            });
+            }).on(Constants.Socket.UPDATE_STATS, (id: string, stats: Partial<GameStats>) => {
+                GameScoreTracker.updateStats(id, stats);
+            });;
     }
 
     private _setupSceneEventHandling(): void {
@@ -227,7 +229,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             .off(Constants.Socket.TRIGGER_ENGINE)
             .off(Constants.Socket.TRIGGER_WEAPON)
             .off(Constants.Socket.UPDATE_SUPPLIES)
-            .off(Constants.Socket.REMOVE_SUPPLY);
+            .off(Constants.Socket.REMOVE_SUPPLY)
+            .off(Constants.Socket.UPDATE_STATS);
     }
 
     private async _getMapFromServer(): Promise<void> {
@@ -243,7 +246,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     private async _getPlayerFromServer(): Promise<void> {
-        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_PLAYER);
+        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_PLAYER, SpaceSimClient.playerData);
         await this._waitForPlayer();
     }
 

@@ -32,7 +32,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
 
     create(): void {
         this.resize();
-        GameScoreTracker.start();
+        GameScoreTracker.start(SpaceSimClient.player.id);
     }
 
     resize(): void {
@@ -155,7 +155,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
                 `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`,
                 `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
                 `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
-                `Score: ${GameScoreTracker.getScore().toFixed(0)}`
+                `Score: ${GameScoreTracker.getScore(SpaceSimClient.player.id).toFixed(0)}`
             ];
             if (SpaceSim.debug) {
                 const loc: Phaser.Math.Vector2 = SpaceSimClient.player.getLocation();

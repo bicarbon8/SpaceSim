@@ -47,7 +47,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.getPhysicsBody().setBounce(0, 0);
         this.addCollisionDetection();
 
-        GameScoreTracker.shotFired();
+        GameScoreTracker.shotFired(this.weapon.ship.id);
         this._setInMotion();
     }
 
@@ -69,7 +69,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
                             attackerId: this.weapon.ship.id,
                             message: `projectile hit`
                         });
-                        GameScoreTracker.shotLanded();
+                        GameScoreTracker.shotLanded(this.weapon.ship.id);
                     });
                 }
             });

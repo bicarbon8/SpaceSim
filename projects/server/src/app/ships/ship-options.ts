@@ -3,6 +3,7 @@ import { PhysicsObject } from "../interfaces/physics-object";
 
 export type ShipOptions = Partial<PhysicsObject> & {
     readonly id?: string;
+    readonly name?: string;
     readonly integrity?: number;
     readonly remainingFuel?: number;
     readonly remainingAmmo?: number;

@@ -10,12 +10,16 @@ import { RepairsSupply } from "../ships/supplies/repairs-supply";
 import { ShipSupply } from "../ships/supplies/ship-supply";
 import { SpaceSim } from "../space-sim";
 import { SpaceSimGameEngine } from "../space-sim-game-engine";
+import { SpaceSimPlayerData } from "../space-sim-player-data";
 import { Constants } from "../utilities/constants";
+import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { Helpers } from "../utilities/helpers";
 
 declare const io: Server;
 
 export class BattleRoyaleScene extends Phaser.Scene {
+    private _disconnectTimers = new Map<string, any>();
+
     preload(): void {
         this.load.image('weapons-1', `assets/sprites/ship-parts/weapons-1.png`);
         this.load.image('wings-1', `assets/sprites/ship-parts/wings-1.png`);
@@ -52,14 +56,19 @@ export class BattleRoyaleScene extends Phaser.Scene {
             console.debug(`player: ${socket.id} connected`);
             socket.on('disconnect', () => {
                 console.debug(`player: ${socket.id} disconnected`);
-                this._removePlayer(socket);
+                this._disconnectTimers.set(socket.id, setTimeout(() => {
+                    this._removePlayer(socket);
+                }, 10000));
             }).on(Constants.Socket.REQUEST_MAP, () => {
                 console.debug(`received map request from: ${socket.id}`);
                 this._sendMap(socket);
-            }).on(Constants.Socket.REQUEST_PLAYER, () => {
-                console.debug(`received new player request from: ${socket.id}`);
+            }).on(Constants.Socket.REQUEST_PLAYER, (data: SpaceSimPlayerData) => {
+                console.debug(`received new player request from: ${socket.id} containing data:`, data);
                 if (!SpaceSim.playersMap.has(socket.id)) {
-                    this._createPlayer(socket.id);
+                    this._createPlayer({
+                        ...data,
+                        shipId: socket.id
+                    });
                 }
             }).on(Constants.Socket.TRIGGER_ENGINE, () => {
                 console.debug(`received trigger engine request from: ${socket.id}`);
@@ -101,7 +110,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
         SpaceSim.map = map;
     }
 
-    private _createPlayer(id: string): Ship {
+    private _createPlayer(data: SpaceSimPlayerData): Ship {
         const room = SpaceSim.map.getRooms()[0];
         const topleft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left+1, room.top+1);
         const botright: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right-1, room.bottom-1);
@@ -112,14 +121,14 @@ export class BattleRoyaleScene extends Phaser.Scene {
             loc = Helpers.vector2(x, y);
         } while (this._isEmpty(loc, 100));
         const ship = new Ship(this, {
-            id: id,
+            id: data.shipId,
             location: loc
         });
         this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
         this._addPlayerCollisionPhysicsWithPlayers(ship);
         this._addPlayerCollisionPhysicsWithSupplies(ship);
         console.debug(`adding ship: `, ship.config);
-        SpaceSim.playersMap.set(id, ship);
+        SpaceSim.playersMap.set(data.shipId, ship);
         return ship;
     }
 
@@ -133,6 +142,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             player?.destroy();
             socket.broadcast.emit(Constants.Socket.PLAYER_DEATH, id);
             this._expelSupplies(config);
+            socket.emit(Constants.Socket.UPDATE_STATS, (config.id, GameScoreTracker.getStats(config)));
         }
     }
 

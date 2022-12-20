@@ -26,6 +26,7 @@
     "@angular/router": "13.2.0",
     "@mikewesthad/dungeon": "^2.0.1",
     "bootstrap": "^5.2.2",
+    "get-browser-fingerprint": "^2.1.1",
     "phaser": "^3.54.0",
     "phaser-ui-components": "^3.0.0",
     "rxjs": "~6.6.0",

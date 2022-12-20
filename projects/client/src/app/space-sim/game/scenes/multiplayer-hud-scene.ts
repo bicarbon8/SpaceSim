@@ -33,7 +33,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     create(): void {
         this.resize();
-        GameScoreTracker.start();
+        GameScoreTracker.start(SpaceSimClient.player.id);
     }
 
     resize(): void {

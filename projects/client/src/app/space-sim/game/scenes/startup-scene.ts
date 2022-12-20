@@ -1,9 +1,10 @@
 import { Card, FlexLayout, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants } from "space-sim-server";
+import { Constants, SpaceSimPlayerData } from "space-sim-server";
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
+import getBrowserFingerprint from "get-browser-fingerprint";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -35,6 +36,21 @@ export class StartupScene extends Phaser.Scene {
     }
 
     create(): void {
+        const fingerprint = getBrowserFingerprint();
+        const dataStr = localStorage.getItem('space-sim');
+        let playerData: SpaceSimPlayerData;
+        if (dataStr) {
+            try {
+                playerData = JSON.parse(dataStr) as SpaceSimPlayerData;
+            } catch (e) {
+                playerData = {name: '', fingerprint: ''};
+            }
+        }
+        SpaceSimClient.playerData = {
+            ...playerData,
+            fingerprint: fingerprint
+        };
+        
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
@@ -126,7 +142,7 @@ export class StartupScene extends Phaser.Scene {
             padding: 5,
             cornerRadius: 15,
             onClick: () => {
-                this.game.scene.start('multiplayer-scene');
+                this.game.scene.start('set-name-scene');
                 this.game.scene.stop(this);
             },
             onHover: () => {

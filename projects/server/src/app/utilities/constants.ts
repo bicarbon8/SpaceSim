@@ -59,5 +59,6 @@ export module Constants {
         export const SET_PLAYER_ANGLE = 'set-player-angle';
         export const UPDATE_SUPPLIES = 'update-supplies';
         export const REMOVE_SUPPLY = 'remove-supply';
+        export const UPDATE_STATS = 'update-stats';
     }
 }
