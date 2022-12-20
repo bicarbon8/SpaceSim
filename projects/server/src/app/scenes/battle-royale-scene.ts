@@ -43,6 +43,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
         this._createMap();
 
         this._setupSocketEventHandling();
+        this._setupSceneEventHandling();
     }
 
     update(time: number, delta: number): void {
@@ -60,7 +61,10 @@ export class BattleRoyaleScene extends Phaser.Scene {
             console.debug(`player: ${socket.id} connected from ${socket.request.connection.remoteAddress}`);
             socket.on('disconnect', () => {
                 console.debug(`player: ${socket.id} disconnected`);
-                this._removePlayer(socket);
+                const ship = SpaceSim.playersMap.get(socket.id);
+                if (ship) {
+                    this._removePlayer(ship.config);
+                }
             }).on(Constants.Socket.REQUEST_MAP, () => {
                 console.debug(`received map request from: ${socket.id}`);
                 this._sendMap(socket);
@@ -109,6 +113,13 @@ export class BattleRoyaleScene extends Phaser.Scene {
         });
     }
 
+    private _setupSceneEventHandling(): void {
+        // setup listener for player death event
+        this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
+            this._removePlayer(shipOpts);
+        });
+    }
+
     private _createMap(): void {
         const map = new GameMap(this, SpaceSimGameEngine.MAP_OPTIONS);
         SpaceSim.map = map;
@@ -141,17 +152,17 @@ export class BattleRoyaleScene extends Phaser.Scene {
         return ship;
     }
 
-    private _removePlayer(socket: Socket): void {
-        const id = socket?.id;
+    private _removePlayer(opts: ShipOptions): void {
+        const id = opts?.id;
         if (SpaceSim.playersMap.has(id)) {
             const player = SpaceSim.playersMap.get(id);
             SpaceSim.playersMap.delete(id);
             const config = player.config;
             console.debug(`removing ship id: ${config.id}, with name: ${config.name}`);
             player?.destroy();
-            socket.broadcast.emit(Constants.Socket.PLAYER_DEATH, id);
+            io.emit(Constants.Socket.PLAYER_DEATH, id);
             this._expelSupplies(config);
-            socket.emit(Constants.Socket.UPDATE_STATS, (config.id, GameScoreTracker.getStats(config)));
+            io.emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
             if (this._users.has(config.fingerprint)) {
                 const userShips = this._users.get(config.fingerprint);
                 const index = userShips.findIndex(id => id === config.id);
@@ -305,7 +316,8 @@ export class BattleRoyaleScene extends Phaser.Scene {
         if (this._users.has(fingerprint)) {
              datas = this._users.get(fingerprint);
              if (datas.length > 2) {
-                return false;
+                // TODO
+                // return false;
              }
         } else {
             datas = new Array<string>();

@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { AmmoSupply, Constants, CoolantSupply, FuelSupply, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RepairsSupply, RoomPlus, Ship, ShipOptions, SpaceSim } from "space-sim-server";
+import { AmmoSupply, Constants, CoolantSupply, FuelSupply, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RepairsSupply, RoomPlus, Ship, ShipOptions, ShipSupply, SpaceSim } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -217,8 +217,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.physics.add.collider(SpaceSimClient.player.getGameObject(), SpaceSim.map.getGameObject());
 
         // setup listener for player death event
-        this.events.on(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
-            if (SpaceSimClient.player.id == ship?.id) {
+        this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
+            if (SpaceSimClient.player.id == shipOpts?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start('game-over-scene');
@@ -228,9 +228,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 });
             } else {
                 GameScoreTracker.opponentDestroyed(SpaceSimClient.player.id);
-                this._expelSupplies(ship?.config);
+                this._expelSupplies(shipOpts);
             }
-            SpaceSim.playersMap.delete(ship?.id);
+            SpaceSim.playersMap.delete(shipOpts?.id);
         });
     }
 
@@ -346,10 +346,12 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
                 : remainingFuel;
             remainingFuel -= amount;
-            new FuelSupply(this, {
+            const supply = new FuelSupply(this, {
                 amount: amount,
                 location: loc
             });
+            this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSim.suppliesMap.set(supply.id, supply);
         }
         let remainingAmmo = shipCfg.remainingAmmo / 2;
         const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
@@ -358,22 +360,53 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 ? Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
                 : remainingAmmo;
             remainingAmmo -= amount;
-            new AmmoSupply(this, {
+            const supply = new AmmoSupply(this, {
                 amount: amount,
                 location: loc
             });
+            this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSim.suppliesMap.set(supply.id, supply);
         }
         if (Phaser.Math.RND.between(0, 1)) {
-            new CoolantSupply(this, {
+            const supply = new CoolantSupply(this, {
                 amount: 40,
                 location: loc
             });
+            this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSim.suppliesMap.set(supply.id, supply);
         }
         if (Phaser.Math.RND.between(0, 1)) {
-            new RepairsSupply(this, {
+            const supply = new RepairsSupply(this, {
                 amount: 20,
                 location: loc
             });
+            this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSim.suppliesMap.set(supply.id, supply);
         }
+    }
+
+    private _addSupplyCollisionPhysicsWithPlayers(supply: ShipSupply): void {
+        this.physics.add.collider(supply, SpaceSim.players()
+            .filter(p => p?.active)
+            .map(o => o?.getGameObject()), 
+            (obj1, obj2) => {
+                let shipGameObj: Phaser.GameObjects.Container;
+                if (obj1 === supply) {
+                    shipGameObj = obj2 as Phaser.GameObjects.Container;
+                } else {
+                    shipGameObj = obj1 as Phaser.GameObjects.Container;
+                }
+                const ship: Ship = SpaceSim.players().find(p => {
+                    const go = p.getGameObject();
+                    if (go === shipGameObj) {
+                        return true;
+                    }
+                    return false;
+                });
+                SpaceSim.suppliesMap.delete(supply.id);
+                supply.apply(ship);
+                supply.destroy();
+            }
+        );
     }
 }

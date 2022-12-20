@@ -1,4 +1,5 @@
 export interface GameStats {
+    shipId: string;
     elapsed: number;
     opponentsDestroyed: number;
     shotsFired: number;

@@ -59,16 +59,18 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     }
 
     configure(options: ShipOptions): this {
-        const loc = options.location ?? Helpers.vector2();
-        this.setLocation(loc);
-        const v = options.velocity ?? Helpers.vector2();
-        this.getPhysicsBody().setVelocity(v.x, v.y);
-        const angle = options.angle ?? 0;
-        this.setRotation(angle);
-        this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
-        this._remainingFuel = options.remainingFuel ?? Constants.Ship.MAX_FUEL;
-        this.getWeapons().remainingAmmo = options.remainingAmmo ?? Constants.Ship.Weapons.MAX_AMMO;
-        this._temperature = options.temperature ?? 0;
+        if (this.active) {
+            const loc = options.location ?? Helpers.vector2();
+            this.setLocation(loc);
+            const v = options.velocity ?? Helpers.vector2();
+            this.getPhysicsBody().setVelocity(v.x, v.y);
+            const angle = options.angle ?? 0;
+            this.setRotation(angle);
+            this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
+            this._remainingFuel = options.remainingFuel ?? Constants.Ship.MAX_FUEL;
+            this.getWeapons().remainingAmmo = options.remainingAmmo ?? Constants.Ship.Weapons.MAX_AMMO;
+            this._temperature = options.temperature ?? 0;
+        }
         return this;
     }
 
@@ -393,6 +395,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     }
 
     destroy(): void {
+        const config = this.config;
         this._destroyedSound?.play();
         this._active = false;
         this._displayShipExplosion();
@@ -404,7 +407,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         }
         this._positionContainer = null;
 
-        this.scene.events.emit(Constants.Events.PLAYER_DEATH, this);
+        this.scene.events.emit(Constants.Events.PLAYER_DEATH, config);
     }
 
     private _createGameObj(options?: ShipOptions): void {
@@ -458,6 +461,8 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this._createHeatIndicator();
 
         this._createOverheatIndicator();
+
+        this._createNameIndicator();
 
         this._engine = new Engine(this);
         this._weapons = new MachineGun(this);
@@ -525,6 +530,17 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
                 duration: 1000
             });
         }
+    }
+
+    private _createNameIndicator(): void {
+        const txt = this.scene.make.text({
+            text: this.name,
+            style: {font: '20px Courier', color: '#ffffff'},
+            x: 0,
+            y: -40
+        });
+        txt.setX(-(txt.width / 2));
+        this._positionContainer.add(txt);
     }
 
     private _displayShipExplosion(): void {

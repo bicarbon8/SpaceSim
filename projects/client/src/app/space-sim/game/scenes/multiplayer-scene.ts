@@ -156,8 +156,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                     supply.destroy();
                     SpaceSim.suppliesMap.delete(id);
                 }
-            }).on(Constants.Socket.UPDATE_STATS, (id: string, stats: Partial<GameStats>) => {
-                GameScoreTracker.updateStats(id, stats);
+            }).on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => {
+                GameScoreTracker.updateAllStats(...stats);
             });;
     }
 
@@ -223,8 +223,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         });
 
         // setup listener for player death event
-        this.events.on(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
-            if (SpaceSimClient.player.id == ship?.id) {
+        this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
+            if (SpaceSimClient.player.id == shipOpts?.id) {
                 this._turnOffSocketEventHandling();
                 SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH);
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
