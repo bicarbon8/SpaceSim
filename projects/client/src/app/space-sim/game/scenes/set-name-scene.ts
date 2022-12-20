@@ -28,8 +28,14 @@ export class SetNameScene extends Phaser.Scene {
 
         this.cameras.main.centerOn(0, 0);
 
-        this._createLayout();
-        this._getKeyboardInput();
+        if (this.game.device.os.desktop) {
+            this._createLayout();
+            this._getKeyboardInput();
+        } else {
+            SpaceSimClient.playerData.name = Phaser.Math.RND.uuid();
+            this.scene.start('multiplayer-scene');
+            this.scene.stop(this);
+        }
     }
 
     update() {
@@ -68,7 +74,13 @@ export class SetNameScene extends Phaser.Scene {
                 style: Styles.Outline.primary().text
             },
             backgroundStyles: Styles.Outline.primary().graphics,
-            width: this._layout.width - (this._layout.padding * 2)
+            width: this._layout.width - (this._layout.padding * 2),
+            onClick: () => {
+                const input = document.querySelector('#hidden-input') as any;
+                if (input) {
+                    input.focus();
+                }
+            }
         });
         this._layout.addContents(this._text);
 
@@ -93,7 +105,7 @@ export class SetNameScene extends Phaser.Scene {
 
     private _getKeyboardInput(): void {
         this.input.keyboard.on(Phaser.Input.Keyboard.Events.ANY_KEY_DOWN, (event: KeyboardEvent) => {
-            console.log(`input:`, event);
+            // console.log(`input:`, event);
             if (event.key === 'Backspace') {
                 this._text.setText({text: this._text.text.text.substring(0, this._text.text.text.length - 1)})
             }

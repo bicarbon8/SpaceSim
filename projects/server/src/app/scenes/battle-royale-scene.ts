@@ -18,7 +18,11 @@ import { Helpers } from "../utilities/helpers";
 declare const io: Server;
 
 export class BattleRoyaleScene extends Phaser.Scene {
-    private _disconnectTimers = new Map<string, any>();
+    /**
+     * a Map of fingerprints to ship ids so we can prevent
+     * more than 3 ships per fingerprint (user)
+     */
+    private _users = new Map<string, Array<string>>();
 
     preload(): void {
         this.load.image('weapons-1', `assets/sprites/ship-parts/weapons-1.png`);
@@ -53,22 +57,22 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     private _setupSocketEventHandling(): void {
         io.on('connection', (socket: Socket) => {
-            console.debug(`player: ${socket.id} connected`);
+            console.debug(`player: ${socket.id} connected from ${socket.request.connection.remoteAddress}`);
             socket.on('disconnect', () => {
                 console.debug(`player: ${socket.id} disconnected`);
-                this._disconnectTimers.set(socket.id, setTimeout(() => {
-                    this._removePlayer(socket);
-                }, 10000));
+                this._removePlayer(socket);
             }).on(Constants.Socket.REQUEST_MAP, () => {
                 console.debug(`received map request from: ${socket.id}`);
                 this._sendMap(socket);
             }).on(Constants.Socket.REQUEST_PLAYER, (data: SpaceSimPlayerData) => {
                 console.debug(`received new player request from: ${socket.id} containing data:`, data);
                 if (!SpaceSim.playersMap.has(socket.id)) {
-                    this._createPlayer({
-                        ...data,
-                        shipId: socket.id
-                    });
+                    if (this._preventAbuse(socket.id, data.fingerprint)) {
+                        this._createPlayer({
+                            ...data,
+                            shipId: socket.id
+                        });
+                    }
                 }
             }).on(Constants.Socket.TRIGGER_ENGINE, () => {
                 console.debug(`received trigger engine request from: ${socket.id}`);
@@ -122,13 +126,18 @@ export class BattleRoyaleScene extends Phaser.Scene {
         } while (this._isEmpty(loc, 100));
         const ship = new Ship(this, {
             id: data.shipId,
-            location: loc
+            location: loc,
+            fingerprint: data.fingerprint,
+            name: data.name.substring(0, 10)
         });
         this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
         this._addPlayerCollisionPhysicsWithPlayers(ship);
         this._addPlayerCollisionPhysicsWithSupplies(ship);
-        console.debug(`adding ship: `, ship.config);
-        SpaceSim.playersMap.set(data.shipId, ship);
+        console.debug(`adding ship with fingerprint: ${data.fingerprint},`,
+            `name: ${data.name.substring(0, 10)},`,
+            `and id: ${ship.id} at x: ${ship.location.x}, y: ${ship.location.y}`);
+        SpaceSim.playersMap.set(ship.id, ship);
+        
         return ship;
     }
 
@@ -138,11 +147,19 @@ export class BattleRoyaleScene extends Phaser.Scene {
             const player = SpaceSim.playersMap.get(id);
             SpaceSim.playersMap.delete(id);
             const config = player.config;
-            console.debug(`removing ship: `, config);
+            console.debug(`removing ship id: ${config.id}, with name: ${config.name}`);
             player?.destroy();
             socket.broadcast.emit(Constants.Socket.PLAYER_DEATH, id);
             this._expelSupplies(config);
             socket.emit(Constants.Socket.UPDATE_STATS, (config.id, GameScoreTracker.getStats(config)));
+            if (this._users.has(config.fingerprint)) {
+                const userShips = this._users.get(config.fingerprint);
+                const index = userShips.findIndex(id => id === config.id);
+                if (index >= 0) {
+                    userShips.splice(index, 1);
+                    this._users.set(config.fingerprint, userShips);
+                }
+            }
         }
     }
 
@@ -165,7 +182,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
         const tiles: Array<Phaser.Tilemaps.Tile> = SpaceSim.map.getLayer()
             .getTilesWithinShape(circleA)?.filter(t => t.collides);
         if (tiles?.length > 0) {
-            console.debug(`location ${JSON.stringify(location)} collides with map tiles: `, tiles);
+            console.debug(`location collides with map tiles: `, location);
             return false;
         }
 
@@ -278,5 +295,24 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     private _addPlayerCollisionPhysicsWithPlayers(ship: Ship): void {
         this.physics.add.collider(ship.getGameObject(), SpaceSim.players().map(p => p?.getGameObject()));
+    }
+
+    /**
+     * ensure no single user creates more than 3 players at a time
+     */
+    private _preventAbuse(id: string, fingerprint: string): boolean {
+        let datas: Array<string>;
+        if (this._users.has(fingerprint)) {
+             datas = this._users.get(fingerprint);
+             if (datas.length > 2) {
+                return false;
+             }
+        } else {
+            datas = new Array<string>();
+        }
+        datas.push(id);
+        this._users.set(fingerprint, datas);
+
+        return true;
     }
 }

@@ -89,11 +89,10 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this._stellarBodies = new Array<StellarBody>();
 
         this._playMusic();
-        this._setupSocketEventHandling();
-        this._setupSceneEventHandling();
         this._getMapFromServer()
             .then(_ => this._createStellarBodiesLayer())
             .then(_ => this._getPlayerFromServer())
+            .then(_ => this._setupSupplyEventHandling())
             .then(_ => this.resize())
             .then(_ => {
                 SpaceSim.game.scene.start('multiplayer-hud-scene');
@@ -120,51 +119,9 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this._setupCamera();
     }
 
-    private _setupSocketEventHandling(): void {
+    private _setupSupplyEventHandling(): void {
         SpaceSimClient.socket
-            .on(Constants.Socket.UPDATE_MAP, (opts: GameMapOptions) => {
-                SpaceSim.map = new GameMap(this, opts);
-                // ensure all tiles are visible (defaults to hidden)
-                SpaceSim.map.getLayer().forEachTile(tile => tile.setAlpha(1));
-            }).on(Constants.Socket.PLAYER_DEATH, (id: string) => {
-                const ship = SpaceSim.playersMap.get(id);
-                ship?.destroy();
-                SpaceSim.playersMap.delete(ship.id);
-            }).on(Constants.Socket.UPDATE_PLAYERS, (shipOpts: Array<ShipOptions>) => {
-                shipOpts.forEach(o => {
-                    let ship = SpaceSim.playersMap.get(o.id);
-                    if (ship) {
-                        // update existing ship
-                        ship?.configure(o);
-                    } else {
-                        // or create new ship if doesn't already exist
-                        ship = new Ship(this, {
-                            ...o,
-                            weaponsKey: Phaser.Math.RND.between(1, 3),
-                            wingsKey: Phaser.Math.RND.between(1, 3),
-                            cockpitKey: Phaser.Math.RND.between(1, 3),
-                            engineKey: Phaser.Math.RND.between(1, 3)
-                        });
-                        SpaceSim.playersMap.set(o.id, ship);
-                        this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
-                        this._addPlayerCollisionPhysicsWithPlayers(ship);
-                    }
-
-                    if (ship?.id === `${SpaceSimClient.playerData.fingerprint}_${SpaceSimClient.playerData.name}`) {
-                        SpaceSimClient.player = ship;
-                    }
-                });
-            }).on(Constants.Socket.TRIGGER_ENGINE, (id: string) => {
-                const ship = SpaceSim.playersMap.get(id);
-                if (ship) {
-                    ship.getThruster().trigger();
-                }
-            }).on(Constants.Socket.TRIGGER_WEAPON, (id: string) => {
-                const ship = SpaceSim.playersMap.get(id);
-                if (ship) {
-                    ship.getWeapons().trigger();
-                }
-            }).on(Constants.Socket.UPDATE_SUPPLIES, (supplyOpts: Array<ShipSupplyOptions>) => {
+            .on(Constants.Socket.UPDATE_SUPPLIES, (supplyOpts: Array<ShipSupplyOptions>) => {
                 supplyOpts.forEach(o => {
                     let supply = SpaceSim.suppliesMap.get(o.id);
                     if (supply) {
@@ -204,7 +161,67 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             });;
     }
 
-    private _setupSceneEventHandling(): void {
+    private _turnOffSocketEventHandling(): void {
+        SpaceSimClient.socket
+            .off(Constants.Socket.UPDATE_MAP)
+            .off(Constants.Socket.PLAYER_DEATH)
+            .off(Constants.Socket.UPDATE_PLAYERS)
+            .off(Constants.Socket.TRIGGER_ENGINE)
+            .off(Constants.Socket.TRIGGER_WEAPON)
+            .off(Constants.Socket.UPDATE_SUPPLIES)
+            .off(Constants.Socket.REMOVE_SUPPLY)
+            .off(Constants.Socket.UPDATE_STATS);
+    }
+
+    private async _getMapFromServer(): Promise<void> {
+        SpaceSimClient.socket
+            .on(Constants.Socket.UPDATE_MAP, (opts: GameMapOptions) => {
+                SpaceSim.map = new GameMap(this, opts);
+                // ensure all tiles are visible (defaults to hidden)
+                SpaceSim.map.getLayer().forEachTile(tile => tile.setAlpha(1));
+            });
+        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP);
+        await this._waitForMap();
+    }
+
+    private async _waitForMap(): Promise<void> {
+        while (SpaceSim.map == null) {
+            // wait half a second and check again
+            await new Promise<void>(resolve => setTimeout(resolve, 500));
+        }
+    }
+
+    private async _getPlayerFromServer(): Promise<void> {
+        SpaceSimClient.socket.on(Constants.Socket.UPDATE_PLAYERS, (shipOpts: Array<ShipOptions>) => {
+            shipOpts.forEach(o => {
+                let ship = SpaceSim.playersMap.get(o.id);
+                if (ship) {
+                    // update existing ship
+                    ship?.configure(o);
+                } else {
+                    // or create new ship if doesn't already exist
+                    ship = new Ship(this, {
+                        ...o,
+                        weaponsKey: Phaser.Math.RND.between(1, 3),
+                        wingsKey: Phaser.Math.RND.between(1, 3),
+                        cockpitKey: Phaser.Math.RND.between(1, 3),
+                        engineKey: Phaser.Math.RND.between(1, 3)
+                    });
+                    SpaceSim.playersMap.set(o.id, ship);
+                    this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
+                    this._addPlayerCollisionPhysicsWithPlayers(ship);
+                }
+
+                if (ship?.id === SpaceSimClient.socket.id) {
+                    SpaceSimClient.player = ship;
+                }
+            });
+        }).on(Constants.Socket.PLAYER_DEATH, (id: string) => {
+            const ship = SpaceSim.playersMap.get(id);
+            ship?.destroy();
+            SpaceSim.playersMap.delete(ship.id);
+        });
+
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (ship: Ship) => {
             if (SpaceSimClient.player.id == ship?.id) {
@@ -219,33 +236,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                 });
             }
         });
-    }
 
-    private _turnOffSocketEventHandling(): void {
-        SpaceSimClient.socket
-            .off(Constants.Socket.UPDATE_MAP)
-            .off(Constants.Socket.PLAYER_DEATH)
-            .off(Constants.Socket.UPDATE_PLAYERS)
-            .off(Constants.Socket.TRIGGER_ENGINE)
-            .off(Constants.Socket.TRIGGER_WEAPON)
-            .off(Constants.Socket.UPDATE_SUPPLIES)
-            .off(Constants.Socket.REMOVE_SUPPLY)
-            .off(Constants.Socket.UPDATE_STATS);
-    }
-
-    private async _getMapFromServer(): Promise<void> {
-        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP);
-        await this._waitForMap();
-    }
-
-    private async _waitForMap(): Promise<void> {
-        while (SpaceSim.map == null) {
-            // wait half a second and check again
-            await new Promise<void>(resolve => setTimeout(resolve, 500));
-        }
-    }
-
-    private async _getPlayerFromServer(): Promise<void> {
         SpaceSimClient.socket.emit(Constants.Socket.REQUEST_PLAYER, SpaceSimClient.playerData);
         await this._waitForPlayer();
     }

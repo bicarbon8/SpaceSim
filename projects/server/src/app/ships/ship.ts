@@ -17,6 +17,8 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     readonly id: string; // UUID
     readonly scene: Scene;
     readonly mass: number;
+    readonly fingerprint: string;
+    readonly name: string;
     
     private _active: boolean = true;
     private _temperature: number; // in Celcius
@@ -45,6 +47,8 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this.id = options.id ?? Phaser.Math.RND.uuid();
         this.scene = scene;
         this.mass = options.mass ?? 100;
+        this.name = options.name;
+        this.fingerprint = options.fingerprint;
 
         // create ship-pod sprite, group and container
         this._createGameObj(options);
@@ -79,7 +83,8 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
             remainingFuel: this.remainingFuel,
             remainingAmmo: this.getWeapons().remainingAmmo,
             temperature: this.temperature,
-            mass: this.mass
+            mass: this.mass,
+            name: this.name
         };
     }
 

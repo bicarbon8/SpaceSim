@@ -34,7 +34,9 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
 
         this.configure(options);
 
-        this.scene.physics.add.collider(this, SpaceSim.map.getGameObject());
+        if (SpaceSim.map) {
+            this.scene.physics.add.collider(this, SpaceSim.map?.getGameObject());
+        }
     }
 
     get config(): ShipSupplyOptions {
