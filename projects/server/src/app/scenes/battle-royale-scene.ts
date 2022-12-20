@@ -52,7 +52,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             console.debug(`player: ${socket.id} connected`);
             socket.on('disconnect', () => {
                 console.debug(`player: ${socket.id} disconnected`);
-                this._removePlayer(socket.id);
+                this._removePlayer(socket);
             }).on(Constants.Socket.REQUEST_MAP, () => {
                 console.debug(`received map request from: ${socket.id}`);
                 this._sendMap(socket);
@@ -90,9 +90,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 console.debug(`received player death notice from: ${socket.id}`);
                 const ship = SpaceSim.playersMap.get(socket.id);
                 if (ship) {
-                    socket.broadcast.emit(Constants.Socket.PLAYER_DEATH, ship.id);
-                    SpaceSim.playersMap.delete(ship.id);
-                    ship.getGameObject()?.destroy();
+                    this._removePlayer(socket);
                 }
             });
         });
@@ -125,14 +123,15 @@ export class BattleRoyaleScene extends Phaser.Scene {
         return ship;
     }
 
-    private _removePlayer(id: string): void {
+    private _removePlayer(socket: Socket): void {
+        const id = socket?.id;
         if (SpaceSim.playersMap.has(id)) {
             const player = SpaceSim.playersMap.get(id);
             SpaceSim.playersMap.delete(id);
             const config = player.config;
             console.debug(`removing ship: `, config);
             player?.destroy();
-            io.emit(Constants.Socket.PLAYER_DEATH, id);
+            socket.broadcast.emit(Constants.Socket.PLAYER_DEATH, id);
             this._expelSupplies(config);
         }
     }
@@ -250,9 +249,8 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _addPlayerCollisionPhysicsWithSupplies(ship: Ship): void {
-        this.physics.add.collider(ship.getGameObject(), SpaceSim.players()
-            .filter(p => p?.active)
-            .map(o => o?.getGameObject()), 
+        this.physics.add.collider(ship.getGameObject(), SpaceSim.supplies()
+            .filter(p => p?.active), 
             (obj1, obj2) => {
                 let supply: ShipSupply;
                 if (obj1 === ship.getGameObject()) {
@@ -260,7 +258,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 } else {
                     supply = obj1 as ShipSupply;
                 }
-                io.emit(Constants.Socket.REMOVE_SUPPLY, supply.id)
+                io.emit(Constants.Socket.REMOVE_SUPPLY, supply.id);
                 SpaceSim.suppliesMap.delete(supply.id);
                 supply.apply(ship);
                 supply.destroy();

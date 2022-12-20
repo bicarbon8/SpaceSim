@@ -147,6 +147,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                         });
                         SpaceSim.playersMap.set(o.id, ship);
                         this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
+                        this._addPlayerCollisionPhysicsWithPlayers(ship);
                     }
 
                     if (ship?.id === SpaceSimClient.socket?.id) {
@@ -322,5 +323,9 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
         this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music.stop());
         this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music.destroy());
+    }
+
+    private _addPlayerCollisionPhysicsWithPlayers(ship: Ship): void {
+        this.physics.add.collider(ship.getGameObject(), SpaceSim.players().map(p => p?.getGameObject()));
     }
 }

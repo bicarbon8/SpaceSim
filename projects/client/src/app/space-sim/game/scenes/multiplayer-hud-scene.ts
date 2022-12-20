@@ -21,6 +21,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     private _cancelDestructButton: TextButton;
     private _hudLayout: GridLayout;
     private _controller: InputController;
+    private _connectedToServer: boolean;
 
     debug: boolean;
 
@@ -46,6 +47,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     }
 
     update(time: number, delta: number): void {
+        this._connectedToServer = SpaceSimClient.socket?.connected ?? false;
         this._displayHUDInfo();
         if (SpaceSimClient.player?.active) {
             this._controller?.update(time, delta);
@@ -152,18 +154,20 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     private _displayHUDInfo(): void {
         try {
             const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
-            const accuracy: string = (stats.shotsFired) ? (stats.shotsLanded / stats.shotsFired).toFixed(1) : 'n/a';
+            const accuracy: string = (stats.shotsFired) ? ((stats.shotsLanded / stats.shotsFired) * 100).toFixed(1) : 'n/a';
             const info: string[] = [
-                `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
                 `Kills: ${stats.opponentsDestroyed}`,
+                `Active Players: ${SpaceSim.players()?.length}`,
                 `Accuracy: ${accuracy} %`,
                 `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
-                `Score: ${GameScoreTracker.getScore().toFixed(0)}`
+                `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`
             ];
             if (SpaceSim.debug) {
                 const loc: Phaser.Math.Vector2 = SpaceSimClient.player.getLocation();
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
+            }
+            if (!this._connectedToServer) {
+                info.push('SERVER DISCONNECTED!');
             }
             this._hudText.setText(info);
             this._hudLayout.updateSize(this._width, this._height);
