@@ -2,6 +2,12 @@ import * as Phaser from "phaser";
 import { Server, Socket } from "socket.io";
 import { GameMap } from "../map/game-map";
 import { Ship } from "../ships/ship";
+import { ShipOptions } from "../ships/ship-options";
+import { AmmoSupply } from "../ships/supplies/ammo-supply";
+import { CoolantSupply } from "../ships/supplies/coolant-supply";
+import { FuelSupply } from "../ships/supplies/fuel-supply";
+import { RepairsSupply } from "../ships/supplies/repairs-supply";
+import { ShipSupply } from "../ships/supplies/ship-supply";
 import { SpaceSim } from "../space-sim";
 import { SpaceSimGameEngine } from "../space-sim-game-engine";
 import { Constants } from "../utilities/constants";
@@ -34,7 +40,8 @@ export class BattleRoyaleScene extends Phaser.Scene {
     update(time: number, delta: number): void {
         try {
             SpaceSim.players().forEach(ship => ship?.update(time, delta));
-            this._sendPlayers();
+            this._sendPlayersUpdate();
+            this._sendSuppliesUpdate();
         } catch (e) {
             console.error(`error in update: `, e);
         }
@@ -68,7 +75,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                     socket.broadcast.emit(Constants.Socket.TRIGGER_WEAPON, ship.id);
                     ship.getWeapons().trigger();
                 }
-            }).on(Constants.Socket.SET_ANGLE, (degrees: number) => {
+            }).on(Constants.Socket.SET_PLAYER_ANGLE, (degrees: number) => {
                 try {
                     const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
                     console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
@@ -111,7 +118,8 @@ export class BattleRoyaleScene extends Phaser.Scene {
             location: loc
         });
         this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
-        this.physics.add.collider(ship.getGameObject(), SpaceSim.players().map(p => p?.getGameObject()));
+        this._addPlayerCollisionPhysicsWithPlayers(ship);
+        this._addPlayerCollisionPhysicsWithSupplies(ship);
         console.debug(`adding ship: `, ship.config);
         SpaceSim.playersMap.set(id, ship);
         return ship;
@@ -121,9 +129,11 @@ export class BattleRoyaleScene extends Phaser.Scene {
         if (SpaceSim.playersMap.has(id)) {
             const player = SpaceSim.playersMap.get(id);
             SpaceSim.playersMap.delete(id);
-            console.debug(`removing ship: `, player.config);
+            const config = player.config;
+            console.debug(`removing ship: `, config);
             player?.destroy();
             io.emit(Constants.Socket.PLAYER_DEATH, id);
+            this._expelSupplies(config);
         }
     }
 
@@ -131,8 +141,12 @@ export class BattleRoyaleScene extends Phaser.Scene {
         socket.emit(Constants.Socket.UPDATE_MAP, SpaceSimGameEngine.MAP_OPTIONS);
     }
 
-    private _sendPlayers(): void {
+    private _sendPlayersUpdate(): void {
         io.emit(Constants.Socket.UPDATE_PLAYERS, SpaceSim.players().map(p => p.config));
+    }
+
+    private _sendSuppliesUpdate(): void {
+        io.emit(Constants.Socket.UPDATE_SUPPLIES, SpaceSim.supplies().map(s => s.config));
     }
 
     private _isEmpty(location: Phaser.Types.Math.Vector2Like, radius: number): boolean {
@@ -159,5 +173,102 @@ export class BattleRoyaleScene extends Phaser.Scene {
             }
         }
         return true;
+    }
+
+    private _expelSupplies(shipCfg: ShipOptions): void {
+        const loc = shipCfg.location;
+        let remainingFuel = shipCfg.remainingFuel / 2;
+        const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / Constants.Ship.MAX_FUEL_PER_CONTAINER);
+        for (var i=0; i<fuelContainersCount; i++) {
+            const amount = (remainingFuel > Constants.Ship.MAX_FUEL_PER_CONTAINER) 
+                ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
+                : remainingFuel;
+            remainingFuel -= amount;
+            const supply = new FuelSupply(this, {
+                amount: amount,
+                location: loc
+            });
+            this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSim.suppliesMap.set(supply.id, supply);
+        }
+        let remainingAmmo = shipCfg.remainingAmmo / 2;
+        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
+        for (var i=0; i<ammoContainersCount; i++) {
+            const amount = (remainingAmmo > Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER) 
+                ? Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
+                : remainingAmmo;
+            remainingAmmo -= amount;
+            const supply = new AmmoSupply(this, {
+                amount: amount,
+                location: loc
+            });
+            this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSim.suppliesMap.set(supply.id, supply);
+        }
+        if (Phaser.Math.RND.between(0, 1)) {
+            const supply = new CoolantSupply(this, {
+                amount: 40,
+                location: loc
+            });
+            this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSim.suppliesMap.set(supply.id, supply);
+        }
+        if (Phaser.Math.RND.between(0, 1)) {
+            const supply = new RepairsSupply(this, {
+                amount: 20,
+                location: loc
+            });
+            this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSim.suppliesMap.set(supply.id, supply);
+        }
+    }
+
+    private _addSupplyCollisionPhysicsWithPlayers(supply: ShipSupply): void {
+        this.physics.add.collider(supply, SpaceSim.players()
+            .filter(p => p?.active)
+            .map(o => o?.getGameObject()), 
+            (obj1, obj2) => {
+                let shipGameObj: Phaser.GameObjects.Container;
+                if (obj1 === supply) {
+                    shipGameObj = obj2 as Phaser.GameObjects.Container;
+                } else {
+                    shipGameObj = obj1 as Phaser.GameObjects.Container;
+                }
+                const ship: Ship = SpaceSim.players().find(p => {
+                    const go = p.getGameObject();
+                    if (go === shipGameObj) {
+                        return true;
+                    }
+                    return false;
+                });
+                io.emit(Constants.Socket.REMOVE_SUPPLY, supply.id);
+                SpaceSim.suppliesMap.delete(supply.id);
+                supply.apply(ship);
+                supply.destroy();
+            }
+        );
+    }
+
+    private _addPlayerCollisionPhysicsWithSupplies(ship: Ship): void {
+        this.physics.add.collider(ship.getGameObject(), SpaceSim.players()
+            .filter(p => p?.active)
+            .map(o => o?.getGameObject()), 
+            (obj1, obj2) => {
+                let supply: ShipSupply;
+                if (obj1 === ship.getGameObject()) {
+                    supply = obj2 as ShipSupply;
+                } else {
+                    supply = obj1 as ShipSupply;
+                }
+                io.emit(Constants.Socket.REMOVE_SUPPLY, supply.id)
+                SpaceSim.suppliesMap.delete(supply.id);
+                supply.apply(ship);
+                supply.destroy();
+            }
+        );
+    }
+
+    private _addPlayerCollisionPhysicsWithPlayers(ship: Ship): void {
+        this.physics.add.collider(ship.getGameObject(), SpaceSim.players().map(p => p?.getGameObject()));
     }
 }

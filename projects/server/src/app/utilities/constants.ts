@@ -17,7 +17,8 @@ export module Constants {
             export const USAGE_DELAY_MS = 100; 
         }
         export module Weapons {
-            export const MAX_AMMO_PER_CONTAINER = 500;
+            export const MAX_AMMO = 500;
+            export const MAX_AMMO_PER_CONTAINER = 100;
         }
     }
     export module UI {
@@ -55,6 +56,8 @@ export module Constants {
         export const PLAYER_DEATH = 'player-death';
         export const TRIGGER_ENGINE = 'trigger-engine';
         export const TRIGGER_WEAPON = 'trigger-weapon';
-        export const SET_ANGLE = 'set-angle';
+        export const SET_PLAYER_ANGLE = 'set-player-angle';
+        export const UPDATE_SUPPLIES = 'update-supplies';
+        export const REMOVE_SUPPLY = 'remove-supply';
     }
 }

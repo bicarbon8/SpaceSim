@@ -124,7 +124,17 @@ export class GameOverScene extends Phaser.Scene {
                     .setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
             },
             onClick: () => {
-                this.game.scene.start('gameplay-scene');
+                switch (SpaceSimClient.mode) {
+                    case 'singleplayer':
+                        this.game.scene.start('gameplay-scene');
+                        break;
+                    case 'multiplayer':
+                        this.game.scene.start('multiplayer-scene');
+                        break;
+                    default:
+                        this.game.scene.start('startup-scene');
+                        break;
+                }
                 this._music.stop();
                 this.game.scene.stop(this);
             }

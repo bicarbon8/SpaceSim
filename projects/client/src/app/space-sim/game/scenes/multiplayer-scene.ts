@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus } from "space-sim-server";
+import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -25,6 +25,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         super(settingsConfig || sceneConfig);
 
         this.debug = SpaceSim.debug;
+
+        SpaceSimClient.mode = 'multiplayer';
     }
 
     preload(): void {
@@ -161,6 +163,41 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                 if (ship) {
                     ship.getWeapons().trigger();
                 }
+            }).on(Constants.Socket.UPDATE_SUPPLIES, (supplyOpts: Array<ShipSupplyOptions>) => {
+                supplyOpts.forEach(o => {
+                    let supply = SpaceSim.suppliesMap.get(o.id);
+                    if (supply) {
+                        // update existing supply
+                        supply?.configure(o);
+                    } else {
+                        // or create new ship if doesn't already exist
+                        switch (o.supplyType) {
+                            case 'ammo':
+                                supply = new AmmoSupply(this, o);
+                                break;
+                            case 'coolant':
+                                supply = new CoolantSupply(this, o);
+                                break;
+                            case 'fuel':
+                                supply = new FuelSupply(this, o);
+                                break;
+                            case 'repairs':
+                                supply = new RepairsSupply(this, o);
+                                break;
+                            default:
+                                console.warn(`unknown supplyType of ${o.supplyType} provided`);
+                                break;
+                        }
+                        SpaceSim.suppliesMap.set(o.id, supply);
+                        this.physics.add.collider(supply, SpaceSim.map.getGameObject());
+                    }
+                });
+            }).on(Constants.Socket.REMOVE_SUPPLY, (id) => {
+                const supply = SpaceSim.suppliesMap.get(id);
+                if (supply) {
+                    supply.destroy();
+                    SpaceSim.suppliesMap.delete(id);
+                }
             });
     }
 
@@ -187,7 +224,9 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             .off(Constants.Socket.PLAYER_DEATH)
             .off(Constants.Socket.UPDATE_PLAYERS)
             .off(Constants.Socket.TRIGGER_ENGINE)
-            .off(Constants.Socket.TRIGGER_WEAPON);
+            .off(Constants.Socket.TRIGGER_WEAPON)
+            .off(Constants.Socket.UPDATE_SUPPLIES)
+            .off(Constants.Socket.REMOVE_SUPPLY);
     }
 
     private async _getMapFromServer(): Promise<void> {

@@ -9,6 +9,7 @@ import { Socket } from "socket.io-client";
 import { MultiplayerScene } from "./scenes/multiplayer-scene";
 import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 import { AiController } from "./controllers/ai-controller";
+import { GameMode } from "./interfaces/game-mode";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -107,4 +108,5 @@ export module SpaceSimClient {
     export var socket: Socket;
     export var player: Ship;
     export const opponents = new Array<AiController>();
+    export var mode: GameMode = 'singleplayer';
 }

@@ -8,14 +8,11 @@ import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
 import { LayoutContainer } from "phaser-ui-components";
 import { Weapons } from "./attachments/offence/weapons";
-import { FuelSupply } from "./supplies/fuel-supply";
-import { AmmoSupply } from "./supplies/ammo-supply";
-import { CoolantSupply } from "./supplies/coolant-supply";
 import { MachineGun } from "./attachments/offence/machine-gun";
-import { RepairsSupply } from "./supplies/repairs-supply";
 import { ShipLike } from "../interfaces/ship-like";
+import { IsConfigurable } from "../interfaces/is-configurable";
 
-export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
+export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurable<ShipOptions> {
     /** ShipOptions */
     readonly id: string; // UUID
     readonly scene: Scene;
@@ -66,6 +63,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
         this.setRotation(angle);
         this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
         this._remainingFuel = options.remainingFuel ?? Constants.Ship.MAX_FUEL;
+        this.getWeapons().remainingAmmo = options.remainingAmmo ?? Constants.Ship.Weapons.MAX_AMMO;
         this._temperature = options.temperature ?? 0;
         return this;
     }
@@ -73,11 +71,13 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
     get config(): ShipOptions {
         return {
             id: this.id,
-            location: this.location.clone(),
-            velocity: this.velocity.clone(),
+            location: {x: this.location.x, y: this.location.y},
+            velocity: {x: this.velocity.x, y: this.velocity.y},
             angle: this.angle,
+            angularVelocity: 0,
             integrity: this.integrity,
             remainingFuel: this.remainingFuel,
+            remainingAmmo: this.getWeapons().remainingAmmo,
             temperature: this.temperature,
             mass: this.mass
         };
@@ -220,7 +220,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
         return Phaser.Math.Vector2.ZERO;
     }
 
-    setLocation(location: Phaser.Math.Vector2): void {
+    setLocation(location: Phaser.Types.Math.Vector2Like): void {
         let go: Phaser.GameObjects.Container = this._positionContainer;
         go.x = location.x;
         go.y = location.y;
@@ -398,7 +398,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
         this._destroyedSound?.play();
         this._active = false;
         this._displayShipExplosion();
-        this._expelSupplies();
         this.getGameObject()?.setActive(false);
         try {
             this.getGameObject()?.destroy();
@@ -412,7 +411,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
 
     private _createGameObj(options?: ShipOptions): void {
         // create container as parent to all ship parts
-        let loc: Phaser.Math.Vector2 = options?.location ?? Helpers.vector2();
+        let loc = options?.location ?? Helpers.vector2();
         this._positionContainer = this.scene.add.container(loc.x, loc.y);
         this._positionContainer.setDepth(Constants.UI.Layers.PLAYER);
 
@@ -526,46 +525,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody {
                 loop: 0,
                 delay: 5000,
                 duration: 1000
-            });
-        }
-    }
-
-    private _expelSupplies(): void {
-        const loc = this.getLocation();
-        let remainingFuel = this._remainingFuel / 2;
-        const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / Constants.Ship.MAX_FUEL_PER_CONTAINER);
-        for (var i=0; i<fuelContainersCount; i++) {
-            const amount = (remainingFuel > Constants.Ship.MAX_FUEL_PER_CONTAINER) 
-                ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
-                : remainingFuel;
-            remainingFuel -= amount;
-            new FuelSupply(this.scene, {
-                amount: amount,
-                location: loc
-            });
-        }
-        let remainingAmmo = this._weapons?.remainingAmmo / 2;
-        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
-        for (var i=0; i<ammoContainersCount; i++) {
-            const amount = (remainingAmmo > Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER) 
-                ? Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
-                : remainingAmmo;
-            remainingAmmo -= amount;
-            new AmmoSupply(this.scene, {
-                amount: amount,
-                location: loc
-            });
-        }
-        if (Phaser.Math.RND.between(0, 1)) {
-            new CoolantSupply(this.scene, {
-                amount: 40,
-                location: loc
-            });
-        }
-        if (Phaser.Math.RND.between(0, 1)) {
-            new RepairsSupply(this.scene, {
-                amount: 20,
-                location: loc
             });
         }
     }

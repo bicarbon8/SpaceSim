@@ -2,6 +2,7 @@ import { CanShoot } from "../../../interfaces/can-shoot";
 import { Ship } from "../../ship";
 import { ShipAttachment } from "../ship-attachment";
 import { Bullet } from "./bullet";
+import { Constants } from "../../../utilities/constants";
 
 export type WeaponsOptions = {
     maxAmmo?: number;
@@ -17,7 +18,6 @@ export type WeaponsOptions = {
 export abstract class Weapons extends ShipAttachment implements CanShoot {
     private _maxAmmo: number;
     private _firingDelay: number;
-    private _remainingAmmo: number;
     private _heatPerShot: number;
     private _lastFired: number;
     private _isFiring: boolean;
@@ -27,13 +27,15 @@ export abstract class Weapons extends ShipAttachment implements CanShoot {
     private _damagePerHit: number;
     private _force: number;
 
+    public remainingAmmo: number;
+
     constructor(ship: Ship, options: WeaponsOptions) {
         super(ship);
         this._lastFired = 0;
 
-        this._maxAmmo = options.maxAmmo ?? 100;
+        this._maxAmmo = options.maxAmmo ?? Constants.Ship.Weapons.MAX_AMMO;
         this._firingDelay = options.firingDelay ?? 500;
-        this._remainingAmmo = options.remainingAmmo ?? this._maxAmmo;
+        this.remainingAmmo = options.remainingAmmo ?? this._maxAmmo;
         this._heatPerShot = options.heatPerShot ?? 0.5;
         this._bulletMass = options.bulletMass ?? 0.01;
         this._bulletScale = options.bulletScale ?? 1;
@@ -41,14 +43,10 @@ export abstract class Weapons extends ShipAttachment implements CanShoot {
         this._force = options.force ?? 500;
     }
 
-    get remainingAmmo(): number {
-        return this._remainingAmmo;
-    }
-
     addAmmo(amount: number): this {
-        this._remainingAmmo += amount;
-        if (this._remainingAmmo > this._maxAmmo) {
-            this._remainingAmmo = this._maxAmmo;
+        this.remainingAmmo += amount;
+        if (this.remainingAmmo > this._maxAmmo) {
+            this.remainingAmmo = this._maxAmmo;
         }
         return this;
     }
@@ -87,12 +85,12 @@ export abstract class Weapons extends ShipAttachment implements CanShoot {
             mass: this._bulletMass,
             spriteName: 'bullet'
         });
-        this._remainingAmmo--;
+        this.remainingAmmo--;
     }
 
     private _canFire(): boolean {
         return this.active
-            && this._remainingAmmo > 0
+            && this.remainingAmmo > 0
             && this.scene.time.now >= +this._lastFired + +this._firingDelay
             && !this.ship?.isOverheating();
     }

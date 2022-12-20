@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { Constants, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RoomPlus, Ship, SpaceSim } from "space-sim-server";
+import { AmmoSupply, Constants, CoolantSupply, FuelSupply, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RepairsSupply, RoomPlus, Ship, ShipOptions, SpaceSim } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -29,6 +29,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
 
         this.debug = SpaceSim.debug;
         this._stellarBodies = [];
+
+        SpaceSimClient.mode = 'singleplayer';
     }
 
     preload(): void {
@@ -224,9 +226,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                     }
                 });
             } else {
-                // TODO: remove opponent from SpaceSim.opponents array
                 GameScoreTracker.opponentDestroyed();
+                this._expelSupplies(ship?.config);
             }
+            SpaceSim.playersMap.delete(ship?.id);
         });
     }
 
@@ -329,6 +332,46 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                         message: 'ship collision'
                     });
                 });
+            });
+        }
+    }
+
+    private _expelSupplies(shipCfg: ShipOptions): void {
+        const loc = shipCfg.location;
+        let remainingFuel = shipCfg.remainingFuel / 2;
+        const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / Constants.Ship.MAX_FUEL_PER_CONTAINER);
+        for (var i=0; i<fuelContainersCount; i++) {
+            const amount = (remainingFuel > Constants.Ship.MAX_FUEL_PER_CONTAINER) 
+                ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
+                : remainingFuel;
+            remainingFuel -= amount;
+            new FuelSupply(this, {
+                amount: amount,
+                location: loc
+            });
+        }
+        let remainingAmmo = shipCfg.remainingAmmo / 2;
+        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
+        for (var i=0; i<ammoContainersCount; i++) {
+            const amount = (remainingAmmo > Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER) 
+                ? Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
+                : remainingAmmo;
+            remainingAmmo -= amount;
+            new AmmoSupply(this, {
+                amount: amount,
+                location: loc
+            });
+        }
+        if (Phaser.Math.RND.between(0, 1)) {
+            new CoolantSupply(this, {
+                amount: 40,
+                location: loc
+            });
+        }
+        if (Phaser.Math.RND.between(0, 1)) {
+            new RepairsSupply(this, {
+                amount: 20,
+                location: loc
             });
         }
     }

@@ -4,7 +4,7 @@ import { Weapons } from "./weapons";
 export class MachineGun extends Weapons {
     constructor(ship: Ship) {
         super(ship, {
-            maxAmmo: 1500,
+            maxAmmo: 500,
             firingDelay: 200,
             heatPerShot: 1,
             force: 1000,

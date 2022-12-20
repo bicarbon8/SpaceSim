@@ -34,7 +34,7 @@ export class TouchController extends InputController {
         // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
         // only update if angle changed more than minimum allowed degrees
         if (!Phaser.Math.Fuzzy.Equal(this.ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
-            SpaceSimClient.socket?.emit(Constants.Socket.SET_ANGLE, degrees);
+            SpaceSimClient.socket?.emit(Constants.Socket.SET_PLAYER_ANGLE, degrees);
             this.ship.setRotation(degrees);
         }
     }

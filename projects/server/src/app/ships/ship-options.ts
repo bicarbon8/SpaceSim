@@ -1,12 +1,11 @@
 import Phaser from "phaser";
+import { PhysicsObject } from "../interfaces/physics-object";
 
-export interface ShipOptions {
+export type ShipOptions = Partial<PhysicsObject> & {
     readonly id?: string;
-    readonly location?: Phaser.Math.Vector2;
-    readonly velocity?: Phaser.Math.Vector2;
-    readonly angle?: number;
     readonly integrity?: number;
     readonly remainingFuel?: number;
+    readonly remainingAmmo?: number;
     readonly temperature?: number;
     readonly mass?: number;
     readonly weaponsKey?: number;
