@@ -194,7 +194,21 @@ export class BattleRoyaleScene extends Phaser.Scene {
             io.emit(Constants.Socket.PLAYER_DEATH, opts.id);
             this._expelSupplies(opts);
             io.emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
-            // TODO: locate user fingerprint associated with ship.id and update count
+            
+            // locate user fingerprint associated with ship.id and update count
+            try {
+                const datas = this._users.get(player.fingerprint);
+                if (datas) {
+                    const index = datas.findIndex(d => d.fingerprint === player.fingerprint
+                        && d.name === player.name);
+                    if (index >= 0) {
+                        datas.splice(index, 1);
+                        this._users.set(player.fingerprint, datas);
+                    }
+                }
+            } catch (e) {
+                console.warn('error removing old user data: ', e.message ?? e);
+            }
         }
     }
 
@@ -387,7 +401,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 return ship.id;
             }
         } catch (e) {
-            console.warn('error reconnecting: ', e);
+            console.warn('error reconnecting: ', e.message ?? e);
         }
         return null; // unable to reconnect
     }
