@@ -20,6 +20,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     private _music: Phaser.Sound.BaseSound;
     private _exploder: Explosion;
     private _shipId: string;
+    private _disconnectTimer: number;
 
     debug: boolean;
 
@@ -112,6 +113,17 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             this._stellarBodies.forEach((body) => {
                 body?.update(time, delta);
             });
+
+            if (!SpaceSimClient.socket?.connected) {
+                if (this._disconnectTimer == null) {
+                    this._disconnectTimer = window.setTimeout(() => this._gameOver(), 10000);
+                }
+            } else {
+                if (this._disconnectTimer != null) {
+                    window.clearTimeout(this._disconnectTimer);
+                    this._disconnectTimer = null;
+                }
+            }
         } catch (e) {
             /* ignore */
         }
