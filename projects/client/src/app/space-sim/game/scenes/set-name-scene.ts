@@ -110,25 +110,12 @@ export class SetNameScene extends Phaser.Scene {
 
     private _getMobileTextInput(): void {
         this._text.setInteractive().on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
-            const pname = Helpers.sanitise(
-                prompt('Enter player name: (minimum 3 characters consisting of [a-zA-Z0-9])')
-            );
+            const txt: string = window.prompt('Enter player name: (minimum 3 characters consisting of [a-zA-Z0-9])');
+            const pname: string = Helpers.sanitise(txt);
             if (pname.length < 3) {
-                alert('invalid name!');
+                window.alert('invalid name!');
             } else {
-                const text = new TextButton(this, {
-                    padding: 10,
-                    cornerRadius: 10,
-                    textConfig: {
-                        text: pname,
-                        style: Styles.Outline.primary().text
-                    },
-                    backgroundStyles: Styles.Outline.primary().graphics,
-                    width: this._layout.width - (this._layout.padding * 2)
-                });
-                this._layout.removeContentAt(1, 0, true);
-                this._text = text;
-                this._layout.addContentAt(1, 0, this._text);
+                this._text.setText({text: pname});
             }
         });
     }
