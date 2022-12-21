@@ -1,4 +1,4 @@
-import { GridLayout, Styles, TextButton } from "phaser-ui-components";
+import { GridLayout, LayoutContainer, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
 import { Helpers } from "space-sim-server";
 
@@ -12,7 +12,7 @@ export class SetNameScene extends Phaser.Scene {
     private _width: number;
     private _height: number;
     private _layout: GridLayout;
-    private _text: TextButton;
+    private _text: LayoutContainer;
     private _button: TextButton;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
@@ -38,7 +38,7 @@ export class SetNameScene extends Phaser.Scene {
     }
 
     update() {
-        if (this._text.text.text.length > 2) {
+        if (this._text.contentAs<Phaser.GameObjects.Text>().text.length > 2) {
             this._button.setText({style: Styles.success().text});
             this._button.setBackground(Styles.success().graphics);
         } else {
@@ -64,17 +64,15 @@ export class SetNameScene extends Phaser.Scene {
             }
         }));
 
-        this._text = new TextButton(this, {
+        this._text = new LayoutContainer(this, {
             padding: 10,
             cornerRadius: 10,
-            textConfig: {
-                text: '',
-                style: Styles.Outline.primary().text
-            },
             backgroundStyles: Styles.Outline.primary().graphics,
             width: this._layout.width - (this._layout.padding * 2),
-            onClick: null,
-            onHover: null
+            content: this.make.text({
+                text: '',
+                style: Styles.Outline.primary().text
+            })
         });
         this._layout.addContentAt(1, 0, this._text);
 
@@ -87,7 +85,7 @@ export class SetNameScene extends Phaser.Scene {
             },
             backgroundStyles: Styles.secondary().graphics,
             onClick: () => {
-                this._validateAndStartGame(this._text.text.text);
+                this._validateAndStartGame(this._text.contentAs<Phaser.GameObjects.Text>().text);
             }
         });
         this._layout.addContentAt(2, 0, this._button);
@@ -96,16 +94,18 @@ export class SetNameScene extends Phaser.Scene {
     private _getKeyboardInput(): void {
         this.input.keyboard.on(Phaser.Input.Keyboard.Events.ANY_KEY_DOWN, (event: KeyboardEvent) => {
             // console.log(`input:`, event);
+            const txtGo = this._text.contentAs<Phaser.GameObjects.Text>();
+            const txt = txtGo.text;
             if (event.key === 'Backspace') {
-                this._text.setText({text: this._text.text.text.substring(0, this._text.text.text.length - 1)})
+                txtGo.setText(txt.substring(0, txt.length - 1));
             }
             if (event.key.length === 1 && event.key.match(/[a-zA-Z0-9]/)) {
-                if (this._text.text.text.length < 10) {
-                    this._text.setText({text: this._text.text.text + event.key});
+                if (txt.length < 10) {
+                    txtGo.setText(txt + event.key);
                 }
             }
             if (event.key === 'Enter') {
-                this._validateAndStartGame(this._text.text.text);
+                this._validateAndStartGame(txt);
             }
         });
     }
@@ -117,13 +117,14 @@ export class SetNameScene extends Phaser.Scene {
             if (pname.length < 3) {
                 window.alert('invalid name!');
             } else {
-                this._text.setText({text: pname});
+                this._text.contentAs<Phaser.GameObjects.Text>()
+                    .setText(pname);
             }
         });
     }
 
     private _validateAndStartGame(text: string): void {
-        const pname = Helpers.sanitise(this._text.text.text);
+        const pname = Helpers.sanitise(text);
         if (pname.length > 2) {
             SpaceSimClient.playerData.name = pname;
             this.scene.start('multiplayer-scene');
