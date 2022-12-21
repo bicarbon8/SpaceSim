@@ -154,8 +154,10 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     private _removePlayer(opts: ShipOptions): void {
         if (SpaceSim.playersMap.has(opts.id)) {
+            // prevent further updates to ship
             const player = SpaceSim.playersMap.get(opts.id);
             SpaceSim.playersMap.delete(opts.id);
+            
             console.debug(`removing ship id: ${opts.id}, with name: ${opts.name}`);
             player?.destroy(false); // don't emit event locally
             io.emit(Constants.Socket.PLAYER_DEATH, opts.id);

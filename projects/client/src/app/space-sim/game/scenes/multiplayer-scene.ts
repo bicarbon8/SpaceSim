@@ -223,23 +223,26 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             const ship = SpaceSim.playersMap.get(id);
             if (ship) {
                 this._exploder.explode({location: ship.config.location});
-                ship?.destroy();
+                ship?.destroy(false);
                 SpaceSim.playersMap.delete(ship.id);
+                
+                if (SpaceSimClient.player.id == ship?.id) {
+                    this._turnOffSocketEventHandling();
+                    this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+                        if (progress === 1) {
+                            this.game.scene.start('game-over-scene');
+                            this.game.scene.stop('multiplayer-hud-scene');
+                            this.game.scene.stop(this);
+                        }
+                    });
+                }
             }
         });
 
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
-            if (SpaceSimClient.player.id == shipOpts?.id) {
-                this._turnOffSocketEventHandling();
+            if (shipOpts.id === SpaceSimClient.player.id) {
                 SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH);
-                this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
-                    if (progress === 1) {
-                        this.game.scene.start('game-over-scene');
-                        this.game.scene.stop('multiplayer-hud-scene');
-                        this.game.scene.stop(this);
-                    }
-                });
             }
         });
 
