@@ -13,14 +13,6 @@ module.exports = (env) => {
           test: /\.tsx?$/,
           use: 'ts-loader',
           exclude: /node_modules|test/,
-        }, {
-          test: /server\.config\.json?$/,
-          loader: 'file-replace-loader',
-          options: {
-              condition: env.production,
-              replacement: path.resolve('./server.config.prod.json'),
-              async: true
-          }
         }
       ],
     },
