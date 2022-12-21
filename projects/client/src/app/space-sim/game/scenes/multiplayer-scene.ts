@@ -19,6 +19,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: Explosion;
+    private _shipId: string;
 
     debug: boolean;
 
@@ -84,6 +85,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     create(): void {
+        this._shipId = null;
         SpaceSim.map = null;
         SpaceSimClient.player = null;
         SpaceSim.playersMap.clear();
@@ -172,7 +174,13 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                 }
             }).on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => {
                 GameScoreTracker.updateAllStats(...stats);
-            });;
+            }).on('connect', () => {
+                if (SpaceSimClient.playerData
+                    && SpaceSimClient.playerData.fingerprint
+                    && SpaceSimClient.playerData.name) {
+                    SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, SpaceSimClient.playerData);
+                }
+            });
     }
 
     private _turnOffSocketEventHandling(): void {
@@ -194,7 +202,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                 // ensure all tiles are visible (defaults to hidden)
                 SpaceSim.map.getLayer().forEachTile(tile => tile.setAlpha(1));
             });
-        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP);
+        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP, SpaceSimClient.playerData);
         await this._waitForMap();
     }
 
@@ -206,7 +214,9 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     private async _getPlayerFromServer(): Promise<void> {
-        SpaceSimClient.socket.on(Constants.Socket.UPDATE_PLAYERS, (shipOpts: Array<ShipOptions>) => {
+        SpaceSimClient.socket.on(Constants.Socket.SET_PLAYER_ID, (id: string) => {
+            this._shipId = id;
+        }).on(Constants.Socket.UPDATE_PLAYERS, (shipOpts: Array<ShipOptions>) => {
             shipOpts.forEach(o => {
                 let ship = SpaceSim.playersMap.get(o.id);
                 if (ship) {
@@ -226,7 +236,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
                 }
 
-                if (ship?.id === SpaceSimClient.socket.id) {
+                if (ship?.id === this._shipId) {
                     SpaceSimClient.player = ship;
                 }
             });
@@ -253,7 +263,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
             if (shipOpts.id === SpaceSimClient.player.id) {
-                SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH);
+                SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH, SpaceSimClient.playerData);
             }
         });
 

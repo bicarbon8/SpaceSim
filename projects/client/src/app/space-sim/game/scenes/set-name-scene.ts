@@ -1,5 +1,6 @@
-import { GridLayout, LinearLayout, Styles, TextButton } from "phaser-ui-components";
+import { GridLayout, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
+import { Helpers } from "space-sim-server";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -109,7 +110,7 @@ export class SetNameScene extends Phaser.Scene {
 
     private _getMobileTextInput(): void {
         this._text.setInteractive().on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
-            const pname = this._sanitise(
+            const pname = Helpers.sanitise(
                 prompt('Enter player name: (minimum 3 characters consisting of [a-zA-Z0-9])')
             );
             if (pname.length < 3) {
@@ -120,14 +121,8 @@ export class SetNameScene extends Phaser.Scene {
         });
     }
 
-    private _sanitise(text: string): string {
-        // TODO: filter out bad words
-        return text?.replace(/[^a-zA-Z0-9]/g, '')
-            .substring(0, 10) ?? '';
-    }
-
     private _validateAndStartGame(text: string): void {
-        const pname = this._sanitise(this._text.text.text);
+        const pname = Helpers.sanitise(this._text.text.text);
         if (pname.length > 2) {
             SpaceSimClient.playerData.name = pname;
             this.scene.start('multiplayer-scene');

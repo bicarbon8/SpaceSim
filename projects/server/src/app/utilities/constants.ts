@@ -48,9 +48,11 @@ export module Constants {
         export const PLAYER_DEATH: string = 'player-death';
     }
     export module Socket {
+        export const SET_PLAYER_DATA = 'set-player-data';
         export const REQUEST_MAP = 'get-map';
         export const UPDATE_MAP = 'update-map';
         export const REQUEST_PLAYER = 'get-player';
+        export const SET_PLAYER_ID = 'set-player-id';
         export const UPDATE_PLAYERS = 'update-players';
         export const COMMAND_PLAYER = 'player-command';
         export const PLAYER_DEATH = 'player-death';

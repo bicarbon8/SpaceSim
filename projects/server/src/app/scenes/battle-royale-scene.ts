@@ -19,10 +19,18 @@ declare const io: Server;
 
 export class BattleRoyaleScene extends Phaser.Scene {
     /**
-     * a Map of fingerprints to ship ids so we can prevent
+     * a Map of fingerprints to `SpaceSimPlayerData` so we can prevent
      * more than 3 ships per fingerprint (user)
      */
-    private _users = new Map<string, Array<string>>();
+    private _users = new Map<string, Array<SpaceSimPlayerData>>();
+
+    /**
+     * mapping of socket.id to ship.id since socket disconnect
+     * results in new id on reconnect.
+     */
+    private _socketToShipId = new Map<string, string>();
+
+    private _disconnectTimers = new Map<string, number>();
 
     preload(): void {
         this.load.image('weapons-1', `assets/sprites/ship-parts/weapons-1.png`);
@@ -60,52 +68,73 @@ export class BattleRoyaleScene extends Phaser.Scene {
         io.on('connection', (socket: Socket) => {
             console.debug(`player: ${socket.id} connected from ${socket.request.connection.remoteAddress}`);
             socket.on('disconnect', () => {
-                console.debug(`player: ${socket.id} disconnected`);
-                const ship = SpaceSim.playersMap.get(socket.id);
-                if (ship) {
+                console.debug(`player: ${socket.id} disconnected;`,
+                    `waiting 10 seconds before destroying ship...`);
+                const id = this._socketToShipId.get(socket.id);
+                this._disconnectTimers.set(id, window.setTimeout(() => {
+                    const ship = SpaceSim.playersMap.get(id);
                     this._removePlayer(ship.config);
-                }
-            }).on(Constants.Socket.REQUEST_MAP, () => {
+                }, 10000));
+            }).on(Constants.Socket.SET_PLAYER_DATA, (data: SpaceSimPlayerData) => {
+                console.debug(`received set player data from ${socket.id} `,
+                    `with data: ${JSON.stringify(data)}`);
+                this._reconnect(socket.id, data);
+            }).on(Constants.Socket.REQUEST_MAP, (data: SpaceSimPlayerData) => {
                 console.debug(`received map request from: ${socket.id}`);
                 this._sendMap(socket);
             }).on(Constants.Socket.REQUEST_PLAYER, (data: SpaceSimPlayerData) => {
-                console.debug(`received new player request from: ${socket.id} containing data:`, data);
-                if (!SpaceSim.playersMap.has(socket.id)) {
-                    if (this._preventAbuse(socket.id, data.fingerprint)) {
-                        this._createPlayer({
-                            ...data,
-                            shipId: socket.id
-                        });
-                    }
+                console.debug(`received new player request from: ${socket.id} `,
+                    `containing data: ${JSON.stringify(data)}`);
+                data = {...data, name: Helpers.sanitise(data.name)};
+                if (this._preventAbuse(data)) {
+                    const ship = this._createPlayer(data);
+                    this._socketToShipId.set(socket.id, ship.id);
+                    socket.emit(Constants.Socket.SET_PLAYER_ID, ship.id);
                 }
-            }).on(Constants.Socket.TRIGGER_ENGINE, () => {
-                const ship = SpaceSim.playersMap.get(socket.id);
+            }).on(Constants.Socket.TRIGGER_ENGINE, (data: SpaceSimPlayerData) => {
+                const id = this._getShipId(socket.id);
+                if (!id) {
+                    socket.emit(Constants.Socket.PLAYER_DEATH, id);
+                }
+                const ship = SpaceSim.playersMap.get(id);
                 if (ship) {
                     console.debug(`triggering engine for ${ship.id} at angle ${ship.angle}`);
                     socket.broadcast.emit(Constants.Socket.TRIGGER_ENGINE, ship.id);
                     ship.getThruster().trigger();
                 }
-            }).on(Constants.Socket.TRIGGER_WEAPON, () => {
-                const ship = SpaceSim.playersMap.get(socket.id);
+            }).on(Constants.Socket.TRIGGER_WEAPON, (data: SpaceSimPlayerData) => {
+                const id = this._getShipId(socket.id);
+                if (!id) {
+                    socket.emit(Constants.Socket.PLAYER_DEATH, id);
+                }
+                const ship = SpaceSim.playersMap.get(id);
                 if (ship) {
                     console.debug(`triggering weapon for ${ship.id} at angle ${ship.angle}`);
                     socket.broadcast.emit(Constants.Socket.TRIGGER_WEAPON, ship.id);
                     ship.getWeapons().trigger();
                 }
-            }).on(Constants.Socket.SET_PLAYER_ANGLE, (degrees: number) => {
+            }).on(Constants.Socket.SET_PLAYER_ANGLE, (degrees: number, data: SpaceSimPlayerData) => {
                 try {
                     const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
                     // console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
-                    const ship = SpaceSim.playersMap.get(socket.id);
+                    const id = this._getShipId(socket.id);
+                    if (!id) {
+                        socket.emit(Constants.Socket.PLAYER_DEATH, id);
+                    }
+                    const ship = SpaceSim.playersMap.get(id);
                     if (ship) {
                         ship.setRotation(d);
                     }
                 } catch (e) {
                     console.error(`error in handling set angle event:`, e);
                 }
-            }).on(Constants.Socket.PLAYER_DEATH, () => {
+            }).on(Constants.Socket.PLAYER_DEATH, (data: SpaceSimPlayerData) => {
                 console.debug(`received player death notice from: ${socket.id}`);
-                const ship = SpaceSim.playersMap.get(socket.id);
+                const id = this._getShipId(socket.id);
+                if (!id) {
+                    socket.emit(Constants.Socket.PLAYER_DEATH, id);
+                }
+                const ship = SpaceSim.playersMap.get(id);
                 if (ship) {
                     this._removePlayer(ship.config);
                 }
@@ -136,10 +165,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
             loc = Helpers.vector2(x, y);
         } while (this._isEmpty(loc, 100));
         const ship = new Ship(this, {
-            id: data.shipId,
             location: loc,
             fingerprint: data.fingerprint,
-            name: data.name.substring(0, 10)
+            name: data.name
         });
         this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
         this._addPlayerCollisionPhysicsWithPlayers(ship);
@@ -308,19 +336,15 @@ export class BattleRoyaleScene extends Phaser.Scene {
     /**
      * ensure no single user creates more than 3 players at a time
      */
-    private _preventAbuse(id: string, fingerprint: string): boolean {
-        let datas: Array<string>;
-        if (this._users.has(fingerprint)) {
-             datas = this._users.get(fingerprint);
-             if (datas.length > 2) {
-                // TODO
-                // return false;
-             }
+    private _preventAbuse(data: SpaceSimPlayerData): boolean {
+        if (this._users.has(data.fingerprint)) {
+            const datas = this._users.get(data.fingerprint);
+            if (datas.length >= 3) {
+                return false;
+            }
         } else {
-            datas = new Array<string>();
+            this._users.set(data.fingerprint, new Array<SpaceSimPlayerData>());
         }
-        datas.push(id);
-        this._users.set(fingerprint, datas);
 
         return true;
     }
@@ -330,13 +354,34 @@ export class BattleRoyaleScene extends Phaser.Scene {
      * @param supply a `ShipSupply` to remove
      */
     private _cleanupSupply(supply: ShipSupply): void {
-        setTimeout(() => {
+        window.setTimeout(() => {
             io.emit(Constants.Socket.FLICKER_SUPPLY, (supply.id));
-            setTimeout(() => {
+            window.setTimeout(() => {
                 SpaceSim.suppliesMap.delete(supply.id);
                 supply.destroy();
                 io.emit(Constants.Socket.REMOVE_SUPPLY, (supply.id));
             }, 5000);
         }, 25000);
+    }
+
+    private _getShipId(socketId: string, data?: SpaceSimPlayerData): string {
+        const id = this._socketToShipId.get(socketId);
+        if (id) {
+            return id;
+        }
+        return this._reconnect(socketId, data);
+    }
+
+    private _reconnect(newSocketId: string, data: SpaceSimPlayerData): string {
+        data = {...data, name: Helpers.sanitise(data.name)};
+        const ship = SpaceSim.players()
+            .find(p => p.fingerprint === data.fingerprint 
+                && p.name === data.name);
+        if (ship) {
+            window.clearTimeout(ship.id);
+            this._socketToShipId.set(newSocketId, ship.id);
+            return ship.id;
+        }
+        return null; // unable to reconnect
     }
 }

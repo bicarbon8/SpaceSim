@@ -213,7 +213,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             engineKey: Phaser.Math.RND.between(1, 3)
         });
         SpaceSim.playersMap.set(SpaceSimClient.player.id, SpaceSimClient.player);
-        SpaceSimClient.playerData.shipId = SpaceSimClient.player.id;
         
         // setup collision with map walls
         this.physics.add.collider(SpaceSimClient.player.getGameObject(), SpaceSim.map.getGameObject());
