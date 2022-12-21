@@ -72,7 +72,9 @@ export class SetNameScene extends Phaser.Scene {
                 style: Styles.Outline.primary().text
             },
             backgroundStyles: Styles.Outline.primary().graphics,
-            width: this._layout.width - (this._layout.padding * 2)
+            width: this._layout.width - (this._layout.padding * 2),
+            onClick: null,
+            onHover: null
         });
         this._layout.addContentAt(1, 0, this._text);
 
