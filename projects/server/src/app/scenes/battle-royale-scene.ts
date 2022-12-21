@@ -157,7 +157,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             // prevent further updates to ship
             const player = SpaceSim.playersMap.get(opts.id);
             SpaceSim.playersMap.delete(opts.id);
-            
+
             console.debug(`removing ship id: ${opts.id}, with name: ${opts.name}`);
             player?.destroy(false); // don't emit event locally
             io.emit(Constants.Socket.PLAYER_DEATH, opts.id);
@@ -220,6 +220,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             });
             this._addSupplyCollisionPhysicsWithPlayers(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
+            this._cleanupSupply(supply);
         }
         let remainingAmmo = shipCfg.remainingAmmo / 2;
         const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
@@ -234,6 +235,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             });
             this._addSupplyCollisionPhysicsWithPlayers(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
+            this._cleanupSupply(supply);
         }
         if (Phaser.Math.RND.between(0, 1)) {
             const supply = new CoolantSupply(this, {
@@ -242,6 +244,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             });
             this._addSupplyCollisionPhysicsWithPlayers(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
+            this._cleanupSupply(supply);
         }
         if (Phaser.Math.RND.between(0, 1)) {
             const supply = new RepairsSupply(this, {
@@ -250,6 +253,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             });
             this._addSupplyCollisionPhysicsWithPlayers(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
+            this._cleanupSupply(supply);
         }
     }
 
@@ -319,5 +323,20 @@ export class BattleRoyaleScene extends Phaser.Scene {
         this._users.set(fingerprint, datas);
 
         return true;
+    }
+
+    /**
+     * removes a `ShipSupply` after 30 seconds
+     * @param supply a `ShipSupply` to remove
+     */
+    private _cleanupSupply(supply: ShipSupply): void {
+        setTimeout(() => {
+            io.emit(Constants.Socket.FLICKER_SUPPLY, (supply.id));
+            setTimeout(() => {
+                SpaceSim.suppliesMap.delete(supply.id);
+                supply.destroy();
+                io.emit(Constants.Socket.REMOVE_SUPPLY, (supply.id));
+            }, 5000);
+        }, 25000);
     }
 }

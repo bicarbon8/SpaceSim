@@ -159,6 +159,17 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                     supply.destroy();
                     SpaceSim.suppliesMap.delete(id);
                 }
+            }).on(Constants.Socket.FLICKER_SUPPLY, (id: string) => {
+                const supply = SpaceSim.suppliesMap.get(id);
+                if (supply) {
+                    this.tweens.add({
+                        targets: supply,
+                        loop: -1,
+                        yoyo: true,
+                        duration: 100,
+                        alpha: 0.5
+                    });
+                }
             }).on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => {
                 GameScoreTracker.updateAllStats(...stats);
             });;
