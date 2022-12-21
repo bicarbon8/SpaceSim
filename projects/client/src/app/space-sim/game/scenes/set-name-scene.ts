@@ -116,7 +116,19 @@ export class SetNameScene extends Phaser.Scene {
             if (pname.length < 3) {
                 alert('invalid name!');
             } else {
-                this._text.setText({text: pname});
+                const text = new TextButton(this, {
+                    padding: 10,
+                    cornerRadius: 10,
+                    textConfig: {
+                        text: pname,
+                        style: Styles.Outline.primary().text
+                    },
+                    backgroundStyles: Styles.Outline.primary().graphics,
+                    width: this._layout.width - (this._layout.padding * 2)
+                });
+                this._layout.removeContentAt(1, 0, true);
+                this._text = text;
+                this._layout.addContentAt(1, 0, this._text);
             }
         });
     }
