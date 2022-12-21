@@ -136,7 +136,34 @@ export module Helpers {
         });
     }
 
-    export function getId(data: SpaceSimPlayerData): string {
-        return `${data.name?.substring(0, 10)}_${data.fingerprint}`;
+    export function trycatch(func: () => void, 
+        message: string, 
+        level: 'debug' | 'info' | 'warn' | 'error' = 'debug',
+        includeError: boolean = true): void {
+        try {
+            func();
+        } catch (e) {
+            let out: (...data: Array<any>) => void;
+            switch(level) {
+                case 'debug':
+                    out = console.debug;
+                    break;
+                case 'info':
+                    out = console.info;
+                    break;
+                case 'warn':
+                    out = console.warn;
+                    break;
+                case 'error':
+                default:
+                    out = console.error;
+                    break;
+            }
+            if (includeError) {
+                out(message, e);
+            } else {
+                out(message);
+            }
+        }
     }
 }

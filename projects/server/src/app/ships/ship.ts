@@ -38,7 +38,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     private _shipHeatIndicator: Phaser.GameObjects.Sprite;
     private _shipOverheatIndicator: Phaser.GameObjects.Text;
     private _lastDamagedBy: DamageOptions[];
-    private _destroyedSound: Phaser.Sound.BaseSound;
     private _shipDamageFlicker: Phaser.Tweens.Tween;
 
     private _selfDestruct: boolean;
@@ -394,20 +393,19 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this._selfDestruct = false;
     }
 
-    destroy(): void {
-        const config = this.config;
-        this._destroyedSound?.play();
+    destroy(emit: boolean = true): void {
+        if (emit) {
+            this.scene.events.emit(Constants.Events.PLAYER_DEATH, this.config);
+        }
+
         this._active = false;
-        this._displayShipExplosion();
-        this.getGameObject()?.setActive(false);
         try {
+            this.getGameObject()?.setActive(false);
             this.getGameObject()?.destroy();
         } catch (e) {
             /* ignore */
         }
         this._positionContainer = null;
-
-        this.scene.events.emit(Constants.Events.PLAYER_DEATH, config);
     }
 
     private _createGameObj(options?: ShipOptions): void {
@@ -466,12 +464,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
 
         this._engine = new Engine(this);
         this._weapons = new MachineGun(this);
-
-        try {
-            this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1});
-        } catch (e) {
-            // ignore
-        }
     }
 
     private _createIntegrityIndicator(): void {
@@ -535,47 +527,17 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     private _createNameIndicator(): void {
         const txt = this.scene.make.text({
             text: this.name,
-            style: {font: '20px Courier', color: '#ffffff'},
+            style: {
+                font: '20px Courier', 
+                color: '#ffffff',
+                stroke: '#000000',
+                strokeThickness: 1
+            },
             x: 0,
-            y: -40
+            y: 40 // under the ship
         });
         txt.setX(-(txt.width / 2));
         this._positionContainer.add(txt);
-    }
-
-    private _displayShipExplosion(): void {
-        // create particle systems for destruction
-        let pos: Phaser.Math.Vector2 = this.getLocation();
-        const flare = this.scene.add.particles('flares');
-        flare.setPosition(pos.x, pos.y);
-        flare.setDepth(Constants.UI.Layers.PLAYER);
-        const explosion = this.scene.add.particles('explosion');
-        explosion.setPosition(pos.x, pos.y);
-        explosion.setDepth(Constants.UI.Layers.PLAYER);
-
-        const explosionEmitter = explosion.createEmitter({
-            lifespan: { min: 500, max: 1000 },
-            speedX: { min: -1, max: 1 },
-            speedY: { min: -1, max: 1 },
-            angle: { min: -180, max: 179 },
-            gravityX: 0,
-            gravityY: 0,
-            scale: { start: 1, end: 0 },
-            blendMode: 'ADD',
-            maxParticles: 3
-        });
-        const flareEmitter = flare.createEmitter({
-            frame: Constants.UI.SpriteMaps.Flares.red as number,
-            lifespan: { min: 100, max: 500 },
-            speedX: { min: -600, max: 600 },
-            speedY: { min: -600, max: 600 },
-            angle: { min: -180, max: 179 },
-            gravityX: 0,
-            gravityY: 0,
-            scale: { start: 1, end: 0 },
-            blendMode: 'ADD',
-            maxParticles: 10
-        });
     }
 
     private _updateLastDamagedBy(damageOpts: DamageOptions): void {

@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { AmmoSupply, Constants, CoolantSupply, FuelSupply, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RepairsSupply, RoomPlus, Ship, ShipOptions, ShipSupply, SpaceSim } from "space-sim-server";
+import { AmmoSupply, Constants, CoolantSupply, Explosion, FuelSupply, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RepairsSupply, RoomPlus, Ship, ShipOptions, ShipSupply, SpaceSim } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -19,6 +19,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _stellarBodies: StellarBody[];
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
+    private _exploder: Explosion;
 
     private _physicsUpdator: Generator<void, void, unknown>;
 
@@ -87,6 +88,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     create(): void {
+        this._exploder = new Explosion(this);
         this._createMapAndPlayer();
         this.resize();
         this._createStellarBodiesLayer();
@@ -218,6 +220,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
 
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
+            this._exploder.explode({location: shipOpts.location});
             if (SpaceSimClient.player.id == shipOpts?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {

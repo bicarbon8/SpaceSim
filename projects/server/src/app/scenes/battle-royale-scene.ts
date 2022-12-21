@@ -79,23 +79,23 @@ export class BattleRoyaleScene extends Phaser.Scene {
                     }
                 }
             }).on(Constants.Socket.TRIGGER_ENGINE, () => {
-                console.debug(`received trigger engine request from: ${socket.id}`);
                 const ship = SpaceSim.playersMap.get(socket.id);
                 if (ship) {
+                    console.debug(`triggering engine for ${ship.id} at angle ${ship.angle}`);
                     socket.broadcast.emit(Constants.Socket.TRIGGER_ENGINE, ship.id);
                     ship.getThruster().trigger();
                 }
             }).on(Constants.Socket.TRIGGER_WEAPON, () => {
-                console.debug(`received trigger weapon request from: ${socket.id}`);
                 const ship = SpaceSim.playersMap.get(socket.id);
                 if (ship) {
+                    console.debug(`triggering weapon for ${ship.id} at angle ${ship.angle}`);
                     socket.broadcast.emit(Constants.Socket.TRIGGER_WEAPON, ship.id);
                     ship.getWeapons().trigger();
                 }
             }).on(Constants.Socket.SET_PLAYER_ANGLE, (degrees: number) => {
                 try {
                     const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
-                    console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
+                    // console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
                     const ship = SpaceSim.playersMap.get(socket.id);
                     if (ship) {
                         ship.setRotation(d);
@@ -107,14 +107,14 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 console.debug(`received player death notice from: ${socket.id}`);
                 const ship = SpaceSim.playersMap.get(socket.id);
                 if (ship) {
-                    this._removePlayer(socket);
+                    this._removePlayer(ship.config);
                 }
             });
         });
     }
 
     private _setupSceneEventHandling(): void {
-        // setup listener for player death event
+        // setup listener for player death event (sent from ship.destroy())
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
             this._removePlayer(shipOpts);
         });
@@ -153,24 +153,15 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _removePlayer(opts: ShipOptions): void {
-        const id = opts?.id;
-        if (SpaceSim.playersMap.has(id)) {
-            const player = SpaceSim.playersMap.get(id);
-            SpaceSim.playersMap.delete(id);
-            const config = player.config;
-            console.debug(`removing ship id: ${config.id}, with name: ${config.name}`);
-            player?.destroy();
-            io.emit(Constants.Socket.PLAYER_DEATH, id);
-            this._expelSupplies(config);
+        if (SpaceSim.playersMap.has(opts.id)) {
+            const player = SpaceSim.playersMap.get(opts.id);
+            SpaceSim.playersMap.delete(opts.id);
+            console.debug(`removing ship id: ${opts.id}, with name: ${opts.name}`);
+            player?.destroy(false); // don't emit event locally
+            io.emit(Constants.Socket.PLAYER_DEATH, opts.id);
+            this._expelSupplies(opts);
             io.emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
-            if (this._users.has(config.fingerprint)) {
-                const userShips = this._users.get(config.fingerprint);
-                const index = userShips.findIndex(id => id === config.id);
-                if (index >= 0) {
-                    userShips.splice(index, 1);
-                    this._users.set(config.fingerprint, userShips);
-                }
-            }
+            // TODO: locate user fingerprint associated with ship.id and update count
         }
     }
 
