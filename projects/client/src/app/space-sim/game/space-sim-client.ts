@@ -48,9 +48,11 @@ export class SpaceSimClient {
         SpaceSim.game = new Phaser.Game(conf);
         SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSimClient.resize());
         SpaceSim.game.events.on(Phaser.Core.Events.HIDDEN, () => {
-            SpaceSim.game.scene.getScenes(true).forEach(s => {
-                SpaceSim.game.scene.pause(s);
-            });
+            if (SpaceSimClient.mode !== 'multiplayer') {
+                SpaceSim.game.scene.getScenes(true).forEach(s => {
+                    SpaceSim.game.scene.pause(s);
+                });
+            }
         });
         SpaceSim.game.events.on(Phaser.Core.Events.VISIBLE, () => {
             SpaceSim.game.scene.getScenes(false).forEach(s => {
