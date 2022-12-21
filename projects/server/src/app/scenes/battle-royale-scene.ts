@@ -68,13 +68,16 @@ export class BattleRoyaleScene extends Phaser.Scene {
         io.on('connection', (socket: Socket) => {
             console.debug(`player: ${socket.id} connected from ${socket.request.connection.remoteAddress}`);
             socket.on('disconnect', () => {
-                console.debug(`player: ${socket.id} disconnected;`,
-                    `waiting 10 seconds before destroying ship...`);
+                console.debug(`player: ${socket.id} disconnected;`);
                 const id = this._socketToShipId.get(socket.id);
-                this._disconnectTimers.set(id, window.setTimeout(() => {
-                    const ship = SpaceSim.playersMap.get(id);
-                    this._removePlayer(ship.config);
-                }, 10000));
+                const ship = SpaceSim.playersMap.get(id);
+                if (ship) {
+                    console.debug(`waiting 10 seconds before destroying ship: ${ship.id}...`);
+                    const config = ship.config;
+                    this._disconnectTimers.set(id, window.setTimeout(() => {
+                        this._removePlayer(config);
+                    }, 10000));
+                }
             }).on(Constants.Socket.SET_PLAYER_DATA, (data: SpaceSimPlayerData) => {
                 console.debug(`received set player data from ${socket.id} `,
                     `with data: ${JSON.stringify(data)}`);
@@ -92,9 +95,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
                     socket.emit(Constants.Socket.SET_PLAYER_ID, ship.id);
                 }
             }).on(Constants.Socket.TRIGGER_ENGINE, (data: SpaceSimPlayerData) => {
-                const id = this._getShipId(socket.id);
+                const id = this._getShipId(socket.id, data);
                 if (!id) {
-                    socket.emit(Constants.Socket.PLAYER_DEATH, id);
+                    socket.emit(Constants.Socket.PLAYER_DEATH);
                 }
                 const ship = SpaceSim.playersMap.get(id);
                 if (ship) {
@@ -103,9 +106,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
                     ship.getThruster().trigger();
                 }
             }).on(Constants.Socket.TRIGGER_WEAPON, (data: SpaceSimPlayerData) => {
-                const id = this._getShipId(socket.id);
+                const id = this._getShipId(socket.id, data);
                 if (!id) {
-                    socket.emit(Constants.Socket.PLAYER_DEATH, id);
+                    socket.emit(Constants.Socket.PLAYER_DEATH);
                 }
                 const ship = SpaceSim.playersMap.get(id);
                 if (ship) {
@@ -117,9 +120,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 try {
                     const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
                     // console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
-                    const id = this._getShipId(socket.id);
+                    const id = this._getShipId(socket.id, data);
                     if (!id) {
-                        socket.emit(Constants.Socket.PLAYER_DEATH, id);
+                        socket.emit(Constants.Socket.PLAYER_DEATH);
                     }
                     const ship = SpaceSim.playersMap.get(id);
                     if (ship) {
@@ -130,9 +133,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 }
             }).on(Constants.Socket.PLAYER_DEATH, (data: SpaceSimPlayerData) => {
                 console.debug(`received player death notice from: ${socket.id}`);
-                const id = this._getShipId(socket.id);
+                const id = this._getShipId(socket.id, data);
                 if (!id) {
-                    socket.emit(Constants.Socket.PLAYER_DEATH, id);
+                    socket.emit(Constants.Socket.PLAYER_DEATH);
                 }
                 const ship = SpaceSim.playersMap.get(id);
                 if (ship) {
@@ -373,14 +376,18 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _reconnect(newSocketId: string, data: SpaceSimPlayerData): string {
-        data = {...data, name: Helpers.sanitise(data.name)};
-        const ship = SpaceSim.players()
-            .find(p => p.fingerprint === data.fingerprint 
-                && p.name === data.name);
-        if (ship) {
-            window.clearTimeout(ship.id);
-            this._socketToShipId.set(newSocketId, ship.id);
-            return ship.id;
+        try {
+            data = {...data, name: Helpers.sanitise(data.name)};
+            const ship = SpaceSim.players()
+                .find(p => p.fingerprint === data.fingerprint 
+                    && p.name === data.name);
+            if (ship) {
+                window.clearTimeout(ship.id);
+                this._socketToShipId.set(newSocketId, ship.id);
+                return ship.id;
+            }
+        } catch (e) {
+            console.warn('error reconnecting: ', e);
         }
         return null; // unable to reconnect
     }

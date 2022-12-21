@@ -241,21 +241,18 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                 }
             });
         }).on(Constants.Socket.PLAYER_DEATH, (id: string) => {
-            const ship = SpaceSim.playersMap.get(id);
-            if (ship) {
-                this._exploder.explode({location: ship.config.location});
-                ship?.destroy(false);
-                SpaceSim.playersMap.delete(ship.id);
-                
-                if (SpaceSimClient.player.id == ship?.id) {
-                    this._turnOffSocketEventHandling();
-                    this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
-                        if (progress === 1) {
-                            this.game.scene.start('game-over-scene');
-                            this.game.scene.stop('multiplayer-hud-scene');
-                            this.game.scene.stop(this);
-                        }
-                    });
+            if (!id) {
+                this._gameOver();
+            } else {
+                const ship = SpaceSim.playersMap.get(id);
+                if (ship) {
+                    this._exploder.explode({location: ship.config.location});
+                    ship?.destroy(false);
+                    SpaceSim.playersMap.delete(ship.id);
+                    
+                    if (SpaceSimClient.player.id == ship?.id) {
+                        this._gameOver();
+                    }
                 }
             }
         });
@@ -351,5 +348,16 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
 
     private _addPlayerCollisionPhysicsWithPlayers(ship: Ship): void {
         this.physics.add.collider(ship.getGameObject(), SpaceSim.players().map(p => p?.getGameObject()));
+    }
+
+    private _gameOver(): void {
+        this._turnOffSocketEventHandling();
+        this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+            if (progress === 1) {
+                this.game.scene.start('game-over-scene');
+                this.game.scene.stop('multiplayer-hud-scene');
+                this.game.scene.stop(this);
+            }
+        });
     }
 }
