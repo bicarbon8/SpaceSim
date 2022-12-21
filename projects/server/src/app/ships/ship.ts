@@ -534,7 +534,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
                 strokeThickness: 1
             },
             x: 0,
-            y: 40 // under the ship
+            y: 30 // under the ship
         });
         txt.setX(-(txt.width / 2));
         this._positionContainer.add(txt);

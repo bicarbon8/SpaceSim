@@ -1,4 +1,4 @@
-import { LinearLayout, Styles, TextButton } from "phaser-ui-components";
+import { GridLayout, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
@@ -10,7 +10,7 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 export class SetNameScene extends Phaser.Scene {
     private _width: number;
     private _height: number;
-    private _layout: LinearLayout;
+    private _layout: GridLayout;
     private _text: TextButton;
     private _button: TextButton;
     
@@ -28,13 +28,11 @@ export class SetNameScene extends Phaser.Scene {
 
         this.cameras.main.centerOn(0, 0);
 
+        this._createLayout();
         if (this.game.device.os.desktop) {
-            this._createLayout();
             this._getKeyboardInput();
         } else {
-            SpaceSimClient.playerData.name = Phaser.Math.RND.uuid();
-            this.scene.start('multiplayer-scene');
-            this.scene.stop(this);
+            this._getMobileTextInput();
         }
     }
 
@@ -49,22 +47,21 @@ export class SetNameScene extends Phaser.Scene {
     }
 
     private _createLayout(): void {
-        this._layout = new LinearLayout(this, {
-            orientation: 'vertical',
-            padding: 10,
-            contents: [
-                this.make.text({
-                    text: 'Enter player name:',
-                    style: {
-                        font: '40px Courier', 
-                        color: '#6d6dff', 
-                        stroke: '#ffffff', 
-                        strokeThickness: 4
-                    }
-                })
-            ]
+        this._layout = new GridLayout(this, {
+            rows: 3,
+            columns: 1,
+            padding: 10
         });
         this.add.existing(this._layout);
+        this._layout.addContentAt(0, 0, this.make.text({
+            text: 'Enter player name:',
+            style: {
+                font: '40px Courier', 
+                color: '#6d6dff', 
+                stroke: '#ffffff', 
+                strokeThickness: 4
+            }
+        }));
 
         this._text = new TextButton(this, {
             padding: 10,
@@ -74,15 +71,9 @@ export class SetNameScene extends Phaser.Scene {
                 style: Styles.Outline.primary().text
             },
             backgroundStyles: Styles.Outline.primary().graphics,
-            width: this._layout.width - (this._layout.padding * 2),
-            onClick: () => {
-                const input = document.querySelector('#hidden-input') as any;
-                if (input) {
-                    input.focus();
-                }
-            }
+            width: this._layout.width - (this._layout.padding * 2)
         });
-        this._layout.addContents(this._text);
+        this._layout.addContentAt(1, 0, this._text);
 
         this._button = new TextButton(this, {
             padding: 10,
@@ -93,14 +84,10 @@ export class SetNameScene extends Phaser.Scene {
             },
             backgroundStyles: Styles.secondary().graphics,
             onClick: () => {
-                if (this._text.text.text.length > 2) {
-                    SpaceSimClient.playerData.name = this._text.text.text;
-                    this.scene.start('multiplayer-scene');
-                    this.scene.stop(this);
-                }
+                this._validateAndStartGame(this._text.text.text);
             }
         });
-        this._layout.addContents(this._button);
+        this._layout.addContentAt(2, 0, this._button);
     }
 
     private _getKeyboardInput(): void {
@@ -114,6 +101,37 @@ export class SetNameScene extends Phaser.Scene {
                     this._text.setText({text: this._text.text.text + event.key});
                 }
             }
+            if (event.key === 'Enter') {
+                this._validateAndStartGame(this._text.text.text);
+            }
         });
+    }
+
+    private _getMobileTextInput(): void {
+        this._text.setInteractive().on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
+            const pname = this._sanitise(
+                prompt('Enter player name: (minimum 3 characters consisting of [a-zA-Z0-9])')
+            );
+            if (pname.length < 3) {
+                alert('invalid name!');
+            } else {
+                this._text.setText({text: pname});
+            }
+        });
+    }
+
+    private _sanitise(text: string): string {
+        // TODO: filter out bad words
+        return text?.replace(/[^a-zA-Z0-9]/g, '')
+            .substring(0, 10) ?? '';
+    }
+
+    private _validateAndStartGame(text: string): void {
+        const pname = this._sanitise(this._text.text.text);
+        if (pname.length > 2) {
+            SpaceSimClient.playerData.name = pname;
+            this.scene.start('multiplayer-scene');
+            this.scene.stop(this);
+        }
     }
 }
