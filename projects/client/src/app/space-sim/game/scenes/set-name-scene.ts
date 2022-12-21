@@ -117,8 +117,7 @@ export class SetNameScene extends Phaser.Scene {
             if (pname.length < 3) {
                 window.alert('invalid name!');
             } else {
-                this._text.contentAs<Phaser.GameObjects.Text>()
-                    .setText(pname);
+                this._validateAndStartGame(pname);
             }
         });
     }
