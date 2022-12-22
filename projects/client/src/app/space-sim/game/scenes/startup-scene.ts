@@ -172,10 +172,13 @@ export class StartupScene extends Phaser.Scene {
         });
         layout.addContents(controlsTextButton);
 
+        const txt = (SpaceSimClient.socket && SpaceSimClient.socket?.connected) 
+            ? 'Server connection established' 
+            : 'Connecting to server...'
         this._serverConnectionText = new LayoutContainer(this, {
             width: layout.width - (layout.padding * 2),
             content: this.make.text({
-                text: (SpaceSimClient.socket?.connected) ? 'Server connection established' : 'Connecting to server...',
+                text: txt,
                 style: Styles.Outline.light().text
             })
         });
