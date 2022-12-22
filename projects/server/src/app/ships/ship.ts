@@ -11,6 +11,7 @@ import { Weapons } from "./attachments/offence/weapons";
 import { MachineGun } from "./attachments/offence/machine-gun";
 import { ShipLike } from "../interfaces/ship-like";
 import { IsConfigurable } from "../interfaces/is-configurable";
+import { GameScoreTracker } from "../utilities/game-score-tracker";
 
 export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurable<ShipOptions> {
     /** ShipOptions */
@@ -337,6 +338,11 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         if (this.integrity <= 0) {
             this._integrity = 0;
             this.destroy(); // we are dead
+            const attackerId = Helpers.getLastAttackerId(this);
+            if (attackerId) {
+                // give credit to attacker for our destruction
+                GameScoreTracker.opponentDestroyed(attackerId);
+            }
             return;
         }
 

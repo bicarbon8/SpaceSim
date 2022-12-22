@@ -1,5 +1,5 @@
 import { SpaceSimClient } from "../space-sim-client";
-import { GameScoreTracker, SpaceSim } from "space-sim-server";
+import { GameScoreTracker, Helpers, SpaceSim } from "space-sim-server";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {
@@ -9,10 +9,7 @@ export class AiController extends InputController {
     private _nextThrusterFireAt: number;
     
     update(time: number, delta: number): void {
-        const attackerId = Array.from(new Set<string>(this.ship.damageSources
-            .filter(d => d.attackerId != null)
-            .map(d => d.attackerId)).values())
-            .pop();
+        const attackerId = Helpers.getLastAttackerId(this.ship);
         if (attackerId) {
             const attacker = SpaceSim.playersMap.get(attackerId);
             if (attacker) {

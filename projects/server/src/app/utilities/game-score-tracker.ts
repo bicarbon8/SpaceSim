@@ -6,7 +6,7 @@ export module GameScoreTracker {
     const _stats = new Map<string, Partial<GameStats>>();
 
     export function start(id: string): void {
-        updateStats(id, {
+        GameScoreTracker.updateStats(id, {
             shipId: id,
             opponentsDestroyed: 0,
             shotsFired: 0,
@@ -16,19 +16,19 @@ export module GameScoreTracker {
     export function shotFired(id: string): void {
         if (_stats.has(id)) {
             const stats = _stats.get(id);
-            updateStats(id, {...stats, shotsFired: stats.shotsFired++});
+            GameScoreTracker.updateStats(id, {...stats, shotsFired: stats.shotsFired++});
         }
     }
     export function shotLanded(id: string): void {
         if (_stats.has(id)) {
             const stats = _stats.get(id);
-            updateStats(id, {...stats, shotsLanded: stats.shotsLanded++});
+            GameScoreTracker.updateStats(id, {...stats, shotsLanded: stats.shotsLanded++});
         }
     }
     export function opponentDestroyed(id: string): void {
         if (_stats.has(id)) {
             const stats = _stats.get(id);
-            updateStats(id, {...stats, opponentsDestroyed: stats.opponentsDestroyed++});
+            GameScoreTracker.updateStats(id, {...stats, opponentsDestroyed: stats.opponentsDestroyed++});
         }
     }
     export function getScore(id: string): number {

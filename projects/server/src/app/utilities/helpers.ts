@@ -1,5 +1,6 @@
 import { GameObjectPlus } from "../interfaces/game-object-plus";
 import { NumberOrRange } from "../interfaces/number-range";
+import { Ship } from "../ships/ship";
 import { SpaceSimPlayerData } from "../space-sim-player-data";
 
 export module Helpers {
@@ -178,5 +179,20 @@ export module Helpers {
         // TODO: filter out bad words
         return text?.replace(/[^a-zA-Z0-9ÀÁÂÃÄÅĀƁƂÇĈĊĎĐÈÉÊËƑĜĞĠĤĦÌÍÎÏĴĶĹĿŁÑŃÒÓÔÕÖƤɊŔŖŚŜŢŤŦÙÚÛÜŴŶŽ]/g, '')
             .substring(0, 10) ?? '';
+    }
+
+    /**
+     * queries the damage sources array for the passed in ship to get the id of
+     * the last ship to attack the passed in one.
+     * @param ship the ship to query
+     * @returns the id of the last ship to attack the passed in ship or `undefined`
+     * if none
+     */
+    export function getLastAttackerId(ship: Ship): string {
+        const attackerId = Array.from(new Set<string>(ship.damageSources
+            .filter(d => d.attackerId != null)
+            .map(d => d.attackerId)).values())
+            .pop();
+        return attackerId;
     }
 }
