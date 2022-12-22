@@ -1,4 +1,4 @@
-import { Card, FlexLayout, LinearLayout, Styles, TextButton } from "phaser-ui-components";
+import { Card, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { Constants, SpaceSimPlayerData } from "space-sim-server";
@@ -20,6 +20,7 @@ export class StartupScene extends Phaser.Scene {
     private _music: Phaser.Sound.BaseSound;
     private _controlsMenu: Card;
     private _startMultiplayerButton: TextButton;
+    private _serverConnectionText: LayoutContainer;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
@@ -121,7 +122,7 @@ export class StartupScene extends Phaser.Scene {
             },
             backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
             padding: 5,
-            cornerRadius: 15,
+            cornerRadius: 14,
             onClick: () => {
                 this.game.scene.start('gameplay-scene');
                 this.game.scene.stop(this);
@@ -140,7 +141,7 @@ export class StartupScene extends Phaser.Scene {
             },
             backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
             padding: 5,
-            cornerRadius: 15,
+            cornerRadius: 14,
             onClick: () => {
                 this.game.scene.start('set-name-scene');
                 this.game.scene.stop(this);
@@ -160,7 +161,7 @@ export class StartupScene extends Phaser.Scene {
             textConfig: {text: 'Controls', style: buttonTextStyle},
             backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
             padding: 5,
-            cornerRadius: 15,
+            cornerRadius: 14,
             onClick: () => {
                 this._controlsMenu.setActive(true);
                 this._controlsMenu.setVisible(true);
@@ -170,6 +171,15 @@ export class StartupScene extends Phaser.Scene {
             }
         });
         layout.addContents(controlsTextButton);
+
+        this._serverConnectionText = new LayoutContainer(this, {
+            width: layout.width - (layout.padding * 2),
+            content: this.make.text({
+                text: 'Connecting to server...',
+                style: Styles.Outline.light().text
+            })
+        });
+        layout.addContents(this._serverConnectionText);
     }
 
     private _createControlsMenu(): void {
@@ -267,14 +277,26 @@ export class StartupScene extends Phaser.Scene {
             SpaceSimClient.socket = io(`${environment.websocket}`);
             SpaceSimClient.socket.on('connect', () => {
                 console.debug(`connected to server at: ${environment.websocket}`);
+                this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
+                    .setText(`Server connection established`);
+                this._serverConnectionText.updateSize();
                 this._startMultiplayerButton
                     .setActive(true)
                     .setVisible(true);
             }).on('disconnect', (reason: Socket.DisconnectReason, description: DisconnectDescription) => {
                 console.warn(`socket disconnect`, reason, description);
+                this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
+                    .setText(`Server disconnected...`);
+                this._serverConnectionText.updateSize();
+                this._startMultiplayerButton
+                    .setActive(false)
+                    .setVisible(false);
                 if (reason === "io server disconnect") {
                     // the disconnection was initiated by the server, you need to reconnect manually
                     console.info(`attempting to reconnect to server...`);
+                    this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
+                        .setText(`attempting to reconnect to server...`);
+                this._serverConnectionText.updateSize();
                     SpaceSimClient.socket.connect();
                 }
             });
