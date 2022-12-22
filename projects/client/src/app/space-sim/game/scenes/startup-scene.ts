@@ -175,7 +175,7 @@ export class StartupScene extends Phaser.Scene {
         this._serverConnectionText = new LayoutContainer(this, {
             width: layout.width - (layout.padding * 2),
             content: this.make.text({
-                text: 'Connecting to server...',
+                text: (SpaceSimClient.socket?.connected) ? 'Server connection established' : 'Connecting to server...',
                 style: Styles.Outline.light().text
             })
         });
