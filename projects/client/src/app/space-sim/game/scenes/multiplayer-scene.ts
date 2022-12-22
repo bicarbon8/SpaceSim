@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameStats, GameScoreTracker, Explosion } from "space-sim-server";
+import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameStats, GameScoreTracker, Exploder } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -18,7 +18,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     private _stellarBodies: StellarBody[];
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
-    private _exploder: Explosion;
+    private _exploder: Exploder;
     private _shipId: string;
     private _disconnectTimer: number;
 
@@ -92,7 +92,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         SpaceSim.playersMap.clear();
         this._stellarBodies = new Array<StellarBody>();
 
-        this._exploder = new Explosion(this);
+        this._exploder = new Exploder(this);
 
         this._playMusic();
         this._getMapFromServer()

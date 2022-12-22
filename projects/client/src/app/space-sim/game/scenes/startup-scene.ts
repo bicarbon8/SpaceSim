@@ -1,7 +1,7 @@
 import { Card, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants, SpaceSimPlayerData } from "space-sim-server";
+import { Constants, Helpers, SpaceSimPlayerData } from "space-sim-server";
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
 import getBrowserFingerprint from "get-browser-fingerprint";
@@ -280,25 +280,31 @@ export class StartupScene extends Phaser.Scene {
             SpaceSimClient.socket = io(`${environment.websocket}`);
             SpaceSimClient.socket.on('connect', () => {
                 console.debug(`connected to server at: ${environment.websocket}`);
-                this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
-                    .setText(`Server connection established`);
-                this._serverConnectionText.updateSize();
-                this._startMultiplayerButton
-                    .setActive(true)
-                    .setVisible(true);
+                Helpers.trycatch(() => {
+                    this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
+                        .setText(`Server connection established`);
+                    this._serverConnectionText?.updateSize();
+                    this._startMultiplayerButton
+                        .setActive(true)
+                        .setVisible(true);
+                }, 'error updating startup scene connection text');
             }).on('disconnect', (reason: Socket.DisconnectReason, description: DisconnectDescription) => {
                 console.warn(`socket disconnect`, reason, description);
-                this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
-                    .setText(`Server disconnected...`);
-                this._serverConnectionText.updateSize();
-                this._startMultiplayerButton
-                    .setActive(false)
-                    .setVisible(false);
+                Helpers.trycatch(() => {
+                    this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
+                        .setText(`Server disconnected...`);
+                    this._serverConnectionText.updateSize();
+                    this._startMultiplayerButton
+                        .setActive(false)
+                        .setVisible(false);
+                }, 'error updating startup scene connection text');
                 if (reason === "io server disconnect") {
                     // the disconnection was initiated by the server, you need to reconnect manually
                     console.info(`attempting to reconnect to server...`);
-                    this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
-                        .setText(`attempting to reconnect to server...`);
+                    Helpers.trycatch(() => {
+                        this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
+                            .setText(`attempting to reconnect to server...`);
+                    }, 'error updating startup scene connection text');
                 this._serverConnectionText.updateSize();
                     SpaceSimClient.socket.connect();
                 }

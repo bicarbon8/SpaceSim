@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { AmmoSupply, Constants, CoolantSupply, Explosion, FuelSupply, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RepairsSupply, RoomPlus, Ship, ShipOptions, ShipSupply, SpaceSim } from "space-sim-server";
+import { Constants, Exploder, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, SpaceSim } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -19,7 +19,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _stellarBodies: StellarBody[];
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
-    private _exploder: Explosion;
+    private _exploder: Exploder;
 
     private _physicsUpdator: Generator<void, void, unknown>;
 
@@ -88,7 +88,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     create(): void {
-        this._exploder = new Explosion(this);
+        this._exploder = new Exploder(this);
         this._createMapAndPlayer();
         this.resize();
         this._createStellarBodiesLayer();
@@ -340,48 +340,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     private _expelSupplies(shipCfg: ShipOptions): void {
-        const loc = shipCfg.location;
-        let remainingFuel = shipCfg.remainingFuel / 2;
-        const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / Constants.Ship.MAX_FUEL_PER_CONTAINER);
-        for (var i=0; i<fuelContainersCount; i++) {
-            const amount = (remainingFuel > Constants.Ship.MAX_FUEL_PER_CONTAINER) 
-                ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
-                : remainingFuel;
-            remainingFuel -= amount;
-            const supply = new FuelSupply(this, {
-                amount: amount,
-                location: loc
-            });
-            this._addSupplyCollisionPhysicsWithPlayers(supply);
-            SpaceSim.suppliesMap.set(supply.id, supply);
-        }
-        let remainingAmmo = shipCfg.remainingAmmo / 2;
-        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
-        for (var i=0; i<ammoContainersCount; i++) {
-            const amount = (remainingAmmo > Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER) 
-                ? Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
-                : remainingAmmo;
-            remainingAmmo -= amount;
-            const supply = new AmmoSupply(this, {
-                amount: amount,
-                location: loc
-            });
-            this._addSupplyCollisionPhysicsWithPlayers(supply);
-            SpaceSim.suppliesMap.set(supply.id, supply);
-        }
-        if (Phaser.Math.RND.between(0, 1)) {
-            const supply = new CoolantSupply(this, {
-                amount: 40,
-                location: loc
-            });
-            this._addSupplyCollisionPhysicsWithPlayers(supply);
-            SpaceSim.suppliesMap.set(supply.id, supply);
-        }
-        if (Phaser.Math.RND.between(0, 1)) {
-            const supply = new RepairsSupply(this, {
-                amount: 20,
-                location: loc
-            });
+        const supplies = this._exploder.emitSupplies(shipCfg);
+        for (var i=0; i<supplies.length; i++) {
+            let supply = supplies[i];
             this._addSupplyCollisionPhysicsWithPlayers(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
         }

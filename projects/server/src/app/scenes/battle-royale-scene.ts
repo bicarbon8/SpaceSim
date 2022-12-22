@@ -3,15 +3,12 @@ import { Server, Socket } from "socket.io";
 import { GameMap } from "../map/game-map";
 import { Ship } from "../ships/ship";
 import { ShipOptions } from "../ships/ship-options";
-import { AmmoSupply } from "../ships/supplies/ammo-supply";
-import { CoolantSupply } from "../ships/supplies/coolant-supply";
-import { FuelSupply } from "../ships/supplies/fuel-supply";
-import { RepairsSupply } from "../ships/supplies/repairs-supply";
 import { ShipSupply } from "../ships/supplies/ship-supply";
 import { SpaceSim } from "../space-sim";
 import { SpaceSimGameEngine } from "../space-sim-game-engine";
 import { SpaceSimPlayerData } from "../space-sim-player-data";
 import { Constants } from "../utilities/constants";
+import { Exploder } from "../utilities/exploder";
 import { GameScoreTracker } from "../utilities/game-score-tracker";
 import { Helpers } from "../utilities/helpers";
 
@@ -32,6 +29,8 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     private _disconnectTimers = new Map<string, number>();
 
+    private _exploder: Exploder;
+
     preload(): void {
         this.load.image('weapons-1', `assets/sprites/ship-parts/weapons-1.png`);
         this.load.image('wings-1', `assets/sprites/ship-parts/wings-1.png`);
@@ -48,6 +47,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     create(): void {
+        this._exploder = new Exploder(this);
         this._createMap();
 
         this._setupSocketEventHandling();
@@ -82,7 +82,10 @@ export class BattleRoyaleScene extends Phaser.Scene {
             }).on(Constants.Socket.SET_PLAYER_DATA, (data: SpaceSimPlayerData) => {
                 console.debug(`received set player data from ${socket.id} `,
                     `with data: ${JSON.stringify(data)}`);
-                this._reconnect(socket.id, data);
+                const shipId = this._reconnect(socket.id, data);
+                if (shipId) {
+                    socket.emit(Constants.Socket.SET_PLAYER_ID, shipId);
+                }
             }).on(Constants.Socket.REQUEST_MAP, (data: SpaceSimPlayerData) => {
                 console.debug(`received map request from: ${socket.id}`);
                 this._sendMap(socket);
@@ -92,7 +95,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 data = {...data, name: Helpers.sanitise(data.name)};
                 if (this._preventAbuse(data)) {
                     const ship = this._createPlayer(data);
+                    console.debug(`associating socket ${socket.id} to ship ${ship.id}`);
                     this._socketToShipId.set(socket.id, ship.id);
+                    console.debug(`sending ship id ${ship.id} to client ${socket.id}`);
                     socket.emit(Constants.Socket.SET_PLAYER_ID, ship.id);
                 }
             }).on(Constants.Socket.TRIGGER_ENGINE, (data: SpaceSimPlayerData) => {
@@ -171,29 +176,36 @@ export class BattleRoyaleScene extends Phaser.Scene {
     private _removePlayer(opts: ShipOptions): void {
         if (SpaceSim.playersMap.has(opts.id)) {
             // prevent further updates to ship
+            this._socketToShipId.forEach((val, key) => {
+                if (val === opts.id) {
+                    this._socketToShipId.delete(key);
+                }
+            });
             const player = SpaceSim.playersMap.get(opts.id);
             SpaceSim.playersMap.delete(opts.id);
-
-            console.debug(`removing ship id: ${opts.id}, with name: ${opts.name}`);
-            player?.destroy(false); // don't emit event locally
+            
+            console.debug(`sending player death notice to clients for ship ${opts.id}`);
             io.emit(Constants.Socket.PLAYER_DEATH, opts.id);
             this._expelSupplies(opts);
+
+            console.debug(`calling ship.destroy(false) for ship: ${opts.id}, with name: ${opts.name}`);
+            player?.destroy(false); // don't emit event locally
+            
             io.emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
             
             // locate user fingerprint associated with ship.id and update count
-            try {
+            Helpers.trycatch(() => {
                 const datas = this._users.get(player.fingerprint);
                 if (datas) {
-                    const index = datas.findIndex(d => d.fingerprint === player.fingerprint
+                    const index = datas.findIndex(d => 
+                        d.fingerprint === player.fingerprint
                         && d.name === player.name);
                     if (index >= 0) {
                         datas.splice(index, 1);
                         this._users.set(player.fingerprint, datas);
                     }
                 }
-            } catch (e) {
-                console.warn('error removing old user data: ', e.message ?? e);
-            }
+            }, 'error removing old user data', 'warn');
         }
     }
 
@@ -236,51 +248,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _expelSupplies(shipCfg: ShipOptions): void {
-        const loc = shipCfg.location;
-        let remainingFuel = shipCfg.remainingFuel / 2;
-        const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / Constants.Ship.MAX_FUEL_PER_CONTAINER);
-        for (var i=0; i<fuelContainersCount; i++) {
-            const amount = (remainingFuel > Constants.Ship.MAX_FUEL_PER_CONTAINER) 
-                ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
-                : remainingFuel;
-            remainingFuel -= amount;
-            const supply = new FuelSupply(this, {
-                amount: amount,
-                location: loc
-            });
-            this._addSupplyCollisionPhysicsWithPlayers(supply);
-            SpaceSim.suppliesMap.set(supply.id, supply);
-            this._cleanupSupply(supply);
-        }
-        let remainingAmmo = shipCfg.remainingAmmo / 2;
-        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
-        for (var i=0; i<ammoContainersCount; i++) {
-            const amount = (remainingAmmo > Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER) 
-                ? Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
-                : remainingAmmo;
-            remainingAmmo -= amount;
-            const supply = new AmmoSupply(this, {
-                amount: amount,
-                location: loc
-            });
-            this._addSupplyCollisionPhysicsWithPlayers(supply);
-            SpaceSim.suppliesMap.set(supply.id, supply);
-            this._cleanupSupply(supply);
-        }
-        if (Phaser.Math.RND.between(0, 1)) {
-            const supply = new CoolantSupply(this, {
-                amount: 40,
-                location: loc
-            });
-            this._addSupplyCollisionPhysicsWithPlayers(supply);
-            SpaceSim.suppliesMap.set(supply.id, supply);
-            this._cleanupSupply(supply);
-        }
-        if (Phaser.Math.RND.between(0, 1)) {
-            const supply = new RepairsSupply(this, {
-                amount: 20,
-                location: loc
-            });
+        const supplies = this._exploder.emitSupplies(shipCfg);
+        for (var i=0; i<supplies.length; i++) {
+            let supply = supplies[i];
             this._addSupplyCollisionPhysicsWithPlayers(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
             this._cleanupSupply(supply);
@@ -380,6 +350,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
         if (!id) {
             // possible disconnect and reconnect with new socket.id
             id = this._reconnect(socket.id, data);
+            if (id) {
+                socket.emit(Constants.Socket.SET_PLAYER_ID, id);
+            }
         }
         if (!id) {
             // force player to restart (possibly their ship was destroyed while disconnected)
@@ -403,21 +376,23 @@ export class BattleRoyaleScene extends Phaser.Scene {
      * @returns a `ship.id` if reconnected otherwise null
      */
     private _reconnect(newSocketId: string, data: SpaceSimPlayerData): string {
-        try {
-            data = {...data, name: Helpers.sanitise(data.name)};
+        console.debug(`attempting to reconnect socket ${newSocketId} using data ${JSON.stringify(data)}`);
+        Helpers.trycatch(() => {
+            const d = {...data, name: Helpers.sanitise(data?.name)};
             const ship = SpaceSim.players()
-                .find(p => p.fingerprint === data.fingerprint 
-                    && p.name === data.name);
+                .find(p => p.fingerprint === d.fingerprint 
+                    && p.name === d?.name);
             if (ship) {
                 const timer = this._disconnectTimers.get(ship.id);
                 window.clearTimeout(timer);
                 this._disconnectTimers.delete(ship.id);
+                console.debug(`associating socket ${newSocketId} to ship ${ship.id}`);
                 this._socketToShipId.set(newSocketId, ship.id);
                 return ship.id;
+            } else {
+                console.debug(`no existing ship found for socket ${newSocketId} and data ${JSON.stringify(data)}`);
             }
-        } catch (e) {
-            console.warn('error reconnecting: ', e.message ?? e);
-        }
+        }, 'error reconnecting:');
         return null; // unable to reconnect
     }
 }

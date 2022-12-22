@@ -91,7 +91,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     }
 
     get active(): boolean {
-        return this._active && this.getPhysicsBody()?.enable;
+        return this._active && this.getGameObject()?.active && this.getPhysicsBody()?.enable;
     }
 
     get location(): Phaser.Math.Vector2 {

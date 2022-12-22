@@ -7,7 +7,7 @@ import { Ship } from "../../ship";
 import { Constants } from "../../../utilities/constants";
 import { Weapons } from "./weapons";
 import { GameScoreTracker } from "../../../utilities/game-score-tracker";
-import { Explosion } from "../../../utilities/explosion";
+import { Exploder } from "../../../utilities/exploder";
 
 export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.Container>, HasLocation {
     readonly id: string;
@@ -66,7 +66,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
                 if (opp.id !== this.weapon.ship.id) {
                     this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
                         this._hitSound?.play();
-                        new Explosion(this.scene).explode({
+                        new Exploder(this.scene).explode({
                             location: this.getLocation(),
                             scale: 0.25
                         });
@@ -148,8 +148,11 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
 
     private _createGameObj(): void {
         const ball = this.scene.add.sprite(0, 0, 'bullet');
-        const glow = this.scene.add.sprite(0, 0, 'flares', Constants.UI.SpriteMaps.Flares.green);
-        glow.setScale(this.scale);
+        let glow: Phaser.GameObjects.Sprite;
+        Helpers.trycatch(() => {
+            glow = this.scene.add.sprite(0, 0, 'flares', Constants.UI.SpriteMaps.Flares.green);
+        }, 'bullet glow texture not loaded', 'info', false);
+        glow?.setScale(this.scale);
         const maxScale = this.scale + 0.1;
         this.scene.add.tween({
             targets: glow,

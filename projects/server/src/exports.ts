@@ -42,8 +42,9 @@ export * from "./app/ships/supplies/repairs-supply";
 export * from "./app/ships/supplies/ship-supply";
 export * from "./app/ships/supplies/supply-type";
 /** utilities */
+export * from "./app/utilities/animations";
 export * from "./app/utilities/constants";
-export * from "./app/utilities/explosion";
+export * from "./app/utilities/exploder";
 export * from "./app/utilities/game-score-tracker";
 export * from "./app/utilities/game-stats";
 export * from "./app/utilities/helpers";
