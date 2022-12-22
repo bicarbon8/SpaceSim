@@ -288,6 +288,11 @@ export class StartupScene extends Phaser.Scene {
                         .setActive(true)
                         .setVisible(true);
                 }, 'error updating startup scene connection text');
+                if (SpaceSimClient.playerData
+                    && SpaceSimClient.playerData.fingerprint
+                    && SpaceSimClient.playerData.name) {
+                    SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, SpaceSimClient.playerData);
+                }
             }).on('disconnect', (reason: Socket.DisconnectReason, description: DisconnectDescription) => {
                 console.warn(`socket disconnect`, reason, description);
                 Helpers.trycatch(() => {

@@ -37,7 +37,8 @@ export class Exploder {
         this._explosionParticleEmitter.setPosition(options.location.x, options.location.y);
         this._explosionParticleEmitter.setDepth(Constants.UI.Layers.PLAYER);
 
-        this._destroyedSound.play();
+        Helpers.trycatch(() => this._destroyedSound.play(), 
+            'could not play explosion sound', 'debug', false);
 
         this._explosionParticleEmitter.createEmitter({
             lifespan: { min: 500, max: 1000 },

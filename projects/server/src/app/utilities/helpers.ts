@@ -138,7 +138,7 @@ export module Helpers {
     }
 
     export function trycatch(func: () => void, 
-        message: string, 
+        message: string = '', 
         level: 'debug' | 'info' | 'warn' | 'error' = 'debug',
         includeError: boolean = true): void {
         try {

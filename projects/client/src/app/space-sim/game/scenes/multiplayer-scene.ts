@@ -138,13 +138,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
 
     private _setupRemainingEventHandling(): void {
         SpaceSimClient.socket
-            .on('connect', () => {
-                if (SpaceSimClient.playerData
-                    && SpaceSimClient.playerData.fingerprint
-                    && SpaceSimClient.playerData.name) {
-                    SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, SpaceSimClient.playerData);
-                }
-            }).on(Constants.Socket.UPDATE_SUPPLIES, (supplyOpts: Array<ShipSupplyOptions>) => {
+            .on(Constants.Socket.UPDATE_SUPPLIES, (supplyOpts: Array<ShipSupplyOptions>) => {
                 supplyOpts.forEach(o => {
                     let supply = SpaceSim.suppliesMap.get(o.id);
                     if (supply) {
@@ -277,6 +271,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
             if (shipOpts.id === SpaceSimClient.player.id) {
                 SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH, SpaceSimClient.playerData);
+                this._gameOver();
             }
         });
 

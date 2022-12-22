@@ -55,13 +55,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     update(time: number, delta: number): void {
-        try {
-            SpaceSim.players().forEach(ship => ship?.update(time, delta));
-            this._sendPlayersUpdate();
-            this._sendSuppliesUpdate();
-        } catch (e) {
-            console.error(`error in update: `, e);
-        }
+        Helpers.trycatch(() => SpaceSim.players().forEach(ship => ship?.update(time, delta)));
+        Helpers.trycatch(() => this._sendPlayersUpdate());
+        Helpers.trycatch(() => this._sendSuppliesUpdate());
     }
 
     private _setupSocketEventHandling(): void {
@@ -156,7 +152,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             let x = Phaser.Math.RND.realInRange(topleft.x, botright.x);
             let y = Phaser.Math.RND.realInRange(topleft.y, botright.y);
             loc = Helpers.vector2(x, y);
-        } while (this._isMapLocationEmpty(loc, 100));
+        } while (this._isMapLocationOccupied(loc, 100));
         const ship = new Ship(this, {
             location: loc,
             fingerprint: data.fingerprint,
@@ -176,13 +172,14 @@ export class BattleRoyaleScene extends Phaser.Scene {
     private _removePlayer(opts: ShipOptions): void {
         if (SpaceSim.playersMap.has(opts.id)) {
             // prevent further updates to ship
-            this._socketToShipId.forEach((val, key) => {
-                if (val === opts.id) {
-                    this._socketToShipId.delete(key);
-                }
-            });
             const player = SpaceSim.playersMap.get(opts.id);
             SpaceSim.playersMap.delete(opts.id);
+            for (var [key, val] of this._socketToShipId) {
+                if (val === opts.id) {
+                    this._socketToShipId.delete(key);
+                    break;
+                }
+            }
             
             console.debug(`sending player death notice to clients for ship ${opts.id}`);
             io.emit(Constants.Socket.PLAYER_DEATH, opts.id);
@@ -214,14 +211,14 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _sendPlayersUpdate(): void {
-        io.volatile.emit(Constants.Socket.UPDATE_PLAYERS, SpaceSim.players().map(p => p.config));
+        io.emit(Constants.Socket.UPDATE_PLAYERS, SpaceSim.players().map(p => p.config));
     }
 
     private _sendSuppliesUpdate(): void {
-        io.volatile.emit(Constants.Socket.UPDATE_SUPPLIES, SpaceSim.supplies().map(s => s.config));
+        io.emit(Constants.Socket.UPDATE_SUPPLIES, SpaceSim.supplies().map(s => s.config));
     }
 
-    private _isMapLocationEmpty(location: Phaser.Types.Math.Vector2Like, radius: number): boolean {
+    private _isMapLocationOccupied(location: Phaser.Types.Math.Vector2Like, radius: number): boolean {
         const circleA = new Phaser.Geom.Circle(location.x, location.y, radius);
 
         // ensure within walls of room
@@ -229,7 +226,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             .getTilesWithinShape(circleA)?.filter(t => t.collides);
         if (tiles?.length > 0) {
             console.debug(`location collides with map tiles: `, location);
-            return false;
+            return true;
         }
 
         // ensure space not occupied by other player(s)
@@ -241,20 +238,21 @@ export class BattleRoyaleScene extends Phaser.Scene {
             const occupied = Phaser.Geom.Intersects.CircleToCircle(circleA, circleB);
             if (occupied) {
                 console.debug(`location collides with existing player: `, location);
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     private _expelSupplies(shipCfg: ShipOptions): void {
+        console.debug(`expelling supplies at:`, shipCfg.location);
         const supplies = this._exploder.emitSupplies(shipCfg);
-        for (var i=0; i<supplies.length; i++) {
-            let supply = supplies[i];
+        for (const supply of supplies) {
             this._addSupplyCollisionPhysicsWithPlayers(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
             this._cleanupSupply(supply);
         }
+        console.debug(`${supplies.length} supplies expelled from ship ${shipCfg.id}`);
     }
 
     private _addSupplyCollisionPhysicsWithPlayers(supply: ShipSupply): void {
