@@ -98,7 +98,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this._getMapFromServer()
             .then(_ => this._createStellarBodiesLayer())
             .then(_ => this._getPlayerFromServer())
-            .then(_ => this._setupSupplyEventHandling())
+            .then(_ => this._setupRemainingEventHandling())
             .then(_ => this.resize())
             .then(_ => {
                 SpaceSim.game.scene.start('multiplayer-hud-scene');
@@ -136,9 +136,15 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this._setupCamera();
     }
 
-    private _setupSupplyEventHandling(): void {
+    private _setupRemainingEventHandling(): void {
         SpaceSimClient.socket
-            .on(Constants.Socket.UPDATE_SUPPLIES, (supplyOpts: Array<ShipSupplyOptions>) => {
+            .on('connect', () => {
+                if (SpaceSimClient.playerData
+                    && SpaceSimClient.playerData.fingerprint
+                    && SpaceSimClient.playerData.name) {
+                    SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, SpaceSimClient.playerData);
+                }
+            }).on(Constants.Socket.UPDATE_SUPPLIES, (supplyOpts: Array<ShipSupplyOptions>) => {
                 supplyOpts.forEach(o => {
                     let supply = SpaceSim.suppliesMap.get(o.id);
                     if (supply) {
@@ -186,12 +192,10 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                 }
             }).on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => {
                 GameScoreTracker.updateAllStats(...stats);
-            }).on('connect', () => {
-                if (SpaceSimClient.playerData
-                    && SpaceSimClient.playerData.fingerprint
-                    && SpaceSimClient.playerData.name) {
-                    SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, SpaceSimClient.playerData);
-                }
+            }).on(Constants.Socket.TRIGGER_ENGINE, (id) => {
+                SpaceSim.playersMap.get(id)?.getThruster()?.trigger();
+            }).on(Constants.Socket.TRIGGER_WEAPON, (id) => {
+                SpaceSim.playersMap.get(id)?.getWeapons()?.trigger();
             });
     }
 
