@@ -8,6 +8,7 @@ import { Resizable } from "../interfaces/resizable";
 import { AiController } from "../controllers/ai-controller";
 import MiniMapShader from "../shaders/minimap-shader";
 import { Colors } from "phaser-ui-components";
+import { MiniMap } from "../ui-components/mini-map";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -22,7 +23,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: Exploder;
-    private _minimap: Phaser.Cameras.Scene2D.Camera;
+    private _minimap: MiniMap;
 
     private _physicsUpdator: Generator<void, void, unknown>;
 
@@ -112,6 +113,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this._height = this.game.canvas.height;
         this._createBackground();
         this._setupCamera();
+        this._createMiniMap();
     }
 
     update(time: number, delta: number): void {
@@ -295,27 +297,31 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             .setBackgroundColor(0x000000)
             .centerOn(playerLoc.x, playerLoc.y)
             .startFollow(SpaceSimClient.player.getGameObject(), true, 1, 1);
+    }
 
+    private _createMiniMap(): void {
         const miniWidth = this._width / 4;
         const miniHeight = this._height / 4;
-        const miniSize = (miniWidth < miniHeight) ? miniWidth : miniHeight;
-        const maskGraphics = this.make.graphics({x: (this._width / 2) - (miniSize / 2), y: miniSize / 2}, false)
-            .fillStyle(0xffffff, 1)
-            .fillCircle(miniSize / 2, 0, miniSize / 2);
-        this._minimap = this.cameras.add((this._width / 2) - (miniSize / 2), 0, miniSize, miniSize)
-            .setName('minimap')
-            .setZoom(0.02)
-            .ignore([
+        let miniSize = (miniWidth < miniHeight) ? miniWidth : miniHeight;
+        if (miniSize < 150) {
+            miniSize = 150;
+        }
+        if (this._minimap) {
+            this._minimap.destroy();
+        }
+        this._minimap = new MiniMap(this, {
+            x: this._width - ((miniSize / 2) + 10),
+            y: miniSize,
+            width: miniSize,
+            height: miniSize,
+            ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
                 SpaceSim.map.getLayer(),
                 ...SpaceSim.players().map(p => p.getGameObject())
-            ])
-            .setBackgroundColor('rgba(87, 227, 11, 0.5)')
-            .setAlpha(0.5)
-            .centerOn(playerLoc.x, playerLoc.y)
-            .startFollow(SpaceSimClient.player.getGameObject(), true, 1, 1)
-            .setMask(maskGraphics.createGeometryMask());
+            ],
+            followObject: SpaceSimClient.player.getGameObject()
+        });
     }
 
     private _playMusic(): void {

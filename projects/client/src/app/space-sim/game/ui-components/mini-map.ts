@@ -7,7 +7,7 @@ export type MiniMapOptions = Phaser.Types.Math.Vector2Like & {
     zoom?: number;
     backgroundColor?: string | number | Phaser.Types.Display.InputColorObject;
     alpha?: number;
-    followObject: GameObjectPlus;
+    followObject?: GameObjectPlus;
     ignore?: Array<Phaser.GameObjects.GameObject>;
 };
 
@@ -19,8 +19,7 @@ export class MiniMap implements HasLocation {
         height: 100,
         zoom: 0.02,
         backgroundColor: 'rgba(87, 227, 11, 0.5)',
-        alpha: 0.5,
-        followObject: null
+        alpha: 0.5
     } as const;
     readonly scene: Phaser.Scene;
 
@@ -35,6 +34,8 @@ export class MiniMap implements HasLocation {
             ...MiniMap.DEFAULT_OPTIONS,
             ...options
         });
+
+        this.ignore(...options.ignore);
     }
 
     getLocationInView(): Phaser.Math.Vector2 {
@@ -57,18 +58,22 @@ export class MiniMap implements HasLocation {
     }
 
     ignore(...entries: Array<Phaser.GameObjects.GameObject>): this {
-        for (var i=0; i<entries.length; i++) {
-            this._ignored.add(entries[i]);
+        if (entries) {
+            for (var i=0; i<entries.length; i++) {
+                this._ignored.add(entries[i]);
+            }
+            this._cam.ignore(Array.from(this._ignored.values()));
         }
-        this._cam.ignore(Array.from(this._ignored.values()));
         return this;
     }
 
     unignore(...entries: Array<Phaser.GameObjects.GameObject>): this {
-        for (var i=0; i<entries.length; i++) {
-            this._ignored.delete(entries[i]);
+        if (entries) {
+            for (var i=0; i<entries.length; i++) {
+                this._ignored.delete(entries[i]);
+            }
+            this._cam.ignore(Array.from(this._ignored.values()));
         }
-        this._cam.ignore(Array.from(this._ignored.values()));
         return this;
     }
 
@@ -83,11 +88,19 @@ export class MiniMap implements HasLocation {
         return this;
     }
 
+    destroy(): void {
+        try {
+            this.scene.cameras.remove(this._cam, true);
+        } catch (e) {
+            console.warn('unable to cleanly remove MiniMap', e);
+        }
+    }
+
     private _createCamera(opts: MiniMapOptions): void {
         const maskGraphics = this.scene.make.graphics({x: opts.x, y: opts.y}, false)
             .fillStyle(0xffffff, 1)
-            .fillCircle(opts.width / 2, 0, opts.width / 2);
-        this._cam = this.scene.cameras.add(opts.x, opts.y, opts.width, opts.height, false, 'mini-map')
+            .fillCircle(0, 0, opts.width / 2);
+        this._cam = this.scene.cameras.add(opts.x - (opts.width / 2), opts.y - (opts.height / 2), opts.width, opts.height, false, 'mini-map')
             .setZoom(opts.zoom)
             .setBackgroundColor(opts.backgroundColor)
             .setAlpha(opts.alpha)
