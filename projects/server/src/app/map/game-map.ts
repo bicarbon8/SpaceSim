@@ -15,6 +15,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
     private _scene: Phaser.Scene;
     private _dungeon: Dungeon;
     private _layer: Phaser.Tilemaps.TilemapLayer;
+    private _minimapLayer: Phaser.Tilemaps.TilemapLayer;
     private _tileMap: Phaser.Tilemaps.Tilemap;
 
     constructor(scene: Phaser.Scene, options?: GameMapOptions) {
@@ -36,6 +37,10 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
 
     getLayer(): Phaser.Tilemaps.TilemapLayer {
         return this._layer;
+    }
+
+    get minimapLayer(): Phaser.Tilemaps.TilemapLayer {
+        return this._minimapLayer;
     }
 
     getRooms(): RoomPlus[] {
@@ -126,8 +131,10 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
             height: this._dungeon.height,
         });
 
-        let tileset: Phaser.Tilemaps.Tileset = this._tileMap.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
+        const tileset: Phaser.Tilemaps.Tileset = this._tileMap.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
         this._layer = this._tileMap.createBlankLayer('Map Layer', tileset);
+        const minitileset = this._tileMap.addTilesetImage('minimaptile', 'minimaptile', 96, 96, 0, 0);
+        this._minimapLayer = this._tileMap.createBlankLayer('MiniMap Layer', minitileset);
         this._layer.setDepth(options?.layerDepth ?? Constants.UI.Layers.PLAYER);
 
         this._dungeon.rooms.forEach(room => {
@@ -142,18 +149,26 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
             // right wall
             this._layer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, right, top, 1, height);
 
+            this._minimapLayer.fill(0, left+1, top+1, width-2, height-2);
+
             // Dungeons have rooms that are connected with doors. Each door has an x & y relative to the
             // room's location
             const doors = room.getDoorLocations();
             for (let i = 0; i < doors.length; i++) {
-                if (doors[i].y === 0) {
-                    this._layer.removeTileAt(x + doors[i].x - 1, y + doors[i].y);
-                } else if (doors[i].y === room.height - 1) {
-                    this._layer.removeTileAt(x + doors[i].x - 1, y + doors[i].y);
-                } else if (doors[i].x === 0) {
-                    this._layer.removeTileAt(x + doors[i].x, y + doors[i].y - 1);
-                } else if (doors[i].x === room.width - 1) {
-                    this._layer.removeTileAt(x + doors[i].x, y + doors[i].y - 1);
+                let door = doors[i];
+
+                if (door.y === 0) {
+                    this._layer.removeTileAt(x + door.x - 1, y + door.y);
+                    this._minimapLayer.putTileAt(0, x + door.x - 1, y + door.y);
+                } else if (door.y === room.height - 1) {
+                    this._layer.removeTileAt(x + door.x - 1, y + door.y);
+                    this._minimapLayer.putTileAt(0, x + door.x - 1, y + door.y);
+                } else if (door.x === 0) {
+                    this._layer.removeTileAt(x + door.x, y + door.y - 1);
+                    this._minimapLayer.putTileAt(0, x + door.x, y + door.y - 1);
+                } else if (door.x === room.width - 1) {
+                    this._layer.removeTileAt(x + door.x, y + door.y - 1);
+                    this._minimapLayer.putTileAt(0, x + door.x, y + door.y - 1);
                 }
             }
         });
@@ -161,5 +176,6 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         // hide all tiles until we enter the room
         this._layer.forEachTile(tile => tile.setAlpha(0));
         this._layer.setCollisionBetween(1, 14);
+        this._minimapLayer.forEachTile(tile => tile.setAlpha(0));
     }
 }

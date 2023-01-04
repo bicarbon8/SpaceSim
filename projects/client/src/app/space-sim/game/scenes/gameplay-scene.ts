@@ -6,6 +6,8 @@ import { SpaceSimClient } from "../space-sim-client";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { Resizable } from "../interfaces/resizable";
 import { AiController } from "../controllers/ai-controller";
+import MiniMapShader from "../shaders/minimap-shader";
+import { Colors } from "phaser-ui-components";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -20,6 +22,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: Exploder;
+    private _minimap: Phaser.Cameras.Scene2D.Camera;
 
     private _physicsUpdator: Generator<void, void, unknown>;
 
@@ -78,6 +81,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
 
         this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
+        this.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`)
         
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
         this.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
@@ -88,9 +92,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     create(): void {
+        this._width = this.game.canvas.width;
+        this._height = this.game.canvas.height;
         this._exploder = new Exploder(this);
         this._createMapAndPlayer();
-        this.resize();
         this._createStellarBodiesLayer();
         this._createBackground();
         this._createOpponents();
@@ -98,6 +103,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
 
         SpaceSim.game.scene.start('gameplay-hud-scene');
         SpaceSim.game.scene.bringToTop('gameplay-hud-scene');
+
+        this.resize();
     }
 
     resize(): void {
@@ -274,17 +281,41 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     private _setupCamera(): void {
-        this.cameras.main.backgroundColor.setFromRGB({r: 0, g: 0, b: 0});
-        
-        let zoom = 0.75;
+        const playerLoc = SpaceSimClient.player.getLocation();
+        let zoom = 1;
         if (this._width < 400 || this._height < 400) {
             zoom = 0.5;
         }
-        this.cameras.main.setZoom(zoom);
-        let playerLoc = SpaceSimClient.player.getLocation();
-        this.cameras.main.centerOn(playerLoc.x, playerLoc.y);
+        this.cameras.main
+            .setName('main')
+            .setZoom(zoom)
+            .ignore([
+                SpaceSim.map.minimapLayer
+            ])
+            .setBackgroundColor(0x000000)
+            .centerOn(playerLoc.x, playerLoc.y)
+            .startFollow(SpaceSimClient.player.getGameObject(), true, 1, 1);
 
-        this.cameras.main.startFollow(SpaceSimClient.player.getGameObject(), true, 1, 1);
+        const miniWidth = this._width / 4;
+        const miniHeight = this._height / 4;
+        const miniSize = (miniWidth < miniHeight) ? miniWidth : miniHeight;
+        const maskGraphics = this.make.graphics({x: (this._width / 2) - (miniSize / 2), y: miniSize / 2}, false)
+            .fillStyle(0xffffff, 1)
+            .fillCircle(miniSize / 2, 0, miniSize / 2);
+        this._minimap = this.cameras.add((this._width / 2) - (miniSize / 2), 0, miniSize, miniSize)
+            .setName('minimap')
+            .setZoom(0.02)
+            .ignore([
+                this._backgroundStars, 
+                ...this._stellarBodies.map(b => b.getGameObject()),
+                SpaceSim.map.getLayer(),
+                ...SpaceSim.players().map(p => p.getGameObject())
+            ])
+            .setBackgroundColor('rgba(87, 227, 11, 0.5)')
+            .setAlpha(0.5)
+            .centerOn(playerLoc.x, playerLoc.y)
+            .startFollow(SpaceSimClient.player.getGameObject(), true, 1, 1)
+            .setMask(maskGraphics.createGeometryMask());
     }
 
     private _playMusic(): void {
@@ -308,7 +339,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 });
             this.add.tween({
                 targets: [
-                    ...SpaceSim.map.getLayer().getTilesWithin(room.x, room.y, room.width, room.height), 
+                    ...SpaceSim.map.getLayer().getTilesWithin(room.x, room.y, room.width, room.height),
+                    ...SpaceSim.map.minimapLayer.getTilesWithin(room.x, room.y, room.width, room.height), 
                     ...opponentsInRoom.map(o => o.getGameObject())
                 ],
                 alpha: 1,
