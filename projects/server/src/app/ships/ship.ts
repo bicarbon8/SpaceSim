@@ -235,12 +235,17 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
 
     /**
      * the location within the viewable area
-     * @returns a {Phaser.Math.Vector2} offset for location within current 
+     * @returns a `Phaser.Math.Vector2` offset for location within current 
      * viewable area. for the Player, this should always return 0,0 since the
      * camera follows the Player
      */
     getLocationInView(): Phaser.Math.Vector2 {
         return Helpers.convertLocToLocInView(this.getLocation(), this.scene);
+    }
+
+    setLocationInView(location: Phaser.Types.Math.Vector2Like): void {
+        const loc = Helpers.convertLocInViewToLoc(location, this.scene);
+        this.setLocation(loc);
     }
 
     getGameObject(): Phaser.GameObjects.Container {

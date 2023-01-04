@@ -27,6 +27,14 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         return this._layer;
     }
 
+    getRotation(): number {
+        return this.getGameObject().angle;
+    }
+
+    setRotation(degrees: number): void {
+        this.getGameObject().setAngle(degrees);
+    }
+
     getPhysicsBody(): Phaser.Physics.Arcade.Body {
         return this._layer.body as Phaser.Physics.Arcade.Body;
     }

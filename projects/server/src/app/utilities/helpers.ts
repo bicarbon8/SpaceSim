@@ -55,12 +55,22 @@ export module Helpers {
      * converts location in coordinate space to the location within the viewable area.
      * NOTE: this assumes that the camera is always centred on the view and moves with
      * the player
-     * @returns a {Phaser.Math.Vector2} location within current viewable area
+     * @returns a `Phaser.Math.Vector2` location within current viewable area
      */
-    export function convertLocToLocInView(location: Phaser.Math.Vector2, scene: Phaser.Scene): Phaser.Math.Vector2 {
+    export function convertLocToLocInView(location: Phaser.Types.Math.Vector2Like, scene: Phaser.Scene): Phaser.Math.Vector2 {
         // NOTE: point 0,0 for the camera is the centre of the canvas where the ship appears
-        let cameraPos: Phaser.Math.Vector2 = scene.cameras.main.getWorldPoint(0, 0);
+        const cameraPos: Phaser.Math.Vector2 = scene.cameras.main.getWorldPoint(0, 0);
         return new Phaser.Math.Vector2(location.x - cameraPos.x, location.y - cameraPos.y).negate();
+    }
+
+    /**
+     * converts location in the screen or view to a location in world space
+     * @param location the location in the view to be converted to world space
+     * @param scene the current scene
+     * @returns a `Phaser.Math.Vector2` location within world space
+     */
+    export function convertLocInViewToLoc(location: Phaser.Types.Math.Vector2Like, scene: Phaser.Scene): Phaser.Math.Vector2 {
+        return scene.cameras.main.getWorldPoint(location.x, location.y);
     }
 
     export function getRealNumber(input: NumberOrRange): number {

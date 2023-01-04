@@ -1,15 +1,15 @@
 export type HasLocation = {
-    getRotation(): number;
-    setRotation(degrees: number): void;
-    getHeading(): Phaser.Math.Vector2;
-    getSpeed(): number;
-    getVelocity(): Phaser.Math.Vector2;
     /**
      * the location within the viewable area
      * @returns a `Phaser.Math.Vector2` offset for location within current 
      * viewable area (screen / window)
      */
     getLocationInView(): Phaser.Math.Vector2;
+    /**
+     * sets the location of this object in screen space
+     * @param location the location in screen space
+     */
+    setLocationInView(location: Phaser.Types.Math.Vector2Like): void;
     /**
      * the location within coordinate space
      * @returns a `Phaser.Math.Vector2` for the location of this

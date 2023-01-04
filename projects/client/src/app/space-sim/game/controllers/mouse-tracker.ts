@@ -56,6 +56,10 @@ export class MouseTracker implements HasLocation, Updatable {
         return this._pointer()?.position?.clone() || Helpers.vector2();
     }
 
+    setLocationInView(location: Phaser.Types.Math.Vector2Like): void {
+        throw new Error('MouseTracker.setLocationInView(...) is not supported');
+    }
+
     /**
      * offsets the screen position based on camera position
      */

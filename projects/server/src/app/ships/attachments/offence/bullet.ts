@@ -117,6 +117,10 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         return new Phaser.Math.Vector2(loc.x - cameraPos.x, loc.y - cameraPos.y);
     }
 
+    setLocationInView(location: Phaser.Types.Math.Vector2Like): void {
+        throw new Error('Bullet.setLocationInView(...) is not supported');
+    }
+
     getLocation(): Phaser.Math.Vector2 {
         const go = this.getGameObject();
         return Helpers.vector2(go?.x ?? 0, go?.y ?? 0);

@@ -43,6 +43,10 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
     getRotation(): number {
         return this.getGameObject()?.angle ?? 0;
     }
+
+    setRotation(degrees: number): void {
+        this.getGameObject()?.setAngle(degrees);
+    }
     
     getLocationInView(): Phaser.Math.Vector2 {
         return Helpers.convertLocToLocInView(this.getLocation(), this._scene);

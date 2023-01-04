@@ -33,4 +33,12 @@ export abstract class InputController implements Updatable, HasGameObject<Phaser
 
     abstract update(time: number, delta: number): void;
     abstract getGameObject(): Phaser.GameObjects.Container;
+
+    getRotation(): number {
+        return this.getGameObject().angle;
+    }
+
+    setRotation(degrees: number): void {
+        this.getGameObject().setAngle(degrees);
+    }
 }
