@@ -321,7 +321,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                SpaceSim.map.getLayer()
+                SpaceSim.map.getGameObject()
             ],
             followObject: SpaceSimClient.player.getGameObject()
         });

@@ -169,7 +169,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                                 break;
                         }
                         SpaceSim.suppliesMap.set(o.id, supply);
-                        SpaceSimClient.minimap.ignore(supply);
+                        Helpers.trycatch(() => SpaceSimClient.minimap?.ignore(supply), 'none');
                         this.physics.add.collider(supply, SpaceSim.map.getGameObject());
                     }
                 });
@@ -217,6 +217,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                 SpaceSim.map = new GameMap(this, opts);
                 // ensure all tiles are visible (defaults to hidden)
                 SpaceSim.map.getLayer().forEachTile(tile => tile.setAlpha(1));
+                SpaceSim.map.minimapLayer.forEachTile(tile => tile.setAlpha(1));
             });
         SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP, SpaceSimClient.playerData);
         await this._waitForMap();
@@ -303,8 +304,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         ];
         const topleft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
         const botright: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
-        const offsetX = 100;
-        const offsetY = 100;
+        const offsetX = 300;
+        const offsetY = 300;
         const divisionsX = Math.floor(Phaser.Math.Distance.BetweenPoints({x: topleft.x, y: 0}, {x: botright.x, y: 0}) / offsetX);
         const divisionsY = Math.floor(Phaser.Math.Distance.BetweenPoints({x: 0, y: topleft.y}, {x: 0, y: botright.y}) / offsetY);
         let x: number = topleft.x;
@@ -384,7 +385,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                SpaceSim.map.getLayer()
+                SpaceSim.map.getGameObject()
             ],
             followObject: SpaceSimClient.player.getGameObject()
         });

@@ -20,17 +20,20 @@ export class Camera implements HasLocation {
 
     constructor(scene: Phaser.Scene, options?: CameraOptions) {
         this.scene = scene;
-        this._ignored = this.scene.add.group(options.ignore || [], {
-            name: `${options.name ?? 'camera'}-ignore-group`
-        });
         
-        this._cam = this._getCamera({
+        const opts: CameraOptions = {
             ...this._defaultOptions(this.scene),
             ...options
+        };
+        
+        this._ignored = this.scene.add.group([], {
+            name: `${opts.name ?? 'camera'}-ignore-group`
         });
+        
+        this._cam = this._getCamera(opts);
 
-        this.ignore(...options.ignore);
-        this.follow(options.followObject);
+        this.ignore(...opts.ignore);
+        this.follow(opts.followObject);
     }
 
     get cam(): Phaser.Cameras.Scene2D.Camera {
@@ -61,6 +64,7 @@ export class Camera implements HasLocation {
             for (var i=0; i<entries.length; i++) {
                 this._ignored.add(entries[i]);
             }
+            this._cam.ignore(this._ignored);
         }
         return this;
     }
@@ -70,6 +74,7 @@ export class Camera implements HasLocation {
             for (var i=0; i<entries.length; i++) {
                 Helpers.trycatch(() => this._ignored.remove(entries[i]));
             }
+            this._cam.ignore(this._ignored);
         }
         return this;
     }
@@ -100,7 +105,7 @@ export class Camera implements HasLocation {
     }
 
     destroy(): void {
-        /* ignored */
+        Helpers.trycatch(() => this._ignored.destroy(), 'warn');
     }
 
     private _defaultOptions(scene: Phaser.Scene): CameraOptions {
@@ -110,7 +115,8 @@ export class Camera implements HasLocation {
             width: scene.game.scale.displaySize.width,
             height: scene.game.scale.displaySize.height,
             zoom: 1,
-            alpha: 1
+            alpha: 1,
+            ignore: []
         }
     }
 }

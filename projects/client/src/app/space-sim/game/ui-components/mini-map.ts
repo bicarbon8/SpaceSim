@@ -50,5 +50,6 @@ export class MiniMap extends Camera {
             this.scene.cameras.remove(this.cam, true);
             this._border.destroy();
         }, 'warn', 'unable to cleanly remove MiniMap');
+        super.destroy();
     }
 }
