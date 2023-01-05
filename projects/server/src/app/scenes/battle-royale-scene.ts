@@ -36,6 +36,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
         this.load.image('wings-1', `assets/sprites/ship-parts/wings-1.png`);
         this.load.image('cockpit-1', `assets/sprites/ship-parts/cockpit-1.png`);
         this.load.image('engine-1', `assets/sprites/ship-parts/engine-1.png`);
+        this.load.image('minimap-player', `assets/sprites/minimap-player.png`);
         
         this.load.image('bullet', `assets/sprites/bullet.png`);
         this.load.image('ammo', `assets/sprites/ammo.png`);
@@ -44,6 +45,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
         this.load.image('repairs-canister', `assets/sprites/repairs-canister.png`);
 
         this.load.image('metaltiles', `assets/tiles/metaltiles_lg.png`);
+        this.load.image('minimaptile', `assets/tiles/minimap-tile.png`);
     }
 
     create(): void {
@@ -202,7 +204,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                         this._users.set(player.fingerprint, datas);
                     }
                 }
-            }, 'error removing old user data', 'warn');
+            }, 'warn', 'error removing old user data');
         }
     }
 
@@ -374,23 +376,25 @@ export class BattleRoyaleScene extends Phaser.Scene {
      * @returns a `ship.id` if reconnected otherwise null
      */
     private _reconnect(newSocketId: string, data: SpaceSimPlayerData): string {
-        console.debug(`attempting to reconnect socket ${newSocketId} using data ${JSON.stringify(data)}`);
-        Helpers.trycatch(() => {
-            const d = {...data, name: Helpers.sanitise(data?.name)};
-            const ship = SpaceSim.players()
-                .find(p => p.fingerprint === d.fingerprint 
-                    && p.name === d?.name);
-            if (ship) {
-                const timer = this._disconnectTimers.get(ship.id);
-                window.clearTimeout(timer);
-                this._disconnectTimers.delete(ship.id);
-                console.debug(`associating socket ${newSocketId} to ship ${ship.id}`);
-                this._socketToShipId.set(newSocketId, ship.id);
-                return ship.id;
-            } else {
-                console.debug(`no existing ship found for socket ${newSocketId} and data ${JSON.stringify(data)}`);
-            }
-        }, 'error reconnecting:');
+        if (newSocketId && data) {
+            console.debug(`attempting to reconnect socket ${newSocketId} using data ${JSON.stringify(data)}`);
+            Helpers.trycatch(() => {
+                const d = {...data, name: Helpers.sanitise(data?.name)};
+                const ship = SpaceSim.players()
+                    .find(p => p.fingerprint === d.fingerprint 
+                        && p.name === d?.name);
+                if (ship) {
+                    const timer = this._disconnectTimers.get(ship.id);
+                    window.clearTimeout(timer);
+                    this._disconnectTimers.delete(ship.id);
+                    console.debug(`associating socket ${newSocketId} to ship ${ship.id}`);
+                    this._socketToShipId.set(newSocketId, ship.id);
+                    return ship.id;
+                } else {
+                    console.debug(`no existing ship found for socket ${newSocketId} and data ${JSON.stringify(data)}`);
+                }
+            }, 'warn', 'error reconnecting:');
+        }
         return null; // unable to reconnect
     }
 }

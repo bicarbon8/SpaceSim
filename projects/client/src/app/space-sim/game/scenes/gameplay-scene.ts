@@ -81,7 +81,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
 
         this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
-        this.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`)
+        this.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`);
         
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
         this.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
@@ -197,7 +197,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             let controller = new AiController(this, p);
             SpaceSimClient.opponents.push(controller);
             SpaceSim.playersMap.set(p.id, p);
-            console.debug(`playersMap.size ${SpaceSim.playersMap.size}`);
         };
     }
 
@@ -292,7 +291,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         }
         const ignore = Array.from(SpaceSim.playersMap.values())
             .map(p => p.minimapSprite);
-        console.debug(`ignoring ${ignore.length}`);
         SpaceSimClient.camera = new Camera(this, {
             name: 'main',
             zoom: zoom,

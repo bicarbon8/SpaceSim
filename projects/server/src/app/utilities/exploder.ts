@@ -23,11 +23,11 @@ export class Exploder {
         this.scene = scene;
 
         Helpers.trycatch(() => this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1}),
-            'unable to load explosion sound', 'warn', false);
+            'warn', 'unable to load explosion sound', false);
         Helpers.trycatch(() => this._flareParticleEmitter = this.scene.add.particles('flares'),
-            'unable to load flares sprite as particles', 'warn', false);
+            'warn', 'unable to load flares sprite as particles', false);
         Helpers.trycatch(() => this._explosionParticleEmitter = this.scene.add.particles('explosion'),
-            'unable to load explosion sprite as particles', 'warn', false);
+            'warn', 'unable to load explosion sprite as particles', false);
     }
 
     explode(options: ExploderOptions): this {
@@ -37,8 +37,7 @@ export class Exploder {
         this._explosionParticleEmitter.setPosition(options.location.x, options.location.y);
         this._explosionParticleEmitter.setDepth(Constants.UI.Layers.PLAYER);
 
-        Helpers.trycatch(() => this._destroyedSound.play(), 
-            'could not play explosion sound', 'debug', false);
+        Helpers.trycatch(() => this._destroyedSound.play(), 'none');
 
         this._explosionParticleEmitter.createEmitter({
             lifespan: { min: 500, max: 1000 },

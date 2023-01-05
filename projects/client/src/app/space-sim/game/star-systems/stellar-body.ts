@@ -70,9 +70,18 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
 
     private _createGameObj(): void {
         if (this.spriteName === 'asteroids') {
-            this._gameObj = this._scene.add.sprite(this.location.x, this.location.y, this.spriteName, Phaser.Math.RND.between(0, 63));
+            this._gameObj = this._scene.add.sprite(
+                this.location.x * (1/this.scrollFactor), 
+                this.location.y * (1/this.scrollFactor), 
+                this.spriteName, 
+                Phaser.Math.RND.between(0, 63)
+            );
         } else {
-            this._gameObj = this._scene.add.sprite(this.location.x, this.location.y, this.spriteName);
+            this._gameObj = this._scene.add.sprite(
+                this.location.x * (1/this.scrollFactor), 
+                this.location.y * (1/this.scrollFactor), 
+                this.spriteName
+            );
         }
         this._gameObj.setScale(this.scale, this.scale);
         this._gameObj.setScrollFactor(this.scrollFactor);

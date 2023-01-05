@@ -420,6 +420,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         try {
             this.getGameObject()?.setActive(false);
             this.getGameObject()?.destroy();
+            this.minimapSprite?.destroy();
         } catch (e) {
             /* ignore */
         }

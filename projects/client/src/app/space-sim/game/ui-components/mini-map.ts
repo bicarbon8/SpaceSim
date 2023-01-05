@@ -1,4 +1,4 @@
-import { Constants } from "space-sim-server";
+import { Constants, Helpers } from "space-sim-server";
 import { Camera, CameraOptions } from "./camera";
 
 export type MiniMapOptions = Omit<CameraOptions, 'name' | 'zoom'> & {
@@ -46,11 +46,9 @@ export class MiniMap extends Camera {
     }
 
     override destroy(): void {
-        try {
+        Helpers.trycatch(() => {
             this.scene.cameras.remove(this.cam, true);
             this._border.destroy();
-        } catch (e) {
-            console.warn('unable to cleanly remove MiniMap', e);
-        }
+        }, 'warn', 'unable to cleanly remove MiniMap');
     }
 }

@@ -5,6 +5,8 @@ import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { Resizable } from "../interfaces/resizable";
+import { Camera } from "../ui-components/camera";
+import { MiniMap } from "../ui-components/mini-map";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -45,6 +47,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this.load.image('engine-1', `${environment.baseUrl}/assets/sprites/ship-parts/engine-1.png`);
         this.load.image('engine-2', `${environment.baseUrl}/assets/sprites/ship-parts/engine-2.png`);
         this.load.image('engine-3', `${environment.baseUrl}/assets/sprites/ship-parts/engine-3.png`);
+        this.load.image('minimap-player', `${environment.baseUrl}/assets/sprites/minimap-player.png`);
 
         this.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
         this.load.spritesheet('flares', `${environment.baseUrl}/assets/particles/flares.png`, {
@@ -76,6 +79,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
 
         this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
+        this.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`);
         
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
         this.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
@@ -130,10 +134,11 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     resize(): void {
-        this._width = this.game.canvas.width;
-        this._height = this.game.canvas.height;
+        this._width = this.game.scale.displaySize.width;
+        this._height = this.game.scale.displaySize.height;
         this._createBackground();
         this._setupCamera();
+        this._setupMiniMap();
     }
 
     private _setupRemainingEventHandling(): void {
@@ -164,6 +169,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                                 break;
                         }
                         SpaceSim.suppliesMap.set(o.id, supply);
+                        SpaceSimClient.minimap.ignore(supply);
                         this.physics.add.collider(supply, SpaceSim.map.getGameObject());
                     }
                 });
@@ -244,6 +250,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                     SpaceSim.playersMap.set(o.id, ship);
                     this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
+                    Helpers.trycatch(() => SpaceSimClient.camera?.ignore(ship.minimapSprite), 'none');
                 }
 
                 if (ship?.id === this._shipId) {
@@ -296,8 +303,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         ];
         const topleft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
         const botright: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
-        const offsetX = 300;
-        const offsetY = 300;
+        const offsetX = 100;
+        const offsetY = 100;
         const divisionsX = Math.floor(Phaser.Math.Distance.BetweenPoints({x: topleft.x, y: 0}, {x: botright.x, y: 0}) / offsetX);
         const divisionsY = Math.floor(Phaser.Math.Distance.BetweenPoints({x: 0, y: topleft.y}, {x: 0, y: botright.y}) / offsetY);
         let x: number = topleft.x;
@@ -334,18 +341,53 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     private async _setupCamera(): Promise<void> {
+        await this._waitForMap();
         await this._waitForPlayer();
-        this.cameras.main.backgroundColor.setFromRGB({r: 0, g: 0, b: 0});
-        
-        let zoom = 0.75;
+
+        let zoom = 1;
         if (this._width < 400 || this._height < 400) {
             zoom = 0.5;
         }
-        this.cameras.main.setZoom(zoom);
-        let playerLoc = SpaceSimClient.player.getLocation();
-        this.cameras.main.centerOn(playerLoc.x, playerLoc.y);
+        if (SpaceSimClient.camera) {
+            SpaceSimClient.camera.destroy();
+        }
+        SpaceSimClient.camera = new Camera(this, {
+            name: 'main',
+            zoom: zoom,
+            ignore: [
+                SpaceSim.map.minimapLayer,
+                ...SpaceSim.players().map(p => p.minimapSprite)
+            ],
+            backgroundColor: 0x000000,
+            followObject: SpaceSimClient.player.getGameObject()
+        });
+    }
 
-        this.cameras.main.startFollow(SpaceSimClient.player.getGameObject(), true, 1, 1);
+    private async _setupMiniMap(): Promise<void> {
+        await this._waitForMap();
+        await this._waitForPlayer();
+        
+        const miniWidth = this._width / 4;
+        const miniHeight = this._height / 4;
+        let miniSize = (miniWidth < miniHeight) ? miniWidth : miniHeight;
+        if (miniSize < 150) {
+            miniSize = 150;
+        }
+        if (SpaceSimClient.minimap) {
+            SpaceSimClient.minimap.destroy();
+        }
+        SpaceSimClient.minimap = new MiniMap(this, {
+            x: this._width - ((miniSize / 2) + 10),
+            y: miniSize,
+            width: miniSize,
+            height: miniSize,
+            ignore: [
+                this._backgroundStars, 
+                ...this._stellarBodies.map(b => b.getGameObject()),
+                SpaceSim.map.getLayer()
+            ],
+            followObject: SpaceSimClient.player.getGameObject()
+        });
     }
 
     private _playMusic(): void {

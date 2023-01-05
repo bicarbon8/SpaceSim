@@ -287,7 +287,7 @@ export class StartupScene extends Phaser.Scene {
                     this._startMultiplayerButton
                         .setActive(true)
                         .setVisible(true);
-                }, 'error updating startup scene connection text');
+                }, 'warn', 'error updating startup scene connection text');
                 if (SpaceSimClient.playerData
                     && SpaceSimClient.playerData.fingerprint
                     && SpaceSimClient.playerData.name) {
@@ -302,14 +302,14 @@ export class StartupScene extends Phaser.Scene {
                     this._startMultiplayerButton
                         .setActive(false)
                         .setVisible(false);
-                }, 'error updating startup scene connection text');
+                }, 'warn', 'error updating startup scene connection text');
                 if (reason === "io server disconnect") {
                     // the disconnection was initiated by the server, you need to reconnect manually
                     console.info(`attempting to reconnect to server...`);
                     Helpers.trycatch(() => {
                         this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
                             .setText(`attempting to reconnect to server...`);
-                    }, 'error updating startup scene connection text');
+                    }, 'warn', 'error updating startup scene connection text');
                 this._serverConnectionText.updateSize();
                     SpaceSimClient.socket.connect();
                 }
