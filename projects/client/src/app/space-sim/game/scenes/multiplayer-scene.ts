@@ -6,7 +6,7 @@ import { SpaceSimClient } from "../space-sim-client";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { Resizable } from "../interfaces/resizable";
 import { Camera } from "../ui-components/camera";
-import { MiniMap } from "../ui-components/mini-map";
+import { Radar } from "../ui-components/radar";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -169,7 +169,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                                 break;
                         }
                         SpaceSim.suppliesMap.set(o.id, supply);
-                        Helpers.trycatch(() => SpaceSimClient.minimap?.ignore(supply), 'none');
+                        Helpers.trycatch(() => SpaceSimClient.radar?.ignore(supply), 'none');
                         this.physics.add.collider(supply, SpaceSim.map.getGameObject());
                     }
                 });
@@ -371,10 +371,10 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         if (miniSize < 150) {
             miniSize = 150;
         }
-        if (SpaceSimClient.minimap) {
-            SpaceSimClient.minimap.destroy();
+        if (SpaceSimClient.radar) {
+            SpaceSimClient.radar.destroy();
         }
-        SpaceSimClient.minimap = new MiniMap(this, {
+        SpaceSimClient.radar = new Radar(this, {
             x: this._width - ((miniSize / 2) + 10),
             y: miniSize,
             width: miniSize,

@@ -1,11 +1,11 @@
 import { Constants, Helpers } from "space-sim-server";
 import { Camera, CameraOptions } from "./camera";
 
-export type MiniMapOptions = Omit<CameraOptions, 'name' | 'zoom'> & {
+export type RadarOptions = Omit<CameraOptions, 'name' | 'zoom'> & {
     
 };
 
-export class MiniMap extends Camera {
+export class Radar extends Camera {
     private _border: Phaser.GameObjects.Graphics;
     private static DEFAULT_OPTIONS: CameraOptions = {
         name: 'minimap',
@@ -18,14 +18,14 @@ export class MiniMap extends Camera {
         alpha: 0.5
     } as const;
     
-    constructor(scene: Phaser.Scene, options?: MiniMapOptions) {
+    constructor(scene: Phaser.Scene, options?: RadarOptions) {
         super(scene, {
-            ...MiniMap.DEFAULT_OPTIONS,
+            ...Radar.DEFAULT_OPTIONS,
             ...options
         });
     }
 
-    protected override _getCamera(opts: MiniMapOptions): Phaser.Cameras.Scene2D.Camera {
+    protected override _getCamera(opts: RadarOptions): Phaser.Cameras.Scene2D.Camera {
         const cam = super._getCamera({
             camera: opts.camera ?? this.scene.cameras.add(0, 0, opts.width, opts.height, false),
             ...opts,

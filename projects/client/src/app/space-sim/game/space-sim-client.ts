@@ -12,7 +12,7 @@ import { AiController } from "./controllers/ai-controller";
 import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
 import { Camera } from "./ui-components/camera";
-import { MiniMap } from "./ui-components/mini-map";
+import { Radar } from "./ui-components/radar";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -124,5 +124,5 @@ export module SpaceSimClient {
     export const opponents = new Array<AiController>();
     export var mode: GameMode = 'singleplayer';
     export var camera: Camera;
-    export var minimap: MiniMap;
+    export var radar: Radar;
 }
