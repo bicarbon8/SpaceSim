@@ -297,7 +297,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             zoom: zoom,
             ignore: [
                 SpaceSim.map.minimapLayer,
-                // ...ignore
+                ...ignore
             ],
             backgroundColor: 0x000000,
             followObject: SpaceSimClient.player.getGameObject()
