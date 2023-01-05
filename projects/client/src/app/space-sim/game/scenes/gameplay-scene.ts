@@ -204,6 +204,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         SpaceSim.map = new GameMap(this, {
             doorPadding: 2
         });
+        SpaceSim.map.alpha = 0; // hide until player enters room
         
         // Place the player in random empty tile in the first room
         const startingRoom = SpaceSim.map.getRoomClosestToOrigin();
@@ -296,7 +297,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             zoom: zoom,
             ignore: [
                 SpaceSim.map.minimapLayer,
-                ...ignore
+                // ...ignore
             ],
             backgroundColor: 0x000000,
             followObject: SpaceSimClient.player.getGameObject()

@@ -170,7 +170,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
             this._weapons.update(time, delta);
 
             const pos = this.getLocation();
-            this._minimapSprite.setPosition(pos.x, pos.y);
         }
     }
 
@@ -420,7 +419,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         try {
             this.getGameObject()?.setActive(false);
             this.getGameObject()?.destroy();
-            this.minimapSprite?.destroy();
         } catch (e) {
             /* ignore */
         }
@@ -485,10 +483,12 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this._weapons = new MachineGun(this);
 
         this._minimapSprite = this.scene.make.sprite({
-            x: loc.x,
-            y: loc.y,
+            x: 0,
+            y: 0,
             key: 'minimap-player'
-        }, false).setDepth(Constants.UI.Layers.PLAYER + 0.1);
+        }, true);
+        this._positionContainer.add(this._minimapSprite)
+            .bringToTop(this._minimapSprite);
     }
 
     private _createIntegrityIndicator(): void {

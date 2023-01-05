@@ -215,9 +215,6 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         SpaceSimClient.socket
             .on(Constants.Socket.UPDATE_MAP, (opts: GameMapOptions) => {
                 SpaceSim.map = new GameMap(this, opts);
-                // ensure all tiles are visible (defaults to hidden)
-                SpaceSim.map.getLayer().forEachTile(tile => tile.setAlpha(1));
-                SpaceSim.map.minimapLayer.forEachTile(tile => tile.setAlpha(1));
             });
         SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP, SpaceSimClient.playerData);
         await this._waitForMap();

@@ -23,6 +23,11 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         this._createGameObj(options);
     }
 
+    set alpha(alpha: number) {
+        this._layer.forEachTile(tile => tile.setAlpha(alpha));
+        this._minimapLayer.forEachTile(tile => tile.setAlpha(alpha));
+    }
+
     getGameObject(): Phaser.Tilemaps.TilemapLayer {
         return this._layer;
     }
@@ -181,9 +186,6 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
             }
         });
 
-        // hide all tiles until we enter the room
-        this._layer.forEachTile(tile => tile.setAlpha(0));
         this._layer.setCollisionBetween(1, 14);
-        this._minimapLayer.forEachTile(tile => tile.setAlpha(0));
     }
 }
