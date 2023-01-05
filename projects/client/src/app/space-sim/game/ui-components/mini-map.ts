@@ -1,4 +1,4 @@
-import { HasLocation, Helpers } from "space-sim-server";
+import { Constants, HasLocation, Helpers } from "space-sim-server";
 import { GameObjectPlus } from "space-sim-server";
 
 export type MiniMapOptions = Phaser.Types.Math.Vector2Like & {
@@ -108,5 +108,10 @@ export class MiniMap implements HasLocation {
         if (opts.followObject) {
             this.follow(opts.followObject);
         }
+        const border = this.scene.add.graphics()
+            .lineStyle(3, 0x57e30b, 1)
+            .setScrollFactor(0)
+            .strokeCircle(opts.x, opts.y, opts.width / 2)
+            .setDepth(Constants.UI.Layers.HUD);
     }
 }
