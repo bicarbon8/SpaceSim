@@ -6,9 +6,8 @@ import { SpaceSimClient } from "../space-sim-client";
 import { StellarBodyOptions } from "../star-systems/stellar-body-options";
 import { Resizable } from "../interfaces/resizable";
 import { AiController } from "../controllers/ai-controller";
-import MiniMapShader from "../shaders/minimap-shader";
-import { Colors } from "phaser-ui-components";
 import { MiniMap } from "../ui-components/mini-map";
+import { Camera } from "../ui-components/camera";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -23,7 +22,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: Exploder;
-    private _minimap: MiniMap;
 
     private _physicsUpdator: Generator<void, void, unknown>;
 
@@ -51,6 +49,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this.load.image('engine-1', `${environment.baseUrl}/assets/sprites/ship-parts/engine-1.png`);
         this.load.image('engine-2', `${environment.baseUrl}/assets/sprites/ship-parts/engine-2.png`);
         this.load.image('engine-3', `${environment.baseUrl}/assets/sprites/ship-parts/engine-3.png`);
+        this.load.image('minimap-player', `${environment.baseUrl}/assets/sprites/minimap-player.png`);
 
         this.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
         this.load.spritesheet('flares', `${environment.baseUrl}/assets/particles/flares.png`, {
@@ -179,7 +178,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         SpaceSimClient.opponents.splice(0, SpaceSimClient.opponents.length);
         
         // add opponent in each room
-        SpaceSim.map.getRooms().forEach((room: RoomPlus) => {
+        for (var room of SpaceSim.map.getRooms()) {
             let tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
             let br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
             let pos: Phaser.Math.Vector2 = Helpers.vector2(
@@ -198,7 +197,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             let controller = new AiController(this, p);
             SpaceSimClient.opponents.push(controller);
             SpaceSim.playersMap.set(p.id, p);
-        });
+            console.debug(`playersMap.size ${SpaceSim.playersMap.size}`);
+        };
     }
 
     private _createMapAndPlayer(): void {
@@ -283,20 +283,26 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     private _setupCamera(): void {
-        const playerLoc = SpaceSimClient.player.getLocation();
         let zoom = 1;
         if (this._width < 400 || this._height < 400) {
             zoom = 0.5;
         }
-        this.cameras.main
-            .setName('main')
-            .setZoom(zoom)
-            .ignore([
-                SpaceSim.map.minimapLayer
-            ])
-            .setBackgroundColor(0x000000)
-            .centerOn(playerLoc.x, playerLoc.y)
-            .startFollow(SpaceSimClient.player.getGameObject(), true, 1, 1);
+        if (SpaceSimClient.camera) {
+            SpaceSimClient.camera.destroy();
+        }
+        const ignore = Array.from(SpaceSim.playersMap.values())
+            .map(p => p.minimapSprite);
+        console.debug(`ignoring ${ignore.length}`);
+        SpaceSimClient.camera = new Camera(this, {
+            name: 'main',
+            zoom: zoom,
+            ignore: [
+                SpaceSim.map.minimapLayer,
+                ...ignore
+            ],
+            backgroundColor: 0x000000,
+            followObject: SpaceSimClient.player.getGameObject()
+        });
     }
 
     private _createMiniMap(): void {
@@ -306,10 +312,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         if (miniSize < 150) {
             miniSize = 150;
         }
-        if (this._minimap) {
-            this._minimap.destroy();
+        if (SpaceSimClient.minimap) {
+            SpaceSimClient.minimap.destroy();
         }
-        this._minimap = new MiniMap(this, {
+        SpaceSimClient.minimap = new MiniMap(this, {
             x: this._width - ((miniSize / 2) + 10),
             y: miniSize,
             width: miniSize,
@@ -317,8 +323,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                SpaceSim.map.getLayer(),
-                ...SpaceSim.players().map(p => p.getGameObject())
+                SpaceSim.map.getLayer()
             ],
             followObject: SpaceSimClient.player.getGameObject()
         });
@@ -382,6 +387,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         for (var i=0; i<supplies.length; i++) {
             let supply = supplies[i];
             this._addSupplyCollisionPhysicsWithPlayers(supply);
+            SpaceSimClient.minimap.ignore(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
         }
     }

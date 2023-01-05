@@ -11,6 +11,8 @@ import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 import { AiController } from "./controllers/ai-controller";
 import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
+import { Camera } from "./ui-components/camera";
+import { MiniMap } from "./ui-components/mini-map";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -121,4 +123,6 @@ export module SpaceSimClient {
     export var playerData: SpaceSimPlayerData;
     export const opponents = new Array<AiController>();
     export var mode: GameMode = 'singleplayer';
+    export var camera: Camera;
+    export var minimap: MiniMap;
 }

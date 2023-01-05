@@ -1,5 +1,4 @@
 import { Scene } from "phaser";
-import { HasLocation } from "../interfaces/has-location";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { Engine } from "./attachments/utility/engine";
@@ -40,6 +39,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     private _shipOverheatIndicator: Phaser.GameObjects.Text;
     private _lastDamagedBy: DamageOptions[];
     private _shipDamageFlicker: Phaser.Tweens.Tween;
+    private _minimapSprite: Phaser.GameObjects.Sprite;
 
     private _selfDestruct: boolean;
     
@@ -153,6 +153,10 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         return this._engine;
     }
 
+    get minimapSprite(): Phaser.GameObjects.Sprite {
+        return this._minimapSprite;
+    }
+
     /**
      * if player is active, face the current target, check for overheat and update
      * attachments
@@ -164,6 +168,9 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
             this._checkOverheatCondition(time, delta);
             this._engine.update(time, delta);
             this._weapons.update(time, delta);
+
+            const pos = this.getLocation();
+            this._minimapSprite.setPosition(pos.x, pos.y);
         }
     }
 
@@ -475,6 +482,12 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
 
         this._engine = new Engine(this);
         this._weapons = new MachineGun(this);
+
+        this._minimapSprite = this.scene.make.sprite({
+            x: loc.x,
+            y: loc.y,
+            key: 'minimap-player'
+        }, false).setDepth(Constants.UI.Layers.PLAYER + 0.1);
     }
 
     private _createIntegrityIndicator(): void {
