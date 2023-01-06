@@ -1,7 +1,7 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants, GameScoreTracker, GameStats } from "space-sim-server";
+import { Constants, GameScoreTracker, GameStats, Helpers } from "space-sim-server";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -172,11 +172,11 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _createMusic(): void {
-        this._music = this.sound.add('game-over-song', {loop: true, volume: 0.1});
-        this._music.play();
-        this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music.pause());
-        this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
-        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music.stop());
-        this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music.destroy());
+        Helpers.trycatch(() => this._music = this.sound.add('game-over-song', {loop: true, volume: 0.1}));
+        this._music?.play();
+        this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
+        this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());
+        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music?.stop());
+        this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music?.destroy());
     }
 }

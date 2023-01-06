@@ -1,6 +1,7 @@
 import { GridLayout, LayoutContainer, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
 import { Helpers } from "space-sim-server";
+import { environment } from "src/environments/environment";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -14,21 +15,23 @@ export class SetNameScene extends Phaser.Scene {
     private _layout: GridLayout;
     private _text: LayoutContainer;
     private _button: TextButton;
+    private _music: Phaser.Sound.BaseSound;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
     }
 
     preload() {
-
+        this.load.audio('startup-theme', `${environment.baseUrl}/assets/audio/sky-lines.ogg`);
     }
 
     create() {
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
-
+        
         this.cameras.main.centerOn(0, 0);
 
+        this._createMusic();
         this._createLayout();
         if (this.game.device.os.desktop) {
             this._getKeyboardInput();
@@ -45,6 +48,15 @@ export class SetNameScene extends Phaser.Scene {
             this._button.setText({style: Styles.secondary().text});
             this._button.setBackground(Styles.secondary().graphics);
         }
+    }
+
+    private _createMusic(): void {
+        Helpers.trycatch(() => this._music = this.sound.add('startup-theme', {loop: true, volume: 0.1}), 'warn');
+        this._music?.play();
+        this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
+        this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());
+        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music?.stop());
+        this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music?.destroy());
     }
 
     private _createLayout(): void {
