@@ -1,4 +1,4 @@
-import { Scene } from "phaser";
+import { Game, Scene } from "phaser";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { Engine } from "./attachments/utility/engine";
@@ -349,11 +349,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         if (this.integrity <= 0) {
             this._integrity = 0;
             this.destroy(); // we are dead
-            const attackerId = Helpers.getLastAttackerId(this);
-            if (attackerId) {
-                // give credit to attacker for our destruction
-                GameScoreTracker.opponentDestroyed(attackerId);
-            }
             return;
         }
 

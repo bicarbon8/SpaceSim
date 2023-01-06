@@ -238,7 +238,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                     }
                 });
             } else {
-                GameScoreTracker.opponentDestroyed(SpaceSimClient.player.id);
                 this._expelSupplies(shipOpts);
             }
             SpaceSim.playersMap.delete(shipOpts?.id);

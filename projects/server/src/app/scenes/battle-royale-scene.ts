@@ -167,6 +167,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
             `name: ${data.name.substring(0, 10)},`,
             `and id: ${ship.id} at x: ${ship.location.x}, y: ${ship.location.y}`);
         SpaceSim.playersMap.set(ship.id, ship);
+        GameScoreTracker.start(ship.config);
         
         return ship;
     }
@@ -205,6 +206,8 @@ export class BattleRoyaleScene extends Phaser.Scene {
                     }
                 }
             }, 'warn', 'error removing old user data');
+
+            GameScoreTracker.stop(opts.id);
         }
     }
 

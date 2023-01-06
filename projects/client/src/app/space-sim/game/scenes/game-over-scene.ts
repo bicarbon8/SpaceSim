@@ -91,11 +91,7 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _createScore(): void {
-        const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
-        let accuracy: number = (stats.shotsLanded / stats.shotsFired) * 100;
-        if (isNaN(accuracy)) {
-            accuracy = 0;
-        }
+        const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player.id);
         const scoreText: Phaser.GameObjects.Text = this.make.text({
             text: '', 
             style: {font: '30px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4}
@@ -103,8 +99,8 @@ export class GameOverScene extends Phaser.Scene {
         scoreText.setText([
             `Score: ${GameScoreTracker.getScore(SpaceSimClient.player.id).toFixed(0)}`,
             `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
-            `Accuracy: ${accuracy.toFixed(0)}%`,
-            `Kills: ${stats.opponentsDestroyed}`
+            `Accuracy: ${stats.accuracy.toFixed(0)}%`,
+            `Kills: ${GameScoreTracker.destroyedCount(SpaceSimClient.player.id)}`
         ]);
         this._layout.addContents(scoreText);
     }

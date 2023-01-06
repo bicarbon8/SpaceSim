@@ -46,7 +46,6 @@ export * from "./app/utilities/animations";
 export * from "./app/utilities/constants";
 export * from "./app/utilities/exploder";
 export * from "./app/utilities/game-score-tracker";
-export * from "./app/utilities/game-stats";
 export * from "./app/utilities/helpers";
 /** space-sim */
 export * from "./app/space-sim-player-data";

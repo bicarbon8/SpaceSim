@@ -33,7 +33,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     create(): void {
         this.resize();
-        GameScoreTracker.start(SpaceSimClient.player.id);
+        GameScoreTracker.start(SpaceSimClient.player.config);
     }
 
     resize(): void {
@@ -153,14 +153,14 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
-            const accuracy: string = (stats.shotsFired) ? ((stats.shotsLanded / stats.shotsFired) * 100).toFixed(1) : 'n/a';
+            const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player.id);
             const info: string[] = [
-                `Kills: ${stats.opponentsDestroyed}`,
+                `Kills: ${GameScoreTracker.destroyedCount(SpaceSimClient.player.id)}`,
                 `Active Players: ${SpaceSim.players()?.length}`,
-                `Accuracy: ${accuracy} %`,
+                `Accuracy: ${stats.accuracy.toFixed(0)}%`,
                 `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`
+                `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
+                `Score: ${GameScoreTracker.getScore(SpaceSimClient.player.id).toFixed(0)}`
             ];
             if (SpaceSim.debug) {
                 const loc: Phaser.Math.Vector2 = SpaceSimClient.player.getLocation();

@@ -1,4 +1,4 @@
-import { Constants, GameScoreTracker, GameStats, SpaceSim } from "space-sim-server";
+import { Constants, GameScoreTracker, GameStats, Helpers, SpaceSim } from "space-sim-server";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
@@ -32,7 +32,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
 
     create(): void {
         this.resize();
-        GameScoreTracker.start(SpaceSimClient.player.id);
+        GameScoreTracker.start(SpaceSimClient.player.config);
     }
 
     resize(): void {
@@ -148,11 +148,11 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     }
 
     private _displayHUDInfo(): void {
-        try {
-            const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
+        Helpers.trycatch(() => {
+            const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player.id);
             const info: string[] = [
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
-                `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`,
+                `Enemies: ${GameScoreTracker.destroyedCount(SpaceSimClient.player.id)}/${SpaceSimClient.opponents.length}`,
                 `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
                 `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore(SpaceSimClient.player.id).toFixed(0)}`
@@ -163,8 +163,6 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             }
             this._hudText.setText(info);
             this._hudLayout.updateSize(this._width, this._height);
-        } catch (e) {
-            // do nothing
-        }
+        }, 'warn');
     }
 }

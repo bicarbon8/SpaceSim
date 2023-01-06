@@ -1,7 +1,6 @@
 import { GameObjectPlus } from "../interfaces/game-object-plus";
 import { NumberOrRange } from "../interfaces/number-range";
 import { Ship } from "../ships/ship";
-import { SpaceSimPlayerData } from "../space-sim-player-data";
 
 export module Helpers {
     /**
@@ -206,5 +205,19 @@ export module Helpers {
             .map(d => d.attackerId)).values())
             .pop();
         return attackerId;
+    }
+
+    /**
+     * calculates the accuracy of shots fired (those that hit a target)
+     * @param shotsFired the number of times a bullet has been fired
+     * @param shotsLanded the number of times a bullet hit an opponent
+     * @returns the percentage (0-100) of successful shots fired
+     */
+    export function getAccuracy(shotsFired: number, shotsLanded: number): number {
+        let accuracy = 0;
+        if (+shotsFired > 0) {
+            accuracy = (+shotsLanded / shotsFired) * 100;
+        }
+        return accuracy;
     }
 }
