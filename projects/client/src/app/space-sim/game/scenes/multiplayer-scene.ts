@@ -389,12 +389,12 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     private _playMusic(): void {
-        this._music = this.sound.add('background-music', {loop: true, volume: 0.1});
-        this._music.play();
-        this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music.pause());
-        this.events.on(Phaser.Scenes.Events.RESUME, () => this._music.resume());
-        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music.stop());
-        this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music.destroy());
+        Helpers.trycatch(() => this._music = this.sound.add('background-music', {loop: true, volume: 0.1}));
+        this._music?.play();
+        this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
+        this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());
+        this.events.on(Phaser.Scenes.Events.SHUTDOWN, () => this._music?.stop());
+        this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music?.destroy());
     }
 
     private _addPlayerCollisionPhysicsWithPlayers(ship: Ship): void {

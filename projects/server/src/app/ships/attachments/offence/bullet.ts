@@ -174,10 +174,6 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setCircle(ball.displayWidth / 2);
 
-        try {
-            this._hitSound = this.scene.sound.add('bullet-hit');
-        } catch (e) {
-            // ignore
-        }
+        Helpers.trycatch(() => this._hitSound = this.scene.sound.add('bullet-hit'), 'warn');
     }
 }
