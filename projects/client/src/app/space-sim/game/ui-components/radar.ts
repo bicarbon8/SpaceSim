@@ -6,6 +6,7 @@ export type RadarOptions = Omit<CameraOptions, 'name' | 'zoom'> & {
 };
 
 export class Radar extends Camera {
+    private _mask: Phaser.GameObjects.Graphics;
     private _border: Phaser.GameObjects.Graphics;
     private static DEFAULT_OPTIONS: CameraOptions = {
         name: 'minimap',
@@ -26,21 +27,25 @@ export class Radar extends Camera {
     }
 
     protected override _getCamera(opts: RadarOptions): Phaser.Cameras.Scene2D.Camera {
+        const radius = opts.width / 2;
         const cam = super._getCamera({
             camera: opts.camera ?? this.scene.cameras.add(0, 0, opts.width, opts.height, false),
             ...opts,
-            x: opts.x - (opts.width / 2),
+            x: opts.x - radius,
             y: opts.y - (opts.height / 2)
         });
-        const maskGraphics = this.scene.make.graphics({x: opts.x, y: opts.y}, false)
+        this._mask = this.scene.make.graphics({x: opts.x, y: opts.y}, false)
             .fillStyle(0xffffff, 1)
-            .fillCircle(0, 0, opts.width / 2);
-        cam.setMask(maskGraphics.createGeometryMask());
-        this._border = this.scene.add.graphics()
-            .lineStyle(3, 0x57e30b, 1)
-            .setScrollFactor(0)
-            .strokeCircle(opts.x, opts.y, opts.width / 2)
-            .setDepth(Constants.UI.Layers.HUD);
+            .fillCircle(0, 0, radius);
+        cam.setMask(this._mask.createGeometryMask());
+        const mainCamZoom = this.scene.cameras.main.zoom;
+        if (Phaser.Math.Fuzzy.Equal(mainCamZoom, 1, 0.1)) {
+            this._border = this.scene.add.graphics()
+                .lineStyle(3, 0x57e30b, 1)
+                .setScrollFactor(0)
+                .strokeCircle(opts.x, opts.y, radius)
+                .setDepth(Constants.UI.Layers.HUD);
+        }
 
         return cam;
     }
@@ -48,7 +53,8 @@ export class Radar extends Camera {
     override destroy(): void {
         Helpers.trycatch(() => {
             this.scene.cameras.remove(this.cam, true);
-            this._border.destroy();
+            this._mask?.destroy();
+            this._border?.destroy();
         }, 'warn', 'unable to cleanly remove MiniMap');
         super.destroy();
     }
