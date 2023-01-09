@@ -1,4 +1,4 @@
-import { Constants, GameScoreTracker, GameStats, SpaceSim } from "space-sim-server";
+import { Constants, GameScoreTracker, GameStats, SpaceSim } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";

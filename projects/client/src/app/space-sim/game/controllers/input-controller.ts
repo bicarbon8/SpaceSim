@@ -1,4 +1,4 @@
-import { HasGameObject, Updatable, Ship } from "space-sim-server";
+import { HasGameObject, Updatable, Ship } from "space-sim-shared";
 
 export abstract class InputController implements Updatable, HasGameObject<Phaser.GameObjects.Container> {
     readonly id: string;

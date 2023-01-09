@@ -1,16 +1,31 @@
 import { Scene } from "phaser";
+import { LayoutContainer } from "phaser-ui-components";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { Engine } from "./attachments/utility/engine";
-import { ShipOptions } from "./ship-options";
 import { DamageOptions } from './damage-options';
 import { HasPhysicsBody } from '../interfaces/has-physics-body';
-import { LayoutContainer } from "phaser-ui-components";
 import { Weapons } from "./attachments/offence/weapons";
 import { MachineGun } from "./attachments/offence/machine-gun";
 import { ShipLike } from "../interfaces/ship-like";
 import { IsConfigurable } from "../interfaces/is-configurable";
 import { Animations } from "../utilities/animations";
+import { PhysicsObject } from "../interfaces/physics-object";
+
+export type ShipOptions = Partial<PhysicsObject> & {
+    readonly id?: string;
+    readonly name?: string;
+    readonly fingerprint?: string;
+    readonly integrity?: number;
+    readonly remainingFuel?: number;
+    readonly remainingAmmo?: number;
+    readonly temperature?: number;
+    readonly mass?: number;
+    readonly weaponsKey?: number;
+    readonly wingsKey?: number;
+    readonly cockpitKey?: number;
+    readonly engineKey?: number;
+}
 
 export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurable<ShipOptions> {
     /** ShipOptions */

@@ -1,4 +1,4 @@
-import { ShipOptions } from "../ships/ship-options";
+import { ShipOptions } from "../ships/ship";
 import { AmmoSupply } from "../ships/supplies/ammo-supply";
 import { CoolantSupply } from "../ships/supplies/coolant-supply";
 import { FuelSupply } from "../ships/supplies/fuel-supply";

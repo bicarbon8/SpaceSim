@@ -1,16 +1,7 @@
 import * as Phaser from "phaser";
 import { Server, Socket } from "socket.io";
-import { GameMap } from "../map/game-map";
-import { Ship } from "../ships/ship";
-import { ShipOptions } from "../ships/ship-options";
-import { ShipSupply } from "../ships/supplies/ship-supply";
-import { SpaceSim } from "../space-sim";
+import { GameMap, Ship, ShipOptions, ShipSupply, SpaceSim, SpaceSimPlayerData, Constants, Exploder, GameScoreTracker, Helpers } from "space-sim-shared";
 import { SpaceSimGameEngine } from "../space-sim-game-engine";
-import { SpaceSimPlayerData } from "../space-sim-player-data";
-import { Constants } from "../utilities/constants";
-import { Exploder } from "../utilities/exploder";
-import { GameScoreTracker } from "../utilities/game-score-tracker";
-import { Helpers } from "../utilities/helpers";
 
 declare const io: Server;
 

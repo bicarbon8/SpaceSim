@@ -1,5 +1,5 @@
 import "phaser";
-import { SpaceSim, Ship, Size, SpaceSimPlayerData } from "space-sim-server";
+import { SpaceSim, Ship, Size, SpaceSimPlayerData } from "space-sim-shared";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";

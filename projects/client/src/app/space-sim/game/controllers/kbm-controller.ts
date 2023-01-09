@@ -1,4 +1,4 @@
-import { Constants, Ship } from "space-sim-server";
+import { Constants, Ship } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";

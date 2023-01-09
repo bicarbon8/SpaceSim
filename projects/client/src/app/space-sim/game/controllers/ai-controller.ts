@@ -1,5 +1,5 @@
 import { SpaceSimClient } from "../space-sim-client";
-import { GameScoreTracker, Helpers, SpaceSim } from "space-sim-server";
+import { GameScoreTracker, Helpers, SpaceSim } from "space-sim-shared";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {

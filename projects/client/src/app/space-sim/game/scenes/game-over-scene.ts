@@ -1,7 +1,7 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants, GameScoreTracker, GameStats, Helpers } from "space-sim-server";
+import { Constants, GameScoreTracker, GameStats, Helpers } from "space-sim-shared";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,

@@ -1,7 +1,6 @@
 import { GameServerEngine } from "phaser-game-server-engine";
-import { GameMapOptions } from "./map/game-map-options";
+import { GameMapOptions, SpaceSim } from "space-sim-shared";
 import { BattleRoyaleScene } from "./scenes/battle-royale-scene";
-import { SpaceSim } from "./space-sim";
 
 export class SpaceSimGameEngine extends GameServerEngine {
     private static readonly MAP_WIDTH = 50; // tiles, not pixels

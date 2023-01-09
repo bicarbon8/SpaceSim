@@ -1,4 +1,4 @@
-import { GameObjectPlus } from "space-sim-server/src/app/interfaces/game-object-plus";
+import { GameObjectPlus } from "../interfaces/game-object-plus";
 
 export module Animations {
     /**

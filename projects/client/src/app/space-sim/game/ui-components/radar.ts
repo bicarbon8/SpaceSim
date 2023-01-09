@@ -1,4 +1,4 @@
-import { Constants, Helpers } from "space-sim-server";
+import { Constants, Helpers } from "space-sim-shared";
 import { Camera, CameraOptions } from "./camera";
 
 export type RadarOptions = Omit<CameraOptions, 'name' | 'zoom'> & {

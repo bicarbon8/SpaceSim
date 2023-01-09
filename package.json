@@ -1,6 +1,7 @@
 {
     "name": "space-sim",
     "workspaces": [
+        "projects/shared",
         "projects/server",
         "projects/client"
     ],

@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameStats, GameScoreTracker, Exploder, Animations } from "space-sim-server";
+import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameStats, GameScoreTracker, Exploder, Animations } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";

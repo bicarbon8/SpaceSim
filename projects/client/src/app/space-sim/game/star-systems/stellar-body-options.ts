@@ -1,4 +1,4 @@
-import { NumberOrRange } from "space-sim-server";
+import { NumberOrRange } from "space-sim-shared";
 
 export type StellarBodyOptions = {
     spriteName: 'sun' | 'mercury' | 'venus' | 'asteroids';

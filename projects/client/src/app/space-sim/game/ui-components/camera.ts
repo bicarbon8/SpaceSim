@@ -1,4 +1,4 @@
-import { GameObjectPlus, HasLocation, Helpers } from "space-sim-server";
+import { GameObjectPlus, HasLocation, Helpers } from "space-sim-shared";
 
 export type CameraOptions = Phaser.Types.Math.Vector2Like & {
     camera?: Phaser.Cameras.Scene2D.Camera;

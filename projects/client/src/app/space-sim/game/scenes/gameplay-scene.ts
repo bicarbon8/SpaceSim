@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { Constants, Exploder, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, SpaceSim } from "space-sim-server";
+import { Constants, Exploder, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, SpaceSim } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";

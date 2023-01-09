@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { HasLocation, Helpers, Ship, Updatable, Constants } from "space-sim-server";
+import { HasLocation, Helpers, Ship, Updatable, Constants } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 
 export class MouseTracker implements HasLocation, Updatable {

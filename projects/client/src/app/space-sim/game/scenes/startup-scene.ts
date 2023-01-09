@@ -1,7 +1,7 @@
 import { Card, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants, Helpers, SpaceSimPlayerData } from "space-sim-server";
+import { Constants, Helpers, SpaceSimPlayerData } from "space-sim-shared";
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
 import getBrowserFingerprint from "get-browser-fingerprint";

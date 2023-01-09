@@ -31,7 +31,7 @@
     "phaser-ui-components": "^3.0.0",
     "rxjs": "~6.6.0",
     "socket.io-client": "^4.5.4",
-    "space-sim-server": "^1.0.0",
+    "space-sim-shared": "^1.0.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.11.4"
   },

@@ -1,4 +1,4 @@
-import { Helpers, Constants, Ship } from "space-sim-server";
+import { Helpers, Constants, Ship } from "space-sim-shared";
 import { InputController } from "./input-controller";
 import { GridLayout, LayoutContent, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";

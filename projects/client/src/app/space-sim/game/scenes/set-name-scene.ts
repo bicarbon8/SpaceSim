@@ -1,6 +1,6 @@
 import { GridLayout, LayoutContainer, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
-import { Helpers } from "space-sim-server";
+import { Helpers } from "space-sim-shared";
 import { environment } from "src/environments/environment";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {

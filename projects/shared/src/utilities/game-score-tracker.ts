@@ -1,4 +1,4 @@
-import { ShipOptions } from "../ships/ship-options";
+import { ShipOptions } from "../ships/ship";
 import { SpaceSim } from "../space-sim";
 import { Constants } from "./constants";
 import { Helpers } from "./helpers";

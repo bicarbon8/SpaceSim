@@ -1,4 +1,4 @@
-import { HasGameObject, Updatable, Constants, Helpers } from "space-sim-server";
+import { HasGameObject, Updatable, Constants, Helpers } from "space-sim-shared";
 import { StellarBodyOptions } from "./stellar-body-options";
 
 export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.Sprite> {
