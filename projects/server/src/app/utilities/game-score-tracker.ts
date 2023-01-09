@@ -35,6 +35,7 @@ export module GameScoreTracker {
 
     export function start(opts: ShipOptions): void {
         if (opts) {
+            GameScoreTracker.stop(opts.id);
             GameScoreTracker.updateStats(opts.id, {
                 shipId: opts.id,
                 elapsed: 0,

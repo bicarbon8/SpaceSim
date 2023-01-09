@@ -161,7 +161,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         let glow: Phaser.GameObjects.Sprite;
         Helpers.trycatch(() => {
             glow = this.scene.add.sprite(0, 0, 'flares', Constants.UI.SpriteMaps.Flares.green);
-        }, 'warn', 'bullet glow texture not loaded', false);
+        }, 'warn', 'bullet glow texture not loaded', 'none');
         glow?.setScale(this.scale);
         const maxScale = this.scale + 0.1;
         this.scene.add.tween({

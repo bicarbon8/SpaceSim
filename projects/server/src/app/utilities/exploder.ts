@@ -23,11 +23,11 @@ export class Exploder {
         this.scene = scene;
 
         Helpers.trycatch(() => this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1}),
-            'warn', 'unable to load explosion sound', false);
+            'warn', 'unable to load explosion sound', 'none');
         Helpers.trycatch(() => this._flareParticleEmitter = this.scene.add.particles('flares'),
-            'warn', 'unable to load flares sprite as particles', false);
+            'warn', 'unable to load flares sprite as particles', 'none');
         Helpers.trycatch(() => this._explosionParticleEmitter = this.scene.add.particles('explosion'),
-            'warn', 'unable to load explosion sprite as particles', false);
+            'warn', 'unable to load explosion sprite as particles', 'none');
     }
 
     explode(options: ExploderOptions): this {

@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameStats, GameScoreTracker, Exploder } from "space-sim-server";
+import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameStats, GameScoreTracker, Exploder, Animations } from "space-sim-server";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -182,13 +182,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             }).on(Constants.Socket.FLICKER_SUPPLY, (id: string) => {
                 const supply = SpaceSim.suppliesMap.get(id);
                 if (supply) {
-                    this.tweens.add({
-                        targets: supply,
-                        loop: -1,
-                        yoyo: true,
-                        duration: 100,
-                        alpha: 0.5
-                    });
+                    Animations.flicker(supply, -1, () => null);
                 }
             }).on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => {
                 GameScoreTracker.updateAllStats(...stats);
@@ -275,6 +269,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
             if (shipOpts.id === SpaceSimClient.player.id) {
+                this._exploder.explode({location: SpaceSimClient.player.config.location});
                 SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH, SpaceSimClient.playerData);
                 this._gameOver();
             }

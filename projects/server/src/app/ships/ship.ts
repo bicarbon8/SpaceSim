@@ -1,4 +1,4 @@
-import { Game, Scene } from "phaser";
+import { Scene } from "phaser";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { Engine } from "./attachments/utility/engine";
@@ -10,7 +10,7 @@ import { Weapons } from "./attachments/offence/weapons";
 import { MachineGun } from "./attachments/offence/machine-gun";
 import { ShipLike } from "../interfaces/ship-like";
 import { IsConfigurable } from "../interfaces/is-configurable";
-import { GameScoreTracker } from "../utilities/game-score-tracker";
+import { Animations } from "../utilities/animations";
 
 export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurable<ShipOptions> {
     /** ShipOptions */
@@ -358,7 +358,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this._updateIntegrityIndicator();
         
         if (!this._shipDamageFlicker?.isPlaying()) {
-            this._shipDamageFlicker = Helpers.flicker(this._rotationContainer, 200, () => {
+            this._shipDamageFlicker = Animations.flicker(this._rotationContainer, 200, () => {
                 this._rotationContainer?.setAlpha(1);
             });
         }
@@ -394,11 +394,11 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
                 } else {
                     text.setText(`${countdownTxt}`);
                     text.setAlpha(1);
-                    Helpers.fadeOut(text, 1000, onComplete);
+                    Animations.fadeOut(text, 1000, onComplete);
                 }
             }
         }
-        Helpers.fadeOut(text, 1000, onComplete);
+        Animations.fadeOut(text, 1000, onComplete);
     }
 
     cancelSelfDestruct(): void {

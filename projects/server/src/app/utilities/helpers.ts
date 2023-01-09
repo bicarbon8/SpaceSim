@@ -80,76 +80,22 @@ export module Helpers {
 
     export async function runAsync<T>(func: () => T): Promise<T> {
         try {
-            return func();
+            return Promise.resolve()
+                .then(func)
+                .catch((err) => {
+                    console.error(err);
+                    return Promise.reject(err);
+                });
         } catch (e) {
             console.error(e);
             return Promise.reject(e);
         }
     }
 
-    /**
-     * fades the passed in `obj` to 0 alpha over the specified `duration` and then calls
-     * the `onComplete` function
-     * @param obj the object to be tweened
-     * @param duration the total amount of time to run the animation
-     * @param onComplete a function to run on completion of the tween
-     */
-    export function fadeOut(obj: GameObjectPlus | Array<GameObjectPlus>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
-        let scene: Phaser.Scene;
-        if (Array.isArray(obj)) {
-            scene = obj[0].scene;
-        } else {
-            scene = obj.scene;
-        }
-        return scene.add.tween({
-            targets: obj,
-            alpha: 0,
-            duration: duration,
-            onComplete: onComplete
-        });
-    }
-
-    /**
-     * fades between 100% and 50% opacity 4 times before fading to 0% opacity
-     * and calling the passed in `onComplete` function
-     * @param obj the objects to be tweened
-     * @param duration the total amount of time for the animation to run
-     * @param onComplete a function to be run on completion
-     */
-    export function flickerOut(obj: GameObjectPlus | Array<GameObjectPlus>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
-        return Helpers.flicker(obj, duration - (duration / 5), () => {
-            Helpers.fadeOut(obj, duration / 5, onComplete);
-        });
-    }
-
-    /**
-     * fades between 100% and 50% and back to 100% opacity 4 times before
-     * calling the passed in `onComplete` function
-     * @param obj the objects to be tweened
-     * @param duration the total amount of time for the animation to run
-     * @param onComplete a function to be run on completion
-     */
-    export function flicker(obj: GameObjectPlus | Array<GameObjectPlus>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
-        let scene: Phaser.Scene;
-        if (Array.isArray(obj)) {
-            scene = obj[0].scene;
-        } else {
-            scene = obj.scene;
-        }
-        return scene.add.tween({
-            targets: obj,
-            alpha: 0.5,
-            yoyo: true,
-            loop: 4,
-            duration: duration / 4,
-            onComplete: onComplete
-        });
-    }
-
     export function trycatch(func: () => void, 
         level: 'debug' | 'info' | 'warn' | 'error' | 'none' = 'debug',
         message: string = '', 
-        includeError: boolean = true): void {
+        errorFormat: 'none' | 'message' | 'stack' | 'all' = 'message'): void {
         try {
             func();
         } catch (e) {
@@ -170,10 +116,23 @@ export module Helpers {
                         out = console.error;
                         break;
                 }
-                if (includeError) {
-                    out(message, e);
-                } else {
-                    out(message);
+                if (errorFormat !== 'none') {
+                    switch(errorFormat) {
+                        case 'stack':
+                            const s = (e as Error)?.stack ?? e;
+                            message = (message?.length) ? `${message}\n${s}` : s;
+                            out(message);
+                            break;
+                        case 'all':
+                            out(message, e);
+                            break;
+                        case 'message':
+                        default:
+                            const m = (e as Error)?.message ?? e;
+                            message = (message?.length) ? `${message}\n${m}` : m;
+                            out(message);
+                            break;
+                    }
                 }
             }
         }
