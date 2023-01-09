@@ -31,6 +31,9 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     private _exploder: Exploder;
 
+    private _sendShipUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
+    private _sendSupplyUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
+
     preload(): void {
         this.load.image('weapons-1', `assets/sprites/ship-parts/weapons-1.png`);
         this.load.image('wings-1', `assets/sprites/ship-parts/wings-1.png`);
@@ -57,9 +60,22 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     update(time: number, delta: number): void {
+        this._sendShipUpdateAt += delta;
+        this._sendSupplyUpdateAt += delta;
+
         Helpers.trycatch(() => SpaceSim.players().forEach(ship => ship?.update(time, delta)));
-        Helpers.trycatch(() => this._sendPlayersUpdate());
-        Helpers.trycatch(() => this._sendSuppliesUpdate());
+        
+        // 30 fps
+        if (this._sendShipUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
+            this._sendShipUpdateAt = 0;
+            Helpers.trycatch(() => this._sendPlayersUpdate());
+        }
+
+        // 15 fps
+        if (this._sendSupplyUpdateAt >= Constants.Timing.LOW_PRI_UPDATE_FREQ) {
+            this._sendSupplyUpdateAt = 0;
+            Helpers.trycatch(() => this._sendSuppliesUpdate());
+        }
     }
 
     private _setupSocketEventHandling(): void {
@@ -184,14 +200,13 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 }
             }
             
+            io.emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
             console.debug(`sending player death notice to clients for ship ${opts.id}`);
             io.emit(Constants.Socket.PLAYER_DEATH, opts.id);
             this._expelSupplies(opts);
 
             console.debug(`calling ship.destroy(false) for ship: ${opts.id}, with name: ${opts.name}`);
             player?.destroy(false); // don't emit event locally
-            
-            io.emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
             
             // locate user fingerprint associated with ship.id and update count
             Helpers.trycatch(() => {

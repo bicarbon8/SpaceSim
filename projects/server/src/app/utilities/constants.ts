@@ -64,4 +64,9 @@ export module Constants {
         export const REMOVE_SUPPLY = 'remove-supply';
         export const UPDATE_STATS = 'update-stats';
     }
+    export module Timing {
+        export const HIGH_PRI_UPDATE_FREQ = 1000/60; // 60 fps
+        export const MED_PRI_UPDATE_FREQ = 1000/30; // 30 fps
+        export const LOW_PRI_UPDATE_FREQ = 1000/15; // 15 fps
+    }
 }

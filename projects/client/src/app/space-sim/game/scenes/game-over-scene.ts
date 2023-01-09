@@ -91,18 +91,29 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _createScore(): void {
-        const id = SpaceSimClient.player.id;
-        const stats: GameStats = GameScoreTracker.getStats(id);
         const scoreText: Phaser.GameObjects.Text = this.make.text({
             text: '', 
             style: {font: '30px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4}
         }, false);
-        scoreText.setText([
-            `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`,
-            `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
-            `Accuracy: ${stats.accuracy.toFixed(0)}%`,
-            `Kills: ${GameScoreTracker.destroyedCount(id)}`
-        ]);
+        
+        if (SpaceSimClient.mode === 'singleplayer') {
+            const id = SpaceSimClient.player.id;
+            const stats: GameStats = GameScoreTracker.getStats(id);
+            scoreText.setText([
+                `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`,
+                `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
+                `Accuracy: ${stats.accuracy.toFixed(0)}%`,
+                `Kills: ${GameScoreTracker.destroyedCount(id)}`
+            ]);
+        } else {
+            const leaderboard = GameScoreTracker.getLeaderboard();
+            scoreText.setText([
+                'Leaderboard:',
+                ...leaderboard.map((s, i) => `${i+1}. ${s.name} - ${s.score}`)
+                .splice(0, 10)
+            ]);
+        }
+
         this._layout.addContents(scoreText);
     }
 

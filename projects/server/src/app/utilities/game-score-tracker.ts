@@ -20,6 +20,7 @@ export type HitsOnTarget = {
 
 export type GameStats = {
     shipId: string;
+    playerName: string;
     elapsed: number;
     opponentsDestroyed: Array<Destroyed>;
     shotsFired: number;
@@ -30,6 +31,11 @@ export type GameStats = {
     fuelRemaining: number;
 };
 
+export type UserScore = {
+    name: string;
+    score: number;
+};
+
 export module GameScoreTracker {
     const _stats = new Map<string, Partial<GameStats>>();
 
@@ -38,6 +44,7 @@ export module GameScoreTracker {
             GameScoreTracker.stop(opts.id);
             GameScoreTracker.updateStats(opts.id, {
                 shipId: opts.id,
+                playerName: opts.name,
                 elapsed: 0,
                 opponentsDestroyed: new Array<Destroyed>(),
                 shotsFired: 0,
@@ -127,12 +134,25 @@ export module GameScoreTracker {
         score += (stats.integrityRemaining / Constants.Ship.MAX_INTEGRITY) * 100;
         score += (stats.fuelRemaining / Constants.Ship.MAX_FUEL) * 100;
 
-        return score;
+        return Number.parseFloat(score.toFixed(1));
+    }
+    export function getLeaderboard(): Array<UserScore> {
+        const userScoresArr = new Array<UserScore>();
+        for (var id of _stats.keys()) {
+            const stats = GameScoreTracker.getStats(id);
+            if (stats && stats.playerName) {
+                const score = GameScoreTracker.getScore(id);
+
+                userScoresArr.push({name: stats.playerName, score: score});
+            }
+        }
+        return userScoresArr.sort((a, b) => a.score - b.score).reverse();
     }
     export function getStats(id: string): GameStats {
         const stats = _stats.get(id);
         return {
             shipId: id,
+            playerName: stats.playerName,
             elapsed: SpaceSim.game.getTime(),
             ammoRemaining: stats.ammoRemaining ?? 0,
             integrityRemaining: stats.integrityRemaining ?? 0,
