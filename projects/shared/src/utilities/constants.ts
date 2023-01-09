@@ -1,5 +1,6 @@
 export module Constants {
     export module Ship {
+        export const RADIUS = 16;
         export const MAX_INTEGRITY = 100;
         export const MAX_FUEL = 100;
         export const MAX_FUEL_PER_CONTAINER = 20;
@@ -19,6 +20,11 @@ export module Constants {
         export module Weapons {
             export const MAX_AMMO = 500;
             export const MAX_AMMO_PER_CONTAINER = 100;
+        }
+        export module Supplies {
+            export const RADIUS = 16;
+            export const BOUNCE = 0.5;
+            export const MASS = 0.1;
         }
     }
     export module UI {

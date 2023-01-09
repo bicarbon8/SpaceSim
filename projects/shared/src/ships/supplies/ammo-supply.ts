@@ -13,14 +13,4 @@ export class AmmoSupply extends ShipSupply {
         }
         this.destroy();
     }
-    
-    protected _createChildren(): this {
-        const sprite = this.scene.make.sprite({
-            key: 'ammo',
-            origin: 0.5
-        }, false);
-        this.add(sprite);
-        
-        return this;
-    }
 }

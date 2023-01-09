@@ -1,9 +1,5 @@
 import { ShipOptions } from "../ships/ship";
-import { AmmoSupply } from "../ships/supplies/ammo-supply";
-import { CoolantSupply } from "../ships/supplies/coolant-supply";
-import { FuelSupply } from "../ships/supplies/fuel-supply";
-import { RepairsSupply } from "../ships/supplies/repairs-supply";
-import { ShipSupply } from "../ships/supplies/ship-supply";
+import { ShipSupplyOptions } from "../ships/supplies/ship-supply";
 import { Constants } from "./constants";
 import { Helpers } from "./helpers";
 
@@ -66,8 +62,8 @@ export class Exploder {
         return this;
     }
 
-    emitSupplies(shipOpts: ShipOptions): Array<ShipSupply> {
-        const supplies = new Array<ShipSupply>();
+    emitSupplies(shipOpts: ShipOptions): Array<ShipSupplyOptions> {
+        const supplies = new Array<ShipSupplyOptions>();
         const loc = shipOpts.location;
         let remainingFuel = shipOpts.remainingFuel / 2;
         const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / Constants.Ship.MAX_FUEL_PER_CONTAINER);
@@ -76,10 +72,11 @@ export class Exploder {
                 ? Constants.Ship.MAX_FUEL_PER_CONTAINER 
                 : remainingFuel;
             remainingFuel -= amount;
-            const supply = new FuelSupply(this.scene, {
+            const supply: ShipSupplyOptions = {
+                supplyType: 'fuel',
                 amount: amount,
                 location: loc
-            });
+            };
             supplies.push(supply);
         }
         let remainingAmmo = shipOpts.remainingAmmo / 2;
@@ -89,24 +86,27 @@ export class Exploder {
                 ? Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
                 : remainingAmmo;
             remainingAmmo -= amount;
-            const supply = new AmmoSupply(this.scene, {
+            const supply: ShipSupplyOptions = {
+                supplyType: 'ammo',
                 amount: amount,
                 location: loc
-            });
+            };
             supplies.push(supply);
         }
         if (Phaser.Math.RND.between(0, 1)) {
-            const supply = new CoolantSupply(this.scene, {
+            const supply: ShipSupplyOptions = {
+                supplyType: 'coolant',
                 amount: 40,
                 location: loc
-            });
+            };
             supplies.push(supply);
         }
         if (Phaser.Math.RND.between(0, 1)) {
-            const supply = new RepairsSupply(this.scene, {
+            const supply: ShipSupplyOptions = {
+                supplyType: 'repairs',
                 amount: 20,
                 location: loc
-            });
+            };
             supplies.push(supply);
         }
 

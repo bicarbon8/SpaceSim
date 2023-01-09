@@ -9,7 +9,7 @@ import { Weapons } from "./attachments/offence/weapons";
 import { MachineGun } from "./attachments/offence/machine-gun";
 import { ShipLike } from "../interfaces/ship-like";
 import { IsConfigurable } from "../interfaces/is-configurable";
-import { Animations } from "../utilities/animations";
+import { Animations } from "../../../client/src/app/space-sim/game/utilities/animations";
 import { PhysicsObject } from "../interfaces/physics-object";
 
 export type ShipOptions = Partial<PhysicsObject> & {
@@ -49,11 +49,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
 
     private _positionContainer: Phaser.GameObjects.Container; // used for position and physics
     private _rotationContainer: Phaser.GameObjects.Container; // used for rotation
-    private _shipIntegrityIndicator: LayoutContainer;
-    private _shipHeatIndicator: Phaser.GameObjects.Sprite;
-    private _shipOverheatIndicator: Phaser.GameObjects.Text;
     private _lastDamagedBy: DamageOptions[];
-    private _shipDamageFlicker: Phaser.Tweens.Tween;
     private _minimapSprite: Phaser.GameObjects.Sprite;
 
     private _selfDestruct: boolean;
@@ -101,12 +97,40 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
             remainingAmmo: this.getWeapons().remainingAmmo,
             temperature: this.temperature,
             mass: this.mass,
-            name: this.name
+            name: this.name,
+            weaponsKey: this.weaponsKey,
+            wingsKey: this.wingsKey,
+            cockpitKey: this.cockpitKey,
+            engineKey: this.engineKey
         };
     }
 
     get active(): boolean {
         return this._active && this.getGameObject()?.active && this.getPhysicsBody()?.enable;
+    }
+
+    get positionContainer(): Phaser.GameObjects.Container {
+        return this._positionContainer;
+    }
+
+    get rotationContainer(): Phaser.GameObjects.Container {
+        return this._rotationContainer;
+    }
+
+    get weaponsKey(): number {
+        return this._weaponsKey;
+    }
+
+    get wingsKey(): number {
+        return this._wingsKey;
+    }
+
+    get cockpitKey(): number {
+        return this._cockpitKey;
+    }
+
+    get engineKey(): number {
+        return this._engineKey;
     }
 
     get location(): Phaser.Math.Vector2 {
@@ -142,22 +166,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
             .map(d => {
                 return {...d} as DamageOptions;
             });
-    }
-
-    get weaponsKey(): number {
-        return this._weaponsKey;
-    }
-
-    get wingsKey(): number {
-        return this._wingsKey;
-    }
-
-    get cockpitKey(): number {
-        return this._cockpitKey;
-    }
-
-    get engineKey(): number {
-        return this._engineKey;
     }
     
     getWeapons(): Weapons {
@@ -197,24 +205,11 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
      */
     private _checkOverheatCondition(time: number, delta: number): void {
         if (this.active) {
-            const alpha = this._temperature / Constants.Ship.MAX_SAFE_TEMPERATURE;
-            this._shipHeatIndicator.setAlpha(Math.min(alpha, 1));
-            
             if (this.isOverheating()) {
                 if (this._temperature > Constants.Ship.MAX_TEMPERATURE) {
                     this.destroy(); // we are dead
                     return;
                 } else {
-                    if (!this.scene.tweens.getTweensOf(this._shipOverheatIndicator)?.length) {
-                        this._shipOverheatIndicator.setAlpha(1);
-                        this.scene.tweens.add({
-                            targets: this._shipOverheatIndicator,
-                            alpha: 0,
-                            yoyo: true,
-                            duration: 200,
-                            loop: -1
-                        });
-                    }
                     // reduce integrity at a fixed rate of 1 per second
                     let damage: number = 1 * (delta / 1000);
                     this.sustainDamage({
@@ -223,10 +218,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
                         message: 'ship overheat damage'
                     });
                 }
-            } else {
-                // ensure "OVERHEAT" warning is off
-                this.scene.tweens.killTweensOf(this._shipOverheatIndicator);
-                this._shipOverheatIndicator.setAlpha(0);
             }
 
             let amountCooled: number = Constants.Ship.COOLING_RATE_PER_SECOND * (delta / 1000);
@@ -366,17 +357,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
             this.destroy(); // we are dead
             return;
         }
-
-        // keep the health bar visible by killing any active fade out tweens
-        this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
-
-        this._updateIntegrityIndicator();
-        
-        if (!this._shipDamageFlicker?.isPlaying()) {
-            this._shipDamageFlicker = Animations.flicker(this._rotationContainer, 200, () => {
-                this._rotationContainer?.setAlpha(1);
-            });
-        }
     }
 
     repair(amount: number): void {
@@ -384,7 +364,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         if (this.integrity > Constants.Ship.MAX_INTEGRITY) {
             this._integrity = Constants.Ship.MAX_INTEGRITY;
         }
-        this._updateIntegrityIndicator();
     }
 
     /**
@@ -426,12 +405,10 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         }
 
         this._active = false;
-        try {
+        Helpers.trycatch(() => {
             this.getGameObject()?.setActive(false);
             this.getGameObject()?.destroy();
-        } catch (e) {
-            /* ignore */
-        }
+        }, 'warn', 'error destroying ship game object', 'message');
         this._positionContainer = null;
     }
 
@@ -439,35 +416,8 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         // create container as parent to all ship parts
         let loc = options?.location ?? Helpers.vector2();
         this._positionContainer = this.scene.add.container(loc.x, loc.y);
-        this._positionContainer.setDepth(Constants.UI.Layers.PLAYER);
-
-        this._weaponsKey = options.weaponsKey ?? 1;
-        this._wingsKey = options.wingsKey ?? 1;
-        this._cockpitKey = options.cockpitKey ?? 1;
-        this._engineKey = options.engineKey ?? 1;
-
-        // create ship sprite and set container bounds based on sprite size
-        const weaponsSprite = this.scene.make.sprite({
-            x: 0,
-            y: 0,
-            key: `weapons-${this.weaponsKey}`
-        }, false);
-        const wingsSprite = this.scene.make.sprite({
-            x: 0,
-            y: 0,
-            key: `wings-${this.wingsKey}`
-        }, false);
-        const cockpitSprite = this.scene.make.sprite({
-            x: 0,
-            y: 0,
-            key: `cockpit-${this.cockpitKey}`
-        }, false);
-        const engineSprite = this.scene.make.sprite({
-            x: 0,
-            y: 0,
-            key: `engine-${this.engineKey}`
-        }, false);
-        this._rotationContainer = this.scene.add.container(0, 0, [weaponsSprite, wingsSprite, cockpitSprite, engineSprite]);
+        
+        this._rotationContainer = this.scene.add.container(0, 0);
         this._positionContainer.add(this._rotationContainer);
         
         const containerBounds: Phaser.Geom.Rectangle = this._positionContainer.getBounds();
@@ -476,103 +426,18 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         // setup physics for container
         this.scene.physics.add.existing(this._positionContainer);
 
-        this.getPhysicsBody().setCircle(16);
+        this.getPhysicsBody().setCircle(Constants.Ship.RADIUS);
         this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setBounce(0.2, 0.2);
         this.getPhysicsBody().setMaxSpeed(Constants.Ship.MAX_SPEED);
 
-        this._createIntegrityIndicator();
-
-        this._createHeatIndicator();
-
-        this._createOverheatIndicator();
-
-        this._createNameIndicator();
+        this._weaponsKey = options.weaponsKey ?? 1;
+        this._wingsKey = options.wingsKey ?? 1;
+        this._cockpitKey = options.cockpitKey ?? 1;
+        this._engineKey = options.engineKey ?? 1;
 
         this._engine = new Engine(this);
         this._weapons = new MachineGun(this);
-
-        this._minimapSprite = this.scene.make.sprite({
-            x: 0,
-            y: 0,
-            key: 'minimap-player'
-        }, true);
-        this._positionContainer.add(this._minimapSprite)
-            .bringToTop(this._minimapSprite);
-    }
-
-    private _createIntegrityIndicator(): void {
-        this._shipIntegrityIndicator = new LayoutContainer(this.scene, {
-            y: -30,
-            padding: 1,
-            width: 102,
-            height: 6,
-            alignment: {horizontal: 'left'},
-            backgroundStyles: {fillStyle: {color: 0xffffff}}
-        });
-        this._shipIntegrityIndicator.setAlpha(0); // only visible when damage sustained
-        this._positionContainer.add(this._shipIntegrityIndicator);
-    }
-
-    private _createHeatIndicator(): void {
-        this._shipHeatIndicator = this.scene.add.sprite(0, 0, 'overheat-glow');
-        this._shipHeatIndicator.setAlpha(0); // no heat
-        this._positionContainer.add(this._shipHeatIndicator);
-        this._positionContainer.sendToBack(this._shipHeatIndicator);
-        this.scene.tweens.add({
-            targets: this._shipHeatIndicator,
-            scale: 1.05,
-            angle: 45,
-            yoyo: true,
-            duration: 500,
-            loop: -1
-        });
-    }
-
-    private _createOverheatIndicator(): void {
-        this._shipOverheatIndicator = this.scene.add.text(0, -75, 'OVERHEAT', {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4});
-        this._shipOverheatIndicator.setAlpha(0);
-        this._shipOverheatIndicator.setX(-this._shipOverheatIndicator.width / 2);
-        this._positionContainer.add(this._shipOverheatIndicator);
-    }
-
-    private _updateIntegrityIndicator(): void {
-        if (this._shipIntegrityIndicator) {
-            this._shipIntegrityIndicator.removeContent(true);
-
-            let square: Phaser.GameObjects.Graphics = this.scene.add.graphics({fillStyle: {color: 0xff6060}});
-            square.fillRect(-Math.floor(this.integrity/2), -2, this.integrity, 4);
-            let squareContainer: Phaser.GameObjects.Container = this.scene.add.container(0, 0, [square]);
-            squareContainer.setSize(this.integrity, 4);
-            this._shipIntegrityIndicator.setContent(squareContainer);
-
-            this._shipIntegrityIndicator.setAlpha(1); // make visible
-            this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
-            this.scene.tweens.add({ // fade out after 5 seconds
-                targets: [this._shipIntegrityIndicator],
-                alpha: 0,
-                yoyo: false,
-                loop: 0,
-                delay: 5000,
-                duration: 1000
-            });
-        }
-    }
-
-    private _createNameIndicator(): void {
-        const txt = this.scene.make.text({
-            text: this.name,
-            style: {
-                font: '20px Courier', 
-                color: '#ffffff',
-                stroke: '#000000',
-                strokeThickness: 1
-            },
-            x: 0,
-            y: 30 // under the ship
-        });
-        txt.setX(-(txt.width / 2));
-        this._positionContainer.add(txt);
     }
 
     private _updateLastDamagedBy(damageOpts: DamageOptions): void {

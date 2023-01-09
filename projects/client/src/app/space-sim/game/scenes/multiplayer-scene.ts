@@ -1,12 +1,18 @@
 import * as Phaser from "phaser";
-import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameStats, GameScoreTracker, Exploder, Animations } from "space-sim-shared";
+import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, GameStats, GameScoreTracker, Exploder } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { StellarBodyOptions } from "../star-systems/stellar-body-options";
+import { StellarBodyOptions } from "../star-systems/stellar-body";
 import { Resizable } from "../interfaces/resizable";
 import { Camera } from "../ui-components/camera";
 import { Radar } from "../ui-components/radar";
+import { PlayerShip } from "../ships/player-ship";
+import { PlayerAmmoSupply } from "../ships/supplies/player-ammo-supply";
+import { PlayerCoolantSupply } from "../ships/supplies/player-coolant-supply";
+import { PlayerFuelSupply } from "../ships/supplies/player-fuel-supply";
+import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
+import { Animations } from "../utilities/animations";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -153,16 +159,16 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                         // or create new ship if doesn't already exist
                         switch (o.supplyType) {
                             case 'ammo':
-                                supply = new AmmoSupply(this, o);
+                                supply = new PlayerAmmoSupply(this, o);
                                 break;
                             case 'coolant':
-                                supply = new CoolantSupply(this, o);
+                                supply = new PlayerCoolantSupply(this, o);
                                 break;
                             case 'fuel':
-                                supply = new FuelSupply(this, o);
+                                supply = new PlayerFuelSupply(this, o);
                                 break;
                             case 'repairs':
-                                supply = new RepairsSupply(this, o);
+                                supply = new PlayerRepairsSupply(this, o);
                                 break;
                             default:
                                 console.warn(`unknown supplyType of ${o.supplyType} provided`);
@@ -232,7 +238,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                     ship?.configure(o);
                 } else {
                     // or create new ship if doesn't already exist
-                    ship = new Ship(this, {
+                    ship = new PlayerShip(this, {
                         ...o,
                         weaponsKey: Phaser.Math.RND.between(1, 3),
                         wingsKey: Phaser.Math.RND.between(1, 3),

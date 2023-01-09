@@ -1,4 +1,4 @@
-import { GameObjectPlus } from "../interfaces/game-object-plus";
+import { GameObjectPlus } from "../../../../../../shared/src/interfaces/game-object-plus";
 
 export module Animations {
     /**

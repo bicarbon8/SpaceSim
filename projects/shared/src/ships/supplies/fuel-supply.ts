@@ -12,14 +12,4 @@ export class FuelSupply extends ShipSupply {
         }
         this.destroy();
     }
-    
-    protected _createChildren(): this {
-        const sprite = this.scene.make.sprite({
-            key: 'fuel-canister',
-            origin: 0.5
-        }, false);
-        this.add(sprite);
-        
-        return this;
-    }
 }

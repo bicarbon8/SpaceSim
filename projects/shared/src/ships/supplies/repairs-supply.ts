@@ -12,14 +12,4 @@ export class RepairsSupply extends ShipSupply {
         }
         this.destroy();
     }
-    
-    protected _createChildren(): this {
-        const sprite = this.scene.make.sprite({
-            key: 'repairs-canister',
-            origin: 0.5
-        }, false);
-        this.add(sprite);
-        
-        return this;
-    }
 }

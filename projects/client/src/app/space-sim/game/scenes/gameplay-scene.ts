@@ -1,13 +1,18 @@
 import * as Phaser from "phaser";
-import { Constants, Exploder, GameMap, GameObjectPlus, GameScoreTracker, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, SpaceSim } from "space-sim-shared";
+import { AmmoSupply, Constants, Exploder, GameMap, GameObjectPlus, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, ShipSupplyOptions, SpaceSim } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { StellarBodyOptions } from "../star-systems/stellar-body-options";
+import { StellarBodyOptions } from "../star-systems/stellar-body";
 import { Resizable } from "../interfaces/resizable";
 import { AiController } from "../controllers/ai-controller";
 import { Radar } from "../ui-components/radar";
 import { Camera } from "../ui-components/camera";
+import { PlayerShip } from "../ships/player-ship";
+import { PlayerAmmoSupply } from "../ships/supplies/player-ammo-supply";
+import { PlayerCoolantSupply } from "../ships/supplies/player-coolant-supply";
+import { PlayerFuelSupply } from "../ships/supplies/player-fuel-supply";
+import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -185,7 +190,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
-            let p = new Ship(this, {
+            let p = new PlayerShip(this, {
                 location: pos,
                 weaponsKey: Phaser.Math.RND.between(1, 3),
                 wingsKey: Phaser.Math.RND.between(1, 3),
@@ -381,16 +386,34 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
     }
 
     private _expelSupplies(shipCfg: ShipOptions): void {
-        const supplies = this._exploder.emitSupplies(shipCfg);
-        for (var i=0; i<supplies.length; i++) {
-            let supply = supplies[i];
-            this._addSupplyCollisionPhysicsWithPlayers(supply);
+        const supplyOpts = this._exploder.emitSupplies(shipCfg);
+        for (var i=0; i<supplyOpts.length; i++) {
+            let options = supplyOpts[i];
+            let supply = this._addSupplyCollisionPhysicsWithPlayers(options);
             SpaceSimClient.radar.ignore(supply);
             SpaceSim.suppliesMap.set(supply.id, supply);
         }
     }
 
-    private _addSupplyCollisionPhysicsWithPlayers(supply: ShipSupply): void {
+    private _addSupplyCollisionPhysicsWithPlayers(options: ShipSupplyOptions): ShipSupply {
+        let supply: ShipSupply;
+        switch(options.supplyType) {
+            case 'ammo':
+                supply = new PlayerAmmoSupply(this, options);
+                break;
+            case 'coolant':
+                supply = new PlayerCoolantSupply(this, options);
+                break;
+            case 'fuel':
+                supply = new PlayerFuelSupply(this, options);
+                break;
+            case 'repairs':
+                supply = new PlayerRepairsSupply(this, options);
+                break;
+            default:
+                console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
+                break;
+        }
         this.physics.add.collider(supply, SpaceSim.players()
             .filter(p => p?.active)
             .map(o => o?.getGameObject()), 
@@ -413,5 +436,6 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 supply.destroy();
             }
         );
+        return supply;
     }
 }

@@ -22,15 +22,11 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         super(scene, options.location.x, options.location.y);
         this.scene.add.existing(this);
         this.setDepth(Constants.UI.Layers.PLAYER);
-
-        this._createChildren();
-
-        this.updateSize();
         
         this.scene.physics.add.existing(this);
-        this._body.setMass(0.1);
-        this._body.setCircle(this.width / 2);
-        this._body.setBounce(0.5, 0.5);
+        this._body.setMass(Constants.Ship.Supplies.MASS);
+        this._body.setCircle(Constants.Ship.Supplies.RADIUS);
+        this._body.setBounce(Constants.Ship.Supplies.BOUNCE, Constants.Ship.Supplies.BOUNCE);
 
         this.configure(options);
 
@@ -86,16 +82,5 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         return this;
     }
 
-    protected abstract _createChildren(): this;
-
     abstract apply(ship: ShipLike): void;
-
-    updateSize(): this {
-        const bounds: Phaser.Geom.Rectangle = this.getBounds();
-
-        //set the container size
-        this.setSize(bounds.width, bounds.height);
-
-        return this;
-    }
 }

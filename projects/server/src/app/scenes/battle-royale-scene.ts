@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
 import { Server, Socket } from "socket.io";
-import { GameMap, Ship, ShipOptions, ShipSupply, SpaceSim, SpaceSimPlayerData, Constants, Exploder, GameScoreTracker, Helpers } from "space-sim-shared";
+import { GameMap, Ship, ShipOptions, ShipSupply, SpaceSim, SpaceSimPlayerData, Constants, Exploder, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply } from "space-sim-shared";
 import { SpaceSimGameEngine } from "../space-sim-game-engine";
 
 declare const io: Server;
@@ -257,16 +257,34 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     private _expelSupplies(shipCfg: ShipOptions): void {
         console.debug(`expelling supplies at:`, shipCfg.location);
-        const supplies = this._exploder.emitSupplies(shipCfg);
-        for (const supply of supplies) {
-            this._addSupplyCollisionPhysicsWithPlayers(supply);
+        const supplyOpts = this._exploder.emitSupplies(shipCfg);
+        for (const options of supplyOpts) {
+            const supply = this._addSupplyCollisionPhysicsWithPlayers(options);
             SpaceSim.suppliesMap.set(supply.id, supply);
             this._cleanupSupply(supply);
         }
-        console.debug(`${supplies.length} supplies expelled from ship ${shipCfg.id}`);
+        console.debug(`${supplyOpts.length} supplies expelled from ship ${shipCfg.id}`);
     }
 
-    private _addSupplyCollisionPhysicsWithPlayers(supply: ShipSupply): void {
+    private _addSupplyCollisionPhysicsWithPlayers(options: ShipSupplyOptions): ShipSupply {
+        let supply: ShipSupply;
+        switch(options.supplyType) {
+            case 'ammo':
+                supply = new AmmoSupply(this, options);
+                break;
+            case 'coolant':
+                supply = new CoolantSupply(this, options);
+                break;
+            case 'fuel':
+                supply = new FuelSupply(this, options);
+                break;
+            case 'repairs':
+                supply = new RepairsSupply(this, options);
+                break;
+            default:
+                console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
+                break;
+        }
         this.physics.add.collider(supply, SpaceSim.players()
             .filter(p => p?.active)
             .map(o => o?.getGameObject()), 
@@ -290,6 +308,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 supply.destroy();
             }
         );
+        return supply;
     }
 
     private _addPlayerCollisionPhysicsWithSupplies(ship: Ship): void {
