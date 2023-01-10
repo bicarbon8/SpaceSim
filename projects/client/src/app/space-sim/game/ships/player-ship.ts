@@ -15,6 +15,10 @@ export class PlayerShip extends Ship {
         this._addVisualsToGameObject(options);
     }
 
+    get radarSprite(): Phaser.GameObjects.Sprite {
+        return this._radarSprite;
+    }
+
     override update(time: number, delta: number): void {
         super.update(time, delta);
 
@@ -24,15 +28,17 @@ export class PlayerShip extends Ship {
     override sustainDamage(damageOpts: DamageOptions): void {
         super.sustainDamage(damageOpts);
 
-        // keep the health bar visible by killing any active fade out tweens
-        this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
+        if (this.active) {
+            // keep the health bar visible by killing any active fade out tweens
+            this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
 
-        this._updateIntegrityIndicator();
-        
-        if (!this._shipDamageFlicker?.isPlaying()) {
-            this._shipDamageFlicker = Animations.flicker(this.rotationContainer, 200, () => {
-                this.rotationContainer?.setAlpha(1);
-            });
+            this._updateIntegrityIndicator();
+            
+            if (!this._shipDamageFlicker?.isPlaying()) {
+                this._shipDamageFlicker = Animations.flicker(this.rotationContainer, 200, () => {
+                    this.rotationContainer?.setAlpha(1);
+                });
+            }
         }
     }
 
@@ -42,33 +48,32 @@ export class PlayerShip extends Ship {
         this._updateIntegrityIndicator();
     }
 
-    /**
-     * gradually increases visibility of heat sprite around ship as temperature
-     * increases and displays overhead warning if ship temperature over max safe
-     * value
-     */
-    private _updateOverheatingSpriteAndText(): void {
-        if (this.active) {
-            const alpha = this.temperature / Constants.Ship.MAX_SAFE_TEMPERATURE;
-            this._shipHeatIndicator.setAlpha(Math.min(alpha, 1));
-            
-            if (this.isOverheating()) {
-                if (!this.scene.tweens.getTweensOf(this._shipOverheatIndicator)?.length) {
-                    this._shipOverheatIndicator.setAlpha(1);
-                    this.scene.tweens.add({
-                        targets: this._shipOverheatIndicator,
-                        alpha: 0,
-                        yoyo: true,
-                        duration: 200,
-                        loop: -1
-                    });
+    override selfDestruct(countdownSeconds: number = 3): void {
+        super.selfDestruct(countdownSeconds);
+
+        const remainingTime = this.destroyAt - this.scene.game.getTime();
+        const remainingSeconds = Math.ceil(remainingTime / 1000);
+
+        const text = this.scene.make.text({
+            x: 0, 
+            y: -75, 
+            text: `${remainingSeconds}`,
+            style: {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4}
+        });
+        text.setX(-text.width / 2);
+        this.positionContainer.add(text);
+        const onComplete = () => {
+            if (this.destroyAt) {
+                let countdownTxt: number = Number.parseInt(text.text);
+                countdownTxt--;
+                if (countdownTxt > 0) {
+                    text.setText(`${countdownTxt}`);
+                    text.setAlpha(1);
+                    Animations.fadeOut(text, 1000, onComplete);
                 }
-            } else {
-                // ensure "OVERHEAT" warning is off
-                this.scene.tweens.killTweensOf(this._shipOverheatIndicator);
-                this._shipOverheatIndicator.setAlpha(0);
             }
         }
+        Animations.fadeOut(text, 1000, onComplete);
     }
 
     private _addVisualsToGameObject(options: ShipOptions): void {
@@ -78,22 +83,26 @@ export class PlayerShip extends Ship {
         const weaponsSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
-            key: `weapons-${this.weaponsKey}`
+            key: `weapons-${this.weaponsKey}`,
+            origin: 0.5
         }, false);
         const wingsSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
-            key: `wings-${this.wingsKey}`
+            key: `wings-${this.wingsKey}`,
+            origin: 0.5
         }, false);
         const cockpitSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
-            key: `cockpit-${this.cockpitKey}`
+            key: `cockpit-${this.cockpitKey}`,
+            origin: 0.5
         }, false);
         const engineSprite = this.scene.make.sprite({
             x: 0,
             y: 0,
-            key: `engine-${this.engineKey}`
+            key: `engine-${this.engineKey}`,
+            origin: 0.5
         }, false);
         this.rotationContainer.add([weaponsSprite, wingsSprite, cockpitSprite, engineSprite]);
 
@@ -165,8 +174,37 @@ export class PlayerShip extends Ship {
             .bringToTop(this._radarSprite);
     }
 
+    /**
+     * gradually increases visibility of heat sprite around ship as temperature
+     * increases and displays overhead warning if ship temperature over max safe
+     * value
+     */
+    private _updateOverheatingSpriteAndText(): void {
+        if (this.active) {
+            const alpha = this.temperature / Constants.Ship.MAX_SAFE_TEMPERATURE;
+            this._shipHeatIndicator.setAlpha(Math.min(alpha, 1));
+            
+            if (this.isOverheating()) {
+                if (!this.scene.tweens.getTweensOf(this._shipOverheatIndicator)?.length) {
+                    this._shipOverheatIndicator.setAlpha(1);
+                    this.scene.tweens.add({
+                        targets: this._shipOverheatIndicator,
+                        alpha: 0,
+                        yoyo: true,
+                        duration: 200,
+                        loop: -1
+                    });
+                }
+            } else {
+                // ensure "OVERHEAT" warning is off
+                this.scene.tweens.killTweensOf(this._shipOverheatIndicator);
+                this._shipOverheatIndicator.setAlpha(0);
+            }
+        }
+    }
+
     private _updateIntegrityIndicator(): void {
-        if (this._shipIntegrityIndicator) {
+        if (this.active && this._shipIntegrityIndicator) {
             this._shipIntegrityIndicator.removeContent(true);
 
             let square: Phaser.GameObjects.Graphics = this.scene.add.graphics({fillStyle: {color: 0xff6060}});

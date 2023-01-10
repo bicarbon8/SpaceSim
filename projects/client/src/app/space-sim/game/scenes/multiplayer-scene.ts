@@ -232,23 +232,17 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             this._shipId = id;
         }).on(Constants.Socket.UPDATE_PLAYERS, (shipOpts: Array<ShipOptions>) => {
             shipOpts.forEach(o => {
-                let ship = SpaceSim.playersMap.get(o.id);
+                let ship = SpaceSimClient.playersMap().get(o.id);
                 if (ship) {
                     // update existing ship
                     ship?.configure(o);
                 } else {
                     // or create new ship if doesn't already exist
-                    ship = new PlayerShip(this, {
-                        ...o,
-                        weaponsKey: Phaser.Math.RND.between(1, 3),
-                        wingsKey: Phaser.Math.RND.between(1, 3),
-                        cockpitKey: Phaser.Math.RND.between(1, 3),
-                        engineKey: Phaser.Math.RND.between(1, 3)
-                    });
+                    ship = new PlayerShip(this, o);
                     SpaceSim.playersMap.set(o.id, ship);
                     this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
-                    Helpers.trycatch(() => SpaceSimClient.camera?.ignore(ship.minimapSprite), 'none');
+                    Helpers.trycatch(() => SpaceSimClient.camera?.ignore(ship.radarSprite), 'none');
                 }
 
                 if (ship?.id === this._shipId) {
@@ -355,7 +349,9 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             zoom: zoom,
             ignore: [
                 SpaceSim.map.minimapLayer,
-                ...SpaceSim.players().map(p => p.minimapSprite)
+                ...SpaceSimClient.players()
+                    .map(p => p.radarSprite)
+                    .filter(p => p != null)
             ],
             backgroundColor: 0x000000,
             followObject: SpaceSimClient.player.getGameObject()

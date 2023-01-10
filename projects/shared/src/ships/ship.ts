@@ -1,5 +1,4 @@
 import { Scene } from "phaser";
-import { LayoutContainer } from "phaser-ui-components";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { Engine } from "./attachments/utility/engine";
@@ -9,7 +8,6 @@ import { Weapons } from "./attachments/offence/weapons";
 import { MachineGun } from "./attachments/offence/machine-gun";
 import { ShipLike } from "../interfaces/ship-like";
 import { IsConfigurable } from "../interfaces/is-configurable";
-import { Animations } from "../../../client/src/app/space-sim/game/utilities/animations";
 import { PhysicsObject } from "../interfaces/physics-object";
 
 export type ShipOptions = Partial<PhysicsObject> & {
@@ -50,9 +48,8 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     private _positionContainer: Phaser.GameObjects.Container; // used for position and physics
     private _rotationContainer: Phaser.GameObjects.Container; // used for rotation
     private _lastDamagedBy: DamageOptions[];
-    private _minimapSprite: Phaser.GameObjects.Sprite;
-
-    private _selfDestruct: boolean;
+    
+    private _destroyAtTime: number;
     
     constructor(scene: Phaser.Scene, options: ShipOptions) {
         this.id = options.id ?? Phaser.Math.RND.uuid();
@@ -167,6 +164,14 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
                 return {...d} as DamageOptions;
             });
     }
+
+    /**
+     * returns the time in milliseconds that we should
+     * destroy this ship
+     */
+    get destroyAt(): number {
+        return this._destroyAtTime;
+    }
     
     getWeapons(): Weapons {
         return this._weapons;
@@ -174,10 +179,6 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
 
     getThruster(): Engine {
         return this._engine;
-    }
-
-    get minimapSprite(): Phaser.GameObjects.Sprite {
-        return this._minimapSprite;
     }
 
     /**
@@ -188,11 +189,13 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
      */
     update(time: number, delta: number): void {
         if (this.active) {
-            this._checkOverheatCondition(time, delta);
-            this._engine.update(time, delta);
-            this._weapons.update(time, delta);
-
-            const pos = this.getLocation();
+            if (this.scene.game.getTime() >= this.destroyAt) {
+                this.destroy();
+            } else {
+                this._checkOverheatCondition(time, delta);
+                this._engine.update(time, delta);
+                this._weapons.update(time, delta);
+            }
         }
     }
 
@@ -369,34 +372,12 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     /**
      * start a 3 second countdown to ship destruction
      */
-    selfDestruct(): void {
-        this._selfDestruct = true;
-        const text = this.scene.make.text({
-            x: 0, 
-            y: -75, 
-            text: '3', 
-            style: {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4}
-        });
-        text.setX(-text.width / 2);
-        this._positionContainer.add(text);
-        const onComplete = () => {
-            if (this._selfDestruct) {
-                let countdownTxt: number = +text.text;
-                countdownTxt--;
-                if (countdownTxt <= 0) {
-                    this.destroy();
-                } else {
-                    text.setText(`${countdownTxt}`);
-                    text.setAlpha(1);
-                    Animations.fadeOut(text, 1000, onComplete);
-                }
-            }
-        }
-        Animations.fadeOut(text, 1000, onComplete);
+    selfDestruct(countdownSeconds: number = 3): void {
+        this._destroyAtTime = this.scene.game.getTime() + (countdownSeconds * 1000);
     }
 
     cancelSelfDestruct(): void {
-        this._selfDestruct = false;
+        this._destroyAtTime = undefined;
     }
 
     destroy(emit: boolean = true): void {
@@ -420,13 +401,13 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this._rotationContainer = this.scene.add.container(0, 0);
         this._positionContainer.add(this._rotationContainer);
         
-        const containerBounds: Phaser.Geom.Rectangle = this._positionContainer.getBounds();
-        this._positionContainer.setSize(containerBounds.width, containerBounds.height);
+        const radius = Constants.Ship.RADIUS;
+        this._positionContainer.setSize(radius * 2, radius * 2);
 
         // setup physics for container
         this.scene.physics.add.existing(this._positionContainer);
 
-        this.getPhysicsBody().setCircle(Constants.Ship.RADIUS);
+        this.getPhysicsBody().setCircle(radius);
         this.getPhysicsBody().setMass(this.mass);
         this.getPhysicsBody().setBounce(0.2, 0.2);
         this.getPhysicsBody().setMaxSpeed(Constants.Ship.MAX_SPEED);

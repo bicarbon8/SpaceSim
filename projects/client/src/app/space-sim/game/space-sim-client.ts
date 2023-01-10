@@ -13,6 +13,7 @@ import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
 import { Camera } from "./ui-components/camera";
 import { Radar } from "./ui-components/radar";
+import { PlayerShip } from "./ships/player-ship";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -122,6 +123,8 @@ export module SpaceSimClient {
     export var player: Ship;
     export var playerData: SpaceSimPlayerData;
     export const opponents = new Array<AiController>();
+    export const playersMap = () => SpaceSim.playersMap as Map<string, PlayerShip>;
+    export const players = () => SpaceSim.players() as Array<PlayerShip>;
     export var mode: GameMode = 'singleplayer';
     export var camera: Camera;
     export var radar: Radar;

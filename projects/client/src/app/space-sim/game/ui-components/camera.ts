@@ -26,9 +26,8 @@ export class Camera implements HasLocation {
             ...options
         };
         
-        this._ignored = this.scene.add.group([], {
-            name: `${opts.name ?? 'camera'}-ignore-group`
-        });
+        this._ignored = this.scene.add.group()
+            .setName(`${opts.name ?? 'camera'}-ignore-group`);
         
         this._cam = this._getCamera(opts);
 
@@ -61,9 +60,7 @@ export class Camera implements HasLocation {
 
     ignore(...entries: Array<Phaser.GameObjects.GameObject>): this {
         if (entries?.length) {
-            for (var i=0; i<entries.length; i++) {
-                this._ignored.add(entries[i]);
-            }
+            this._ignored.addMultiple(entries);
             this._cam.ignore(this._ignored);
         }
         return this;

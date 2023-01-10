@@ -5,8 +5,10 @@ export class PlayerAmmoSupply extends AmmoSupply {
         super(scene, options);
 
         const sprite = this.scene.make.sprite({
+            x: 0,
+            y: 0,
             key: 'ammo',
-            origin: 0.5
+            origin: 0
         }, false);
         this.add(sprite);
     }

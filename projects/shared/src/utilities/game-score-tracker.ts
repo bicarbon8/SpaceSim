@@ -118,7 +118,7 @@ export module GameScoreTracker {
     export function shotsLandedCount(id: string): number {
         let count = 0;
         if (_stats.has(id)) {
-            const landed = _stats.get(id).shotsLanded;
+            const landed = _stats.get(id).shotsLanded || [];
             count = landed.map(l => l.hits.length)
                 .reduce((acc, current) => acc + current, 0);
         }

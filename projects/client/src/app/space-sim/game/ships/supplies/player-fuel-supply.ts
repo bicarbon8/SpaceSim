@@ -5,8 +5,10 @@ export class PlayerFuelSupply extends FuelSupply {
         super(scene, options);
 
         const sprite = this.scene.make.sprite({
+            x: 0,
+            y: 0,
             key: 'fuel-canister',
-            origin: 0.5
+            origin: 0
         }, false);
         this.add(sprite);
     }

@@ -22,10 +22,11 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         super(scene, options.location.x, options.location.y);
         this.scene.add.existing(this);
         this.setDepth(Constants.UI.Layers.PLAYER);
-        
+        const radius = Constants.Ship.Supplies.RADIUS;
+        this.setSize(radius * 2, radius * 2);
         this.scene.physics.add.existing(this);
         this._body.setMass(Constants.Ship.Supplies.MASS);
-        this._body.setCircle(Constants.Ship.Supplies.RADIUS);
+        this._body.setCircle(radius);
         this._body.setBounce(Constants.Ship.Supplies.BOUNCE, Constants.Ship.Supplies.BOUNCE);
 
         this.configure(options);

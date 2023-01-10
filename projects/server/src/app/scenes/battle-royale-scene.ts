@@ -165,7 +165,11 @@ export class BattleRoyaleScene extends Phaser.Scene {
         const ship = new Ship(this, {
             location: loc,
             fingerprint: data.fingerprint,
-            name: data.name
+            name: data.name,
+            weaponsKey: Phaser.Math.RND.between(1, 3),
+            wingsKey: Phaser.Math.RND.between(1, 3),
+            cockpitKey: Phaser.Math.RND.between(1, 3),
+            engineKey: Phaser.Math.RND.between(1, 3)
         });
         this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
         this._addPlayerCollisionPhysicsWithPlayers(ship);

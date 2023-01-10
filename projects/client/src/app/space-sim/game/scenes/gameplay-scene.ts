@@ -219,7 +219,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
         );
-        SpaceSimClient.player = new Ship(this, {
+        SpaceSimClient.player = new PlayerShip(this, {
             location: playerStartingPosition,
             weaponsKey: Phaser.Math.RND.between(1, 3),
             wingsKey: Phaser.Math.RND.between(1, 3),
@@ -294,8 +294,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         if (SpaceSimClient.camera) {
             SpaceSimClient.camera.destroy();
         }
-        const ignore = Array.from(SpaceSim.playersMap.values())
-            .map(p => p.minimapSprite);
+        const ignore = Array.from(SpaceSimClient.playersMap().values())
+            .map(p => p.radarSprite)
+            .filter(p => p != null);
         SpaceSimClient.camera = new Camera(this, {
             name: 'main',
             zoom: zoom,
