@@ -74,5 +74,6 @@ export module Constants {
         export const HIGH_PRI_UPDATE_FREQ = 1000/60; // 60 fps
         export const MED_PRI_UPDATE_FREQ = 1000/30; // 30 fps
         export const LOW_PRI_UPDATE_FREQ = 1000/15; // 15 fps
+        export const ULTRALOW_PRI_UPDATE_FREQ = 1000; // 1 fps
     }
 }

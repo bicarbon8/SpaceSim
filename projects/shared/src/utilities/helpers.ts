@@ -178,4 +178,21 @@ export module Helpers {
         }
         return accuracy;
     }
+
+    /**
+     * takes in a `map` and a `value` and returns an array of 
+     * `keys` that contained the `value`
+     * @param map a map to search the values of
+     * @param value the value to be searched for
+     * @returns an array of keys that had the specified value
+     */
+    export function getMapKeysByValue<K, V>(map: Map<K, V>, value: V): Array<K> {
+        const keys = new Array<K>();
+        for (let [key, val] of map.entries()) {
+            if (val === value) {
+                keys.push(key);
+            }
+        }
+        return keys;
+    }
 }

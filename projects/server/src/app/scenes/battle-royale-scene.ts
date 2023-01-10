@@ -6,6 +6,8 @@ import { SpaceSimGameEngine } from "../space-sim-game-engine";
 declare const io: Server;
 
 export class BattleRoyaleScene extends Phaser.Scene {
+    private readonly ROOM_NAME: string;
+    
     /**
      * a Map of fingerprints to `SpaceSimPlayerData` so we can prevent
      * more than 3 ships per fingerprint (user)
@@ -22,21 +24,18 @@ export class BattleRoyaleScene extends Phaser.Scene {
 
     private _exploder: Exploder;
 
-    private _sendShipUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
-    private _sendSupplyUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
+    private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
+    private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
+    private _ultraLowPriUpdateAt: number = Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
+
+    constructor(roomName: string) {
+        const room = roomName ?? Phaser.Math.RND.uuid();
+        super({ key: room });
+        this.ROOM_NAME = room;
+    }
 
     preload(): void {
-        this.load.image('weapons-1', `assets/sprites/ship-parts/weapons-1.png`);
-        this.load.image('wings-1', `assets/sprites/ship-parts/wings-1.png`);
-        this.load.image('cockpit-1', `assets/sprites/ship-parts/cockpit-1.png`);
-        this.load.image('engine-1', `assets/sprites/ship-parts/engine-1.png`);
-        this.load.image('minimap-player', `assets/sprites/minimap-player.png`);
-        
         this.load.image('bullet', `assets/sprites/bullet.png`);
-        this.load.image('ammo', `assets/sprites/ammo.png`);
-        this.load.image('fuel-canister', `assets/sprites/fuel-canister.png`);
-        this.load.image('coolant-canister', `assets/sprites/coolant-canister.png`);
-        this.load.image('repairs-canister', `assets/sprites/repairs-canister.png`);
 
         this.load.image('metaltiles', `assets/tiles/metaltiles_lg.png`);
         this.load.image('minimaptile', `assets/tiles/minimap-tile.png`);
@@ -51,21 +50,28 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     update(time: number, delta: number): void {
-        this._sendShipUpdateAt += delta;
-        this._sendSupplyUpdateAt += delta;
+        this._medPriUpdateAt += delta;
+        this._lowPriUpdateAt += delta;
+        this._ultraLowPriUpdateAt += delta;
 
         Helpers.trycatch(() => SpaceSim.players().forEach(ship => ship?.update(time, delta)));
         
         // 30 fps
-        if (this._sendShipUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
-            this._sendShipUpdateAt = 0;
+        if (this._medPriUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
+            this._medPriUpdateAt = 0;
             Helpers.trycatch(() => this._sendPlayersUpdate());
         }
 
         // 15 fps
-        if (this._sendSupplyUpdateAt >= Constants.Timing.LOW_PRI_UPDATE_FREQ) {
-            this._sendSupplyUpdateAt = 0;
+        if (this._lowPriUpdateAt >= Constants.Timing.LOW_PRI_UPDATE_FREQ) {
+            this._lowPriUpdateAt = 0;
             Helpers.trycatch(() => this._sendSuppliesUpdate());
+        }
+
+        // 1 fps
+        if (this._ultraLowPriUpdateAt >= Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
+            this._ultraLowPriUpdateAt = 0;
+            Helpers.trycatch(() => this._cleanup());
         }
     }
 
@@ -93,6 +99,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 }
             }).on(Constants.Socket.REQUEST_MAP, (data: SpaceSimPlayerData) => {
                 console.debug(`received map request from: ${socket.id}`);
+                console.debug(`joining socket ${socket.id} to room ${this.ROOM_NAME}`);
                 this._sendMap(socket);
             }).on(Constants.Socket.REQUEST_PLAYER, (data: SpaceSimPlayerData) => {
                 console.debug(`received new player request from: ${socket.id} `,
@@ -104,6 +111,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                     this._socketToShipId.set(socket.id, ship.id);
                     console.debug(`sending ship id ${ship.id} to client ${socket.id}`);
                     socket.emit(Constants.Socket.SET_PLAYER_ID, ship.id);
+                    socket.join(this.ROOM_NAME);
                 }
             }).on(Constants.Socket.TRIGGER_ENGINE, (data: SpaceSimPlayerData) => {
                 const ship = this._getShip(socket, data);
@@ -195,9 +203,10 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 }
             }
             
-            io.emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
+            io.to(this.ROOM_NAME).emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
             console.debug(`sending player death notice to clients for ship ${opts.id}`);
-            io.emit(Constants.Socket.PLAYER_DEATH, opts.id);
+            io.to(this.ROOM_NAME).emit(Constants.Socket.PLAYER_DEATH, opts.id);
+            
             this._expelSupplies(opts);
 
             console.debug(`calling ship.destroy(false) for ship: ${opts.id}, with name: ${opts.name}`);
@@ -226,11 +235,11 @@ export class BattleRoyaleScene extends Phaser.Scene {
     }
 
     private _sendPlayersUpdate(): void {
-        io.emit(Constants.Socket.UPDATE_PLAYERS, SpaceSim.players().map(p => p.config));
+        io.to(this.ROOM_NAME).emit(Constants.Socket.UPDATE_PLAYERS, SpaceSim.players().map(p => p.config));
     }
 
     private _sendSuppliesUpdate(): void {
-        io.emit(Constants.Socket.UPDATE_SUPPLIES, SpaceSim.supplies().map(s => s.config));
+        io.to(this.ROOM_NAME).emit(Constants.Socket.UPDATE_SUPPLIES, SpaceSim.supplies().map(s => s.config));
     }
 
     private _isMapLocationOccupied(location: Phaser.Types.Math.Vector2Like, radius: number): boolean {
@@ -306,7 +315,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                     }
                     return false;
                 });
-                io.emit(Constants.Socket.REMOVE_SUPPLY, supply.id);
+                io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLY, supply.id);
                 SpaceSim.suppliesMap.delete(supply.id);
                 supply.apply(ship);
                 supply.destroy();
@@ -325,7 +334,7 @@ export class BattleRoyaleScene extends Phaser.Scene {
                 } else {
                     supply = obj1 as ShipSupply;
                 }
-                io.emit(Constants.Socket.REMOVE_SUPPLY, supply.id);
+                io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLY, supply.id);
                 SpaceSim.suppliesMap.delete(supply.id);
                 supply.apply(ship);
                 supply.destroy();
@@ -359,11 +368,11 @@ export class BattleRoyaleScene extends Phaser.Scene {
      */
     private _cleanupSupply(supply: ShipSupply): void {
         window.setTimeout(() => {
-            io.emit(Constants.Socket.FLICKER_SUPPLY, (supply.id));
+            io.to(this.ROOM_NAME).emit(Constants.Socket.FLICKER_SUPPLY, (supply.id));
             window.setTimeout(() => {
                 SpaceSim.suppliesMap.delete(supply.id);
                 supply.destroy();
-                io.emit(Constants.Socket.REMOVE_SUPPLY, (supply.id));
+                io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLY, (supply.id));
             }, 5000);
         }, 25000);
     }
@@ -428,5 +437,38 @@ export class BattleRoyaleScene extends Phaser.Scene {
             }, 'warn', 'error reconnecting:');
         }
         return null; // unable to reconnect
+    }
+
+    private _cleanup(): void {
+        this._removeSocketsFromRoomWhoAreNotInMultiplayerGame();
+        this._removeSocketToShipMappingForNonexistingShips();
+    }
+
+    private _removeSocketsFromRoomWhoAreNotInMultiplayerGame(): void {
+        const sockets = Array.from(io.sockets.sockets.values())
+            .filter(s => s.rooms.has(this.ROOM_NAME));
+        if (sockets?.length) {
+            for (let socket of sockets) {
+                if (!this._socketToShipId.has(socket.id)) {
+                    console.debug(`removing socket: '${socket.id}' from room: ${this.ROOM_NAME}`)
+                    socket.leave(this.ROOM_NAME);
+                }
+            }
+        }
+    }
+
+    private _removeSocketToShipMappingForNonexistingShips(): void {
+        const shipids = Array.from(this._socketToShipId.values());
+        if (shipids?.length) {
+            for (let shipid of shipids) {
+                if (!SpaceSim.playersMap.has(shipid)) {
+                    const socketids = Helpers.getMapKeysByValue(this._socketToShipId, shipid);
+                    for (let socketid of socketids) {
+                        console.debug(`removing socketToShipId mapping for socket: '${socketid}'`);
+                        this._socketToShipId.delete(socketid);
+                    }
+                }
+            }
+        }
     }
 }
