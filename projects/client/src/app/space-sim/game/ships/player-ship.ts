@@ -8,6 +8,7 @@ export class PlayerShip extends Ship {
     private _shipOverheatIndicator: Phaser.GameObjects.Text;
     private _shipDamageFlicker: Phaser.Tweens.Tween;
     private _radarSprite: Phaser.GameObjects.Sprite;
+    private _selfDestructText: Phaser.GameObjects.Text;
 
     constructor(scene: Phaser.Scene, options: ShipOptions) {
         super(scene, options);
@@ -23,6 +24,7 @@ export class PlayerShip extends Ship {
         super.update(time, delta);
 
         this._updateOverheatingSpriteAndText();
+        this._updateSelfDestructText();
     }
 
     override sustainDamage(damageOpts: DamageOptions): void {
@@ -46,34 +48,6 @@ export class PlayerShip extends Ship {
         super.repair(amount);
 
         this._updateIntegrityIndicator();
-    }
-
-    override selfDestruct(countdownSeconds: number = 3): void {
-        super.selfDestruct(countdownSeconds);
-
-        const remainingTime = this.destroyAt - this.scene.game.getTime();
-        const remainingSeconds = Math.ceil(remainingTime / 1000);
-
-        const text = this.scene.make.text({
-            x: 0, 
-            y: -75, 
-            text: `${remainingSeconds}`,
-            style: {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4}
-        });
-        text.setX(-text.width / 2);
-        this.positionContainer.add(text);
-        const onComplete = () => {
-            if (this.destroyAt) {
-                let countdownTxt: number = Number.parseInt(text.text);
-                countdownTxt--;
-                if (countdownTxt > 0) {
-                    text.setText(`${countdownTxt}`);
-                    text.setAlpha(1);
-                    Animations.fadeOut(text, 1000, onComplete);
-                }
-            }
-        }
-        Animations.fadeOut(text, 1000, onComplete);
     }
 
     private _addVisualsToGameObject(options: ShipOptions): void {
@@ -111,6 +85,7 @@ export class PlayerShip extends Ship {
         this._createOverheatIndicator();
         this._createNameIndicator();
         this._createRadarSprite();
+        this._createSelfDestructText();
     }
 
     private _createNameIndicator(): void {
@@ -174,6 +149,17 @@ export class PlayerShip extends Ship {
             .bringToTop(this._radarSprite);
     }
 
+    private _createSelfDestructText(): void {
+        this._selfDestructText = this.scene.make.text({
+            x: 0, 
+            y: -75, 
+            text: `3`,
+            style: {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4}
+        }).setAlpha(0);
+        this._selfDestructText.setX(-this._selfDestructText.width / 2);
+        this.positionContainer.add(this._selfDestructText);
+    }
+
     /**
      * gradually increases visibility of heat sprite around ship as temperature
      * increases and displays overhead warning if ship temperature over max safe
@@ -223,6 +209,20 @@ export class PlayerShip extends Ship {
                 delay: 5000,
                 duration: 1000
             });
+        }
+    }
+
+    private _updateSelfDestructText(): void {
+        if (this.active) {
+            if (this.destroyAt) {
+                const remainingTime = this.destroyAt - this.scene.game.getTime();
+                const remainingSeconds = Math.ceil(remainingTime / 1000);
+
+                this._selfDestructText.setText(`${remainingSeconds}`)
+                    .setAlpha(1);
+            } else {
+                this._selfDestructText.setAlpha(0);
+            }
         }
     }
 }
