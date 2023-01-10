@@ -23,8 +23,10 @@ export class PlayerShip extends Ship {
     override update(time: number, delta: number): void {
         super.update(time, delta);
 
-        this._updateOverheatingSpriteAndText();
-        this._updateSelfDestructText();
+        if (this.active) {
+            this._updateOverheatingSpriteAndText();
+            this._updateSelfDestructText();
+        }
     }
 
     override sustainDamage(damageOpts: DamageOptions): void {
