@@ -274,6 +274,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             });
         }).on(Constants.Socket.PLAYER_DEATH, (id: string) => {
             if (!id) {
+                // handle case of disconnect/reconnect where ship is gone by ending game
                 this._gameOver();
             } else {
                 const ship = this._ships.get(id);
@@ -289,12 +290,10 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             }
         });
 
-        // setup listener for player death event
+        // handle case of client self destruct by notifying server of our destruction
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
             if (shipOpts.id === SpaceSimClient.player.id) {
-                this._exploder.explode({location: SpaceSimClient.player.config.location});
                 SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH, SpaceSimClient.playerData);
-                this._gameOver();
             }
         });
 

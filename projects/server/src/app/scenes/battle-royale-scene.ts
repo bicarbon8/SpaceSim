@@ -238,7 +238,7 @@ export class BattleRoyaleScene extends BaseScene {
                 }
             }
             
-            SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.UPDATE_STATS, (GameScoreTracker.getAllStats()));
+            SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.UPDATE_STATS, GameScoreTracker.getAllStats());
             console.debug(`sending player death notice to clients for ship ${opts.id}`);
             SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.PLAYER_DEATH, opts.id);
             
