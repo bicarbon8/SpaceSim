@@ -1,4 +1,5 @@
 export module Constants {
+    export const GAME_NAME = 'space-sim';
     export module Ship {
         export const RADIUS = 16;
         export const MAX_INTEGRITY = 100;
@@ -52,7 +53,6 @@ export module Constants {
     }
     export module Events {
         export const PLAYER_DEATH: string = 'player-death';
-        export const REMAP_SOCKET_TO_PLAYER = 'remap-socket-to-player';
     }
     export module Socket {
         export const MAX_USERS_PER_ROOM = 50;
@@ -73,12 +73,14 @@ export module Constants {
         export const FLICKER_SUPPLY = 'flicker-supply';
         export const REMOVE_SUPPLY = 'remove-supply';
         export const UPDATE_STATS = 'update-stats';
+        export const INVALID_NAME = 'invalid-user-name';
+        export const USER_ACCEPTED = 'user-accepted';
     }
     export module Timing {
         export const HIGH_PRI_UPDATE_FREQ = 1000/60; // 60 fps
         export const MED_PRI_UPDATE_FREQ = 1000/30; // 30 fps
         export const LOW_PRI_UPDATE_FREQ = 1000/15; // 15 fps
         export const ULTRALOW_PRI_UPDATE_FREQ = 1000; // 1 fps
-        export const DISCONNECT_TIMEOUT_MS = 10000; // 10 sec
+        export const DISCONNECT_TIMEOUT_MS = 30000; // 30 sec
     }
 }

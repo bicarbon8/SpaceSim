@@ -15,6 +15,7 @@ import { Camera } from "./ui-components/camera";
 import { Radar } from "./ui-components/radar";
 import { environment } from "src/environments/environment";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
+import getBrowserFingerprint from "get-browser-fingerprint";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -68,6 +69,22 @@ export class SpaceSimClient {
                 }
             });
         });
+
+        const fingerprint: string = `${getBrowserFingerprint()}`;
+        const dataStr = localStorage.getItem(Constants.GAME_NAME);
+        let playerData: SpaceSimUserData;
+        if (dataStr) {
+            try {
+                playerData = JSON.parse(dataStr) as SpaceSimUserData;
+            } catch (e) {
+                playerData = {name: '', fingerprint: ''};
+            }
+        }
+        SpaceSimClient.playerData = {
+            ...playerData,
+            fingerprint: fingerprint
+        };
+        localStorage.setItem(Constants.GAME_NAME, JSON.stringify(SpaceSimClient.playerData));
     }
 
     private _createSocket(): void {
@@ -75,6 +92,10 @@ export class SpaceSimClient {
             SpaceSimClient.socket = io(`${environment.websocket}`);
             SpaceSimClient.socket.on('connect', () => {
                 console.debug(`connected to server at: ${environment.websocket}`);
+                // handle reconnect scenario
+                if (SpaceSimClient.playerData.name && SpaceSimClient.playerData.fingerprint) {
+                    SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, SpaceSimClient.playerData);
+                }
             }).on('disconnect', (reason: Socket.DisconnectReason, description: DisconnectDescription) => {
                 console.warn(`socket disconnect`, reason, description);
                 if (reason === "io server disconnect") {

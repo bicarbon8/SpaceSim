@@ -19,6 +19,8 @@ export class SpaceSimServer extends GameServerEngine {
         roomMaxHeight: SpaceSimServer.MAP_HEIGHT,
         doorPadding: 0
     };
+
+    private _disconnectTimers = new Map<string, number>();
     
     constructor() {
         super({scene: [BattleRoyaleScene]});
@@ -31,29 +33,49 @@ export class SpaceSimServer extends GameServerEngine {
 
     private _setupUser(socket: Socket): void {
         console.debug(`new socket connection: '${socket.id}' from '${socket.request.connection.remoteAddress}'`);
-        socket.on(Constants.Socket.SET_PLAYER_DATA, (data: SpaceSimUserData) => this._addUser(socket, data))
-            .on('disconnect', (reason: DisconnectReason) => this._removeUser(socket, reason))
+        socket.on('disconnect', (reason: DisconnectReason) => this._removeUser(socket, reason))
+            .on(Constants.Socket.SET_PLAYER_DATA, (data: SpaceSimUserData) => this._addUser(socket, data))
             .on(Constants.Socket.JOIN_ROOM, (data: SpaceSimUserData) => this._joinAvailableRoom(socket, data));
     }
 
     private _addUser(socket: Socket, data: SpaceSimUserData): void {
         if (data?.fingerprint?.length) {
-            const previousConnection = SpaceSimServer.users({fingerprint: data.fingerprint, name: data.name})
-                .find(u => u != null);
-            if (previousConnection?.socketId) {
-                // user is reconnecting so remove old value
-                SpaceSimServer.usersTable.delete(previousConnection);
-            }
-            const fullData = {
-                ...previousConnection,
-                ...data,
-                socketId: socket.id
-            };
-            SpaceSimServer.usersTable.add(fullData);
-            if (fullData.room?.length) {
-                const scene = SpaceSim.game.scene.getScene(fullData.room) as BattleRoyaleScene;
-                scene.addPlayer(fullData);
-                console.debug(`user ${JSON.stringify(fullData)} reconnected and added back into existing room: ${scene.ROOM_NAME}`);
+            const previousConnection = SpaceSimServer
+                .users(data)
+                .find(u => u.socketId != null);
+            if (previousConnection) {
+                // user is reconnecting...
+                const updated: SpaceSimServerUserData = {
+                    ...previousConnection,
+                    socketId: socket.id
+                };
+                SpaceSimServer.usersTable.set(SpaceSimUserData.format(updated), updated);
+                const timerId = this._disconnectTimers.get(SpaceSimUserData.format(updated));
+                window.clearTimeout(timerId);
+                this._disconnectTimers.delete(SpaceSimUserData.format(updated));
+                if (updated.room) {
+                    const scene = SpaceSim.game.scene.getScene(updated.room) as BattleRoyaleScene;
+                    scene.addPlayer(updated);
+                    console.debug(`user ${JSON.stringify(updated)} reconnected and added back into existing room: ${scene.ROOM_NAME}`);
+                }
+            } else {
+                if (data.name?.length > 2) {
+                    const nameInUseBy = SpaceSimServer.users({name: data.name}).length;
+                    if (nameInUseBy > 0) {
+                        console.debug(`name already in use so user cannot be added: ${JSON.stringify(data)}`);
+                        socket.emit(Constants.Socket.INVALID_NAME, data.name);
+                    } else {
+                        SpaceSimServer.usersTable.set(SpaceSimUserData.format(data), {
+                            ...data,
+                            socketId: socket.id
+                        });
+                        console.debug(`user '${JSON.stringify(data)}' added; returning '${Constants.Socket.USER_ACCEPTED}' event to client.`);
+                        socket.emit(Constants.Socket.USER_ACCEPTED, data);
+                    }
+                } else {
+                    console.debug(`invalid name of '${JSON.stringify(data)}' received; returning '${Constants.Socket.INVALID_NAME}' event to client.`);
+                    socket.emit(Constants.Socket.INVALID_NAME, data.name);
+                }
             }
         } else {
             console.debug(`invalid data of ${JSON.stringify(data)} sent... disconnecting socket.`);
@@ -65,21 +87,23 @@ export class SpaceSimServer extends GameServerEngine {
         console.debug(`socket: ${socket.id} disconnected due to:`, reason);
         const user = SpaceSimServer.users({socketId: socket.id}).find(u => u != null);
         if (user) {
-            const scene = SpaceSim.game.scene.getScene(user.room) as BattleRoyaleScene;
-            if (scene) {
-                scene.removePlayer(user);
-            }
-            
-            window.setTimeout(() => SpaceSimServer.usersTable.delete(user), Constants.Timing.DISCONNECT_TIMEOUT_MS);
+            console.debug(`creating timeout to remove user '${JSON.stringify(user)}' in ${Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
+            this._disconnectTimers.set(SpaceSimUserData.format(user), window.setTimeout(() => {
+                SpaceSimServer.usersTable.delete(SpaceSimUserData.format(user));
+                const scene = SpaceSim.game.scene.getScene(user.room) as BattleRoyaleScene;
+                if (scene) {
+                    scene.removePlayer(user);
+                }
+            }, Constants.Timing.DISCONNECT_TIMEOUT_MS));
         }
     }
 
     private _joinAvailableRoom(socket: Socket, data: SpaceSimUserData): void {
-        console.debug(`attempting to add socket '${socket.id}', user ${JSON.stringify(data)} to a room...`);
-        this._addUser(socket, data);
+        console.debug(`received '${Constants.Socket.JOIN_ROOM}' event from socket: '${socket.id}'`);
         let added: boolean = false;
         const user = SpaceSimServer.users({socketId: socket.id}).find(u => u != null);
         if (user) {
+            console.debug(`attempting to add user ${JSON.stringify(user)} to a room...`);
             // iterate over rooms and see if any have less than max allowed players
             for (let scene of SpaceSimServer.rooms()) {
                 if (scene.getShips().length < Constants.Socket.MAX_USERS_PER_ROOM) {
@@ -95,20 +119,29 @@ export class SpaceSimServer extends GameServerEngine {
                 SpaceSim.game.scene.add(scene.ROOM_NAME, scene, true);
                 scene.addPlayer(user);
             }
+        } else {
+            console.error(`unable to joing room due to: no existing user found for socket '${socket.id}' with data '${JSON.stringify(data)}'`);
         }
     }
 }
 
 export module SpaceSimServer {
     export var io: Server;
-    export const usersTable = new Set<SpaceSimServerUserData>();
-    export const users = (findBy: Partial<SpaceSimServerUserData>): Array<SpaceSimServerUserData> => {
-        let uArr = Array.from(SpaceSimServer.usersTable.keys());
+    export const usersTable = new Map<string, SpaceSimServerUserData>();
+    export const users = (findBy: Partial<SpaceSimServerUserData> & {room?: string}): Array<SpaceSimServerUserData> => {
+        let uArr = Array.from(SpaceSimServer.usersTable.values());
         if (findBy) {
             uArr = uArr.filter(u => {
                 if (findBy.fingerprint && u.fingerprint !== findBy.fingerprint) return false;
                 if (findBy.name && u.name !== findBy.name) return false;
-                if (findBy.room && u.room !== findBy.room) return false;
+                if (findBy.room) {
+                    if (u.room !== findBy.room) {
+                        let socket = SpaceSimServer.io.sockets.sockets.get(u.socketId);
+                        if (socket != null && socket.rooms.size > 0) {
+                            if (!Array.from(socket.rooms.keys()).includes(findBy.room)) return false;
+                        }
+                    }
+                }
                 if (findBy.socketId && u.socketId !== findBy.socketId) return false;
                 return true;
             });

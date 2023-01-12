@@ -114,7 +114,7 @@ export class BattleRoyaleScene extends BaseScene {
             }).on(Constants.Socket.REQUEST_SHIP, (data: SpaceSimUserData) => {
                 Helpers.trycatch(() => {
                     console.debug(`received new ship request from: ${socket.id} in room ${this.ROOM_NAME}`);
-                    const ship = this._createShip(player);
+                    const ship = this._getShip(data, socket) ?? this._createShip(player);
                     console.debug(`associating socket ${socket.id} to ship ${ship.id}`);
                     this._dataToShipId.set(SpaceSimUserData.format(data), ship.id);
                     console.debug(`sending ship id ${ship.id} to client ${socket.id}`);
@@ -127,6 +127,8 @@ export class BattleRoyaleScene extends BaseScene {
                         console.debug(`triggering engine for ${ship.id} at angle ${ship.angle}`);
                         socket.broadcast.in(this.ROOM_NAME).emit(Constants.Socket.TRIGGER_ENGINE, ship.id);
                         ship.getThruster().trigger();
+                    } else {
+                        socket.emit(Constants.Socket.PLAYER_DEATH);
                     }
                 }, 'warn', `error in handling '${Constants.Socket.TRIGGER_ENGINE}' event`, 'message');
             }).on(Constants.Socket.TRIGGER_WEAPON, (data: SpaceSimUserData) => {
@@ -136,6 +138,8 @@ export class BattleRoyaleScene extends BaseScene {
                         console.debug(`triggering weapon for ${ship.id} at angle ${ship.angle}`);
                         socket.broadcast.in(this.ROOM_NAME).emit(Constants.Socket.TRIGGER_WEAPON, ship.id);
                         ship.getWeapons().trigger();
+                    } else {
+                        socket.emit(Constants.Socket.PLAYER_DEATH);
                     }
                 }, 'warn', `error in handling '${Constants.Socket.TRIGGER_WEAPON}' event`, 'message');
             }).on(Constants.Socket.SET_PLAYER_ANGLE, (degrees: number, data: SpaceSimUserData) => {
@@ -145,6 +149,8 @@ export class BattleRoyaleScene extends BaseScene {
                     if (ship) {
                         const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
                         ship.setRotation(d);
+                    } else {
+                        socket.emit(Constants.Socket.PLAYER_DEATH);
                     }
                 }, 'warn', `error in handling '${Constants.Socket.SET_PLAYER_ANGLE}' event`, 'message');
             }).on(Constants.Socket.PLAYER_DEATH, (data: SpaceSimUserData) => {
@@ -160,15 +166,12 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     removePlayer(player: SpaceSimServerUserData): void {
-        const id = this._dataToShipId.get(player.socketId);
+        console.debug(`removing player '${JSON.stringify(player)}' and associated ship...`);
+        const id = this._dataToShipId.get(SpaceSimUserData.format(player));
         const ship = this._ships.get(id);
         if (ship) {
-            console.debug(`waiting 10 seconds before destroying ship: ${ship.id}...`);
             const config = ship.config;
-            this._disconnectTimers.set(id, window.setTimeout(() => {
-                this._removeShip(config);
-                this._disconnectTimers.delete(id);
-            }, 10000));
+            this._removeShip(config);
         }
     }
 
@@ -176,17 +179,6 @@ export class BattleRoyaleScene extends BaseScene {
         // setup listener for player death event (sent from ship.destroy())
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
             this._removeShip(shipOpts);
-        });
-        SpaceSim.game.events.on(Constants.Events.REMAP_SOCKET_TO_PLAYER, (update: {old: string, new: string}) => {
-            if (this._dataToShipId.has(update.old)) {
-                const shipid = this._dataToShipId.get(update.old);
-                if (shipid) {
-                    this._dataToShipId.delete(update.old);
-                    this._dataToShipId.set(update.new, shipid);
-                    const timerid = this._disconnectTimers.get(shipid);
-                    window.clearTimeout(timerid);
-                }
-            }
         });
     }
 
@@ -228,12 +220,15 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     private _removeShip(opts: ShipOptions): void {
+        console.debug(`attempting to remove ship '${JSON.stringify(opts)}'...`);
         if (this._ships.has(opts.id)) {
             // prevent further updates to ship
             const player = this._ships.get(opts.id);
             this._ships.delete(opts.id);
+            let socketId: string;
             for (var [key, val] of this._dataToShipId) {
                 if (val === opts.id) {
+                    socketId = this._dataToShipId.get(key);
                     this._dataToShipId.delete(key);
                     break;
                 }
@@ -246,8 +241,12 @@ export class BattleRoyaleScene extends BaseScene {
 
             console.debug(`calling ship.destroy(false) for ship: ${opts.id}, with name: ${opts.name}`);
             player?.destroy(false); // don't emit event locally
-
-            GameScoreTracker.stop(opts.id);
+            const socket = SpaceSimServer.io.sockets.sockets.get(socketId);
+            if (socket) {
+                socket.leave(this.ROOM_NAME);
+            }
+        } else {
+            console.warn(`no ship with id '${opts.id}' was found.`);
         }
     }
 
@@ -392,10 +391,7 @@ export class BattleRoyaleScene extends BaseScene {
      * @returns a valid `Ship` or `undefined` if no ship found for client details
      */
     private _getShip(data: SpaceSimUserData, socket: Socket): Ship {
-        let id = this._dataToShipId.get(SpaceSimUserData.format(data));
-        if (!id) {
-            socket.emit(Constants.Socket.PLAYER_DEATH);
-        }
+        const id = this._dataToShipId.get(SpaceSimUserData.format(data));
         let ship: Ship;
         if (id) {
             ship = this._ships.get(id);

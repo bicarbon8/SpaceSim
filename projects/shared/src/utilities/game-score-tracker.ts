@@ -68,13 +68,14 @@ export module GameScoreTracker {
     export function shotFired(id: string): void {
         if (_stats.has(id)) {
             const stats = _stats.get(id);
-            GameScoreTracker.updateStats(id, {shotsFired: +stats.shotsFired + 1});
+            GameScoreTracker.updateStats(id, {shotsFired: stats.shotsFired + 1});
         }
     }
     export function shotLanded(shotFiredBy: string, targetId: string, damage: number): void {
         if (_stats.has(shotFiredBy)) {
-            const shotsLanded: Array<HitsOnTarget> = _stats.get(shotFiredBy).shotsLanded;
+            const shotsLanded: Array<HitsOnTarget> = _stats.get(shotFiredBy).shotsLanded || [];
             let index = shotsLanded.findIndex(h => h.targetId === targetId);
+            // if target not already registered then add it
             if (index < 0) {
                 shotsLanded.push({
                     targetId: targetId,
@@ -82,6 +83,7 @@ export module GameScoreTracker {
                 });
                 index = shotsLanded.length - 1;
             }
+            // add hit on target
             shotsLanded[index].hits.push({
                 damage: damage,
                 time: SpaceSim.game.loop.time
@@ -91,8 +93,9 @@ export module GameScoreTracker {
     }
     export function opponentDestroyed(destroyedBy: string, targetId: string): void {
         if (_stats.has(destroyedBy)) {
-            const destroyed: Array<Destroyed> = _stats.get(destroyedBy).opponentsDestroyed;
+            const destroyed: Array<Destroyed> = _stats.get(destroyedBy).opponentsDestroyed || [];
             const index = destroyed.findIndex(d => d.targetId === targetId);
+            // if target not already listed then add it to list of destroyed
             if (index < 0) {
                 destroyed.push({
                     targetId: targetId,
@@ -110,7 +113,7 @@ export module GameScoreTracker {
     export function destroyedCount(id: string): number {
         let count = 0;
         if (_stats.has(id)) {
-            const destroyed = _stats.get(id).opponentsDestroyed;
+            const destroyed = _stats.get(id).opponentsDestroyed || [];
             count = destroyed.length;
         }
         return count;
@@ -128,7 +131,7 @@ export module GameScoreTracker {
         let score: number = 0;
         
         const stats = GameScoreTracker.getStats(id);
-        score = GameScoreTracker.destroyedCount(id) * 1000;
+        score = (stats.opponentsDestroyed || []).length * 1000;
         score += stats.accuracy;
         score += (stats.ammoRemaining / Constants.Ship.Weapons.MAX_AMMO) * 100;
         score += (stats.integrityRemaining / Constants.Ship.MAX_INTEGRITY) * 100;
@@ -146,21 +149,27 @@ export module GameScoreTracker {
                 userScoresArr.push({name: stats.playerName, score: score});
             }
         }
-        return userScoresArr.sort((a, b) => a.score - b.score).reverse();
+        const lowToHigh = userScoresArr.sort((a, b) => a.score - b.score);
+        const deduped = new Map<string, UserScore>();
+        for (let score of lowToHigh) {
+            deduped.set(score.name, score);
+        }
+        const dedupedHighToLow = Array.from(deduped.values()).reverse();
+        return dedupedHighToLow;
     }
     export function getStats(id: string): GameStats {
         const stats = _stats.get(id);
         return {
             shipId: id,
             playerName: stats.playerName,
-            elapsed: SpaceSim.game.getTime(),
+            elapsed: SpaceSim.game.getTime() ?? 0,
             ammoRemaining: stats.ammoRemaining ?? 0,
             integrityRemaining: stats.integrityRemaining ?? 0,
             fuelRemaining: stats.fuelRemaining ?? 0,
-            opponentsDestroyed: stats.opponentsDestroyed,
+            opponentsDestroyed: stats.opponentsDestroyed || [],
             shotsFired: stats.shotsFired ?? 0,
-            shotsLanded: stats.shotsLanded,
-            accuracy: Helpers.getAccuracy(stats.shotsFired, GameScoreTracker.shotsLandedCount(id))
+            shotsLanded: stats.shotsLanded || [],
+            accuracy: Helpers.getAccuracy(stats.shotsFired ?? 0, GameScoreTracker.shotsLandedCount(id))
         };
     }
     export function getAllStats(): Array<Partial<GameStats>> {

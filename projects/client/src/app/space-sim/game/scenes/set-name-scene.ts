@@ -2,6 +2,7 @@ import { GridLayout, LayoutContainer, Styles, TextButton } from "phaser-ui-compo
 import { SpaceSimClient } from "../space-sim-client";
 import { Constants, Helpers } from "space-sim-shared";
 import { environment } from "src/environments/environment";
+import { SpaceSimUserData } from "space-sim-shared";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -40,6 +41,10 @@ export class SetNameScene extends Phaser.Scene {
         }
 
         this._startHandlingSocketMessages();
+
+        if (SpaceSimClient.playerData.name?.length > 2) {
+            this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
+        }
     }
 
     update() {
@@ -58,12 +63,19 @@ export class SetNameScene extends Phaser.Scene {
             this.scene.start('multiplayer-scene');
             this.scene.stop(this);
             this._stopHandlingSocketMessages();
+        }).on(Constants.Socket.INVALID_NAME, (name: string) => {
+            console.debug(`received '${Constants.Socket.INVALID_NAME}' response event for name '${name}'`);
+            window.alert(`name: '${name}' is either already in use or is invalid; please pick a different name.`);
+        }).on(Constants.Socket.USER_ACCEPTED, (data: SpaceSimUserData) => {
+            SpaceSimClient.playerData = data;
+            localStorage.setItem(Constants.GAME_NAME, JSON.stringify(SpaceSimClient.playerData));
+            SpaceSimClient.socket.emit(Constants.Socket.JOIN_ROOM, data);
         });
-        // TODO: handle invalid name response from server
     }
 
     private _stopHandlingSocketMessages(): void {
-
+        SpaceSimClient.socket.off(Constants.Socket.INVALID_NAME)
+            .off(Constants.Socket.USER_ACCEPTED);
     }
 
     private _createMusic(): void {
@@ -141,20 +153,19 @@ export class SetNameScene extends Phaser.Scene {
     private _getMobileTextInput(): void {
         this._text.setInteractive().on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
             const txt: string = window.prompt('Enter player name: (minimum 3 characters consisting of [a-zA-Z0-9])');
-            const pname: string = Helpers.sanitise(txt);
-            if (pname.length < 3) {
-                window.alert('invalid name!');
-            } else {
-                this._validateAndStartGame(pname);
-            }
+            this._validateAndStartGame(txt);
         });
     }
 
     private _validateAndStartGame(text: string): void {
         const pname = Helpers.sanitise(text);
         if (pname.length > 2) {
-            SpaceSimClient.playerData.name = pname;
-            SpaceSimClient.socket.emit(Constants.Socket.JOIN_ROOM, SpaceSimClient.playerData);
+            SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, {
+                ...SpaceSimClient.playerData,
+                name: pname
+            });
+        } else {
+            window.alert('invalid name!');
         }
     }
 }

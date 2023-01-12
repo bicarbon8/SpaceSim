@@ -1,8 +1,7 @@
 import { Card, Colors, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants, Helpers, SpaceSimUserData } from "space-sim-shared";
-import getBrowserFingerprint from "get-browser-fingerprint";
+import { Constants, Helpers } from "space-sim-shared";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
@@ -59,21 +58,6 @@ export class StartupScene extends Phaser.Scene {
     }
 
     create(): void {
-        const fingerprint: string = `${getBrowserFingerprint()}`;
-        const dataStr = localStorage.getItem('space-sim');
-        let playerData: SpaceSimUserData;
-        if (dataStr) {
-            try {
-                playerData = JSON.parse(dataStr) as SpaceSimUserData;
-            } catch (e) {
-                playerData = {name: '', fingerprint: ''};
-            }
-        }
-        SpaceSimClient.playerData = {
-            ...playerData,
-            fingerprint: fingerprint
-        };
-        
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
