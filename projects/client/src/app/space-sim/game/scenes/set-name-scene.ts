@@ -42,7 +42,7 @@ export class SetNameScene extends Phaser.Scene {
 
         this._startHandlingSocketMessages();
 
-        if (SpaceSimClient.playerData.name?.length > 2) {
+        if (SpaceSimClient.playerData.name && SpaceSimClient.playerData.name.length > 2) {
             this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
         }
     }

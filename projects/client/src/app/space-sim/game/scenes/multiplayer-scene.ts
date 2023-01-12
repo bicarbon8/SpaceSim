@@ -122,6 +122,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this._gameLevel = null;
         SpaceSimClient.player = null;
         this._ships.clear();
+        this._supplies.clear();
         this._stellarBodies = new Array<StellarBody>();
 
         this._exploder = new Exploder(this);
