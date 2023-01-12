@@ -1,11 +1,11 @@
 import "phaser";
-import { SpaceSim, Ship, Size, SpaceSimUserData } from "space-sim-shared";
+import { SpaceSim, Ship, Size, SpaceSimUserData, Helpers, Constants } from "space-sim-shared";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
 import { StartupScene } from "./scenes/startup-scene";
 import { SpaceSimClientOptions } from "./space-sim-client-options";
-import { Socket } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import { MultiplayerScene } from "./scenes/multiplayer-scene";
 import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 import { AiController } from "./controllers/ai-controller";
@@ -13,6 +13,8 @@ import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
 import { Camera } from "./ui-components/camera";
 import { Radar } from "./ui-components/radar";
+import { environment } from "src/environments/environment";
+import { DisconnectDescription } from "socket.io-client/build/esm/socket";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -48,7 +50,10 @@ export class SpaceSimClient {
             ]
         };
         SpaceSim.game = new Phaser.Game(conf);
-        SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSimClient.resize());
+        SpaceSim.game.events.on(Phaser.Core.Events.READY, () => {
+            SpaceSimClient.resize();
+            this._createSocket();
+        });
         SpaceSim.game.events.on(Phaser.Core.Events.HIDDEN, () => {
             if (SpaceSimClient.mode !== 'multiplayer') {
                 SpaceSim.game.scene.getScenes(true).forEach(s => {
@@ -63,6 +68,22 @@ export class SpaceSimClient {
                 }
             });
         });
+    }
+
+    private _createSocket(): void {
+        if (!SpaceSimClient.socket || SpaceSimClient.socket.disconnected) {
+            SpaceSimClient.socket = io(`${environment.websocket}`);
+            SpaceSimClient.socket.on('connect', () => {
+                console.debug(`connected to server at: ${environment.websocket}`);
+            }).on('disconnect', (reason: Socket.DisconnectReason, description: DisconnectDescription) => {
+                console.warn(`socket disconnect`, reason, description);
+                if (reason === "io server disconnect") {
+                    // the disconnection was initiated by the server, you need to reconnect manually
+                    console.info(`attempting to reconnect to server...`);
+                    SpaceSimClient.socket.connect();
+                }
+            });
+        }
     }
 }
 

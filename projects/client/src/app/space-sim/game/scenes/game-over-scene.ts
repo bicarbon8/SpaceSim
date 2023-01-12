@@ -109,7 +109,7 @@ export class GameOverScene extends Phaser.Scene {
             const leaderboard = GameScoreTracker.getLeaderboard();
             scoreText.setText([
                 'Leaderboard:',
-                ...leaderboard.map((s, i) => `${i+1}. ${s.name} - ${s.score}`)
+                ...leaderboard.map((s, i) => `${i+1}. ${s.name} - ${s.score.toFixed(0)}`)
                 .splice(0, 10)
             ]);
         }
