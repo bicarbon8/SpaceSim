@@ -122,6 +122,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     }
 
     create(): void {
+        SpaceSimClient.mode = 'singleplayer';
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
         this._exploder = new Exploder(this);
@@ -415,13 +416,13 @@ export class GameplayScene extends BaseScene implements Resizable {
         const supplyOpts = this._exploder.emitSupplies(shipCfg);
         for (var i=0; i<supplyOpts.length; i++) {
             let options = supplyOpts[i];
-            let supply = this._addSupplyCollisionPhysicsWithPlayers(options);
+            let supply = this._addSupplyCollisionPhysics(options);
             SpaceSimClient.radar.ignore(supply);
             this._supplies.set(supply.id, supply);
         }
     }
 
-    private _addSupplyCollisionPhysicsWithPlayers(options: ShipSupplyOptions): ShipSupply {
+    private _addSupplyCollisionPhysics(options: ShipSupplyOptions): ShipSupply {
         let supply: ShipSupply;
         switch(options.supplyType) {
             case 'ammo':
@@ -440,28 +441,12 @@ export class GameplayScene extends BaseScene implements Resizable {
                 console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
                 break;
         }
-        this.physics.add.collider(supply, this.getShips()
-            .filter(p => p?.active)
-            .map(o => o?.getGameObject()), 
-            (obj1, obj2) => {
-                let shipGameObj: Phaser.GameObjects.Container;
-                if (obj1 === supply) {
-                    shipGameObj = obj2 as Phaser.GameObjects.Container;
-                } else {
-                    shipGameObj = obj1 as Phaser.GameObjects.Container;
-                }
-                const ship: Ship = this.getShips().find(p => {
-                    const go = p.getGameObject();
-                    if (go === shipGameObj) {
-                        return true;
-                    }
-                    return false;
-                });
+        this.physics.add.collider(supply, this.getLevel().getGameObject());
+        this.physics.add.collider(supply, SpaceSimClient.player.getGameObject(), () => {
                 this._supplies.delete(supply.id);
-                supply.apply(ship);
+                supply.apply(SpaceSimClient.player);
                 supply.destroy();
-            }
-        );
+        });
         return supply;
     }
 }

@@ -17,6 +17,8 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
     private _id: string;
     private _amount: number;
     private _type: SupplyType;
+
+    public scene: BaseScene;
     
     constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options.location.x, options.location.y);
@@ -30,14 +32,6 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         this._body.setBounce(Constants.Ship.Supplies.BOUNCE, Constants.Ship.Supplies.BOUNCE);
 
         this.configure(options);
-
-        if (this.sceneAs<BaseScene>()['getLevel']) {
-            this.scene.physics.add.collider(this, this.sceneAs<BaseScene>().getLevel()?.getGameObject());
-        }
-    }
-
-    sceneAs<T extends Phaser.Scene>(): T {
-        return super.scene as T;
     }
 
     get config(): ShipSupplyOptions {

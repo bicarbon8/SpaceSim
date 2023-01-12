@@ -8,7 +8,7 @@ export class PlayerCoolantSupply extends CoolantSupply {
             x: 0,
             y: 0,
             key: 'coolant-canister',
-            origin: 0
+            origin: 0.5
         }, false);
         this.add(sprite);
     }

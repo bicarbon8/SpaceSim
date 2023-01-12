@@ -39,8 +39,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         super(settingsConfig || sceneConfig);
 
         this.debug = SpaceSim.debug;
-
-        SpaceSimClient.mode = 'multiplayer';
     }
 
     override getLevel<T extends GameLevel>(): T {
@@ -119,6 +117,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     create(): void {
+        SpaceSimClient.mode = 'multiplayer';
         this._shipId = null;
         this._gameLevel = null;
         SpaceSimClient.player = null;
@@ -199,7 +198,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                         }
                         this._supplies.set(o.id, supply);
                         Helpers.trycatch(() => SpaceSimClient.radar?.ignore(supply), 'none');
-                        this.physics.add.collider(supply, this.getLevel().getGameObject());
                     }
                 });
             }).on(Constants.Socket.REMOVE_SUPPLY, (id) => {
@@ -214,6 +212,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     Animations.flicker(supply, -1, () => null);
                 }
             }).on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => {
+                console.debug('updating game stats from server...');
                 GameScoreTracker.updateAllStats(...stats);
             }).on(Constants.Socket.TRIGGER_ENGINE, (id) => {
                 this._ships.get(id)?.getThruster()?.trigger();

@@ -8,7 +8,7 @@ export class PlayerAmmoSupply extends AmmoSupply {
             x: 0,
             y: 0,
             key: 'ammo',
-            origin: 0
+            origin: 0.5
         }, false);
         this.add(sprite);
     }

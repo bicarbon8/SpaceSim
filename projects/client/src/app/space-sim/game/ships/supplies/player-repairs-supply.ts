@@ -9,7 +9,7 @@ export class PlayerRepairsSupply extends RepairsSupply {
             x: 0,
             y: 0,
             key: 'repairs-canister',
-            origin: 0
+            origin: 0.5
         }, false);
         this.add(sprite);
     }

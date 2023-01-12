@@ -93,6 +93,7 @@ export class BattleRoyaleScene extends BaseScene {
         // 1 fps
         if (this._ultraLowPriUpdateAt >= Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
             this._ultraLowPriUpdateAt = 0;
+            SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.UPDATE_STATS, GameScoreTracker.getAllStats());
             Helpers.trycatch(() => this._cleanup());
         }
     }
@@ -238,7 +239,6 @@ export class BattleRoyaleScene extends BaseScene {
                 }
             }
             
-            SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.UPDATE_STATS, GameScoreTracker.getAllStats());
             console.debug(`sending player death notice to clients for ship ${opts.id}`);
             SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.PLAYER_DEATH, opts.id);
             
@@ -293,14 +293,14 @@ export class BattleRoyaleScene extends BaseScene {
         console.debug(`expelling supplies at:`, shipCfg.location);
         const supplyOpts = this._exploder.emitSupplies(shipCfg);
         for (const options of supplyOpts) {
-            const supply = this._addSupplyCollisionPhysicsWithPlayers(options);
+            const supply = this._addSupplyCollisionPhysics(options);
             this._supplies.set(supply.id, supply);
             this._cleanupSupply(supply);
         }
         console.debug(`${supplyOpts.length} supplies expelled from ship ${shipCfg.id}`);
     }
 
-    private _addSupplyCollisionPhysicsWithPlayers(options: ShipSupplyOptions): ShipSupply {
+    private _addSupplyCollisionPhysics(options: ShipSupplyOptions): ShipSupply {
         let supply: ShipSupply;
         switch(options.supplyType) {
             case 'ammo':
@@ -319,6 +319,7 @@ export class BattleRoyaleScene extends BaseScene {
                 console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
                 break;
         }
+        this.physics.add.collider(supply, this.getLevel().getGameObject());
         this.physics.add.collider(supply, this.getShips()
             .filter(p => p?.active)
             .map(o => o?.getGameObject()), 
@@ -402,9 +403,17 @@ export class BattleRoyaleScene extends BaseScene {
                 const timer = this._disconnectTimers.get(ship.id);
                 window.clearTimeout(timer);
                 this._disconnectTimers.delete(ship.id);
+                this._ensureSocketInRoom(socket);
             }
         }
         return ship;
+    }
+
+    private _ensureSocketInRoom(socket: Socket): void {
+        if (socket && !Array.from(socket.rooms.keys()).includes(this.ROOM_NAME)) {
+            console.debug(`rejoining socket '${socket.id}' to room '${this.ROOM_NAME}'`);
+            socket.join(this.ROOM_NAME);
+        }
     }
 
     private _cleanup(): void {

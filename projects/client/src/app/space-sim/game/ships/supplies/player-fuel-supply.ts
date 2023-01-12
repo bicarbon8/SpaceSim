@@ -8,7 +8,7 @@ export class PlayerFuelSupply extends FuelSupply {
             x: 0,
             y: 0,
             key: 'fuel-canister',
-            origin: 0
+            origin: 0.5
         }, false);
         this.add(sprite);
     }

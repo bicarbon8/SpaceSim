@@ -13,7 +13,6 @@ import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
 import { Camera } from "./ui-components/camera";
 import { Radar } from "./ui-components/radar";
-import { PlayerShip } from "./ships/player-ship";
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
