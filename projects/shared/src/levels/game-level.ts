@@ -3,22 +3,34 @@ import Dungeon, { Room } from "@mikewesthad/dungeon";
 import { HasGameObject } from "../interfaces/has-game-object";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
-import { GameMapOptions } from "./game-map-options";
-import { SpaceSim } from "../space-sim";
 import { ShipLike } from "../interfaces/ship-like";
+import { Ship } from "../ships/ship";
 
 export type RoomPlus = Room & {
     visible?: boolean;
 };
 
-export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
+export type GameLevelOptions = {
+    width?: number;
+    height?: number;
+    seed?: string;
+    roomMinWidth?: number;
+    roomMinHeight?: number;
+    roomMaxWidth?: number;
+    roomMaxHeight?: number;
+    doorPadding?: number;
+    maxRooms?: number;
+    layerDepth?: number;
+};
+
+export class GameLevel implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
     private _scene: Phaser.Scene;
     private _dungeon: Dungeon;
     private _layer: Phaser.Tilemaps.TilemapLayer;
     private _minimapLayer: Phaser.Tilemaps.TilemapLayer;
     private _tileMap: Phaser.Tilemaps.Tilemap;
 
-    constructor(scene: Phaser.Scene, options?: GameMapOptions) {
+    constructor(scene: Phaser.Scene, options?: GameLevelOptions) {
         this._scene = scene;
         this._createGameObj(options);
     }
@@ -103,8 +115,8 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         return furthest;
     }
 
-    getActiveShipsWithinRadius(location: Phaser.Types.Math.Vector2Like, radius: number): Array<ShipLike> {
-        return SpaceSim.players()
+    getActiveShipsWithinRadius(ships: Array<Ship>, location: Phaser.Types.Math.Vector2Like, radius: number): Array<ShipLike> {
+        return ships
             .filter(s => {
                 if (s?.active) {
                     if (Phaser.Math.Distance.BetweenPoints(s.getLocation(), location) <= radius) {
@@ -115,7 +127,7 @@ export class GameMap implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
             });
     }
 
-    private _createGameObj(options: GameMapOptions): void {
+    private _createGameObj(options: GameLevelOptions): void {
         const doorPadding = options?.doorPadding ?? 2;
         this._dungeon = new Dungeon({
             randomSeed: options?.seed ?? 'bicarbon8',

@@ -4,7 +4,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 module.exports = (env) => {
   return {
     entry: {
-      engine: './src/app/space-sim-game-engine.ts'
+      engine: './src/app/space-sim-server.ts'
     },
     devtool: 'source-map',
     module: {

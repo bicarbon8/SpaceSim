@@ -1,7 +1,7 @@
 import { Card, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants, Helpers, SpaceSimPlayerData } from "space-sim-shared";
+import { Constants, Helpers, SpaceSimUserData } from "space-sim-shared";
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
 import getBrowserFingerprint from "get-browser-fingerprint";
@@ -37,12 +37,12 @@ export class StartupScene extends Phaser.Scene {
     }
 
     create(): void {
-        const fingerprint = getBrowserFingerprint();
+        const fingerprint: string = `${getBrowserFingerprint()}`;
         const dataStr = localStorage.getItem('space-sim');
-        let playerData: SpaceSimPlayerData;
+        let playerData: SpaceSimUserData;
         if (dataStr) {
             try {
-                playerData = JSON.parse(dataStr) as SpaceSimPlayerData;
+                playerData = JSON.parse(dataStr) as SpaceSimUserData;
             } catch (e) {
                 playerData = {name: '', fingerprint: ''};
             }
@@ -309,8 +309,8 @@ export class StartupScene extends Phaser.Scene {
                     Helpers.trycatch(() => {
                         this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
                             .setText(`attempting to reconnect to server...`);
+                        this._serverConnectionText.updateSize();
                     }, 'warn', 'error updating startup scene connection text');
-                this._serverConnectionText.updateSize();
                     SpaceSimClient.socket.connect();
                 }
             });

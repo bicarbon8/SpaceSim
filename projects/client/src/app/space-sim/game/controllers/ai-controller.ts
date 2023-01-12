@@ -1,5 +1,4 @@
-import { SpaceSimClient } from "../space-sim-client";
-import { GameScoreTracker, Helpers, SpaceSim } from "space-sim-shared";
+import { Helpers, SpaceSim } from "space-sim-shared";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {
@@ -11,7 +10,7 @@ export class AiController extends InputController {
     update(time: number, delta: number): void {
         const attackerId = Helpers.getLastAttackerId(this.ship);
         if (attackerId) {
-            const attacker = SpaceSim.playersMap.get(attackerId);
+            const attacker = this.scene.getShipsMap().get(attackerId);
             if (attacker) {
                 this.ship.lookAt(attacker.location);
             }
@@ -21,11 +20,11 @@ export class AiController extends InputController {
         if (attackerId) {
             if (this._nextWeaponsFireAt == null || this._nextWeaponsFireAt <= time) {
                 this.ship.getWeapons().trigger();
-                this._nextWeaponsFireAt = time + (SpaceSim.playersMap.size * 50);
+                this._nextWeaponsFireAt = time + (this.scene.getShipsMap().size * 50);
             } else {
                 if (this._nextThrusterFireAt == null || this._nextThrusterFireAt <= time) {
                     this.ship.getThruster().trigger();
-                    this._nextThrusterFireAt = time + (SpaceSim.playersMap.size * 10);
+                    this._nextThrusterFireAt = time + (this.scene.getShipsMap().size * 10);
                 }
             }
         } else {

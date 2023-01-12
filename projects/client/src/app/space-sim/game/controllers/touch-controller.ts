@@ -1,4 +1,4 @@
-import { Helpers, Constants, Ship } from "space-sim-shared";
+import { Helpers, Constants, Ship, BaseScene } from "space-sim-shared";
 import { InputController } from "./input-controller";
 import { GridLayout, LayoutContent, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
@@ -10,7 +10,7 @@ export class TouchController extends InputController {
     private _throwButtonActive: boolean;
     private _boostButtonActive: boolean;
     
-    constructor(scene: Phaser.Scene, player?: Ship) {
+    constructor(scene: BaseScene, player?: Ship) {
         super(scene, player);
 
         this._createGameObj();
@@ -34,21 +34,21 @@ export class TouchController extends InputController {
         // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
         // only update if angle changed more than minimum allowed degrees
         if (!Phaser.Math.Fuzzy.Equal(this.ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
-            SpaceSimClient.socket?.emit(Constants.Socket.SET_PLAYER_ANGLE, degrees);
+            SpaceSimClient.socket?.emit(Constants.Socket.SET_PLAYER_ANGLE, degrees, SpaceSimClient.playerData);
             this.ship.setRotation(degrees);
         }
     }
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
-            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON);
+            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON, SpaceSimClient.playerData);
             this.ship.getWeapons()?.trigger();
         }
     }
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
-            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE);
+            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE, SpaceSimClient.playerData);
             this.ship.getThruster()?.trigger();
         }
     }

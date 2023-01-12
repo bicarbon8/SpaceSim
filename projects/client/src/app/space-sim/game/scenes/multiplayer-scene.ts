@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameMap, Constants, Helpers, GameMapOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, GameStats, GameScoreTracker, Exploder } from "space-sim-shared";
+import { GameLevel, Constants, Helpers, GameLevelOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, GameStats, GameScoreTracker, Exploder, BaseScene, ShipSupply } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -20,7 +20,7 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     key: 'multiplayer-scene'
 };
 
-export class MultiplayerScene extends Phaser.Scene implements Resizable {
+export class MultiplayerScene extends BaseScene implements Resizable {
     private _width: number;
     private _height: number;
     private _stellarBodies: StellarBody[];
@@ -29,6 +29,9 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     private _exploder: Exploder;
     private _shipId: string;
     private _disconnectTimer: number;
+    private _gameLevel: GameLevel;
+    private readonly _supplies = new Map<string, ShipSupply>();
+    private readonly _ships = new Map<string, Ship>();
 
     debug: boolean;
 
@@ -38,6 +41,26 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         this.debug = SpaceSim.debug;
 
         SpaceSimClient.mode = 'multiplayer';
+    }
+
+    override getLevel<T extends GameLevel>(): T {
+        return this._gameLevel as T;
+    }
+
+    override getShipsMap<T extends Ship>(): Map<string, T> {
+        return this._ships as Map<string, T>;
+    }
+
+    override getShips<T extends Ship>(): Array<T> {
+        return Array.from(this._ships.values()) as Array<T>;
+    }
+
+    override getSuppliesMap<T extends ShipSupply>(): Map<string, T> {
+        return this._supplies as Map<string, T>;
+    }
+
+    override getSupplies<T extends ShipSupply>(): Array<T> {
+        return Array.from(this._supplies.values()) as Array<T>;
     }
 
     preload(): void {
@@ -97,9 +120,9 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
 
     create(): void {
         this._shipId = null;
-        SpaceSim.map = null;
+        this._gameLevel = null;
         SpaceSimClient.player = null;
-        SpaceSim.playersMap.clear();
+        this._ships.clear();
         this._stellarBodies = new Array<StellarBody>();
 
         this._exploder = new Exploder(this);
@@ -118,7 +141,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
 
     update(time: number, delta: number): void {
         try {
-            SpaceSim.players().forEach(p => p?.update(time, delta));
+            this.getShips().forEach(p => p?.update(time, delta));
 
             this._stellarBodies.forEach((body) => {
                 body?.update(time, delta);
@@ -151,7 +174,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
         SpaceSimClient.socket
             .on(Constants.Socket.UPDATE_SUPPLIES, (supplyOpts: Array<ShipSupplyOptions>) => {
                 supplyOpts.forEach(o => {
-                    let supply = SpaceSim.suppliesMap.get(o.id);
+                    let supply = this._supplies.get(o.id);
                     if (supply) {
                         // update existing supply
                         supply?.configure(o);
@@ -174,28 +197,28 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
                                 console.warn(`unknown supplyType of ${o.supplyType} provided`);
                                 break;
                         }
-                        SpaceSim.suppliesMap.set(o.id, supply);
+                        this._supplies.set(o.id, supply);
                         Helpers.trycatch(() => SpaceSimClient.radar?.ignore(supply), 'none');
-                        this.physics.add.collider(supply, SpaceSim.map.getGameObject());
+                        this.physics.add.collider(supply, this.getLevel().getGameObject());
                     }
                 });
             }).on(Constants.Socket.REMOVE_SUPPLY, (id) => {
-                const supply = SpaceSim.suppliesMap.get(id);
+                const supply = this._supplies.get(id);
                 if (supply) {
                     supply.destroy();
-                    SpaceSim.suppliesMap.delete(id);
+                    this._supplies.delete(id);
                 }
             }).on(Constants.Socket.FLICKER_SUPPLY, (id: string) => {
-                const supply = SpaceSim.suppliesMap.get(id);
+                const supply = this._supplies.get(id);
                 if (supply) {
                     Animations.flicker(supply, -1, () => null);
                 }
             }).on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => {
                 GameScoreTracker.updateAllStats(...stats);
             }).on(Constants.Socket.TRIGGER_ENGINE, (id) => {
-                SpaceSim.playersMap.get(id)?.getThruster()?.trigger();
+                this._ships.get(id)?.getThruster()?.trigger();
             }).on(Constants.Socket.TRIGGER_WEAPON, (id) => {
-                SpaceSim.playersMap.get(id)?.getWeapons()?.trigger();
+                this._ships.get(id)?.getWeapons()?.trigger();
             });
     }
 
@@ -213,15 +236,15 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
 
     private async _getMapFromServer(): Promise<void> {
         SpaceSimClient.socket
-            .on(Constants.Socket.UPDATE_MAP, (opts: GameMapOptions) => {
-                SpaceSim.map = new GameMap(this, opts);
+            .on(Constants.Socket.UPDATE_MAP, (opts: GameLevelOptions) => {
+                this._gameLevel = new GameLevel(this, opts);
             });
         SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP, SpaceSimClient.playerData);
         await this._waitForMap();
     }
 
     private async _waitForMap(): Promise<void> {
-        while (SpaceSim.map == null) {
+        while (this.getLevel() == null) {
             // wait half a second and check again
             await new Promise<void>(resolve => setTimeout(resolve, 500));
         }
@@ -232,15 +255,15 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             this._shipId = id;
         }).on(Constants.Socket.UPDATE_PLAYERS, (shipOpts: Array<ShipOptions>) => {
             shipOpts.forEach(o => {
-                let ship = SpaceSimClient.playersMap().get(o.id);
+                let ship = this._ships.get(o.id) as PlayerShip;
                 if (ship) {
                     // update existing ship
                     ship?.configure(o);
                 } else {
                     // or create new ship if doesn't already exist
                     ship = new PlayerShip(this, o);
-                    SpaceSim.playersMap.set(o.id, ship);
-                    this.physics.add.collider(ship.getGameObject(), SpaceSim.map.getGameObject());
+                    this._ships.set(o.id, ship);
+                    this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
                     Helpers.trycatch(() => SpaceSimClient.camera?.ignore(ship.radarSprite), 'none');
                 }
@@ -253,11 +276,11 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             if (!id) {
                 this._gameOver();
             } else {
-                const ship = SpaceSim.playersMap.get(id);
+                const ship = this._ships.get(id);
                 if (ship) {
                     this._exploder.explode({location: ship.config.location});
                     ship?.destroy(false);
-                    SpaceSim.playersMap.delete(ship.id);
+                    this._ships.delete(ship.id);
                     
                     if (SpaceSimClient.player.id == ship?.id) {
                         this._gameOver();
@@ -275,7 +298,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             }
         });
 
-        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_PLAYER, SpaceSimClient.playerData);
+        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_SHIP, SpaceSimClient.playerData);
         await this._waitForPlayer();
     }
 
@@ -287,15 +310,15 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     private _createStellarBodiesLayer(): void {
-        const room: RoomPlus = SpaceSim.map.getRooms()[0];
+        const room: RoomPlus = this.getLevel().getRooms()[0];
         const bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
             {spriteName: 'venus', rotationSpeed: 0}, 
             {spriteName: 'mercury', rotationSpeed: 0},
             {spriteName: 'asteroids', scale: {min: 4, max: 10}}
         ];
-        const topleft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
-        const botright: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
+        const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left, room.top);
+        const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right, room.bottom);
         const offsetX = 300;
         const offsetY = 300;
         const divisionsX = Math.floor(Phaser.Math.Distance.BetweenPoints({x: topleft.x, y: 0}, {x: botright.x, y: 0}) / offsetX);
@@ -348,8 +371,8 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             name: 'main',
             zoom: zoom,
             ignore: [
-                SpaceSim.map.minimapLayer,
-                ...SpaceSimClient.players()
+                this.getLevel().minimapLayer,
+                ...this.getShips<PlayerShip>()
                     .map(p => p.radarSprite)
                     .filter(p => p != null)
             ],
@@ -379,7 +402,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                SpaceSim.map.getGameObject()
+                this.getLevel().getGameObject()
             ],
             followObject: SpaceSimClient.player.getGameObject()
         });
@@ -395,7 +418,7 @@ export class MultiplayerScene extends Phaser.Scene implements Resizable {
     }
 
     private _addPlayerCollisionPhysicsWithPlayers(ship: Ship): void {
-        this.physics.add.collider(ship.getGameObject(), SpaceSim.players().map(p => p?.getGameObject()));
+        this.physics.add.collider(ship.getGameObject(), this.getShips().map(p => p?.getGameObject()));
     }
 
     private _gameOver(): void {

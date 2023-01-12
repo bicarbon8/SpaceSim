@@ -1,5 +1,5 @@
 import { LayoutContainer } from "phaser-ui-components";
-import { Constants, DamageOptions, Ship, ShipOptions } from "space-sim-shared";
+import { BaseScene, Constants, DamageOptions, Ship, ShipOptions } from "space-sim-shared";
 import { Animations } from "../utilities/animations";
 
 export class PlayerShip extends Ship {
@@ -10,7 +10,7 @@ export class PlayerShip extends Ship {
     private _radarSprite: Phaser.GameObjects.Sprite;
     private _selfDestructText: Phaser.GameObjects.Text;
 
-    constructor(scene: Phaser.Scene, options: ShipOptions) {
+    constructor(scene: BaseScene, options: ShipOptions) {
         super(scene, options);
 
         this._addVisualsToGameObject(options);

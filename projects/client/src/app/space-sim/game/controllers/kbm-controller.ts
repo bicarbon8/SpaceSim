@@ -1,4 +1,4 @@
-import { Constants, Ship } from "space-sim-shared";
+import { BaseScene, Constants, Ship } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
@@ -20,7 +20,7 @@ export class KbmController extends InputController {
 
     private _container: Phaser.GameObjects.Container;
     
-    constructor(scene: Phaser.Scene, player?: Ship) {
+    constructor(scene: BaseScene, player?: Ship) {
         super(scene, player);
 
         this._createGameObject();
@@ -35,7 +35,7 @@ export class KbmController extends InputController {
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
-                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE);
+                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE, SpaceSimClient.playerData);
                 this.ship.getThruster()?.trigger();
             }
             // reverse Thruster
@@ -56,7 +56,7 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON);
+                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON, SpaceSimClient.playerData);
                 this.ship.getWeapons()?.trigger();
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {

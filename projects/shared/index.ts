@@ -17,11 +17,11 @@ export * from "./src/interfaces/physics-object";
 export * from "./src/interfaces/ship-like";
 export * from "./src/interfaces/size";
 export * from "./src/interfaces/updatable";
-/** map */
-export * from "./src/map/game-map-options";
-export * from "./src/map/game-map";
+/** levels */
+export * from "./src/levels/game-level";
+/** scenes */
+export * from "./src/scenes/base-scene";
 /** ships/attachments/offence */
-export * from "./src/ships/attachments/offence/bullet-options";
 export * from "./src/ships/attachments/offence/bullet";
 export * from "./src/ships/attachments/offence/cannon";
 export * from "./src/ships/attachments/offence/machine-gun";
@@ -46,5 +46,5 @@ export * from "./src/utilities/exploder";
 export * from "./src/utilities/game-score-tracker";
 export * from "./src/utilities/helpers";
 /** game */
-export * from "./src/space-sim-player-data";
+export * from "./src/space-sim-user-data";
 export * from "./src/space-sim";

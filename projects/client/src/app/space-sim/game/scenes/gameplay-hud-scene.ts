@@ -1,4 +1,4 @@
-import { Constants, GameScoreTracker, GameStats, Helpers, SpaceSim } from "space-sim-shared";
+import { Constants, GameScoreTracker, GameStats, Helpers, SpaceSim, BaseScene } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
@@ -22,12 +22,16 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _hudLayout: GridLayout;
     private _controller: InputController;
 
+    readonly parentScene: BaseScene;
+
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
 
         this.debug = SpaceSim.debug;
+
+        this.parentScene = SpaceSim.game.scene.getScene('gameplay-scene') as BaseScene;
     }
 
     create(): void {
@@ -137,9 +141,9 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             this._controller.getGameObject()?.destroy();
         }
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, SpaceSimClient.player);
+            this._controller = new KbmController(this.parentScene, SpaceSimClient.player);
         } else {
-            this._controller = new TouchController(this, SpaceSimClient.player);
+            this._controller = new TouchController(this.parentScene, SpaceSimClient.player);
         }
         const obj = this._controller.getGameObject();
         if (obj) {

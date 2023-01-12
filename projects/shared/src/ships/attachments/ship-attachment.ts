@@ -1,5 +1,6 @@
 import { Ship } from "../ship";
 import { Updatable } from "../../interfaces/updatable";
+import { BaseScene } from "../../scenes/base-scene";
 
 export abstract class ShipAttachment implements Updatable {
     readonly ship: Ship;
@@ -11,7 +12,7 @@ export abstract class ShipAttachment implements Updatable {
         this.active = true;
     }
 
-    get scene(): Phaser.Scene {
+    get scene(): BaseScene {
         return this.ship.scene;
     }
 

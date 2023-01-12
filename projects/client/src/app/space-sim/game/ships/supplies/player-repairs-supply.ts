@@ -1,7 +1,8 @@
 import { RepairsSupply, ShipSupplyOptions } from "space-sim-shared";
+import { BaseScene } from "space-sim-shared";
 
 export class PlayerRepairsSupply extends RepairsSupply {
-    constructor(scene: Phaser.Scene, options: ShipSupplyOptions) {
+    constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options);
 
         const sprite = this.scene.make.sprite({

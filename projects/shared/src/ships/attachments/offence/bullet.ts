@@ -1,17 +1,46 @@
 import { HasGameObject } from "../../../interfaces/has-game-object";
-import { BulletOptions } from "./bullet-options";
 import { HasLocation } from "../../../interfaces/has-location";
 import { Helpers } from "../../../utilities/helpers";
-import { SpaceSim } from "../../../space-sim";
 import { Ship } from "../../ship";
 import { Constants } from "../../../utilities/constants";
 import { Weapons } from "./weapons";
 import { GameScoreTracker } from "../../../utilities/game-score-tracker";
 import { Exploder } from "../../../utilities/exploder";
+import { BaseScene } from "../../../scenes/base-scene";
+
+export type BulletOptions = {
+    readonly location: Phaser.Math.Vector2;
+    readonly weapon: Weapons;
+    readonly spriteName: string;
+    /**
+     * the force imparted on the bullet when fired. larger numbers
+     * travel faster
+     */
+    readonly force?: number;
+    /**
+     * amount of damage this bullet causes if it hits a target
+     */
+    readonly damage?: number;
+    readonly angle?: number;
+    readonly startingV?: Phaser.Math.Vector2;
+    /**
+     * the size of this bullet
+     */
+    readonly scale?: number;
+    /**
+     * number of milliseconds before the bullet self-destructs
+     * after being fired
+     */
+    readonly timeout?: number;
+    /**
+     * how much influence the impact will have on targets
+     */
+    readonly mass?: number;
+};
 
 export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.Container>, HasLocation {
     readonly id: string;
-    readonly scene: Phaser.Scene;
+    readonly scene: BaseScene;
     readonly force: number;
     readonly damage: number;
     readonly scale: number;
@@ -26,10 +55,10 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
     private _gameObj: Phaser.GameObjects.Container;
     private _hitSound: Phaser.Sound.BaseSound;
     
-    constructor(options: BulletOptions) {
+    constructor(scene: BaseScene, options: BulletOptions) {
         this.id = Phaser.Math.RND.uuid();
         this.active = true;
-        this.scene = options.scene;
+        this.scene = scene;
         this._startLoc = options.location || Helpers.vector2();
         this.weapon = options.weapon;
         this.spriteName = options.spriteName;
@@ -57,11 +86,11 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
     }
 
     private addCollisionDetection(): void {
-        this.scene.physics.add.collider(this.getGameObject(), SpaceSim.map.getGameObject(), () => {
+        this.scene.physics.add.collider(this.getGameObject(), this.scene.getLevel().getGameObject(), () => {
             this.destroy();
         });
         const dist = this.getRange();
-        SpaceSim.map.getActiveShipsWithinRadius(this.getLocation(), dist * 2)
+        this.scene.getLevel().getActiveShipsWithinRadius(this.scene.getShips(), this.getLocation(), dist * 2)
             .forEach((opp: Ship) => {
                 if (opp.id !== this.weapon.ship.id) {
                     this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {

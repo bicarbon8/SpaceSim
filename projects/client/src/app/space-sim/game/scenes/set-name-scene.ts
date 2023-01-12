@@ -1,6 +1,6 @@
 import { GridLayout, LayoutContainer, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
-import { Helpers } from "space-sim-shared";
+import { Constants, Helpers } from "space-sim-shared";
 import { environment } from "src/environments/environment";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
@@ -38,6 +38,8 @@ export class SetNameScene extends Phaser.Scene {
         } else {
             this._getMobileTextInput();
         }
+
+        this._startHandlingSocketMessages();
     }
 
     update() {
@@ -48,6 +50,20 @@ export class SetNameScene extends Phaser.Scene {
             this._button.setText({style: Styles.secondary().text});
             this._button.setBackground(Styles.secondary().graphics);
         }
+    }
+
+    private _startHandlingSocketMessages(): void {
+        SpaceSimClient.socket.once(Constants.Socket.JOIN_ROOM, () => {
+            console.debug(`received '${Constants.Socket.JOIN_ROOM}' response event`);
+            this.scene.start('multiplayer-scene');
+            this.scene.stop(this);
+            this._stopHandlingSocketMessages();
+        });
+        // TODO: handle invalid name response from server
+    }
+
+    private _stopHandlingSocketMessages(): void {
+
     }
 
     private _createMusic(): void {
@@ -138,8 +154,7 @@ export class SetNameScene extends Phaser.Scene {
         const pname = Helpers.sanitise(text);
         if (pname.length > 2) {
             SpaceSimClient.playerData.name = pname;
-            this.scene.start('multiplayer-scene');
-            this.scene.stop(this);
+            SpaceSimClient.socket.emit(Constants.Socket.JOIN_ROOM, SpaceSimClient.playerData);
         }
     }
 }

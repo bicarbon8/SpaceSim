@@ -1,4 +1,4 @@
-import { Scene } from "phaser";
+import * as Phaser from "phaser";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { Engine } from "./attachments/utility/engine";
@@ -9,6 +9,7 @@ import { MachineGun } from "./attachments/offence/machine-gun";
 import { ShipLike } from "../interfaces/ship-like";
 import { IsConfigurable } from "../interfaces/is-configurable";
 import { PhysicsObject } from "../interfaces/physics-object";
+import { BaseScene } from "../scenes/base-scene";
 
 export type ShipOptions = Partial<PhysicsObject> & {
     readonly id?: string;
@@ -28,7 +29,7 @@ export type ShipOptions = Partial<PhysicsObject> & {
 export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurable<ShipOptions> {
     /** ShipOptions */
     readonly id: string; // UUID
-    readonly scene: Scene;
+    readonly scene: BaseScene;
     readonly mass: number;
     readonly fingerprint: string;
     readonly name: string;
@@ -51,7 +52,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     
     private _destroyAtTime: number;
     
-    constructor(scene: Phaser.Scene, options: ShipOptions) {
+    constructor(scene: BaseScene, options: ShipOptions) {
         this.id = options.id ?? Phaser.Math.RND.uuid();
         this.scene = scene;
         this.mass = options.mass ?? 100;

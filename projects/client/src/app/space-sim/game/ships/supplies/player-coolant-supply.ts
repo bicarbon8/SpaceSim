@@ -1,7 +1,7 @@
-import { CoolantSupply, ShipSupplyOptions } from "space-sim-shared"
+import { BaseScene, CoolantSupply, ShipSupplyOptions } from "space-sim-shared"
 
 export class PlayerCoolantSupply extends CoolantSupply {
-    constructor(scene: Phaser.Scene, options: ShipSupplyOptions) {
+    constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options);
 
         const sprite = this.scene.make.sprite({

@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { AmmoSupply, Constants, Exploder, GameMap, GameObjectPlus, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, ShipSupplyOptions, SpaceSim } from "space-sim-shared";
+import { Constants, Exploder, GameLevel, GameObjectPlus, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -20,13 +20,16 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     key: 'gameplay-scene'
 };
 
-export class GameplayScene extends Phaser.Scene implements Resizable {
+export class GameplayScene extends BaseScene implements Resizable {
     private _width: number;
     private _height: number;
     private _stellarBodies: StellarBody[];
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: Exploder;
+    private _gameLevel: GameLevel;
+    private readonly _supplies = new Map<string, ShipSupply>();
+    private readonly _ships = new Map<string, Ship>();
 
     private _physicsUpdator: Generator<void, void, unknown>;
 
@@ -39,6 +42,28 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         this._stellarBodies = [];
 
         SpaceSimClient.mode = 'singleplayer';
+        this._ships = new Map<string, Ship>();
+        this._supplies = new Map<string, ShipSupply>();
+    }
+
+    override getLevel<T extends GameLevel>(): T {
+        return this._gameLevel as T;
+    }
+
+    override getShipsMap<T extends Ship>(): Map<string, T> {
+        return this._ships as Map<string, T>;
+    }
+
+    override getShips<T extends Ship>(): Array<T> {
+        return Array.from(this._ships.values()) as Array<T>;
+    }
+
+    override getSuppliesMap<T extends ShipSupply>(): Map<string, T> {
+        return this._supplies as Map<string, T>;
+    }
+
+    override getSupplies<T extends ShipSupply>(): Array<T> {
+        return Array.from(this._supplies.values()) as Array<T>;
     }
 
     preload(): void {
@@ -122,11 +147,11 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
 
     update(time: number, delta: number): void {
         try {
-            SpaceSim.players().forEach(p => p.update(time, delta));
+            this.getShips().forEach(p => p.update(time, delta));
 
             // If the player has entered a new room, make it visible
             const currentLoc = SpaceSimClient.player.getLocation();
-            const currentRoom = SpaceSim.map.getRoomAtWorldXY(currentLoc.x, currentLoc.y);
+            const currentRoom = this.getLevel().getRoomAtWorldXY(currentLoc.x, currentLoc.y);
             this._showRoom(currentRoom);
 
             // disable all objects offscreen (plus margin of error)
@@ -159,7 +184,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         for (var i=0; i<children.length; i++) {
             const c = children[i];
             // skip over the map tiles
-            if (c !== SpaceSim.map.getGameObject()) {
+            if (c !== this.getLevel().getGameObject()) {
                 // and skip over objects that don't have physics bodies 
                 const arcade = c.body as Phaser.Physics.Arcade.Body;
                 if (arcade) {
@@ -183,9 +208,9 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         SpaceSimClient.opponents.splice(0, SpaceSimClient.opponents.length);
         
         // add opponent in each room
-        for (var room of SpaceSim.map.getRooms()) {
-            let tl: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left + 1, room.top + 1);
-            let br: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right - 1, room.bottom - 1);
+        for (var room of this.getLevel().getRooms()) {
+            let tl: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left + 1, room.top + 1);
+            let br: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right - 1, room.bottom - 1);
             let pos: Phaser.Math.Vector2 = Helpers.vector2(
                 Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
@@ -201,20 +226,20 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             this.physics.world.disable(p.getGameObject()); // disabled until player close to opponent
             let controller = new AiController(this, p);
             SpaceSimClient.opponents.push(controller);
-            SpaceSim.playersMap.set(p.id, p);
+            this._ships.set(p.id, p);
         };
     }
 
     private _createMapAndPlayer(): void {
-        SpaceSim.map = new GameMap(this, {
+        this._gameLevel = new GameLevel(this, {
             doorPadding: 2
         });
-        SpaceSim.map.alpha = 0; // hide until player enters room
+        this.getLevel().alpha = 0; // hide until player enters room
         
         // Place the player in random empty tile in the first room
-        const startingRoom = SpaceSim.map.getRoomClosestToOrigin();
-        const startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
-        const startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
+        const startingRoom = this.getLevel().getRoomClosestToOrigin();
+        const startTopLeft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
+        const startBottomRight: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
         const playerStartingPosition: Phaser.Math.Vector2 = Helpers.vector2(
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
@@ -226,10 +251,10 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             cockpitKey: Phaser.Math.RND.between(1, 3),
             engineKey: Phaser.Math.RND.between(1, 3)
         });
-        SpaceSim.playersMap.set(SpaceSimClient.player.id, SpaceSimClient.player);
+        this._ships.set(SpaceSimClient.player.id, SpaceSimClient.player);
         
         // setup collision with map walls
-        this.physics.add.collider(SpaceSimClient.player.getGameObject(), SpaceSim.map.getGameObject());
+        this.physics.add.collider(SpaceSimClient.player.getGameObject(), this.getLevel().getGameObject());
 
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
@@ -245,12 +270,12 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             } else {
                 this._expelSupplies(shipOpts);
             }
-            SpaceSim.playersMap.delete(shipOpts?.id);
+            this._ships.delete(shipOpts?.id);
         });
     }
 
     private _createStellarBodiesLayer(): void {
-        let rooms = SpaceSim.map.getRooms();
+        let rooms = this.getLevel().getRooms();
         let bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
             {spriteName: 'venus', rotationSpeed: 0}, 
@@ -259,8 +284,8 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         ];
         for (var i=0; i<rooms.length; i++) {
             let room = rooms[i];
-            let startTopLeft: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.left, room.top);
-            let startBottomRight: Phaser.Math.Vector2 = SpaceSim.map.getMapTileWorldLocation(room.right, room.bottom);
+            let startTopLeft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left, room.top);
+            let startBottomRight: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right, room.bottom);
             let location: Phaser.Math.Vector2 = Helpers.vector2(
                 Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
                 Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
@@ -294,14 +319,14 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
         if (SpaceSimClient.camera) {
             SpaceSimClient.camera.destroy();
         }
-        const ignore = Array.from(SpaceSimClient.playersMap().values())
+        const ignore = this.getShips<PlayerShip>()
             .map(p => p.radarSprite)
             .filter(p => p != null);
         SpaceSimClient.camera = new Camera(this, {
             name: 'main',
             zoom: zoom,
             ignore: [
-                SpaceSim.map.minimapLayer,
+                this.getLevel().minimapLayer,
                 ...ignore
             ],
             backgroundColor: 0x000000,
@@ -327,7 +352,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                SpaceSim.map.getGameObject()
+                this.getLevel().getGameObject()
             ],
             followObject: SpaceSimClient.player.getGameObject()
         });
@@ -349,13 +374,13 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 .map(o => o?.ship)
                 .filter(s => {
                     const shipLoc = s.getLocation();
-                    const shipRoom = SpaceSim.map.getRoomAtWorldXY(shipLoc.x, shipLoc.y);
+                    const shipRoom = this.getLevel().getRoomAtWorldXY(shipLoc.x, shipLoc.y);
                     return shipRoom === room;
                 });
             this.add.tween({
                 targets: [
-                    ...SpaceSim.map.getLayer().getTilesWithin(room.x, room.y, room.width, room.height),
-                    ...SpaceSim.map.minimapLayer.getTilesWithin(room.x, room.y, room.width, room.height), 
+                    ...this.getLevel().getLayer().getTilesWithin(room.x, room.y, room.width, room.height),
+                    ...this.getLevel().minimapLayer.getTilesWithin(room.x, room.y, room.width, room.height), 
                     ...opponentsInRoom.map(o => o.getGameObject())
                 ],
                 alpha: 1,
@@ -364,7 +389,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             // enable physics for enemies in the room
             opponentsInRoom.forEach(o => {
                 // setup collision with map walls
-                this.physics.add.collider(o.getGameObject(), SpaceSim.map.getGameObject());
+                this.physics.add.collider(o.getGameObject(), this.getLevel().getGameObject());
                 // setup collision with player
                 this.physics.add.collider(o.getGameObject(), SpaceSimClient.player.getGameObject(), () => {
                     const collisionSpeed = o.getVelocity().clone().subtract(SpaceSimClient.player.getVelocity()).length();
@@ -392,7 +417,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
             let options = supplyOpts[i];
             let supply = this._addSupplyCollisionPhysicsWithPlayers(options);
             SpaceSimClient.radar.ignore(supply);
-            SpaceSim.suppliesMap.set(supply.id, supply);
+            this._supplies.set(supply.id, supply);
         }
     }
 
@@ -415,7 +440,7 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
                 break;
         }
-        this.physics.add.collider(supply, SpaceSim.players()
+        this.physics.add.collider(supply, this.getShips()
             .filter(p => p?.active)
             .map(o => o?.getGameObject()), 
             (obj1, obj2) => {
@@ -425,14 +450,14 @@ export class GameplayScene extends Phaser.Scene implements Resizable {
                 } else {
                     shipGameObj = obj1 as Phaser.GameObjects.Container;
                 }
-                const ship: Ship = SpaceSim.players().find(p => {
+                const ship: Ship = this.getShips().find(p => {
                     const go = p.getGameObject();
                     if (go === shipGameObj) {
                         return true;
                     }
                     return false;
                 });
-                SpaceSim.suppliesMap.delete(supply.id);
+                this._supplies.delete(supply.id);
                 supply.apply(ship);
                 supply.destroy();
             }

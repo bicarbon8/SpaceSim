@@ -1,4 +1,4 @@
-import { Constants, GameScoreTracker, GameStats, SpaceSim } from "space-sim-shared";
+import { Constants, GameScoreTracker, GameStats, SpaceSim, BaseScene } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
@@ -22,6 +22,8 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     private _hudLayout: GridLayout;
     private _controller: InputController;
     private _connectedToServer: boolean;
+    
+    readonly parentScene: BaseScene;
 
     debug: boolean;
 
@@ -29,6 +31,8 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
         super(settingsConfig || sceneConfig);
 
         this.debug = SpaceSim.debug;
+
+        this.parentScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
     }
 
     create(): void {
@@ -141,9 +145,9 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             this._controller.getGameObject()?.destroy();
         }
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, SpaceSimClient.player);
+            this._controller = new KbmController(this.parentScene, SpaceSimClient.player);
         } else {
-            this._controller = new TouchController(this, SpaceSimClient.player);
+            this._controller = new TouchController(this.parentScene, SpaceSimClient.player);
         }
         const obj = this._controller.getGameObject();
         if (obj) {
@@ -156,7 +160,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player.id);
             const info: string[] = [
                 `Kills: ${GameScoreTracker.destroyedCount(SpaceSimClient.player.id)}`,
-                `Active Players: ${SpaceSim.players()?.length}`,
+                `Active Players: ${this.parentScene.getShips()?.length}`,
                 `Accuracy: ${stats.accuracy.toFixed(0)}%`,
                 `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
                 `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,

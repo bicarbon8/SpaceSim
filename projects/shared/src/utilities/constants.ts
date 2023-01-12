@@ -52,12 +52,16 @@ export module Constants {
     }
     export module Events {
         export const PLAYER_DEATH: string = 'player-death';
+        export const REMAP_SOCKET_TO_PLAYER = 'remap-socket-to-player';
     }
     export module Socket {
+        export const MAX_USERS_PER_ROOM = 50;
+        export const TOO_MANY_CONNECTIONS = 'too-many-connections';
         export const SET_PLAYER_DATA = 'set-player-data';
+        export const JOIN_ROOM = 'join-room';
         export const REQUEST_MAP = 'get-map';
         export const UPDATE_MAP = 'update-map';
-        export const REQUEST_PLAYER = 'get-player';
+        export const REQUEST_SHIP = 'request-new-ship';
         export const SET_PLAYER_ID = 'set-player-id';
         export const UPDATE_PLAYERS = 'update-players';
         export const COMMAND_PLAYER = 'player-command';
@@ -75,5 +79,6 @@ export module Constants {
         export const MED_PRI_UPDATE_FREQ = 1000/30; // 30 fps
         export const LOW_PRI_UPDATE_FREQ = 1000/15; // 15 fps
         export const ULTRALOW_PRI_UPDATE_FREQ = 1000; // 1 fps
+        export const DISCONNECT_TIMEOUT_MS = 10000; // 10 sec
     }
 }

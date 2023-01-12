@@ -1,5 +1,5 @@
 import "phaser";
-import { SpaceSim, Ship, Size, SpaceSimPlayerData } from "space-sim-shared";
+import { SpaceSim, Ship, Size, SpaceSimUserData } from "space-sim-shared";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
@@ -121,10 +121,8 @@ export module SpaceSimClient {
     }
     export var socket: Socket;
     export var player: Ship;
-    export var playerData: SpaceSimPlayerData;
+    export var playerData: SpaceSimUserData;
     export const opponents = new Array<AiController>();
-    export const playersMap = () => SpaceSim.playersMap as Map<string, PlayerShip>;
-    export const players = () => SpaceSim.players() as Array<PlayerShip>;
     export var mode: GameMode = 'singleplayer';
     export var camera: Camera;
     export var radar: Radar;

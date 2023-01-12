@@ -73,8 +73,7 @@ export abstract class Weapons extends ShipAttachment implements CanShoot {
         let bulletOffset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(-20, 0).add(shipLoc);
         let shipRealLocation: Phaser.Math.Vector2 = this.ship.getLocation();
         let adjustedLocation: Phaser.Math.Vector2 = Phaser.Math.RotateAround(bulletOffset, shipRealLocation.x, shipRealLocation.y, Phaser.Math.DegToRad(shipAngle));
-        new Bullet({
-            scene: this.scene,
+        new Bullet(this.scene, {
             weapon: this,
             location: adjustedLocation,
             force: this._force,

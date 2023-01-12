@@ -1,11 +1,11 @@
 import { ShipLike } from "../../interfaces/ship-like";
-import { SpaceSim } from "../../space-sim";
 import { Constants } from "../../utilities/constants";
 import { IsConfigurable } from "../../interfaces/is-configurable";
 import { PhysicsObject } from "../../interfaces/physics-object";
 import { HasId } from "../../interfaces/has-id";
 import { SupplyType } from "./supply-type";
 import { Helpers } from "../../utilities/helpers";
+import { BaseScene } from "../../scenes/base-scene";
 
 export type ShipSupplyOptions = Partial<PhysicsObject> & {
     readonly id?: string;
@@ -18,7 +18,7 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
     private _amount: number;
     private _type: SupplyType;
     
-    constructor(scene: Phaser.Scene, options: ShipSupplyOptions) {
+    constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options.location.x, options.location.y);
         this.scene.add.existing(this);
         this.setDepth(Constants.UI.Layers.PLAYER);
@@ -31,9 +31,13 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
 
         this.configure(options);
 
-        if (SpaceSim.map) {
-            this.scene.physics.add.collider(this, SpaceSim.map?.getGameObject());
+        if (this.sceneAs<BaseScene>()['getLevel']) {
+            this.scene.physics.add.collider(this, this.sceneAs<BaseScene>().getLevel()?.getGameObject());
         }
+    }
+
+    sceneAs<T extends Phaser.Scene>(): T {
+        return super.scene as T;
     }
 
     get config(): ShipSupplyOptions {
