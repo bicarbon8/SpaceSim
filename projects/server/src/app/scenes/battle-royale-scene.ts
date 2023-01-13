@@ -110,7 +110,7 @@ export class BattleRoyaleScene extends BaseScene {
                 Helpers.trycatch(() => {
                     console.debug(`received map request from: ${socket.id}`);
                     this._sendMap(socket);
-                }, 'warn', `error in handling '${Constants.Socket.REQUEST_MAP}' event`, 'message');
+                }, 'warn', `error in handling '${Constants.Socket.REQUEST_MAP}' event`, 'all');
             }).on(Constants.Socket.REQUEST_SHIP, (data: SpaceSimUserData) => {
                 Helpers.trycatch(() => {
                     console.debug(`received new ship request from: ${socket.id} in room ${this.ROOM_NAME}`);
@@ -119,7 +119,7 @@ export class BattleRoyaleScene extends BaseScene {
                     this._dataToShipId.set(SpaceSimUserData.uniqueKey(data), ship.id);
                     console.debug(`sending ship id ${ship.id} to client ${socket.id}`);
                     socket.emit(Constants.Socket.SET_PLAYER_ID, ship.id);
-                }, 'warn', `error in handling '${Constants.Socket.REQUEST_SHIP}' event`, 'message');
+                }, 'warn', `error in handling '${Constants.Socket.REQUEST_SHIP}' event`, 'all');
             }).on(Constants.Socket.TRIGGER_ENGINE, (data: SpaceSimUserData) => {
                 Helpers.trycatch(() => {
                     const ship = this._getShip(data, socket);
@@ -130,7 +130,7 @@ export class BattleRoyaleScene extends BaseScene {
                     } else {
                         socket.emit(Constants.Socket.PLAYER_DEATH);
                     }
-                }, 'warn', `error in handling '${Constants.Socket.TRIGGER_ENGINE}' event`, 'message');
+                }, 'warn', `error in handling '${Constants.Socket.TRIGGER_ENGINE}' event`, 'all');
             }).on(Constants.Socket.TRIGGER_WEAPON, (data: SpaceSimUserData) => {
                 Helpers.trycatch(() => {
                     const ship = this._getShip(data, socket);
@@ -141,7 +141,7 @@ export class BattleRoyaleScene extends BaseScene {
                     } else {
                         socket.emit(Constants.Socket.PLAYER_DEATH);
                     }
-                }, 'warn', `error in handling '${Constants.Socket.TRIGGER_WEAPON}' event`, 'message');
+                }, 'warn', `error in handling '${Constants.Socket.TRIGGER_WEAPON}' event`, 'all');
             }).on(Constants.Socket.SET_PLAYER_ANGLE, (degrees: number, data: SpaceSimUserData) => {
                 Helpers.trycatch(() => {
                     // console.debug(`received set angle to '${degrees}' request from: ${socket.id}`);
@@ -152,7 +152,7 @@ export class BattleRoyaleScene extends BaseScene {
                     } else {
                         socket.emit(Constants.Socket.PLAYER_DEATH);
                     }
-                }, 'warn', `error in handling '${Constants.Socket.SET_PLAYER_ANGLE}' event`, 'message');
+                }, 'warn', `error in handling '${Constants.Socket.SET_PLAYER_ANGLE}' event`, 'all');
             }).on(Constants.Socket.PLAYER_DEATH, (data: SpaceSimUserData) => {
                 Helpers.trycatch(() => {
                     console.debug(`received player death notice from: ${socket.id}`);
@@ -160,7 +160,7 @@ export class BattleRoyaleScene extends BaseScene {
                     if (ship) {
                         this._removeShip(ship.config);
                     }
-                }, 'warn', `error in handling '${Constants.Socket.PLAYER_DEATH}' event`, 'message');
+                }, 'warn', `error in handling '${Constants.Socket.PLAYER_DEATH}' event`, 'all');
             });
         }
     }
