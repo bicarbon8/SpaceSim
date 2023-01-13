@@ -22,5 +22,8 @@
         "rimraf": "^3.0.2",
         "typedoc": "^0.23.15"
     },
-    "private": true
+    "private": true,
+    "engines": {
+        "node": ">=16 <19"
+    }
 }
