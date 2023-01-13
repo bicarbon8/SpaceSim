@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && webpack",
-    "build:dev": "npm run build",
+    "build": "webpack",
+    "build:dev": "npm run clean && npm run build",
     "start": "npm run build && npm run open",
     "start:dev": "npm run build && npm run open:dev",
     "open": "npx phaser-game-server -s -c server.config.prod.json",

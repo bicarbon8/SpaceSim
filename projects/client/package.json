@@ -7,7 +7,7 @@
     "start": "ng serve --configuration production",
     "start:dev": "ng serve",
     "clean": "rimraf ./dist && rimraf ./docs",
-    "build": "npm run clean && ng build --configuration production --output-path ./docs",
+    "build": "ng build --configuration production --output-path ./docs",
     "build:dev": "npm run clean && ng build",
     "test": "ng test",
     "lint": "ng lint",

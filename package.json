@@ -7,7 +7,7 @@
     ],
     "scripts": {
         "clean": "rimraf ./dist && rimraf ./docs",
-        "build": "npm run clean && npm run build --workspaces --if-present && npm run copy-dist-to-root && npm run copy-docs-to-root",
+        "build": "npm run build --workspaces --if-present && npm run copy-dist-to-root && npm run copy-docs-to-root",
         "build:dev": "npm run build:dev --workspaces --if-present",
         "copy-dist-to-root": "copyfiles -u 3 \"./projects/**/dist/**/*\" ./dist/",
         "copy-docs-to-root": "copyfiles -u 3 \"./projects/**/docs/**/*\" ./docs/",
