@@ -1,4 +1,5 @@
-import { Helpers, SpaceSim } from "space-sim-shared";
+import { BaseScene, Helpers, SpaceSim } from "space-sim-shared";
+import { PlayerShip } from "../ships/player-ship";
 import { InputController } from "./input-controller";
 
 export class AiController extends InputController {
@@ -6,6 +7,14 @@ export class AiController extends InputController {
     private _lastKnownPlayerLocation: Phaser.Math.Vector2;
     private _nextWeaponsFireAt: number;
     private _nextThrusterFireAt: number;
+
+    constructor(scene: BaseScene, ship?: PlayerShip) {
+        super(scene, ship);
+    }
+
+    override get scene(): BaseScene {
+        return super.scene as BaseScene;
+    }
     
     update(time: number, delta: number): void {
         const attackerId = Helpers.getLastAttackerId(this.ship);

@@ -1,4 +1,4 @@
-import { BaseScene, Constants, Ship } from "space-sim-shared";
+import { Constants, Ship } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
@@ -20,7 +20,7 @@ export class KbmController extends InputController {
 
     private _container: Phaser.GameObjects.Container;
     
-    constructor(scene: BaseScene, player?: Ship) {
+    constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
 
         this._createGameObject();

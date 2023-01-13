@@ -1,4 +1,4 @@
-import { Helpers, Constants, Ship, BaseScene } from "space-sim-shared";
+import { Helpers, Constants, Ship } from "space-sim-shared";
 import { InputController } from "./input-controller";
 import { GridLayout, LayoutContent, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
@@ -10,7 +10,7 @@ export class TouchController extends InputController {
     private _throwButtonActive: boolean;
     private _boostButtonActive: boolean;
     
-    constructor(scene: BaseScene, player?: Ship) {
+    constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
 
         this._createGameObj();
