@@ -152,7 +152,6 @@ export module SpaceSimServer {
                 return true;
             });
         }
-        console.debug(`##### found ${results.length} matches for ${JSON.stringify(findBy)} in ${JSON.stringify(Array.from(SpaceSimServer.usersTable.values()))}`);
         return results;
     }
     export const rooms = (): Array<BattleRoyaleScene> => SpaceSim.game.scene.getScenes(true)
