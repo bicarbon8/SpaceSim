@@ -24,7 +24,7 @@ try {
         cwd: serverPath,
         stdio: 'inherit'
     });
-    cp.execSync('npm ci', {
+    cp.execSync('npm i', {
         cwd: serverPath,
         stdio: 'inherit'
     });
