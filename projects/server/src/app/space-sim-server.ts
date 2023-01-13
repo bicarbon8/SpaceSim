@@ -1,7 +1,7 @@
 import { GameServerEngine } from "phaser-game-server-engine";
 import { Server, Socket } from "socket.io";
 import { DisconnectReason } from "socket.io/dist/socket";
-import { Constants, GameLevelOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { Constants, GameLevelOptions, Helpers, SpaceSim, SpaceSimUserData } from "space-sim-shared";
 import { BattleRoyaleScene } from "./scenes/battle-royale-scene";
 import { SpaceSimServerUserData } from "./space-sim-server-user-data";
 
@@ -130,7 +130,7 @@ export class SpaceSimServer extends GameServerEngine {
                 scene.addPlayer(user);
             }
         } else {
-            console.error(`unable to joing room due to: no existing user found for socket '${socket.id}' with data '${JSON.stringify(data)}'`);
+            console.error(`unable to join room due to: no existing user found for socket '${socket.id}' with data '${JSON.stringify(data)}'`);
         }
     }
 }
@@ -138,25 +138,22 @@ export class SpaceSimServer extends GameServerEngine {
 export module SpaceSimServer {
     export var io: Server;
     export const usersTable = new Map<string, SpaceSimServerUserData>();
-    export const users = (findBy: Partial<SpaceSimServerUserData> & {room?: string}): Array<SpaceSimServerUserData> => {
-        let uArr = Array.from(SpaceSimServer.usersTable.values());
+    export const users = (findBy: Partial<SpaceSimServerUserData>): Array<SpaceSimServerUserData> => {
+        const uArr = Array.from(SpaceSimServer.usersTable.values());
+        let results: Array<SpaceSimServerUserData>;
         if (findBy) {
-            uArr = uArr.filter(u => {
-                if (findBy.fingerprint && u.fingerprint !== findBy.fingerprint) return false;
-                if (findBy.name && u.name !== findBy.name) return false;
-                if (findBy.room) {
-                    if (u.room !== findBy.room) {
-                        let socket = SpaceSimServer.io.sockets.sockets.get(u.socketId);
-                        if (socket != null && socket.rooms.size > 0) {
-                            if (!Array.from(socket.rooms.keys()).includes(findBy.room)) return false;
-                        }
+            const findByKeys = Object.keys(findBy);
+            results = uArr.filter(u => {
+                for (let key of findByKeys) {
+                    if (findBy[key] !== u[key]) {
+                        return false;
                     }
                 }
-                if (findBy.socketId && u.socketId !== findBy.socketId) return false;
                 return true;
             });
         }
-        return uArr;
+        console.debug(`##### found ${results.length} matches for ${JSON.stringify(findBy)} in ${JSON.stringify(Array.from(SpaceSimServer.usersTable.values()))}`);
+        return results;
     }
     export const rooms = (): Array<BattleRoyaleScene> => SpaceSim.game.scene.getScenes(true)
         .map(s => s as BattleRoyaleScene);

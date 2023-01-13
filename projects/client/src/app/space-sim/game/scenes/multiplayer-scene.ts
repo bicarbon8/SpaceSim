@@ -182,9 +182,8 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             .on(Constants.Socket.FLICKER_SUPPLY, (id: string) => this._handleFlickerSupplyEvent(id))
             .on(Constants.Socket.UPDATE_PLAYERS, (opts: Array<ShipOptions>) => this._handleUpdatePlayersEvent(opts))
             .on(Constants.Socket.PLAYER_DEATH, (id?: string) => this._handlePlayerDeathEvent(id))
-            .on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => {
-                GameScoreTracker.updateAllStats(...stats);
-            }).on(Constants.Socket.TRIGGER_ENGINE, (id) => {
+            .on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => GameScoreTracker.updateAllStats(...stats))
+            .on(Constants.Socket.TRIGGER_ENGINE, (id) => {
                 this._ships.get(id)?.getThruster()?.trigger();
             }).on(Constants.Socket.TRIGGER_WEAPON, (id) => {
                 this._ships.get(id)?.getWeapons()?.trigger();
@@ -196,34 +195,36 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _handleUpdateSuppliesEvent(opts: Array<ShipSupplyOptions>): void {
-        opts.forEach(o => {
-            let supply = this._supplies.get(o.id);
-            if (supply) {
-                // update existing supply
-                supply?.configure(o);
-            } else {
-                // or create new ship if doesn't already exist
-                switch (o.supplyType) {
-                    case 'ammo':
-                        supply = new PlayerAmmoSupply(this, o);
-                        break;
-                    case 'coolant':
-                        supply = new PlayerCoolantSupply(this, o);
-                        break;
-                    case 'fuel':
-                        supply = new PlayerFuelSupply(this, o);
-                        break;
-                    case 'repairs':
-                        supply = new PlayerRepairsSupply(this, o);
-                        break;
-                    default:
-                        console.warn(`unknown supplyType of ${o.supplyType} provided`);
-                        break;
+        Helpers.trycatch(() => {
+            opts.forEach(o => {
+                let supply = this._supplies.get(o.id);
+                if (supply) {
+                    // update existing supply
+                    supply?.configure(o);
+                } else {
+                    // or create new ship if doesn't already exist
+                    switch (o.supplyType) {
+                        case 'ammo':
+                            supply = new PlayerAmmoSupply(this, o);
+                            break;
+                        case 'coolant':
+                            supply = new PlayerCoolantSupply(this, o);
+                            break;
+                        case 'fuel':
+                            supply = new PlayerFuelSupply(this, o);
+                            break;
+                        case 'repairs':
+                            supply = new PlayerRepairsSupply(this, o);
+                            break;
+                        default:
+                            console.warn(`unknown supplyType of ${o.supplyType} provided`);
+                            break;
+                    }
+                    this._supplies.set(o.id, supply);
+                    Helpers.trycatch(() => SpaceSimClient.radar?.ignore(supply), 'none');
                 }
-                this._supplies.set(o.id, supply);
-                Helpers.trycatch(() => SpaceSimClient.radar?.ignore(supply), 'none');
-            }
-        });
+            });
+        }, 'debug', `error in handling ${Constants.Socket.UPDATE_SUPPLIES} event`, 'message');
     }
 
     private _handleRemoveSupplyEvent(id: string): void {
@@ -242,37 +243,41 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _handleUpdatePlayersEvent(opts: Array<ShipOptions>): void {
-        opts.forEach(o => {
-            let ship = this._ships.get(o.id) as PlayerShip;
-            if (ship) {
-                // update existing ship
-                ship?.configure(o);
-            } else {
-                // or create new ship if doesn't already exist
-                ship = new PlayerShip(this, o);
-                this._ships.set(o.id, ship);
-                this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
-                this._addPlayerCollisionPhysicsWithPlayers(ship);
-                Helpers.trycatch(() => SpaceSimClient.camera?.ignore(ship.radarSprite), 'none');
-            }
+        Helpers.trycatch(() => {
+            opts.forEach(o => {
+                let ship = this._ships.get(o.id) as PlayerShip;
+                if (ship) {
+                    // update existing ship
+                    ship?.configure(o);
+                } else {
+                    // or create new ship if doesn't already exist
+                    ship = new PlayerShip(this, o);
+                    this._ships.set(o.id, ship);
+                    this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
+                    this._addPlayerCollisionPhysicsWithPlayers(ship);
+                    Helpers.trycatch(() => SpaceSimClient.camera?.ignore(ship.radarSprite), 'none');
+                }
 
-            if (ship?.id === this._shipId) {
-                SpaceSimClient.player = ship;
-            }
-        });
+                if (ship?.id === this._shipId) {
+                    SpaceSimClient.player = ship;
+                }
+            });
+        }, 'debug', `error in handling ${Constants.Socket.UPDATE_PLAYERS} event`, 'message');
     }
 
     private _handlePlayerDeathEvent(id?: string): void {
-        if (!id || SpaceSimClient.player.id === id) {
-            this._gameOver();
-        } else {
-            const ship = this._ships.get(id);
-            if (ship) {
-                this._exploder.explode({location: ship.config.location});
-                ship?.destroy(false);
-                this._ships.delete(ship.id);
+        Helpers.trycatch(() => {
+            if (!id || SpaceSimClient.player.id === id) {
+                this._gameOver();
+            } else {
+                const ship = this._ships.get(id);
+                if (ship) {
+                    this._exploder.explode({location: ship.config.location});
+                    ship?.destroy(false);
+                    this._ships.delete(ship.id);
+                }
             }
-        }
+        }, 'debug', `error in handling ${Constants.Socket.PLAYER_DEATH} event`, 'message');
     }
 
     private _turnOffSocketEventHandling(): void {

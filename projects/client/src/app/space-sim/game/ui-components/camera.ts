@@ -96,8 +96,7 @@ export class Camera implements HasLocation {
             .setPosition(opts.x, opts.y)
             .setSize(opts.width, opts.height)
             .setBackgroundColor(opts.backgroundColor)
-            .setAlpha(opts.alpha)
-            .ignore(this._ignored);
+            .setAlpha(opts.alpha);
         return cam;
     }
 
