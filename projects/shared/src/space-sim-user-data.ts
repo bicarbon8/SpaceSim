@@ -20,7 +20,7 @@ export module SpaceSimUserData {
         const sanitised = SpaceSimUserData.sanitise(data);
         if (!sanitised) return false;
         if (!sanitised.name || sanitised.name.length < 3) return false;
-        if (!sanitised.fingerprint || sanitised.fingerprint.length < 10) return false;
+        if (!sanitised.fingerprint || sanitised.fingerprint.length < 5) return false;
         return true;
     }
 }
