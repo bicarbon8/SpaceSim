@@ -20,7 +20,10 @@ try {
     })
     // build server
     const serverPath = path.join(root, 'projects', 'server');
-    cp.execSync(`npm i ${path.join(sharedPath, 'space-sim-shared-1.0.0.tgz')}`, {
+    const sharedPackageJson = require(path.join(sharedPath, 'package.json'));
+    const sharedPackageTarball = path.join(sharedPath, 
+        `${sharedPackageJson.name}-${sharedPackageJson.version}.tgz`);
+    cp.execSync(`npm i ${sharedPackageTarball}`, {
         cwd: serverPath,
         stdio: 'inherit'
     });
