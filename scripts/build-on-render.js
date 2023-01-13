@@ -6,7 +6,7 @@ const root = process.cwd();
 try {
     // build shared
     const sharedPath = path.join(root, 'projects', 'shared');
-    cp.execSync(`npm ci`, {
+    cp.execSync(`npm i`, {
         cwd: sharedPath,
         stdio: 'inherit'
     });
@@ -16,7 +16,7 @@ try {
     });
     // build server
     const serverPath = path.join(root, 'projects', 'server');
-    cp.execSync(`npm ci`, {
+    cp.execSync(`npm i`, {
         cwd: serverPath,
         stdio: 'inherit'
     });
