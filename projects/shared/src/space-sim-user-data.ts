@@ -6,7 +6,21 @@ export type SpaceSimUserData = {
 };
 
 export module SpaceSimUserData {
-    export function format(data: SpaceSimUserData): string {
-        return `${Helpers.sanitise(data.fingerprint)}-${Helpers.sanitise(data.name)}`;
+    export function uniqueKey(data: SpaceSimUserData): string {
+        const sanitised = SpaceSimUserData.sanitise(data);
+        return `${sanitised.fingerprint}-${sanitised.name}`;
+    }
+    export function sanitise(data: SpaceSimUserData): SpaceSimUserData {
+        return {
+            fingerprint: Helpers.sanitise(data.fingerprint),
+            name: Helpers.sanitise(data.name)
+        } as const;
+    }
+    export function isValid(data: SpaceSimUserData): boolean {
+        const sanitised = SpaceSimUserData.sanitise(data);
+        if (!sanitised) return false;
+        if (!sanitised.name || sanitised.name.length < 3) return false;
+        if (!sanitised.fingerprint || sanitised.fingerprint.length < 10) return false;
+        return true;
     }
 }

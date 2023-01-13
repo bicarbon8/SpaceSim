@@ -42,18 +42,20 @@ export class SetNameScene extends Phaser.Scene {
 
         this._startHandlingSocketMessages();
 
-        if (SpaceSimClient.playerData.name && SpaceSimClient.playerData.name.length > 2) {
+        if (SpaceSimUserData.isValid(SpaceSimClient.playerData)) {
             this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
         }
     }
 
     update() {
         if (this._text.contentAs<Phaser.GameObjects.Text>().text.length > 2) {
-            this._button.setText({style: Styles.success().text});
-            this._button.setBackground(Styles.success().graphics);
+            const style = Styles.Outline.success();
+            this._button.setText({style: style.text});
+            this._button.setBackground(style.graphics);
         } else {
-            this._button.setText({style: Styles.secondary().text});
-            this._button.setBackground(Styles.secondary().graphics);
+            const style = Styles.Outline.secondary();
+            this._button.setText({style: style.text});
+            this._button.setBackground(style.graphics);
         }
     }
 
@@ -62,20 +64,23 @@ export class SetNameScene extends Phaser.Scene {
             console.debug(`received '${Constants.Socket.JOIN_ROOM}' response event`);
             this.scene.start('multiplayer-scene');
             this.scene.stop(this);
-            this._stopHandlingSocketMessages();
-        }).on(Constants.Socket.INVALID_NAME, (name: string) => {
-            console.debug(`received '${Constants.Socket.INVALID_NAME}' response event for name '${name}'`);
-            window.alert(`name: '${name}' is either already in use or is invalid; please pick a different name.`);
-        }).on(Constants.Socket.USER_ACCEPTED, (data: SpaceSimUserData) => {
-            SpaceSimClient.playerData = data;
-            localStorage.setItem(Constants.GAME_NAME, JSON.stringify(SpaceSimClient.playerData));
-            SpaceSimClient.socket.emit(Constants.Socket.JOIN_ROOM, data);
-        });
+        }).once(Constants.Socket.INVALID_USER_DATA, () => this._handleInvalidUserDataResponse())
+        .once(Constants.Socket.USER_ACCEPTED, (data: SpaceSimUserData) => this._handleUserAcceptedResponse(data));
     }
 
-    private _stopHandlingSocketMessages(): void {
-        SpaceSimClient.socket.off(Constants.Socket.INVALID_NAME)
-            .off(Constants.Socket.USER_ACCEPTED);
+    private _handleInvalidUserDataResponse(): void {
+        if (this.scene.isActive(this)) {
+            console.debug(`received '${Constants.Socket.INVALID_USER_DATA}' response event`);
+            window.alert(`name: '${this._text.contentAs<Phaser.GameObjects.Text>().text}' is either already in use or is invalid; please pick a different name.`);
+            SpaceSimClient.socket.once(Constants.Socket.INVALID_USER_DATA, () => this._handleInvalidUserDataResponse());
+        }
+    }
+
+    private _handleUserAcceptedResponse(data: SpaceSimUserData): void {
+        if (this.scene.isActive(this)) {
+            SpaceSimClient.socket.emit(Constants.Socket.JOIN_ROOM, data);
+            SpaceSimClient.socket.once(Constants.Socket.USER_ACCEPTED, (d: SpaceSimUserData) => this._handleUserAcceptedResponse(d));
+        }
     }
 
     private _createMusic(): void {

@@ -73,7 +73,7 @@ export module Constants {
         export const FLICKER_SUPPLY = 'flicker-supply';
         export const REMOVE_SUPPLY = 'remove-supply';
         export const UPDATE_STATS = 'update-stats';
-        export const INVALID_NAME = 'invalid-user-name';
+        export const INVALID_USER_DATA = 'invalid-user-data';
         export const USER_ACCEPTED = 'user-accepted';
     }
     export module Timing {

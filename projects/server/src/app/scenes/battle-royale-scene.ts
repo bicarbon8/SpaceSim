@@ -116,7 +116,7 @@ export class BattleRoyaleScene extends BaseScene {
                     console.debug(`received new ship request from: ${socket.id} in room ${this.ROOM_NAME}`);
                     const ship = this._getShip(data, socket) ?? this._createShip(player);
                     console.debug(`associating socket ${socket.id} to ship ${ship.id}`);
-                    this._dataToShipId.set(SpaceSimUserData.format(data), ship.id);
+                    this._dataToShipId.set(SpaceSimUserData.uniqueKey(data), ship.id);
                     console.debug(`sending ship id ${ship.id} to client ${socket.id}`);
                     socket.emit(Constants.Socket.SET_PLAYER_ID, ship.id);
                 }, 'warn', `error in handling '${Constants.Socket.REQUEST_SHIP}' event`, 'message');
@@ -167,7 +167,7 @@ export class BattleRoyaleScene extends BaseScene {
 
     removePlayer(player: SpaceSimServerUserData): void {
         console.debug(`removing player '${JSON.stringify(player)}' and associated ship...`);
-        const id = this._dataToShipId.get(SpaceSimUserData.format(player));
+        const id = this._dataToShipId.get(SpaceSimUserData.uniqueKey(player));
         const ship = this._ships.get(id);
         if (ship) {
             const config = ship.config;
@@ -243,6 +243,7 @@ export class BattleRoyaleScene extends BaseScene {
             player?.destroy(false); // don't emit event locally
             const socket = SpaceSimServer.io.sockets.sockets.get(socketId);
             if (socket) {
+                console.debug(`removing socket '${socket.id}' from room as part of removing ship '${opts.id}'`);
                 socket.leave(this.ROOM_NAME);
             }
         } else {
@@ -391,7 +392,7 @@ export class BattleRoyaleScene extends BaseScene {
      * @returns a valid `Ship` or `undefined` if no ship found for client details
      */
     private _getShip(data: SpaceSimUserData, socket: Socket): Ship {
-        const id = this._dataToShipId.get(SpaceSimUserData.format(data));
+        const id = this._dataToShipId.get(SpaceSimUserData.uniqueKey(data));
         let ship: Ship;
         if (id) {
             ship = this._ships.get(id);

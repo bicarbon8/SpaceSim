@@ -123,6 +123,9 @@ export class GameplayScene extends BaseScene implements Resizable {
 
     create(): void {
         SpaceSimClient.mode = 'singleplayer';
+        if (SpaceSimClient.socket) {
+            SpaceSimClient.socket.emit(Constants.Socket.PLAYER_DEATH, SpaceSimClient.playerData);
+        }
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
         this._exploder = new Exploder(this);
