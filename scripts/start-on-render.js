@@ -5,7 +5,7 @@ const path = require('path');
 const root = process.cwd();
 try {
     const serverPath = path.join(root, 'projects', 'server');
-    cp.execSync('npx phaser-game-server -s -c server.config.prod.json', {
+    cp.execSync('npm run open', {
         cwd: serverPath,
         stdio: 'inherit'
     });
