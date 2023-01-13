@@ -14,9 +14,17 @@ try {
         cwd: sharedPath,
         stdio: 'inherit'
     });
+    cp.execSync('npm pack', {
+        cwd: sharedPath,
+        stdio: 'inherit'
+    })
     // build server
     const serverPath = path.join(root, 'projects', 'server');
-    cp.execSync(`npm i`, {
+    cp.execSync(`npm i ${path.join(sharedPath, 'space-sim-shared-1.0.0.tgz')}`, {
+        cwd: serverPath,
+        stdio: 'inherit'
+    });
+    cp.execSync('npm ci', {
         cwd: serverPath,
         stdio: 'inherit'
     });
