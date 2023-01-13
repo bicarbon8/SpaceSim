@@ -17,9 +17,13 @@ export class SetNameScene extends Phaser.Scene {
     private _text: LayoutContainer;
     private _button: TextButton;
     private _music: Phaser.Sound.BaseSound;
+
+    private readonly _continueButtonStylesDisabled;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
+
+        this._continueButtonStylesDisabled = Styles.Outline.secondary();
     }
 
     preload() {
@@ -44,19 +48,12 @@ export class SetNameScene extends Phaser.Scene {
 
         if (SpaceSimUserData.isValid(SpaceSimClient.playerData)) {
             this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
+            this._updateContinueButton();
         }
     }
 
     update() {
-        if (this._text.contentAs<Phaser.GameObjects.Text>().text.length > 2) {
-            const style = Styles.Outline.success();
-            this._button.setText({style: style.text});
-            this._button.setBackground(style.graphics);
-        } else {
-            const style = Styles.Outline.secondary();
-            this._button.setText({style: style.text});
-            this._button.setBackground(style.graphics);
-        }
+        
     }
 
     private _startHandlingSocketMessages(): void {
@@ -126,12 +123,9 @@ export class SetNameScene extends Phaser.Scene {
             cornerRadius: 10,
             textConfig: {
                 text: 'Continue',
-                style: Styles.secondary().text
+                style: this._continueButtonStylesDisabled.text
             },
-            backgroundStyles: Styles.secondary().graphics,
-            onClick: () => {
-                this._validateAndStartGame(this._text.contentAs<Phaser.GameObjects.Text>().text);
-            }
+            backgroundStyles: this._continueButtonStylesDisabled.graphics
         });
         this._layout.addContentAt(2, 0, this._button);
     }
@@ -149,6 +143,9 @@ export class SetNameScene extends Phaser.Scene {
                     txtGo.setText(txt + event.key);
                 }
             }
+
+            this._updateContinueButton();
+
             if (event.key === 'Enter') {
                 this._validateAndStartGame(txt);
             }
@@ -158,6 +155,8 @@ export class SetNameScene extends Phaser.Scene {
     private _getMobileTextInput(): void {
         this._text.setInteractive().on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
             const txt: string = window.prompt('Enter player name: (minimum 3 characters consisting of [a-zA-Z0-9])');
+            this._button.contentAs<Phaser.GameObjects.Text>().setText(txt);
+            this._updateContinueButton();
             this._validateAndStartGame(txt);
         });
     }
@@ -171,6 +170,21 @@ export class SetNameScene extends Phaser.Scene {
             });
         } else {
             window.alert('invalid name!');
+        }
+    }
+
+    private _updateContinueButton(): void {
+        if (this._button.contentAs<Phaser.GameObjects.Text>().text.length > 2) {
+            const style = Styles.success();
+            this._button.setText({style: style.text})
+                .setBackground(style.graphics)
+                .setOnClick(() => {
+                    this._validateAndStartGame(this._text.contentAs<Phaser.GameObjects.Text>().text);
+                });
+        } else {
+            this._button.setText({style: this._continueButtonStylesDisabled.text})
+                .setBackground(this._continueButtonStylesDisabled.graphics)
+                .setOnClick(null);
         }
     }
 }
