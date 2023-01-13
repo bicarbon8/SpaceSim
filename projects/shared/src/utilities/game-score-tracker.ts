@@ -97,6 +97,7 @@ export module GameScoreTracker {
             const index = destroyed.findIndex(d => d.targetId === targetId);
             // if target not already listed then add it to list of destroyed
             if (index < 0) {
+                console.debug(`ship '${destroyedBy}' destroyed ship '${targetId}'`);
                 destroyed.push({
                     targetId: targetId,
                     time: SpaceSim.game.loop.time
@@ -133,9 +134,6 @@ export module GameScoreTracker {
         const stats = GameScoreTracker.getStats(id);
         score = (stats.opponentsDestroyed || []).length * 1000;
         score += stats.accuracy;
-        score += (stats.ammoRemaining / Constants.Ship.Weapons.MAX_AMMO) * 100;
-        score += (stats.integrityRemaining / Constants.Ship.MAX_INTEGRITY) * 100;
-        score += (stats.fuelRemaining / Constants.Ship.MAX_FUEL) * 100;
 
         return Number.parseFloat(score.toFixed(1));
     }

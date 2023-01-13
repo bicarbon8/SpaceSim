@@ -101,17 +101,21 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
                         });
                         this.destroy();
                         if (opp.active) {
+                            GameScoreTracker.shotLanded(this.weapon.ship.id, opp.id, this.damage);
+                            let remainingIntegrity = opp.integrity - this.damage;
+                            if (remainingIntegrity < 0) {
+                                remainingIntegrity = 0;
+                            }
+                            GameScoreTracker.damageTaken(opp.id, remainingIntegrity);
+                            if (remainingIntegrity <= 0) {
+                                GameScoreTracker.opponentDestroyed(this.weapon.ship.id, opp.id);
+                            }
                             opp.sustainDamage({
                                 amount: this.damage, 
                                 timestamp: this.scene.time.now,
                                 attackerId: this.weapon.ship.id,
                                 message: `projectile hit`
                             });
-                            GameScoreTracker.shotLanded(this.weapon.ship.id, opp.id, this.damage);
-                            GameScoreTracker.damageTaken(opp.id, opp.integrity);
-                            if (opp.integrity <= 0) {
-                                GameScoreTracker.opponentDestroyed(this.weapon.ship.id, opp.id);
-                            }
                         }
                     });
                 }
