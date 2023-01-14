@@ -76,6 +76,11 @@ export class Camera implements HasLocation {
         return this;
     }
 
+    clearAllIgnored(): this {
+        this.unignore(...this._ignored.getChildren());
+        return this;
+    }
+
     follow(obj: GameObjectPlus): this {
         if (obj) {
             this._cam.centerOn(obj.x, obj.y)
@@ -103,13 +108,8 @@ export class Camera implements HasLocation {
     destroy(): void {
         Helpers.trycatch(() => {
             this.unignore(...this._ignored.getChildren())
-            this._ignored.destroy()
+            this._ignored.destroy();
         }, 'warn');
-        this._cam.removeAllListeners()
-            .resetFX()
-            .resetFlip()
-            .removeBounds()
-            .resetPostPipeline(true);
     }
 
     private _defaultOptions(scene: Phaser.Scene): CameraOptions {

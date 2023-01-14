@@ -30,6 +30,8 @@ export class GameplayScene extends BaseScene implements Resizable {
     private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
+    private _camera: Camera;
+    private _radar: Radar;
 
     private _physicsUpdator: Generator<void, void, unknown>;
 
@@ -123,6 +125,7 @@ export class GameplayScene extends BaseScene implements Resizable {
 
     create(): void {
         SpaceSimClient.mode = 'singleplayer';
+        this.cameras.resetAll();
         if (SpaceSimClient.socket) {
             SpaceSimClient.socket.emit(Constants.Socket.PLAYER_DEATH, SpaceSimClient.playerData);
         }
@@ -142,6 +145,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     }
 
     resize(): void {
+        this.cameras.resetAll();
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
         this._createBackground();
@@ -320,18 +324,17 @@ export class GameplayScene extends BaseScene implements Resizable {
         if (this._width < 400 || this._height < 400) {
             zoom = 0.5;
         }
-        if (SpaceSimClient.camera) {
-            SpaceSimClient.camera.destroy();
+        if (this._camera) {
+            this._camera.destroy();
         }
-        const ignore = this.getShips<PlayerShip>()
-            .map(p => p.radarSprite)
-            .filter(p => p != null);
-        SpaceSimClient.camera = new Camera(this, {
+        this._camera = new Camera(this, {
             name: 'main',
             zoom: zoom,
             ignore: [
                 this.getLevel().minimapLayer,
-                ...ignore
+                ...this.getShips<PlayerShip>()
+                    .map(p => p.radarSprite)
+                    .filter(p => p != null)
             ],
             backgroundColor: 0x000000,
             followObject: SpaceSimClient.player.getGameObject()
@@ -345,10 +348,10 @@ export class GameplayScene extends BaseScene implements Resizable {
         if (miniSize < 150) {
             miniSize = 150;
         }
-        if (SpaceSimClient.radar) {
-            SpaceSimClient.radar.destroy();
+        if (this._radar) {
+            this._radar.destroy();
         }
-        SpaceSimClient.radar = new Radar(this, {
+        this._radar = new Radar(this, {
             x: this._width - ((miniSize / 2) + 10),
             y: miniSize,
             width: miniSize,
@@ -420,7 +423,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         for (var i=0; i<supplyOpts.length; i++) {
             let options = supplyOpts[i];
             let supply = this._addSupplyCollisionPhysics(options);
-            SpaceSimClient.radar.ignore(supply);
+            this._radar.ignore(supply);
             this._supplies.set(supply.id, supply);
         }
     }

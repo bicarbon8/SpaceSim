@@ -32,8 +32,16 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
+    private _camera: Camera;
+    private _radar: Radar;
 
     debug: boolean;
+
+    private _shouldGetMap = false;
+    private _shouldCreateStellarBodies = false;
+    private _shouldGetPlayer = false;
+    private _shouldResize = false;
+    private _shouldShowHud = false;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || sceneConfig);
@@ -134,17 +142,31 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
         this._playMusic();
 
-        this._getMapFromServer()
-            .then(_ => this._createStellarBodiesLayer())
-            .then(_ => this._getPlayerFromServer())
-            .then(_ => this.resize())
-            .then(_ => {
-                SpaceSim.game.scene.start('multiplayer-hud-scene');
-                SpaceSim.game.scene.bringToTop('multiplayer-hud-scene');
-            });
+        this._shouldGetMap = true;
     }
 
     update(time: number, delta: number): void {
+        if (this._shouldGetMap) {
+            this._shouldGetMap = false;
+            this._getMapFromServer();
+        }
+        if (this._shouldCreateStellarBodies) {
+            this._shouldCreateStellarBodies = false;
+            this._createStellarBodiesLayer();
+        }
+        if (this._shouldGetPlayer) {
+            this._shouldGetPlayer = false;
+            this._getPlayerFromServer();
+        }
+        if (this._shouldResize) {
+            this._shouldResize = false;
+            this.resize();
+        }
+        if (this._shouldShowHud) {
+            this._shouldShowHud = false;
+            SpaceSim.game.scene.start('multiplayer-hud-scene');
+            SpaceSim.game.scene.bringToTop('multiplayer-hud-scene');
+        }
         try {
             this.getShips().forEach(p => p?.update(time, delta));
 
@@ -168,11 +190,12 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     resize(): void {
+        console.debug(`${Date.now()}: resize called; resetting width, height, background, camera and radar`);
         this._width = this.game.scale.displaySize.width;
         this._height = this.game.scale.displaySize.height;
         this._createBackground();
         this._setupCamera();
-        this._setupMiniMap();
+        this._createMiniMap();
     }
 
     private _setupSocketEventHandling(): void {
@@ -187,9 +210,13 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 this._ships.get(id)?.getThruster()?.trigger();
             }).on(Constants.Socket.TRIGGER_WEAPON, (id) => {
                 this._ships.get(id)?.getWeapons()?.trigger();
-            }).on(Constants.Socket.UPDATE_MAP, (opts: GameLevelOptions) => {
+            }).once(Constants.Socket.UPDATE_MAP, (opts: GameLevelOptions) => {
                 this._gameLevel = new GameLevel(this, opts);
+                console.debug(`${Date.now()}: map ${JSON.stringify(opts)} received from server`);
+                this._shouldCreateStellarBodies = true;
+                this._shouldGetPlayer = true;
             }).on(Constants.Socket.SET_PLAYER_ID, (id: string) => {
+                console.debug(`${Date.now()}: shipid ${id} received from server`);
                 this._shipId = id;
             });
     }
@@ -221,7 +248,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                             break;
                     }
                     this._supplies.set(o.id, supply);
-                    Helpers.trycatch(() => SpaceSimClient.radar?.ignore(supply), 'none');
+                    Helpers.trycatch(() => this._radar?.ignore(supply), 'none');
                 }
             });
         }, 'debug', `error in handling ${Constants.Socket.UPDATE_SUPPLIES} event`, 'message');
@@ -255,11 +282,15 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     this._ships.set(o.id, ship);
                     this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
-                    Helpers.trycatch(() => SpaceSimClient.camera?.ignore(ship.radarSprite), 'none');
+                    Helpers.trycatch(() => this._camera?.ignore(ship.radarSprite), 'none');
                 }
 
                 if (ship?.id === this._shipId) {
+                    this._shipId = null;
                     SpaceSimClient.player = ship;
+                    console.debug(`${Date.now()}: player ship ${ship.id} received from server`);
+                    this._shouldResize = true;
+                    this._shouldShowHud = true;
                 }
             });
         }, 'debug', `error in handling ${Constants.Socket.UPDATE_PLAYERS} event`, 'message');
@@ -292,16 +323,9 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             .removeAllListeners(Constants.Socket.UPDATE_STATS);
     }
 
-    private async _getMapFromServer(): Promise<void> {
+    private _getMapFromServer(): void {
+        console.debug(`${Date.now()}: requesting map from server...`);
         SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP, SpaceSimClient.playerData);
-        await this._waitForMap();
-    }
-
-    private async _waitForMap(): Promise<void> {
-        while (this.getLevel() == null) {
-            // wait half a second and check again
-            await new Promise<void>(resolve => setTimeout(resolve, 500));
-        }
     }
 
     private async _getPlayerFromServer(): Promise<void> {
@@ -312,18 +336,12 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             }
         });
 
+        console.debug(`${Date.now()}: requesting ship from server...`);
         SpaceSimClient.socket.emit(Constants.Socket.REQUEST_SHIP, SpaceSimClient.playerData);
-        await this._waitForPlayer();
-    }
-
-    private async _waitForPlayer(): Promise<void> {
-        while (SpaceSimClient.player == null) {
-            // wait half a second and check again
-            await new Promise<void>(resolve => setTimeout(resolve, 500));
-        }
     }
 
     private _createStellarBodiesLayer(): void {
+        console.debug(`${Date.now()}: creating StellarBodies...`);
         const room: RoomPlus = this.getLevel().getRooms()[0];
         const bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
@@ -370,18 +388,15 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this._backgroundStars.setScrollFactor(0.01); // slight movement to appear very far away
     }
 
-    private async _setupCamera(): Promise<void> {
-        await this._waitForMap();
-        await this._waitForPlayer();
-
+    private _setupCamera(): void {
         let zoom = 1;
         if (this._width < 400 || this._height < 400) {
             zoom = 0.5;
         }
-        if (SpaceSimClient.camera) {
-            SpaceSimClient.camera.destroy();
+        if (this._camera) {
+            this._camera.destroy();
         }
-        SpaceSimClient.camera = new Camera(this, {
+        this._camera = new Camera(this, {
             name: 'main',
             zoom: zoom,
             ignore: [
@@ -393,23 +408,20 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             backgroundColor: 0x000000,
             followObject: SpaceSimClient.player.getGameObject()
         });
-        SpaceSimClient.camera.cam.fadeIn(1000, 0, 0, 0);
+        this._camera.cam.fadeIn(1000, 255, 255, 255);
     }
 
-    private async _setupMiniMap(): Promise<void> {
-        await this._waitForMap();
-        await this._waitForPlayer();
-        
+    private _createMiniMap(): void {
         const miniWidth = this._width / 4;
         const miniHeight = this._height / 4;
         let miniSize = (miniWidth < miniHeight) ? miniWidth : miniHeight;
         if (miniSize < 150) {
             miniSize = 150;
         }
-        if (SpaceSimClient.radar) {
-            SpaceSimClient.radar.destroy();
+        if (this._radar) {
+            this._radar.destroy();
         }
-        SpaceSimClient.radar = new Radar(this, {
+        this._radar = new Radar(this, {
             x: this._width - ((miniSize / 2) + 10),
             y: miniSize,
             width: miniSize,
@@ -438,7 +450,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     private _gameOver(): void {
         this._turnOffSocketEventHandling();
-        SpaceSimClient.camera.cam.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+        this._camera.cam.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
             if (progress === 1) {
                 this.game.scene.start('game-over-scene');
                 this.game.scene.stop('multiplayer-hud-scene');

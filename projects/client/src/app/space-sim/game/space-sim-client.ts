@@ -11,8 +11,6 @@ import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 import { AiController } from "./controllers/ai-controller";
 import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
-import { Camera } from "./ui-components/camera";
-import { Radar } from "./ui-components/radar";
 import { environment } from "src/environments/environment";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
 import getBrowserFingerprint from "get-browser-fingerprint";
@@ -172,6 +170,4 @@ export module SpaceSimClient {
     export var playerData: SpaceSimUserData;
     export const opponents = new Array<AiController>();
     export var mode: GameMode = 'singleplayer';
-    export var camera: Camera;
-    export var radar: Radar;
 }
