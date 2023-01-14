@@ -51,11 +51,11 @@ export class Radar extends Camera {
     }
 
     override destroy(): void {
+        super.destroy();
         Helpers.trycatch(() => {
             this.scene.cameras.remove(this.cam, true);
             this._mask?.destroy();
             this._border?.destroy();
-        }, 'warn', 'unable to cleanly remove MiniMap');
-        super.destroy();
+        }, 'warn', 'unable to cleanly remove Radar');
     }
 }

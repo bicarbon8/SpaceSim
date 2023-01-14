@@ -61,7 +61,7 @@ export class Camera implements HasLocation {
     ignore(...entries: Array<Phaser.GameObjects.GameObject>): this {
         if (entries?.length) {
             this._ignored.addMultiple(entries);
-            this._cam.ignore(this._ignored);
+            this._cam.ignore(this._ignored.getChildren());
         }
         return this;
     }
@@ -71,7 +71,7 @@ export class Camera implements HasLocation {
             for (var i=0; i<entries.length; i++) {
                 Helpers.trycatch(() => this._ignored.remove(entries[i]));
             }
-            this._cam.ignore(this._ignored);
+            this._cam.ignore(this._ignored.getChildren());
         }
         return this;
     }
@@ -101,7 +101,15 @@ export class Camera implements HasLocation {
     }
 
     destroy(): void {
-        Helpers.trycatch(() => this._ignored.destroy(), 'warn');
+        Helpers.trycatch(() => {
+            this.unignore(this._ignored.getChildren())
+            this._ignored.destroy()
+        }, 'warn');
+        this._cam.removeAllListeners()
+            .resetFX()
+            .resetFlip()
+            .removeBounds()
+            .resetPostPipeline(true);
     }
 
     private _defaultOptions(scene: Phaser.Scene): CameraOptions {
