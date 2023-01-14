@@ -102,7 +102,7 @@ export class Camera implements HasLocation {
 
     destroy(): void {
         Helpers.trycatch(() => {
-            this.unignore(this._ignored.getChildren())
+            this.unignore(...this._ignored.getChildren())
             this._ignored.destroy()
         }, 'warn');
         this._cam.removeAllListeners()
