@@ -1,6 +1,6 @@
 import { LayoutContainer } from "phaser-ui-components";
 import { BaseScene, Constants, DamageOptions, Ship, ShipOptions } from "space-sim-shared";
-import { Animations } from "../utilities/animations";
+import { Animations } from "../ui-components/animations";
 
 export class PlayerShip extends Ship {
     private _shipIntegrityIndicator: LayoutContainer;

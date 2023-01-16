@@ -12,7 +12,7 @@ import { PlayerAmmoSupply } from "../ships/supplies/player-ammo-supply";
 import { PlayerCoolantSupply } from "../ships/supplies/player-coolant-supply";
 import { PlayerFuelSupply } from "../ships/supplies/player-fuel-supply";
 import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
-import { Animations } from "../utilities/animations";
+import { Animations } from "../ui-components/animations";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
