@@ -137,17 +137,17 @@ export class ClientSocketManager {
                         this._handleTriggerWeaponEvent(args[0]);
                         break;
                     default:
-                        console.warn(`unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
+                        console.warn(`${Date.now()}: unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
                         break;
                 }
-            }, 'warn', `error handling event '${event}' with arguments: ${JSON.stringify(args)}`, 'none');
+            }, 'warn', `${Date.now()}: error handling event '${event}' with arguments: ${JSON.stringify(args)}`, 'none');
         }
     }
 
     private _handleConnectEvent(): void {
         this._connects++;
         if (SpaceSim.debug) {
-            console.debug(`connected to server at: ${this.url}`);
+            console.debug(`${Date.now()}: connected to server at: ${this.url}`);
         }
         if (this.isReconnect() && SpaceSim.game.scene.isActive('multiplayer-scene')) {
             // handle reconnect scenario
