@@ -83,8 +83,8 @@ export class ClientSocketManager {
     }
 
     private _handleAllEvents(event: string, ...args: Array<any>): void {
-        console.debug(`${Date.now()}: received '${event}' event from server...`);
         if (SpaceSimClient.mode === 'multiplayer') {
+            console.debug(`${Date.now()}: received '${event}' event from server...`);
             Helpers.trycatch(() => {
                 switch(event) {
                     case 'connect':
@@ -137,8 +137,6 @@ export class ClientSocketManager {
                         break;
                 }
             }, 'warn', `error handling event '${event}' with arguments: ${JSON.stringify(args)}`, 'none');
-        } else {
-            console.debug('ignoring server event because not in multiplayer mode');
         }
     }
 

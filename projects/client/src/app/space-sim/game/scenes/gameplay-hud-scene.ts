@@ -23,7 +23,6 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _controller: InputController;
 
     private _parentScene: BaseScene;
-    private _playerShip: Ship;
 
     debug: boolean;
 
@@ -34,10 +33,9 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     }
 
     create(): void {
-        this._parentScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
-        this._playerShip = this._parentScene.getShipsMap().get(SpaceSimClient.playerShipId);
+        this._parentScene = SpaceSim.game.scene.getScene('gameplay-scene') as BaseScene;
         this.resize();
-        GameScoreTracker.start(this._playerShip.config);
+        GameScoreTracker.start(this.playerShip.config);
     }
 
     resize(): void {
@@ -53,6 +51,10 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     update(time: number, delta: number): void {
         this._displayHUDInfo();
         this._controller?.update(time, delta);
+    }
+
+    get playerShip(): Ship {
+        return this._parentScene.getShipsMap().get(SpaceSimClient.playerShipId);
     }
 
     private _createHUD(): void {
@@ -85,7 +87,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.warning().graphics);
             },
             onClick: () => {
-                this._playerShip.selfDestruct();
+                this.playerShip.selfDestruct();
                 this._quitContainer.removeContent(false);
                 this._cancelDestructButton.setActive(true)
                     .setVisible(true);
@@ -107,7 +109,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.danger().graphics);
             },
             onClick: () => {
-                this._playerShip.cancelSelfDestruct();
+                this.playerShip.cancelSelfDestruct();
                 this._quitContainer.removeContent(false);
                 this._destructButton.setActive(true)
                     .setVisible(true);
@@ -142,9 +144,9 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             this._controller.getGameObject()?.destroy();
         }
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, this._playerShip);
+            this._controller = new KbmController(this, this.playerShip);
         } else {
-            this._controller = new TouchController(this, this._playerShip);
+            this._controller = new TouchController(this, this.playerShip);
         }
         const obj = this._controller.getGameObject();
         if (obj) {
@@ -154,17 +156,17 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         Helpers.trycatch(() => {
-            const id = this._playerShip.id;
+            const id = this.playerShip.id;
             const stats: GameStats = GameScoreTracker.getStats(id);
             const info: string[] = [
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
                 `Enemies: ${GameScoreTracker.destroyedCount(id)}/${SpaceSimClient.opponents.length}`,
-                `Fuel: ${this._playerShip.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${this._playerShip.getWeapons()?.remainingAmmo || 0}`,
+                `Fuel: ${this.playerShip.getRemainingFuel().toFixed(1)}`,
+                `Ammo: ${this.playerShip.getWeapons()?.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`
             ];
             if (SpaceSim.debug) {
-                const loc: Phaser.Math.Vector2 = this._playerShip.getLocation();
+                const loc: Phaser.Math.Vector2 = this.playerShip.getLocation();
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             this._hudText.setText(info);
