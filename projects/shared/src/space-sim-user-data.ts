@@ -17,10 +17,13 @@ export module SpaceSimUserData {
         } as const;
     }
     export function isValid(data: SpaceSimUserData): boolean {
-        const sanitised = SpaceSimUserData.sanitise(data);
-        if (!sanitised) return false;
-        if (!sanitised.name || sanitised.name.length < 3) return false;
-        if (!sanitised.fingerprint || sanitised.fingerprint.length < 5) return false;
-        return true;
+        if (data) {
+            const sanitised = SpaceSimUserData.sanitise(data);
+            if (!sanitised) return false;
+            if (!sanitised.name || sanitised.name.length < 3) return false;
+            if (!sanitised.fingerprint || sanitised.fingerprint.length < 5) return false;
+            return true;
+        }
+        return false;
     }
 }

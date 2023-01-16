@@ -1,10 +1,31 @@
 import * as Phaser from "phaser";
 import { Socket } from "socket.io";
-import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, Exploder, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, Exploder, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions } from "space-sim-shared";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
 
 export class BattleRoyaleScene extends BaseScene {
+    setLevel<T extends GameLevelOptions>(opts: T): BaseScene {
+        throw new Error("Method not implemented.");
+    }
+    updateShips<T extends ShipOptions>(opts: T[]): BaseScene {
+        throw new Error("Method not implemented.");
+    }
+    removeShips(...ids: string[]): BaseScene {
+        throw new Error("Method not implemented.");
+    }
+    updateSupplies<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
+        throw new Error("Method not implemented.");
+    }
+    removeSupplies(...ids: string[]): BaseScene {
+        throw new Error("Method not implemented.");
+    }
+    flickerSupplies(...ids: string[]): BaseScene {
+        throw new Error("Method not implemented.");
+    }
+    endScene(): BaseScene {
+        throw new Error("Method not implemented.");
+    }
     readonly ROOM_NAME: string;
     
     /**
@@ -292,43 +313,48 @@ export class BattleRoyaleScene extends BaseScene {
     private _expelSupplies(shipCfg: ShipOptions): void {
         console.debug(`expelling supplies at:`, shipCfg.location);
         const supplyOpts = this._exploder.emitSupplies(shipCfg);
-        for (const options of supplyOpts) {
-            const supply = this._addSupplyCollisionPhysics(options);
+        const supplies = this._addSupplyCollisionPhysics(...supplyOpts);
+        for (let supply of supplies) {
             this._supplies.set(supply.id, supply);
-            this._cleanupSupply(supply);
         }
+        this._cleanupSupplies(...supplies);
         console.debug(`${supplyOpts.length} supplies expelled from ship ${shipCfg.id}`);
     }
 
-    private _addSupplyCollisionPhysics(options: ShipSupplyOptions): ShipSupply {
-        let supply: ShipSupply;
-        switch(options.supplyType) {
-            case 'ammo':
-                supply = new AmmoSupply(this, options);
-                break;
-            case 'coolant':
-                supply = new CoolantSupply(this, options);
-                break;
-            case 'fuel':
-                supply = new FuelSupply(this, options);
-                break;
-            case 'repairs':
-                supply = new RepairsSupply(this, options);
-                break;
-            default:
-                console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
-                break;
+    private _addSupplyCollisionPhysics(...options: Array<ShipSupplyOptions>): Array<ShipSupply> {
+        const supplies = new Array<ShipSupply>();
+        for (let opts of options) {
+            switch(opts.supplyType) {
+                case 'ammo':
+                    supplies.push(new AmmoSupply(this, opts));
+                    break;
+                case 'coolant':
+                    supplies.push(new CoolantSupply(this, opts));
+                    break;
+                case 'fuel':
+                    supplies.push(new FuelSupply(this, opts));
+                    break;
+                case 'repairs':
+                    supplies.push(new RepairsSupply(this, opts));
+                    break;
+                default:
+                    console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, opts.supplyType);
+                    break;
+            }
         }
-        this.physics.add.collider(supply, this.getLevel().getGameObject());
-        this.physics.add.collider(supply, this.getShips()
+        this.physics.add.collider(supplies, this.getLevel().getGameObject());
+        this.physics.add.collider(supplies, this.getShips()
             .filter(p => p?.active)
             .map(o => o?.getGameObject()), 
             (obj1, obj2) => {
                 let shipGameObj: Phaser.GameObjects.Container;
-                if (obj1 === supply) {
+                let supplyGameObj: Phaser.GameObjects.Container;
+                if (supplies.map(s => s as Phaser.GameObjects.GameObject).includes(obj1)) {
                     shipGameObj = obj2 as Phaser.GameObjects.Container;
+                    supplyGameObj = obj1 as Phaser.GameObjects.Container;
                 } else {
                     shipGameObj = obj1 as Phaser.GameObjects.Container;
+                    supplyGameObj = obj2 as Phaser.GameObjects.Container;
                 }
                 const ship: Ship = this.getShips().find(p => {
                     const go = p.getGameObject();
@@ -337,13 +363,20 @@ export class BattleRoyaleScene extends BaseScene {
                     }
                     return false;
                 });
-                SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLY, supply.id);
+                const supply: ShipSupply = this.getSupplies().find(p => {
+                    const go = p as Phaser.GameObjects.GameObject;
+                    if (go === supplyGameObj) {
+                        return true;
+                    }
+                    return false;
+                });
+                SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLIES, supply.id);
                 this._supplies.delete(supply.id);
                 supply.apply(ship);
                 supply.destroy();
             }
         );
-        return supply;
+        return supplies;
     }
 
     private _addPlayerCollisionPhysicsWithSupplies(ship: Ship): void {
@@ -355,7 +388,7 @@ export class BattleRoyaleScene extends BaseScene {
                 } else {
                     supply = obj1 as ShipSupply;
                 }
-                SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLY, supply.id);
+                SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLIES, supply.id);
                 this._supplies.delete(supply.id);
                 supply.apply(ship);
                 supply.destroy();
@@ -371,14 +404,16 @@ export class BattleRoyaleScene extends BaseScene {
      * removes a `ShipSupply` after 30 seconds
      * @param supply a `ShipSupply` to remove
      */
-    private _cleanupSupply(supply: ShipSupply): void {
+    private _cleanupSupplies(...supplies: Array<ShipSupply>): void {
         window.setTimeout(() => {
-            SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.FLICKER_SUPPLY, (supply.id));
-            window.setTimeout(() => {
-                this._supplies.delete(supply.id);
-                supply.destroy();
-                SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLY, (supply.id));
-            }, 5000);
+            SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.FLICKER_SUPPLIES, ...supplies.map(s => s.id));
+            for (let supply of supplies) {
+                window.setTimeout(() => {
+                    this._supplies.delete(supply.id);
+                    supply.destroy();
+                    SpaceSimServer.io.to(this.ROOM_NAME).emit(Constants.Socket.REMOVE_SUPPLIES, ...supplies.map(s => s.id));
+                }, 5000);
+            }
         }, 25000);
     }
 

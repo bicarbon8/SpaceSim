@@ -145,9 +145,12 @@ export module Helpers {
      * and is shortened to maximum of 10 characters
      */
     export function sanitise(text: string): string {
-        // TODO: filter out bad words
-        return text?.replace(/[^a-zA-Z0-9ÀÁÂÃÄÅĀƁƂÇĈĊĎĐÈÉÊËƑĜĞĠĤĦÌÍÎÏĴĶĹĿŁÑŃÒÓÔÕÖƤɊŔŖŚŜŢŤŦÙÚÛÜŴŶŽ]/g, '')
-            .substring(0, 10) ?? '';
+        if (text?.length) {
+            // TODO: filter out bad words
+            return text?.replace(/[^a-zA-Z0-9ÀÁÂÃÄÅĀƁƂÇĈĊĎĐÈÉÊËƑĜĞĠĤĦÌÍÎÏĴĶĹĿŁÑŃÒÓÔÕÖƤɊŔŖŚŜŢŤŦÙÚÛÜŴŶŽ]/g, '')
+                .substring(0, 10) ?? '';
+        }
+        return text;
     }
 
     /**

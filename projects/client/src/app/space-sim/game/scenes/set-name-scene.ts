@@ -3,6 +3,7 @@ import { SpaceSimClient } from "../space-sim-client";
 import { Constants, Helpers } from "space-sim-shared";
 import { environment } from "src/environments/environment";
 import { SpaceSimUserData } from "space-sim-shared";
+import getBrowserFingerprint from "get-browser-fingerprint";
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -48,6 +49,10 @@ export class SetNameScene extends Phaser.Scene {
         if (SpaceSimUserData.isValid(SpaceSimClient.playerData)) {
             this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
             this._updateContinueButton();
+        } else {
+            SpaceSimClient.playerData = {
+                fingerprint: getBrowserFingerprint()
+            };
         }
     }
 
