@@ -97,7 +97,9 @@ export module GameScoreTracker {
             const index = destroyed.findIndex(d => d.targetId === targetId);
             // if target not already listed then add it to list of destroyed
             if (index < 0) {
-                console.debug(`ship '${destroyedBy}' destroyed ship '${targetId}'`);
+                if (SpaceSim.debug) {
+                    console.debug(`ship '${destroyedBy}' destroyed ship '${targetId}'`);
+                }
                 destroyed.push({
                     targetId: targetId,
                     time: SpaceSim.game.loop.time

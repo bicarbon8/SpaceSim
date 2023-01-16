@@ -36,7 +36,9 @@ export class ClientSocketManager {
 
     private _emit(event: string, ...args: Array<any>): this {
         if (SpaceSimClient.mode === 'multiplayer') {
-            console.debug(`${Date.now()}: sending '${event}' event to server...`);
+            if (SpaceSim.debug) {
+                console.debug(`${Date.now()}: sending '${event}' event to server...`);
+            }
             this.socket.emit(event, ...args);
         }
         return this;
@@ -84,7 +86,9 @@ export class ClientSocketManager {
 
     private _handleAllEvents(event: string, ...args: Array<any>): void {
         if (SpaceSimClient.mode === 'multiplayer') {
-            console.debug(`${Date.now()}: received '${event}' event from server...`);
+            if (SpaceSim.debug) {
+                console.debug(`${Date.now()}: received '${event}' event from server...`);
+            }
             Helpers.trycatch(() => {
                 switch(event) {
                     case 'connect':
@@ -142,7 +146,9 @@ export class ClientSocketManager {
 
     private _handleConnectEvent(): void {
         this._connects++;
-        console.debug(`connected to server at: ${this.url}`);
+        if (SpaceSim.debug) {
+            console.debug(`connected to server at: ${this.url}`);
+        }
         if (this.isReconnect() && SpaceSim.game.scene.isActive('multiplayer-scene')) {
             // handle reconnect scenario
             this.sendSetPlayerDataRequest(SpaceSimClient.playerData);

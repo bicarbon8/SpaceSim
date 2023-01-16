@@ -58,6 +58,7 @@ export class StartupScene extends Phaser.Scene {
     }
 
     create(): void {
+        SpaceSimClient.mode = 'singleplayer';
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
