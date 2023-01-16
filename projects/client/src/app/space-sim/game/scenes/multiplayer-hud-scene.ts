@@ -23,7 +23,6 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     private _controller: InputController;
     private _connectedToServer: boolean;
     private _parentScene: BaseScene;
-    private _playerShip: Ship;
 
     debug: boolean;
 
@@ -35,9 +34,8 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     create(): void {
         this._parentScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
-        this._playerShip = this._parentScene.getShipsMap().get(SpaceSimClient.playerShipId);
         this.resize();
-        GameScoreTracker.start(this._playerShip.config);
+        GameScoreTracker.start(this.playerShip.config);
     }
 
     resize(): void {
@@ -53,9 +51,13 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     update(time: number, delta: number): void {
         this._connectedToServer = SpaceSimClient.socket?.connected ?? false;
         this._displayHUDInfo();
-        if (this._playerShip?.active) {
+        if (this.playerShip?.active) {
             this._controller?.update(time, delta);
         }
+    }
+
+    get playerShip(): Ship {
+        return this._parentScene.getShipsMap().get(SpaceSimClient.playerShipId);
     }
 
     private _createHUD(): void {
@@ -88,7 +90,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.warning().graphics);
             },
             onClick: () => {
-                this._playerShip.selfDestruct();
+                this.playerShip.selfDestruct();
                 this._quitContainer.removeContent(false);
                 this._cancelDestructButton.setActive(true)
                     .setVisible(true);
@@ -110,7 +112,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.danger().graphics);
             },
             onClick: () => {
-                this._playerShip.cancelSelfDestruct();
+                this.playerShip.cancelSelfDestruct();
                 this._quitContainer.removeContent(false);
                 this._destructButton.setActive(true)
                     .setVisible(true);
@@ -145,9 +147,9 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             this._controller.getGameObject()?.destroy();
         }
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, this._playerShip);
+            this._controller = new KbmController(this, this.playerShip);
         } else {
-            this._controller = new TouchController(this, this._playerShip);
+            this._controller = new TouchController(this, this.playerShip);
         }
         const obj = this._controller.getGameObject();
         if (obj) {
@@ -157,17 +159,17 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            const stats: GameStats = GameScoreTracker.getStats(this._playerShip.id);
+            const stats: GameStats = GameScoreTracker.getStats(this.playerShip.id);
             const info: string[] = [
                 `Kills: ${stats.opponentsDestroyed.length}`,
                 `Active Players: ${this._parentScene.getShips()?.length}`,
                 `Accuracy: ${stats.accuracy.toFixed(0)}%`,
-                `Fuel: ${this._playerShip.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${this._playerShip.getWeapons()?.remainingAmmo || 0}`,
-                `Score: ${GameScoreTracker.getScore(this._playerShip.id).toFixed(0)}`
+                `Fuel: ${this.playerShip.getRemainingFuel().toFixed(1)}`,
+                `Ammo: ${this.playerShip.getWeapons()?.remainingAmmo || 0}`,
+                `Score: ${GameScoreTracker.getScore(this.playerShip.id).toFixed(0)}`
             ];
             if (SpaceSim.debug) {
-                const loc: Phaser.Math.Vector2 = this._playerShip.getLocation();
+                const loc: Phaser.Math.Vector2 = this.playerShip.getLocation();
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             if (!this._connectedToServer) {
