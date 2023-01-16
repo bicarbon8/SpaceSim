@@ -1,4 +1,4 @@
-import { Constants, GameScoreTracker, GameStats, SpaceSim, BaseScene } from "space-sim-shared";
+import { Constants, GameScoreTracker, GameStats, SpaceSim, BaseScene, Ship } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
@@ -22,8 +22,8 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     private _hudLayout: GridLayout;
     private _controller: InputController;
     private _connectedToServer: boolean;
-    
-    readonly parentScene: BaseScene;
+    private _parentScene: BaseScene;
+    private _playerShip: Ship;
 
     debug: boolean;
 
@@ -31,13 +31,13 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
         super(settingsConfig || sceneConfig);
 
         this.debug = SpaceSim.debug;
-
-        this.parentScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
     }
 
     create(): void {
+        this._parentScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        this._playerShip = this._parentScene.getShipsMap().get(SpaceSimClient.playerShipId);
         this.resize();
-        GameScoreTracker.start(SpaceSimClient.player.config);
+        GameScoreTracker.start(this._playerShip.config);
     }
 
     resize(): void {
@@ -53,7 +53,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     update(time: number, delta: number): void {
         this._connectedToServer = SpaceSimClient.socket?.connected ?? false;
         this._displayHUDInfo();
-        if (SpaceSimClient.player?.active) {
+        if (this._playerShip?.active) {
             this._controller?.update(time, delta);
         }
     }
@@ -88,7 +88,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.warning().graphics);
             },
             onClick: () => {
-                SpaceSimClient.player.selfDestruct();
+                this._playerShip.selfDestruct();
                 this._quitContainer.removeContent(false);
                 this._cancelDestructButton.setActive(true)
                     .setVisible(true);
@@ -110,7 +110,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.danger().graphics);
             },
             onClick: () => {
-                SpaceSimClient.player.cancelSelfDestruct();
+                this._playerShip.cancelSelfDestruct();
                 this._quitContainer.removeContent(false);
                 this._destructButton.setActive(true)
                     .setVisible(true);
@@ -145,9 +145,9 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             this._controller.getGameObject()?.destroy();
         }
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, SpaceSimClient.player);
+            this._controller = new KbmController(this, this._playerShip);
         } else {
-            this._controller = new TouchController(this, SpaceSimClient.player);
+            this._controller = new TouchController(this, this._playerShip);
         }
         const obj = this._controller.getGameObject();
         if (obj) {
@@ -157,18 +157,17 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            const id = SpaceSimClient.player.id;
-            const stats: GameStats = GameScoreTracker.getStats(id);
+            const stats: GameStats = GameScoreTracker.getStats(this._playerShip.id);
             const info: string[] = [
                 `Kills: ${stats.opponentsDestroyed.length}`,
-                `Active Players: ${this.parentScene.getShips()?.length}`,
+                `Active Players: ${this._parentScene.getShips()?.length}`,
                 `Accuracy: ${stats.accuracy.toFixed(0)}%`,
-                `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
-                `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`
+                `Fuel: ${this._playerShip.getRemainingFuel().toFixed(1)}`,
+                `Ammo: ${this._playerShip.getWeapons()?.remainingAmmo || 0}`,
+                `Score: ${GameScoreTracker.getScore(this._playerShip.id).toFixed(0)}`
             ];
             if (SpaceSim.debug) {
-                const loc: Phaser.Math.Vector2 = SpaceSimClient.player.getLocation();
+                const loc: Phaser.Math.Vector2 = this._playerShip.getLocation();
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             if (!this._connectedToServer) {

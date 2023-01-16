@@ -1,19 +1,18 @@
 import "phaser";
-import { SpaceSim, Ship, Size, SpaceSimUserData, Constants } from "space-sim-shared";
+import { SpaceSim, Size, SpaceSimUserData } from "space-sim-shared";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
 import { StartupScene } from "./scenes/startup-scene";
 import { SpaceSimClientOptions } from "./space-sim-client-options";
-import { io, Socket } from "socket.io-client";
 import { MultiplayerScene } from "./scenes/multiplayer-scene";
 import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 import { AiController } from "./controllers/ai-controller";
 import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
 import { environment } from "src/environments/environment";
-import { DisconnectDescription } from "socket.io-client/build/esm/socket";
-import getBrowserFingerprint from "get-browser-fingerprint";
+import { ClientSocketManager } from "./utilities/client-socket-manager";
+
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -67,47 +66,12 @@ export class SpaceSimClient {
                 }
             });
         });
-
-        const fingerprint: string = `${getBrowserFingerprint()}`;
-        const dataStr = localStorage.getItem(Constants.GAME_NAME);
-        let playerData: SpaceSimUserData;
-        if (dataStr) {
-            try {
-                playerData = JSON.parse(dataStr) as SpaceSimUserData;
-            } catch (e) {
-                playerData = {name: '', fingerprint: ''};
-            }
-        }
-        SpaceSimClient.playerData = {
-            ...playerData,
-            fingerprint: fingerprint
-        };
-        localStorage.setItem(Constants.GAME_NAME, JSON.stringify(SpaceSimClient.playerData));
     }
 
     private _createSocket(): void {
         if (!SpaceSimClient.socket || SpaceSimClient.socket.disconnected) {
-            SpaceSimClient.socket = io(`${environment.websocket}`);
-            SpaceSimClient.socket.on('connect', () => {
-                console.debug(`connected to server at: ${environment.websocket}`);
-                // handle reconnect scenario
-                if (SpaceSimUserData.isValid(SpaceSimClient.playerData)) {
-                    SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, SpaceSimClient.playerData);
-                }
-            }).on('disconnect', (reason: Socket.DisconnectReason, description: DisconnectDescription) => {
-                console.warn(`socket disconnect`, reason, description);
-                if (reason === "io server disconnect") {
-                    // the disconnection was initiated by the server, you need to reconnect manually
-                    console.info(`attempting to reconnect to server...`);
-                    SpaceSimClient.socket.connect();
-                }
-            }).on(Constants.Socket.INVALID_USER_DATA, () => {
-                SpaceSimClient.playerData.name = null;
-                SpaceSimClient.playerData.fingerprint = `${getBrowserFingerprint()}`;
-                localStorage.removeItem(Constants.GAME_NAME);
-            }).on(Constants.Socket.USER_ACCEPTED, (data: SpaceSimUserData) => {
-                SpaceSimClient.playerData = data;
-                localStorage.setItem(Constants.GAME_NAME, JSON.stringify(SpaceSimClient.playerData));
+            SpaceSimClient.socket = new ClientSocketManager({
+                serverUrl: environment.websocket
             });
         }
     }
@@ -165,8 +129,8 @@ export module SpaceSimClient {
         }
         return size;
     }
-    export var socket: Socket;
-    export var player: Ship;
+    export var socket: ClientSocketManager;
+    export var playerShipId: string;
     export var playerData: SpaceSimUserData;
     export const opponents = new Array<AiController>();
     export var mode: GameMode = 'singleplayer';

@@ -34,21 +34,21 @@ export class TouchController extends InputController {
         // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
         // only update if angle changed more than minimum allowed degrees
         if (!Phaser.Math.Fuzzy.Equal(this.ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
-            SpaceSimClient.socket?.emit(Constants.Socket.SET_PLAYER_ANGLE, degrees, SpaceSimClient.playerData);
+            SpaceSimClient.socket?.sendSetShipAngleRequest(degrees, SpaceSimClient.playerData);
             this.ship.setRotation(degrees);
         }
     }
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
-            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON, SpaceSimClient.playerData);
+            SpaceSimClient.socket?.sendTriggerWeaponRequest(SpaceSimClient.playerData);
             this.ship.getWeapons()?.trigger();
         }
     }
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
-            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE, SpaceSimClient.playerData);
+            SpaceSimClient.socket?.sendTriggerEngineRequest(SpaceSimClient.playerData);
             this.ship.getThruster()?.trigger();
         }
     }

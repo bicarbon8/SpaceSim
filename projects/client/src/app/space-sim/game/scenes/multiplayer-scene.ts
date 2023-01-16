@@ -27,7 +27,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: Exploder;
-    private _shipId: string;
     private _disconnectTimer: number;
     private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
@@ -40,6 +39,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _shouldGetMap = false;
     private _shouldCreateStellarBodies = false;
     private _shouldGetPlayer = false;
+    private _needsResize = false;
     private _shouldResize = false;
     private _shouldShowHud = false;
 
@@ -51,6 +51,15 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     override getLevel<T extends GameLevel>(): T {
         return this._gameLevel as T;
+    }
+
+    override setLevel<T extends GameLevelOptions>(opts: T): BaseScene {
+        if (!this._gameLevel) {
+            this._gameLevel = new GameLevel(this, opts);
+            this._shouldCreateStellarBodies = true;
+            this._shouldGetPlayer = true;
+        }
+        return this;
     }
 
     override getShipsMap<T extends Ship>(): Map<string, T> {
@@ -126,16 +135,13 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     create(): void {
         SpaceSimClient.mode = 'multiplayer';
-        this._shipId = null;
         this._gameLevel = null;
-        SpaceSimClient.player = null;
+        SpaceSimClient.playerShipId = null;
         this._ships.clear();
         this._supplies.clear();
         this._stellarBodies = new Array<StellarBody>();
 
         this._exploder = new Exploder(this);
-
-        this._setupSocketEventHandling();
 
         // disable camera until we have our ship
         this.cameras.main.fadeOut(0, 0, 0, 0);
@@ -143,12 +149,13 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this._playMusic();
 
         this._shouldGetMap = true;
+        this._needsResize = true;
     }
 
     update(time: number, delta: number): void {
         if (this._shouldGetMap) {
             this._shouldGetMap = false;
-            this._getMapFromServer();
+            SpaceSimClient.socket.sendRequestMapRequest(SpaceSimClient.playerData);
         }
         if (this._shouldCreateStellarBodies) {
             this._shouldCreateStellarBodies = false;
@@ -176,7 +183,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
             if (!SpaceSimClient.socket?.connected) {
                 if (this._disconnectTimer == null) {
-                    this._disconnectTimer = window.setTimeout(() => this._gameOver(), 10000);
+                    this._disconnectTimer = window.setTimeout(() => this.endScene(), 10000);
                 }
             } else {
                 if (this._disconnectTimer != null) {
@@ -198,30 +205,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this._createMiniMap();
     }
 
-    private _setupSocketEventHandling(): void {
-        SpaceSimClient.socket
-            .on(Constants.Socket.UPDATE_SUPPLIES, (opts: Array<ShipSupplyOptions>) => this._handleUpdateSuppliesEvent(opts))
-            .on(Constants.Socket.REMOVE_SUPPLY, (id: string) => this._handleRemoveSupplyEvent(id))
-            .on(Constants.Socket.FLICKER_SUPPLY, (id: string) => this._handleFlickerSupplyEvent(id))
-            .on(Constants.Socket.UPDATE_PLAYERS, (opts: Array<ShipOptions>) => this._handleUpdatePlayersEvent(opts))
-            .on(Constants.Socket.PLAYER_DEATH, (id?: string) => this._handlePlayerDeathEvent(id))
-            .on(Constants.Socket.UPDATE_STATS, (stats: Array<Partial<GameStats>>) => GameScoreTracker.updateAllStats(...stats))
-            .on(Constants.Socket.TRIGGER_ENGINE, (id) => {
-                this._ships.get(id)?.getThruster()?.trigger();
-            }).on(Constants.Socket.TRIGGER_WEAPON, (id) => {
-                this._ships.get(id)?.getWeapons()?.trigger();
-            }).once(Constants.Socket.UPDATE_MAP, (opts: GameLevelOptions) => {
-                this._gameLevel = new GameLevel(this, opts);
-                console.debug(`${Date.now()}: map ${JSON.stringify(opts)} received from server`);
-                this._shouldCreateStellarBodies = true;
-                this._shouldGetPlayer = true;
-            }).on(Constants.Socket.SET_PLAYER_ID, (id: string) => {
-                console.debug(`${Date.now()}: shipid ${id} received from server`);
-                this._shipId = id;
-            });
-    }
-
-    private _handleUpdateSuppliesEvent(opts: Array<ShipSupplyOptions>): void {
+    public override updateSupplies<T extends ShipSupplyOptions>(opts: Array<T>): BaseScene {
         Helpers.trycatch(() => {
             opts.forEach(o => {
                 let supply = this._supplies.get(o.id);
@@ -252,24 +236,31 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 }
             });
         }, 'debug', `error in handling ${Constants.Socket.UPDATE_SUPPLIES} event`, 'message');
+        return this;
     }
 
-    private _handleRemoveSupplyEvent(id: string): void {
-        const supply = this._supplies.get(id);
-        if (supply) {
-            supply.destroy();
-            this._supplies.delete(id);
+    public override removeSupplies(...ids: Array<string>): BaseScene {
+        for (let id of ids) {
+            const supply = this._supplies.get(id);
+            if (supply) {
+                supply.destroy();
+                this._supplies.delete(id);
+            }
         }
+        return this;
     }
 
-    private _handleFlickerSupplyEvent(id: string): void {
-        const supply = this._supplies.get(id);
-        if (supply) {
-            Animations.flicker(supply, -1, () => null);
+    public override flickerSupplies(...ids: Array<string>): BaseScene {
+        for (let id of ids) {
+            const supply = this._supplies.get(id);
+            if (supply) {
+                Animations.flicker(supply, -1, () => null);
+            }
         }
+        return this;
     }
 
-    private _handleUpdatePlayersEvent(opts: Array<ShipOptions>): void {
+    public override updateShips<T extends ShipOptions>(opts: T[]): BaseScene {
         Helpers.trycatch(() => {
             opts.forEach(o => {
                 let ship = this._ships.get(o.id) as PlayerShip;
@@ -285,59 +276,43 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     Helpers.trycatch(() => this._camera?.ignore(ship.radarSprite), 'none');
                 }
 
-                if (ship?.id === this._shipId) {
-                    this._shipId = null;
-                    SpaceSimClient.player = ship;
-                    console.debug(`${Date.now()}: player ship ${ship.id} received from server`);
+                if (this._needsResize && ship?.id === SpaceSimClient.playerShipId) {
+                    this._needsResize = false;
                     this._shouldResize = true;
                     this._shouldShowHud = true;
                 }
             });
         }, 'debug', `error in handling ${Constants.Socket.UPDATE_PLAYERS} event`, 'message');
+        return this;
     }
 
-    private _handlePlayerDeathEvent(id?: string): void {
-        Helpers.trycatch(() => {
-            if (!id || SpaceSimClient.player.id === id) {
-                this._gameOver();
-            } else {
+    public override removeShips(...ids: Array<string>): BaseScene {
+        for (let id of ids) {
+            Helpers.trycatch(() => {
                 const ship = this._ships.get(id);
                 if (ship) {
                     this._exploder.explode({location: ship.config.location});
+                }
+                if (SpaceSimClient.playerShipId === ship.id) {
+                    this.endScene();
+                } else {
                     ship?.destroy(false);
                     this._ships.delete(ship.id);
                 }
-            }
-        }, 'debug', `error in handling ${Constants.Socket.PLAYER_DEATH} event`, 'message');
-    }
-
-    private _turnOffSocketEventHandling(): void {
-        SpaceSimClient.socket
-            .removeAllListeners(Constants.Socket.UPDATE_MAP)
-            .removeAllListeners(Constants.Socket.PLAYER_DEATH)
-            .removeAllListeners(Constants.Socket.UPDATE_PLAYERS)
-            .removeAllListeners(Constants.Socket.TRIGGER_ENGINE)
-            .removeAllListeners(Constants.Socket.TRIGGER_WEAPON)
-            .removeAllListeners(Constants.Socket.UPDATE_SUPPLIES)
-            .removeAllListeners(Constants.Socket.REMOVE_SUPPLY)
-            .removeAllListeners(Constants.Socket.UPDATE_STATS);
-    }
-
-    private _getMapFromServer(): void {
-        console.debug(`${Date.now()}: requesting map from server...`);
-        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_MAP, SpaceSimClient.playerData);
+            }, 'debug', `error in handling ${Constants.Socket.PLAYER_DEATH} event`, 'message');
+        }
+        return this;
     }
 
     private async _getPlayerFromServer(): Promise<void> {
         // handle case of client self destruct by notifying server of our destruction
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
-            if (shipOpts.id === SpaceSimClient.player.id) {
-                SpaceSimClient.socket?.emit(Constants.Socket.PLAYER_DEATH, SpaceSimClient.playerData);
+            if (shipOpts.id === SpaceSimClient.playerShipId) {
+                SpaceSimClient.socket?.sendPlayerDeathNotice(SpaceSimClient.playerData);
             }
         });
 
-        console.debug(`${Date.now()}: requesting ship from server...`);
-        SpaceSimClient.socket.emit(Constants.Socket.REQUEST_SHIP, SpaceSimClient.playerData);
+        SpaceSimClient.socket.sendRequestShipRequest(SpaceSimClient.playerData);
     }
 
     private _createStellarBodiesLayer(): void {
@@ -406,7 +381,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     .filter(p => p != null)
             ],
             backgroundColor: 0x000000,
-            followObject: SpaceSimClient.player.getGameObject()
+            followObject: this._ships.get(SpaceSimClient.playerShipId)?.getGameObject()
         });
         this._camera.cam.fadeIn(1000, 255, 255, 255);
     }
@@ -431,7 +406,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 ...this._stellarBodies.map(b => b.getGameObject()),
                 this.getLevel().getGameObject()
             ],
-            followObject: SpaceSimClient.player.getGameObject()
+            followObject: this._ships.get(SpaceSimClient.playerShipId)?.getGameObject()
         });
     }
 
@@ -448,8 +423,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this.physics.add.collider(ship.getGameObject(), this.getShips().map(p => p?.getGameObject()));
     }
 
-    private _gameOver(): void {
-        this._turnOffSocketEventHandling();
+    public override endScene(): BaseScene {
         this._camera.cam.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
             if (progress === 1) {
                 this.game.scene.start('game-over-scene');
@@ -457,5 +431,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 this.game.scene.stop(this);
             }
         });
+        return this;
     }
 }

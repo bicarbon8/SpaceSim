@@ -30,9 +30,6 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     create(): void {
-        SpaceSimClient.socket.on(Constants.Socket.UPDATE_STATS, (id: string, stats: Partial<GameStats>) => {
-            GameScoreTracker.updateStats(id, stats);
-        });
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
@@ -97,7 +94,7 @@ export class GameOverScene extends Phaser.Scene {
         }, false);
         
         if (SpaceSimClient.mode === 'singleplayer') {
-            const id = SpaceSimClient.player.id;
+            const id = SpaceSimClient.playerShipId;
             const stats: GameStats = GameScoreTracker.getStats(id);
             scoreText.setText([
                 `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`,

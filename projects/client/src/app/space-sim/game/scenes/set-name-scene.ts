@@ -31,6 +31,7 @@ export class SetNameScene extends Phaser.Scene {
     }
 
     create() {
+        SpaceSimClient.mode = 'multiplayer';
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
         
@@ -44,8 +45,6 @@ export class SetNameScene extends Phaser.Scene {
             this._getMobileTextInput();
         }
 
-        this._startHandlingSocketMessages();
-
         if (SpaceSimUserData.isValid(SpaceSimClient.playerData)) {
             this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
             this._updateContinueButton();
@@ -54,30 +53,6 @@ export class SetNameScene extends Phaser.Scene {
 
     update() {
         
-    }
-
-    private _startHandlingSocketMessages(): void {
-        SpaceSimClient.socket.once(Constants.Socket.JOIN_ROOM, () => {
-            console.debug(`received '${Constants.Socket.JOIN_ROOM}' response event`);
-            this.scene.start('multiplayer-scene');
-            this.scene.stop(this);
-        }).once(Constants.Socket.INVALID_USER_DATA, () => this._handleInvalidUserDataResponse())
-        .once(Constants.Socket.USER_ACCEPTED, (data: SpaceSimUserData) => this._handleUserAcceptedResponse(data));
-    }
-
-    private _handleInvalidUserDataResponse(): void {
-        if (this.scene.isActive(this)) {
-            console.debug(`received '${Constants.Socket.INVALID_USER_DATA}' response event`);
-            window.alert(`name: '${this._text.contentAs<Phaser.GameObjects.Text>().text}' is either already in use or is invalid; please pick a different name.`);
-            SpaceSimClient.socket.once(Constants.Socket.INVALID_USER_DATA, () => this._handleInvalidUserDataResponse());
-        }
-    }
-
-    private _handleUserAcceptedResponse(data: SpaceSimUserData): void {
-        if (this.scene.isActive(this)) {
-            SpaceSimClient.socket.emit(Constants.Socket.JOIN_ROOM, data);
-            SpaceSimClient.socket.once(Constants.Socket.USER_ACCEPTED, (d: SpaceSimUserData) => this._handleUserAcceptedResponse(d));
-        }
     }
 
     private _createMusic(): void {
@@ -164,7 +139,7 @@ export class SetNameScene extends Phaser.Scene {
     private _validateAndStartGame(text: string): void {
         const pname = Helpers.sanitise(text);
         if (pname.length > 2) {
-            SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, {
+            SpaceSimClient.socket.sendSetPlayerDataRequest({
                 ...SpaceSimClient.playerData,
                 name: pname
             });

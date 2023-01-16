@@ -70,8 +70,8 @@ export module Constants {
         export const TRIGGER_WEAPON = 'trigger-weapon';
         export const SET_PLAYER_ANGLE = 'set-player-angle';
         export const UPDATE_SUPPLIES = 'update-supplies';
-        export const FLICKER_SUPPLY = 'flicker-supply';
-        export const REMOVE_SUPPLY = 'remove-supply';
+        export const FLICKER_SUPPLIES = 'flicker-supplies';
+        export const REMOVE_SUPPLIES = 'remove-supplies';
         export const UPDATE_STATS = 'update-stats';
         export const INVALID_USER_DATA = 'invalid-user-data';
         export const USER_ACCEPTED = 'user-accepted';

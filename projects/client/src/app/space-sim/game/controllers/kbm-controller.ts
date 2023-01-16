@@ -35,7 +35,7 @@ export class KbmController extends InputController {
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
-                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE, SpaceSimClient.playerData);
+                SpaceSimClient.socket?.sendTriggerEngineRequest(SpaceSimClient.playerData);
                 this.ship.getThruster()?.trigger();
             }
             // reverse Thruster
@@ -56,7 +56,7 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON, SpaceSimClient.playerData);
+                SpaceSimClient.socket?.sendTriggerWeaponRequest(SpaceSimClient.playerData);
                 this.ship.getWeapons()?.trigger();
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {
