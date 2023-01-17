@@ -41,9 +41,9 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
             amount: this.amount,
             supplyType: this.supplyType,
             location: {x: this.x, y: this.y},
-            velocity: {x: this._body.velocity?.x ?? 0, y: this._body.velocity?.y ?? 0},
+            velocity: {x: this._body?.velocity?.x ?? 0, y: this._body?.velocity?.y ?? 0},
             angle: this.angle,
-            angularVelocity: this._body.angularVelocity
+            angularVelocity: this._body?.angularVelocity
         };
     }
 

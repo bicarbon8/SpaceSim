@@ -1,6 +1,7 @@
 import * as Phaser from "phaser";
 import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim } from "space-sim-shared";
 import { ServerBulletFactory } from "../ships/attachments/offence/server-bullet-factory";
+import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
 import { NonUiExploder } from "../utilities/non-ui-exploder";
@@ -14,7 +15,7 @@ export class BattleRoyaleScene extends BaseScene {
     }
     override queueShipRemoval(...ids: string[]): BaseScene {
         if (SpaceSim.debug) {
-            console.debug(`${Date.now()}: queuing ships ${JSON.stringify(ids)} to be removed...`);
+            console.debug(`[${Date.now()}]: queuing ships ${JSON.stringify(ids)} to be removed...`);
         }
         this._removeShipQueue.splice(this._removeShipQueue.length, 0, ...ids);
         return this;
@@ -24,14 +25,14 @@ export class BattleRoyaleScene extends BaseScene {
     }
     override queueSupplyRemoval(...ids: string[]): BaseScene {
         if (SpaceSim.debug) {
-            console.debug(`${Date.now()}: queuing supplies to be removed ${JSON.stringify(ids)}...`);
+            console.debug(`[${Date.now()}]: queuing supplies to be removed ${JSON.stringify(ids)}...`);
         }
         this._removeSuppliesQueue.splice(this._removeSuppliesQueue.length, 0, ...ids);
         return this;
     }
     override queueSupplyFlicker(...ids: string[]): BaseScene {
         if (SpaceSim.debug) {
-            console.debug(`${Date.now()}: queuing supplies to start flickering ${JSON.stringify(ids)}...`);
+            console.debug(`[${Date.now()}]: queuing supplies to start flickering ${JSON.stringify(ids)}...`);
         }
         this._flickerSuppliesQueue.splice(this._flickerSuppliesQueue.length, 0, ...ids);
         return this;
@@ -106,37 +107,49 @@ export class BattleRoyaleScene extends BaseScene {
         this._lowPriUpdateAt += delta;
         this._ultraLowPriUpdateAt += delta;
 
-        if (this._ships.size > 0) {
-            this._processRemoveShipQueue();
-            Helpers.trycatch(() => this.getShips().forEach(ship => ship?.update(time, delta)));
-            
-            // 30 fps
-            if (this._medPriUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
-                this._medPriUpdateAt = 0;
-                const ships = this.getShips().map(s => s.config);
+        Helpers.trycatch(() => this._processRemoveShipQueue());
+        Helpers.trycatch(() => {
+            this.getShips()
+                .filter(s => s.active)
+                .forEach(ship => ship?.update(time, delta));
+        });
+        
+        // 30 fps
+        if (this._medPriUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
+            this._medPriUpdateAt = 0;
+            Helpers.trycatch(() => {
+                const ships = this.getShips()
+                    .filter(s => s.active)
+                    .map(s => s.config);
                 if (ships) {
                     SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, ships);
                 }
-            }
+            }, 'warn');
+        }
 
-            // 15 fps
-            if (this._lowPriUpdateAt >= Constants.Timing.LOW_PRI_UPDATE_FREQ) {
-                this._lowPriUpdateAt = 0;
-                const supplies = this.getSupplies().map(s => s.config);
+        // 15 fps
+        if (this._lowPriUpdateAt >= Constants.Timing.LOW_PRI_UPDATE_FREQ) {
+            this._lowPriUpdateAt = 0;
+            Helpers.trycatch(() => {
+                const supplies = this.getSupplies()
+                    .filter(s => s.active)
+                    .map(s => s.config);
                 if (supplies.length) {
                     SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, supplies);
                 }
-            }
+            }, 'warn');
+        }
 
-            // 1 fps
-            if (this._ultraLowPriUpdateAt >= Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
-                this._ultraLowPriUpdateAt = 0;
+        // 1 fps
+        if (this._ultraLowPriUpdateAt >= Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
+            this._ultraLowPriUpdateAt = 0;
+            Helpers.trycatch(() => {
                 // TODO: filter out stats from other rooms
                 SpaceSimServer.io.sendUpdateStatsToRoom(this.ROOM_NAME, GameScoreTracker.getAllStats());
                 this._processRemoveSupplyQueue();
                 this._processFlickerSupplyQueue();
-                Helpers.trycatch(() => this._cleanup());
-            }
+                this._cleanup()
+            }, 'warn');
         }
     }
 
@@ -159,7 +172,7 @@ export class BattleRoyaleScene extends BaseScene {
             let y = Phaser.Math.RND.realInRange(topleft.y, botright.y);
             loc = Helpers.vector2(x, y);
         } while (this._isMapLocationOccupied(loc, 100));
-        const ship = new Ship(this, {
+        const ship = new ServerShip(this, {
             location: loc,
             fingerprint: data.fingerprint,
             name: data.name,
@@ -190,7 +203,7 @@ export class BattleRoyaleScene extends BaseScene {
 
     addPlayer(player: SpaceSimServerUserData): void {
         if (player) {
-            console.debug(`adding player ${JSON.stringify(player)} to scene ${this.ROOM_NAME}`);
+            console.debug(`[${Date.now()}]: adding player ${JSON.stringify(player)} to scene ${this.ROOM_NAME}`);
             player.room = this.ROOM_NAME;
             SpaceSimServer.io.joinRoom(player.socketId, this.ROOM_NAME);
             SpaceSimServer.io.sendJoinRoomResponse(player.socketId);
@@ -198,7 +211,7 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     removePlayer(player: SpaceSimServerUserData): void {
-        console.debug(`removing player '${JSON.stringify(player)}' and associated ship...`);
+        console.debug(`[${Date.now()}]: removing player '${JSON.stringify(player)}' and associated ship...`);
         const id = this._dataToShipId.get(SpaceSimServer.users.generateKey(player));
         this.queueShipRemoval(id);
         player.room = null;
@@ -213,31 +226,31 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     private _createMap(): void {
-        console.debug(`creating GameLevel in room ${this.ROOM_NAME}`);
+        console.debug(`[${Date.now()}]: creating GameLevel in room ${this.ROOM_NAME}`);
         const map = new GameLevel(this, SpaceSimServer.MAP_OPTIONS);
         this._gameLevel = map;
     }
 
     private _removeShip(opts: Partial<ShipOptions>): void {
         if (SpaceSim.debug) {
-            console.debug(`attempting to remove ship id: '${opts.id}' with name: '${opts.name}'...`);
+            console.debug(`[${Date.now()}]: attempting to remove ship id: '${opts.id}' with name: '${opts.name}'...`);
         }
 
         SpaceSimServer.io.broadcastPlayerDeathEvent(this.ROOM_NAME, opts.id);
 
         if (this._ships.has(opts.id)) {
             // prevent further updates to ship
-            const player = this._ships.get(opts.id);
+            const player = this.getShip<ServerShip>(opts.id);
             this._ships.delete(opts.id);
             
             this._expelSupplies(opts);
 
             if (SpaceSim.debug) {
-                console.debug(`calling ship.destroy(false) for ship: ${opts.id}, with name: ${opts.name}`);
+                console.debug(`[${Date.now()}]: calling ship.destroyObjects(false) for ship: ${opts.id}, with name: ${opts.name}`);
             }
-            player?.destroy(false); // don't emit event locally
+            player?.destroyObjects(false); // don't emit event locally
         } else {
-            console.warn(`no ship with id '${opts.id}' was found.`);
+            console.warn(`[${Date.now()}]: no ship with id '${opts.id}' was found.`);
         }
     }
 
@@ -248,7 +261,7 @@ export class BattleRoyaleScene extends BaseScene {
         const tiles: Array<Phaser.Tilemaps.Tile> = this.getLevel().getLayer()
             .getTilesWithinShape(circleA)?.filter(t => t.collides);
         if (tiles?.length > 0) {
-            console.debug(`location collides with map tiles: `, location);
+            console.debug(`[${Date.now()}]: location collides with map tiles: `, location);
             return true;
         }
 
@@ -260,7 +273,7 @@ export class BattleRoyaleScene extends BaseScene {
             const circleB = new Phaser.Geom.Circle(loc.x, loc.y, p.getGameObject().width / 2)
             const occupied = Phaser.Geom.Intersects.CircleToCircle(circleA, circleB);
             if (occupied) {
-                console.debug(`location collides with existing player: `, location);
+                console.debug(`[${Date.now()}]: location collides with existing player: `, location);
                 return true;
             }
         }
@@ -268,14 +281,14 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     private _expelSupplies(shipCfg: Partial<ShipOptions>): void {
-        console.debug(`expelling supplies at:`, shipCfg.location);
+        console.debug(`[${Date.now()}]: expelling supplies at:`, shipCfg.location);
         const supplyOpts = this._exploder.emitSupplies(shipCfg);
         const supplies = this._addSupplyCollisionPhysics(...supplyOpts);
         for (let supply of supplies) {
             this._supplies.set(supply.id, supply);
         }
         this._cleanupSupplies(...supplies);
-        console.debug(`${supplyOpts.length} supplies expelled from ship ${shipCfg.id}`);
+        console.debug(`[${Date.now()}]: ${supplyOpts.length} supplies expelled from ship ${shipCfg.id}`);
     }
 
     private _addSupplyCollisionPhysics(...options: Array<ShipSupplyOptions>): Array<ShipSupply> {
@@ -303,10 +316,8 @@ export class BattleRoyaleScene extends BaseScene {
             const activeShips = this.getShips().filter(p => p?.active);
             for (let activeShip of activeShips) {
                 this.physics.add.collider(supply, activeShip.getGameObject(), () => {
-                        SpaceSimServer.io.sendRemoveSuppliesEvent(supply.id);
-                        this._supplies.delete(supply.id);
+                        this.queueSupplyRemoval(supply.id);
                         supply.apply(activeShip);
-                        supply.destroy();
                     }
                 );
             }
@@ -361,7 +372,7 @@ export class BattleRoyaleScene extends BaseScene {
                 if (!this._ships.has(shipid)) {
                     const socketids = Helpers.getMapKeysByValue(this._dataToShipId, shipid);
                     for (let socketid of socketids) {
-                        console.debug(`removing socketToShipId mapping for socket: '${socketid}'`);
+                        console.debug(`[${Date.now()}]: removing socketToShipId mapping for socket: '${socketid}'`);
                         this._dataToShipId.delete(socketid);
                     }
                 }
@@ -372,7 +383,7 @@ export class BattleRoyaleScene extends BaseScene {
     private _processRemoveShipQueue(): void {
         const removeShipIds = this._removeShipQueue.splice(0, this._removeShipQueue.length);
         for (let id of removeShipIds) {
-            let ship = this._ships.get(id);
+            let ship = this.getShip(id);
             if (ship) {
                 Helpers.trycatch(() => this._removeShip(ship.config));
             }
@@ -382,8 +393,11 @@ export class BattleRoyaleScene extends BaseScene {
     private _processRemoveSupplyQueue(): void {
         const removeSupplies = this._removeSuppliesQueue.splice(0, this._removeSuppliesQueue.length);
         for (let id of removeSupplies) {
-            let supply = this._supplies.get(id);
+            let supply = this.getSupply(id);
             if (supply) {
+                if (SpaceSim.debug) {
+                    console.debug(`[${Date.now()}]: removing supply '${supply.id}'`);
+                }
                 this._supplies.delete(id);
                 supply.destroy();
             }

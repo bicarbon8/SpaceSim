@@ -39,7 +39,7 @@ export class ClientSocketManager {
     private _emit(event: string, ...args: Array<any>): this {
         if (SpaceSimClient.mode === 'multiplayer') {
             if (SpaceSim.debug) {
-                console.debug(`${Date.now()}: sending '${event}' event to server...`);
+                console.debug(`[${Date.now()}]: sending '${event}' event to server...`);
             }
             this.socket.emit(event, ...args);
         }
@@ -90,7 +90,7 @@ export class ClientSocketManager {
         if (SpaceSimClient.mode === 'multiplayer') {
             if (SpaceSim.debug && ![Constants.Socket.UPDATE_PLAYERS, Constants.Socket.UPDATE_STATS, Constants.Socket.UPDATE_SUPPLIES]
                 .includes(event)) {
-                console.debug(`${Date.now()}: received '${event}' event from server...`);
+                console.debug(`[${Date.now()}]: received '${event}' event from server...`);
             }
             Helpers.trycatch(() => {
                 switch(event) {
@@ -140,17 +140,17 @@ export class ClientSocketManager {
                         this._handleTriggerWeaponEvent(args[0]);
                         break;
                     default:
-                        console.warn(`${Date.now()}: unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
+                        console.warn(`[${Date.now()}]: unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
                         break;
                 }
-            }, 'warn', `${Date.now()}: error handling event '${event}' with arguments: ${JSON.stringify(args)}`, 'none');
+            }, 'warn', `[${Date.now()}]: error handling event '${event}' with arguments: ${JSON.stringify(args)}`, 'none');
         }
     }
 
     private _handleConnectEvent(): void {
         this._connects++;
         if (SpaceSim.debug) {
-            console.debug(`${Date.now()}: connected to server at: ${this.url}`);
+            console.debug(`[${Date.now()}]: connected to server at: ${this.url}`);
         }
         if (this.isReconnect() && SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             // handle reconnect scenario

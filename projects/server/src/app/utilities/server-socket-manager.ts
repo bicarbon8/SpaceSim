@@ -106,11 +106,11 @@ export class ServerSocketManager {
             const socket = this.getSocket(socketId);
             if (socket) {
                 if (SpaceSimServer.trace) {
-                    console.trace(`${Date.now()}: sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
+                    console.trace(`[${Date.now()}]: sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
                 }
                 socket.emit(event, ...args);
             }
-        }, 'warn', `${Date.now()}: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Date.now()}]: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
@@ -119,21 +119,21 @@ export class ServerSocketManager {
             const socket = this.getSocket(socketId);
             if (socket) {
                 if (SpaceSimServer.trace) {
-                    console.trace(`${Date.now()}: broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
+                    console.trace(`[${Date.now()}]: broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
                 }
                 socket.broadcast.in(room).emit(event, ...args);
             }
-        }, 'warn', `${Date.now()}: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Date.now()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
     private roomEmit(room: string, event: string, ...args: Array<any>): this {
         Helpers.trycatch(() => {
             if (SpaceSimServer.trace) {
-                console.trace(`${Date.now()}: sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
+                console.trace(`[${Date.now()}]: sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
             }
             this.io.in(room).emit(event, ...args);
-        }, 'warn', `${Date.now()}: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Date.now()}]: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
@@ -141,7 +141,7 @@ export class ServerSocketManager {
         Helpers.trycatch(() => {
             this.io.on('connection', (socket: Socket) => {
                 this._connections++;
-                console.info(`${Date.now()}: new socket connection: '${socket.id}' from '${socket.request.connection.remoteAddress}'`);
+                console.info(`[${Date.now()}]: new socket connection: '${socket.id}' from '${socket.request.connection.remoteAddress}'`);
                 // TODO: add measures to prevent abuse
                 socket.onAny((event: string, ...args: Array<any>) => {
                     this._handleSocketEvents(socket.id, event, ...args);
@@ -155,12 +155,12 @@ export class ServerSocketManager {
             if (SpaceSim.debug 
                 && ![Constants.Socket.SET_PLAYER_ANGLE, Constants.Socket.TRIGGER_ENGINE, Constants.Socket.TRIGGER_WEAPON]
                     .includes(event)) {
-                console.debug(`${Date.now()}: received '${event}' event from client '${socketId}'...`);
+                console.debug(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
             }
             if (SpaceSimServer.trace 
                 && [Constants.Socket.SET_PLAYER_ANGLE, Constants.Socket.TRIGGER_ENGINE, Constants.Socket.TRIGGER_WEAPON]
                     .includes(event)) {
-                console.debug(`${Date.now()}: received '${event}' event from client '${socketId}'...`);
+                console.debug(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
             }
             switch(event) {
                 case 'disconnect':
@@ -191,10 +191,10 @@ export class ServerSocketManager {
                     this._handleSetPlayerAngleEvent(socketId, args[0], args[1]);
                     break;
                 default:
-                    console.warn(`${Date.now()}: unknown socket event received from client '${socketId}': event '${event}', args ${JSON.stringify(args)}`);
+                    console.warn(`[${Date.now()}]: unknown socket event received from client '${socketId}': event '${event}', args ${JSON.stringify(args)}`);
                     break;
             }
-        }, 'warn', `${Date.now()}: error handling event '${event}' with arguments: ${JSON.stringify(args)} from socket '${socketId}'`, 'all');
+        }, 'warn', `[${Date.now()}]: error handling event '${event}' with arguments: ${JSON.stringify(args)} from socket '${socketId}'`, 'all');
     }
 
     private _handleDisconnectEvent(socketId: string, reason: DisconnectReason): void {
@@ -269,7 +269,7 @@ export class ServerSocketManager {
         const user = SpaceSimServer.users.get(data);
         if (user) {
             if (SpaceSim.debug) {
-                console.debug(`${Date.now()}: attempting to add user ${JSON.stringify(user)} to a room...`);
+                console.debug(`[${Date.now()}]: attempting to add user ${JSON.stringify(user)} to a room...`);
             }
             // iterate over rooms and see if any have less than max allowed players
             for (let scene of SpaceSimServer.rooms()) {
@@ -300,10 +300,10 @@ export class ServerSocketManager {
                 // TODO: add `GameLevel.config` method and use that data instead
                 this.socketEmit(socketId, Constants.Socket.UPDATE_MAP, SpaceSimServer.MAP_OPTIONS);
             } else {
-                console.warn(`${Date.now()}: no scene could be found matching room '${user.room}' so map data will not be sent`);
+                console.warn(`[${Date.now()}]: no scene could be found matching room '${user.room}' so map data will not be sent`);
             }
         } else {
-            console.warn(`${Date.now()}: no user could be found using socket '${socketId}' so map data will not be sent`);
+            console.warn(`[${Date.now()}]: no user could be found using socket '${socketId}' so map data will not be sent`);
         }
     }
 
@@ -314,14 +314,14 @@ export class ServerSocketManager {
             if (scene) {
                 const ship = scene.getShipByData(user) ?? scene.createShip(user);
                 if (SpaceSim.debug) {
-                    console.debug(`${Date.now()}: sending ship id ${ship.id} to client ${socketId}`);
+                    console.debug(`[${Date.now()}]: sending ship id ${ship.id} to client ${socketId}`);
                 }
                 this.sendSetShipIdResponse(socketId, ship.id);
             } else {
-                console.warn(`${Date.now()}: no scene could be found matching room '${user.room}' so new ship not created`);
+                console.warn(`[${Date.now()}]: no scene could be found matching room '${user.room}' so new ship not created`);
             }
         } else {
-            console.warn(`${Date.now()}: no user could be found using socket '${socketId}' so new ship not created`);
+            console.warn(`[${Date.now()}]: no user could be found using socket '${socketId}' so new ship not created`);
         }
     }
 
@@ -357,10 +357,10 @@ export class ServerSocketManager {
                     scene.queueShipRemoval(ship.id);
                 }
             } else {
-                console.warn(`${Date.now()}: no scene could be found matching room '${user.room}' so player death not registered`);
+                console.warn(`[${Date.now()}]: no scene could be found matching room '${user.room}' so player death not registered`);
             }
         } else {
-            console.warn(`${Date.now()}: no user could be found using socket '${socketId}' so player death not registered`);
+            console.warn(`[${Date.now()}]: no user could be found using socket '${socketId}' so player death not registered`);
         }
     }
 
@@ -382,10 +382,10 @@ export class ServerSocketManager {
             if (scene) {
                 ship = scene.getShipByData(user);
             } else {
-                console.warn(`${Date.now()}: no scene containing user could be found from data '${JSON.stringify(data)}'`);
+                console.warn(`[${Date.now()}]: no scene containing user could be found from data '${JSON.stringify(data)}'`);
             }
         } else {
-            console.warn(`${Date.now()}: no user could be found from data '${JSON.stringify(data)}'`);
+            console.warn(`[${Date.now()}]: no user could be found from data '${JSON.stringify(data)}'`);
         }
         return ship;
     }

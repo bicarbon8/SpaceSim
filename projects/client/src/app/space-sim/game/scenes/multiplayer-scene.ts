@@ -180,7 +180,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     resize(): void {
-        console.debug(`${Date.now()}: resize called; resetting width, height, background, camera and radar`);
+        console.debug(`[${Date.now()}]: resize called; resetting width, height, background, camera and radar`);
         this._width = this.game.scale.displaySize.width;
         this._height = this.game.scale.displaySize.height;
         this._createBackground();
@@ -225,7 +225,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _createStellarBodiesLayer(): void {
-        console.debug(`${Date.now()}: creating StellarBodies...`);
+        console.debug(`[${Date.now()}]: creating StellarBodies...`);
         const room: RoomPlus = this.getLevel().getRooms()[0];
         const bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
@@ -365,6 +365,9 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     ship.configure(o);
                 } else {
                     // or create new ship if doesn't already exist
+                    if (SpaceSim.debug) {
+                        console.debug(`creating new PlayerShip ${JSON.stringify(o)}`);
+                    }
                     ship = new PlayerShip(this, {
                         ...o,
                         exploder: this._exploder,
@@ -391,11 +394,15 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             for (let id of ids) {
                 const ship = this._ships.get(id);
                 if (ship) {
+                    if (SpaceSim.debug) {
+                        console.debug(`removing ship '${ship.id}'`);
+                    }
                     this._exploder.explode({location: ship.config.location});
                     ship.destroy(false);
                     this._ships.delete(ship.id);
 
                     if (SpaceSimClient.playerShipId === ship.id) {
+                        console.info(`player ship removed; queuing game over...`);
                         this.queueEndScene();
                     }
                 }
@@ -406,16 +413,16 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _processUpdateSuppliesQueue(): void {
         Helpers.trycatch(() => {
             const opts = this._updateSuppliesQueue.splice(0, this._updateSuppliesQueue.length);
-            if (SpaceSim.debug) {
-                console.debug(`processing ShipSupplyOptions ${JSON.stringify(opts)}`);
-            }
             opts.forEach(o => {
                 let supply = this._supplies.get(o.id);
                 if (supply) {
                     // update existing supply
                     supply?.configure(o);
                 } else {
-                    // or create new ship if doesn't already exist
+                    // or create new supply if doesn't already exist
+                    if (SpaceSim.debug) {
+                        console.debug(`creating new ShipSupply ${JSON.stringify(o)}`);
+                    }
                     switch (o.supplyType) {
                         case 'ammo':
                             supply = new PlayerAmmoSupply(this, o);
@@ -444,8 +451,11 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         Helpers.trycatch(() => {
             const ids = this._removeSuppliesQueue.splice(0, this._removeSuppliesQueue.length);
             for (let id of ids) {
-                const supply = this._supplies.get(id);
+                const supply = this.getSupply(id);
                 if (supply) {
+                    if (SpaceSim.debug) {
+                        console.debug(`removing supply '${supply.id}'`);
+                    }
                     supply.destroy();
                     this._supplies.delete(id);
                 }
@@ -457,7 +467,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         Helpers.trycatch(() => {
             const ids = this._flickerSuppliesQueue.splice(0, this._flickerSuppliesQueue.length);
             for (let id of ids) {
-                const supply = this._supplies.get(id);
+                const supply = this.getSupply(id);
                 if (supply) {
                     Animations.flicker(supply, -1, () => null);
                 }
