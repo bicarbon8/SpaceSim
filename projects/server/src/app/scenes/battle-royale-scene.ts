@@ -1,50 +1,58 @@
 import * as Phaser from "phaser";
-import { Socket } from "socket.io";
 import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, Exploder, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim } from "space-sim-shared";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
 
 export class BattleRoyaleScene extends BaseScene {
-    setLevel<T extends GameLevelOptions>(opts: T): BaseScene {
+    override setLevel<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    updateShips<T extends ShipOptions>(opts: T[]): BaseScene {
+    override updateShips<T extends ShipOptions>(opts: T[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    removeShips(...ids: string[]): BaseScene {
-        for (let id of ids) {
-            const ship = this._ships.get(id);
-            if (ship) {
-                this._removeShip(ship.config);
-            }
+    override removeShips(...ids: string[]): BaseScene {
+        if (SpaceSim.debug) {
+            console.debug(`${Date.now()}: queuing ships ${JSON.stringify(ids)} to be removed...`);
         }
+        this._removeShipQueue.splice(this._removeShipQueue.length, 0, ...ids);
         return this;
     }
-    updateSupplies<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
+    override updateSupplies<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    removeSupplies(...ids: string[]): BaseScene {
+    override removeSupplies(...ids: string[]): BaseScene {
+        if (SpaceSim.debug) {
+            console.debug(`${Date.now()}: queuing supplies to be removed ${JSON.stringify(ids)}...`);
+        }
+        this._removeSuppliesQueue.splice(this._removeSuppliesQueue.length, 0, ...ids);
+        return this;
+    }
+    override flickerSupplies(...ids: string[]): BaseScene {
+        if (SpaceSim.debug) {
+            console.debug(`${Date.now()}: queuing supplies to start flickering ${JSON.stringify(ids)}...`);
+        }
+        this._flickerSuppliesQueue.splice(this._flickerSuppliesQueue.length, 0, ...ids);
+        return this;
+    }
+    override endScene(): BaseScene {
         throw new Error("Method not implemented.");
     }
-    flickerSupplies(...ids: string[]): BaseScene {
-        throw new Error("Method not implemented.");
-    }
-    endScene(): BaseScene {
-        throw new Error("Method not implemented.");
-    }
+
     readonly ROOM_NAME: string;
     
     /**
      * mapping of `fingerprint-name` to ship.id since socket disconnect
-     * results in new sockeet id on reconnect so it can't be used.
+     * results in new socket id on reconnect so it can't be used.
      */
     private readonly _dataToShipId = new Map<string, string>();
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
+    private readonly _removeShipQueue = new Array<string>();
+    private readonly _removeSuppliesQueue = new Array<string>();
+    private readonly _flickerSuppliesQueue = new Array<string>();
+    
     private _gameLevel: GameLevel;
-
     private _exploder: Exploder;
-
     private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
     private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
     private _ultraLowPriUpdateAt: number = Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
@@ -97,12 +105,13 @@ export class BattleRoyaleScene extends BaseScene {
         this._ultraLowPriUpdateAt += delta;
 
         if (this._ships.size > 0) {
+            this._processRemoveShipQueue();
             Helpers.trycatch(() => this.getShips().forEach(ship => ship?.update(time, delta)));
             
             // 30 fps
             if (this._medPriUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
                 this._medPriUpdateAt = 0;
-                SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, this.getShips().map(p => p.config));
+                SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, this.getShips().map(s => s.config));
             }
 
             // 15 fps
@@ -116,13 +125,15 @@ export class BattleRoyaleScene extends BaseScene {
                 this._ultraLowPriUpdateAt = 0;
                 // TODO: filter out stats from other rooms
                 SpaceSimServer.io.sendUpdateStatsToRoom(this.ROOM_NAME, GameScoreTracker.getAllStats());
+                this._processRemoveSupplyQueue();
+                this._processFlickerSupplyQueue();
                 Helpers.trycatch(() => this._cleanup());
             }
         }
     }
 
     getShip(data: SpaceSimUserData): Ship {
-        const id = this._dataToShipId.get(SpaceSimUserData.uniqueKey(data));
+        const id = this._dataToShipId.get(SpaceSimServer.users.generateKey(data));
         let ship: Ship;
         if (id) {
             ship = this._ships.get(id);
@@ -160,7 +171,7 @@ export class BattleRoyaleScene extends BaseScene {
         this._ships.set(ship.id, ship);
         GameScoreTracker.start(ship.config);
 
-        const key = SpaceSimUserData.uniqueKey(data);
+        const key = SpaceSimServer.users.generateKey(data);
         console.info(`created new ship and associating data '${key}' to ship '${ship.id}'`);
         this._dataToShipId.set(key, ship.id);
         
@@ -178,12 +189,8 @@ export class BattleRoyaleScene extends BaseScene {
 
     removePlayer(player: SpaceSimServerUserData): void {
         console.debug(`removing player '${JSON.stringify(player)}' and associated ship...`);
-        const id = this._dataToShipId.get(SpaceSimUserData.uniqueKey(player));
-        const ship = this._ships.get(id);
-        if (ship) {
-            const config = ship.config;
-            this._removeShip(config);
-        }
+        const id = this._dataToShipId.get(SpaceSimServer.users.generateKey(player));
+        this.removeShips(id);
         player.room = null;
         SpaceSimServer.io.leaveRoom(player.socketId, this.ROOM_NAME);
     }
@@ -191,7 +198,7 @@ export class BattleRoyaleScene extends BaseScene {
     private _setupSceneEventHandling(): void {
         // setup listener for player death event (sent from ship.destroy())
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
-            this._removeShip(shipOpts);
+            this.removeShips(shipOpts.id);
         });
     }
 
@@ -203,20 +210,27 @@ export class BattleRoyaleScene extends BaseScene {
 
     private _removeShip(opts: ShipOptions): void {
         if (SpaceSim.debug) {
-            console.debug(`attempting to remove ship '${JSON.stringify(opts)}'...`);
+            console.debug(`attempting to remove ship id: '${opts.id}' with name: '${opts.name}'...`);
         }
+
+        const userDataKeys = Helpers.getMapKeysByValue(this._dataToShipId, opts.id).filter(sid => sid != null);
+        if (SpaceSim.debug) {
+            console.debug(`found ${userDataKeys.length} user data keys associated with ship '${opts.id}'`);
+        }
+        for (let userDataKey of userDataKeys) {
+            const user = SpaceSimServer.users.selectFirst(SpaceSimServer.users.parseKey(userDataKey));
+            if (user?.socketId) {
+                if (SpaceSim.debug) {
+                    console.debug(`${Date.now()}: sending player death notice to socket '${user.socketId}' for ship '${opts.id}'`);
+                }
+                SpaceSimServer.io.sendPlayerDeathEvent(user.socketId, opts.id);
+            }
+        }
+
         if (this._ships.has(opts.id)) {
             // prevent further updates to ship
             const player = this._ships.get(opts.id);
             this._ships.delete(opts.id);
-            
-            const socketIds = Helpers.getMapKeysByValue(this._dataToShipId, opts.id).filter(sid => sid != null);
-            for (let socketId of socketIds) {
-                if (SpaceSim.debug) {
-                    console.debug(`${Date.now()}: sending player death notice to socket '${socketId}' for ship '${opts.id}'`);
-                }
-                SpaceSimServer.io.sendPlayerDeathEvent(socketId, opts.id);
-            }
             
             this._expelSupplies(opts);
 
@@ -351,14 +365,10 @@ export class BattleRoyaleScene extends BaseScene {
      */
     private _cleanupSupplies(...supplies: Array<ShipSupply>): void {
         window.setTimeout(() => {
-            SpaceSimServer.io.sendFlickerSuppliesEvent(this.ROOM_NAME, ...supplies.map(s => s.id));
-            for (let supply of supplies) {
-                window.setTimeout(() => {
-                    this._supplies.delete(supply.id);
-                    supply.destroy();
-                    SpaceSimServer.io.sendRemoveSuppliesEvent(this.ROOM_NAME, ...supplies.map(s => s.id));
-                }, 5000);
-            }
+            this.flickerSupplies(...supplies.map(s => s.id));
+            window.setTimeout(() => {
+                this.removeSupplies(...supplies.map(s => s.id));
+            }, 5000);
         }, 25000);
     }
 
@@ -380,5 +390,35 @@ export class BattleRoyaleScene extends BaseScene {
                 }
             }
         }
+    }
+
+    private _processRemoveShipQueue(): void {
+        const removeShipIds = this._removeShipQueue.splice(0, this._removeShipQueue.length);
+        for (let id of removeShipIds) {
+            let ship = this._ships.get(id);
+            if (ship) {
+                Helpers.trycatch(() => this._removeShip(ship.config));
+            }
+        }
+    }
+
+    private _processRemoveSupplyQueue(): void {
+        const removeSupplies = this._removeSuppliesQueue.splice(0, this._removeSuppliesQueue.length);
+        for (let id of removeSupplies) {
+            let supply = this._supplies.get(id);
+            if (supply) {
+                this._supplies.delete(id);
+                supply.destroy();
+            }
+        }
+        SpaceSimServer.io.sendRemoveSuppliesEvent(this.ROOM_NAME, ...removeSupplies);
+    }
+
+    /**
+     * NOTE: this is a client only event as the server doesn't flicker supplies
+     */
+    private _processFlickerSupplyQueue(): void {
+        const flickerSupplies = this._flickerSuppliesQueue.splice(0, this._flickerSuppliesQueue.length);
+        SpaceSimServer.io.sendFlickerSuppliesEvent(this.ROOM_NAME, ...flickerSupplies);
     }
 }

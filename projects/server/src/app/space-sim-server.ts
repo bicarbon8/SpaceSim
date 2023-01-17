@@ -1,5 +1,5 @@
 import { GameServerEngine } from "phaser-game-server-engine";
-import { GameLevelOptions, SpaceSim } from "space-sim-shared";
+import { DataTable, GameLevelOptions, SpaceSim } from "space-sim-shared";
 import { BattleRoyaleScene } from "./scenes/battle-royale-scene";
 import { SpaceSimServerUserData } from "./space-sim-server-user-data";
 import { ServerSocketManager } from "./utilities/server-socket-manager";
@@ -29,24 +29,9 @@ export class SpaceSimServer extends GameServerEngine {
 }
 
 export module SpaceSimServer {
+    export var trace: boolean = false;
     export var io: ServerSocketManager;
-    export const usersTable = new Map<string, SpaceSimServerUserData>();
-    export const users = (findBy: Partial<SpaceSimServerUserData>): Array<SpaceSimServerUserData> => {
-        const uArr = Array.from(SpaceSimServer.usersTable.values());
-        let results: Array<SpaceSimServerUserData>;
-        if (findBy) {
-            const findByKeys = Object.keys(findBy);
-            results = uArr.filter(u => {
-                for (let key of findByKeys) {
-                    if (findBy[key] !== u[key]) {
-                        return false;
-                    }
-                }
-                return true;
-            });
-        }
-        return results;
-    }
+    export const users = new DataTable<SpaceSimServerUserData>({indexKeys: ['fingerprint', 'name']});
     export const rooms = (): Array<BattleRoyaleScene> => SpaceSim.game.scene.getScenes(true)
         .map(s => s as BattleRoyaleScene);
 }

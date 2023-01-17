@@ -6,10 +6,6 @@ export type SpaceSimUserData = {
 };
 
 export module SpaceSimUserData {
-    export function uniqueKey(data: SpaceSimUserData): string {
-        const sanitised = SpaceSimUserData.sanitise(data);
-        return `${sanitised.fingerprint}-${sanitised.name}`;
-    }
     export function sanitise(data: SpaceSimUserData): SpaceSimUserData {
         return {
             fingerprint: Helpers.sanitise(data.fingerprint),

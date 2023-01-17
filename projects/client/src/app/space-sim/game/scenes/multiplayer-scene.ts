@@ -268,7 +268,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 let ship = this._ships.get(o.id) as PlayerShip;
                 if (ship) {
                     // update existing ship
-                    ship?.configure(o);
+                    ship.configure(o);
                 } else {
                     // or create new ship if doesn't already exist
                     ship = new PlayerShip(this, o);
@@ -294,12 +294,12 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 const ship = this._ships.get(id);
                 if (ship) {
                     this._exploder.explode({location: ship.config.location});
-                }
-                if (SpaceSimClient.playerShipId === ship.id) {
-                    this.endScene();
-                } else {
-                    ship?.destroy(false);
+                    ship.destroy(false);
                     this._ships.delete(ship.id);
+
+                    if (SpaceSimClient.playerShipId === ship.id) {
+                        this.endScene();
+                    }
                 }
             }, 'debug', `error in removeShips ${JSON.stringify(ids)}`, 'message');
         }

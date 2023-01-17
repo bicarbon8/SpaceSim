@@ -42,6 +42,7 @@ export * from "./src/ships/damage-options";
 export * from "./src/ships/ship";
 /** utilities */
 export * from "./src/utilities/constants";
+export * from "./src/utilities/data-table";
 export * from "./src/utilities/exploder";
 export * from "./src/utilities/game-score-tracker";
 export * from "./src/utilities/helpers";
