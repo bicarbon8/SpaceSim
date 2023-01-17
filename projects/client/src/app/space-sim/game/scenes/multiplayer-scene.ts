@@ -48,6 +48,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _needsResize = false;
     private _shouldResize = false;
     private _shouldShowHud = false;
+    private _shouldEndScene = false;
 
     private readonly _updateShipsQueue = new Array<Partial<ShipOptions>>();
     private readonly _removeShipsQueue = new Array<string>();
@@ -151,6 +152,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             SpaceSim.game.scene.bringToTop(MultiplayerHudSceneConfig.key);
         }
         try {
+            this._processEndScene();
             this._processRemoveShipsQueue();
             this._processUpdateShipsQueue();
             this.getShips().forEach(p => p?.update(time, delta));
@@ -327,18 +329,30 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _addPlayerCollisionPhysicsWithPlayers(ship: Ship): void {
-        this.physics.add.collider(ship.getGameObject(), this.getShips().map(p => p?.getGameObject()));
+        const activeShips = this.getShips().filter(s => s.active);
+        for (let activeShip of activeShips) {
+            if (ship.id !== activeShip.id) {
+                this.physics.add.collider(ship.getGameObject(), activeShip.getGameObject());
+            }
+        }
     }
 
     public override queueEndScene(): BaseScene {
-        this._camera.cam.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
-            if (progress === 1) {
-                this.game.scene.start(GameOverSceneConfig.key);
-                this.game.scene.stop(MultiplayerHudSceneConfig.key);
-                this.game.scene.stop(this);
-            }
-        });
+        this._shouldEndScene = true;
         return this;
+    }
+
+    private _processEndScene(): void {
+        if (this._shouldEndScene) {
+            this._shouldEndScene = false;
+            this._camera.cam.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
+                if (progress === 1) {
+                    this.game.scene.start(GameOverSceneConfig.key);
+                    this.game.scene.stop(MultiplayerHudSceneConfig.key);
+                    this.game.scene.stop(this);
+                }
+            });
+        }
     }
 
     private _processUpdateShipsQueue(): void {
@@ -392,6 +406,9 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _processUpdateSuppliesQueue(): void {
         Helpers.trycatch(() => {
             const opts = this._updateSuppliesQueue.splice(0, this._updateSuppliesQueue.length);
+            if (SpaceSim.debug) {
+                console.debug(`processing ShipSupplyOptions ${JSON.stringify(opts)}`);
+            }
             opts.forEach(o => {
                 let supply = this._supplies.get(o.id);
                 if (supply) {

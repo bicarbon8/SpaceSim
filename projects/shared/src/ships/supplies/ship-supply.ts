@@ -6,6 +6,7 @@ import { HasId } from "../../interfaces/has-id";
 import { SupplyType } from "./supply-type";
 import { Helpers } from "../../utilities/helpers";
 import { BaseScene } from "../../scenes/base-scene";
+import { Ship } from "../ship";
 
 export type ShipSupplyOptions = Partial<PhysicsObject> & {
     readonly id?: string;

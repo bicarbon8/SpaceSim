@@ -88,7 +88,8 @@ export class ClientSocketManager {
 
     private _handleAllEvents(event: string, ...args: Array<any>): void {
         if (SpaceSimClient.mode === 'multiplayer') {
-            if (SpaceSim.debug) {
+            if (SpaceSim.debug && ![Constants.Socket.UPDATE_PLAYERS, Constants.Socket.UPDATE_STATS, Constants.Socket.UPDATE_SUPPLIES]
+                .includes(event)) {
                 console.debug(`${Date.now()}: received '${event}' event from server...`);
             }
             Helpers.trycatch(() => {

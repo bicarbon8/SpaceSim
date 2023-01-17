@@ -113,13 +113,19 @@ export class BattleRoyaleScene extends BaseScene {
             // 30 fps
             if (this._medPriUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
                 this._medPriUpdateAt = 0;
-                SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, this.getShips().map(s => s.config));
+                const ships = this.getShips().map(s => s.config);
+                if (ships) {
+                    SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, ships);
+                }
             }
 
             // 15 fps
             if (this._lowPriUpdateAt >= Constants.Timing.LOW_PRI_UPDATE_FREQ) {
                 this._lowPriUpdateAt = 0;
-                SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, this.getSupplies().map(s => s.config));
+                const supplies = this.getSupplies().map(s => s.config);
+                if (supplies.length) {
+                    SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, supplies);
+                }
             }
 
             // 1 fps
@@ -217,19 +223,7 @@ export class BattleRoyaleScene extends BaseScene {
             console.debug(`attempting to remove ship id: '${opts.id}' with name: '${opts.name}'...`);
         }
 
-        const userDataKeys = Helpers.getMapKeysByValue(this._dataToShipId, opts.id).filter(sid => sid != null);
-        if (SpaceSim.debug) {
-            console.debug(`found ${userDataKeys.length} user data keys associated with ship '${opts.id}'`);
-        }
-        for (let userDataKey of userDataKeys) {
-            const user = SpaceSimServer.users.selectFirst(SpaceSimServer.users.parseKey(userDataKey));
-            if (user?.socketId) {
-                if (SpaceSim.debug) {
-                    console.debug(`${Date.now()}: sending player death notice to socket '${user.socketId}' for ship '${opts.id}'`);
-                }
-                SpaceSimServer.io.sendPlayerDeathEvent(user.socketId, opts.id);
-            }
-        }
+        SpaceSimServer.io.broadcastPlayerDeathEvent(this.ROOM_NAME, opts.id);
 
         if (this._ships.has(opts.id)) {
             // prevent further updates to ship
@@ -287,58 +281,38 @@ export class BattleRoyaleScene extends BaseScene {
     private _addSupplyCollisionPhysics(...options: Array<ShipSupplyOptions>): Array<ShipSupply> {
         const supplies = new Array<ShipSupply>();
         for (let opts of options) {
+            let supply: ShipSupply;
             switch(opts.supplyType) {
                 case 'ammo':
-                    supplies.push(new AmmoSupply(this, opts));
+                    supply = new AmmoSupply(this, opts);
                     break;
                 case 'coolant':
-                    supplies.push(new CoolantSupply(this, opts));
+                    supply = new CoolantSupply(this, opts);
                     break;
                 case 'fuel':
-                    supplies.push(new FuelSupply(this, opts));
+                    supply = new FuelSupply(this, opts);
                     break;
                 case 'repairs':
-                    supplies.push(new RepairsSupply(this, opts));
+                    supply = new RepairsSupply(this, opts);
                     break;
                 default:
                     console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, opts.supplyType);
                     break;
             }
-        }
-        this.physics.add.collider(supplies, this.getLevel().getGameObject());
-        this.physics.add.collider(supplies, this.getShips()
-            .filter(p => p?.active)
-            .map(o => o?.getGameObject()), 
-            (obj1, obj2) => {
-                let shipGameObj: Phaser.GameObjects.Container;
-                let supplyGameObj: Phaser.GameObjects.Container;
-                if (supplies.map(s => s as Phaser.GameObjects.GameObject).includes(obj1)) {
-                    shipGameObj = obj2 as Phaser.GameObjects.Container;
-                    supplyGameObj = obj1 as Phaser.GameObjects.Container;
-                } else {
-                    shipGameObj = obj1 as Phaser.GameObjects.Container;
-                    supplyGameObj = obj2 as Phaser.GameObjects.Container;
-                }
-                const ship: Ship = this.getShips().find(p => {
-                    const go = p.getGameObject();
-                    if (go === shipGameObj) {
-                        return true;
+            this.physics.add.collider(supply, this.getLevel().getGameObject());
+            const activeShips = this.getShips().filter(p => p?.active);
+            for (let activeShip of activeShips) {
+                this.physics.add.collider(supply, activeShip.getGameObject(), () => {
+                        SpaceSimServer.io.sendRemoveSuppliesEvent(supply.id);
+                        this._supplies.delete(supply.id);
+                        supply.apply(activeShip);
+                        supply.destroy();
                     }
-                    return false;
-                });
-                const supply: ShipSupply = this.getSupplies().find(p => {
-                    const go = p as Phaser.GameObjects.GameObject;
-                    if (go === supplyGameObj) {
-                        return true;
-                    }
-                    return false;
-                });
-                SpaceSimServer.io.sendRemoveSuppliesEvent(supply.id);
-                this._supplies.delete(supply.id);
-                supply.apply(ship);
-                supply.destroy();
+                );
             }
-        );
+            supplies.push(supply);
+        }
+        
         return supplies;
     }
 
@@ -377,7 +351,6 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     private _cleanup(): void {
-        // this._removeSocketsFromRoomWhoAreNotInMultiplayerGame();
         this._removeSocketToShipMappingForNonexistingShips();
     }
 
@@ -415,7 +388,9 @@ export class BattleRoyaleScene extends BaseScene {
                 supply.destroy();
             }
         }
-        SpaceSimServer.io.sendRemoveSuppliesEvent(this.ROOM_NAME, ...removeSupplies);
+        if (removeSupplies.length) {
+            SpaceSimServer.io.sendRemoveSuppliesEvent(this.ROOM_NAME, ...removeSupplies);
+        }
     }
 
     /**
@@ -423,6 +398,8 @@ export class BattleRoyaleScene extends BaseScene {
      */
     private _processFlickerSupplyQueue(): void {
         const flickerSupplies = this._flickerSuppliesQueue.splice(0, this._flickerSuppliesQueue.length);
-        SpaceSimServer.io.sendFlickerSuppliesEvent(this.ROOM_NAME, ...flickerSupplies);
+        if (flickerSupplies.length) {
+            SpaceSimServer.io.sendFlickerSuppliesEvent(this.ROOM_NAME, ...flickerSupplies);
+        }
     }
 }

@@ -77,6 +77,10 @@ export class ServerSocketManager {
         return this.socketRoomBroadcast(socketId, room, Constants.Socket.TRIGGER_WEAPON, shipId);
     }
 
+    broadcastPlayerDeathEvent(room: string, shipId: string): this {
+        return this.roomEmit(room, Constants.Socket.PLAYER_DEATH, shipId);
+    }
+
     sendPlayerDeathEvent(socketId: string, shipId?: string): this {
         return this.socketEmit(socketId, Constants.Socket.PLAYER_DEATH, shipId);
     }
