@@ -194,7 +194,7 @@ export class ClientSocketManager {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.updateSupplies(opts);
+                scene.queueSupplyUpdates(opts);
             }
         }
     }
@@ -203,7 +203,7 @@ export class ClientSocketManager {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.removeSupplies(...ids);
+                scene.queueSupplyRemoval(...ids);
             }
         }
     }
@@ -212,7 +212,7 @@ export class ClientSocketManager {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.flickerSupplies(...ids);
+                scene.queueSupplyFlicker(...ids);
             }
         }
     }
@@ -221,7 +221,7 @@ export class ClientSocketManager {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.updateShips(opts);
+                scene.queueShipUpdates(opts);
             }
         }
     }
@@ -234,13 +234,13 @@ export class ClientSocketManager {
                     id = SpaceSimClient.playerShipId;
                 } else {
                     if (scene) {
-                        scene.endScene();
+                        scene.queueEndScene();
                         return;
                     }
                 }
             }
             if (scene) {
-                scene.removeShips(id);
+                scene.queueShipRemoval(id);
             }
         }
     }
@@ -255,7 +255,7 @@ export class ClientSocketManager {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.setLevel(opts);
+                scene.queueGameLevelUpdate(opts);
             }
         }
     }
@@ -269,7 +269,7 @@ export class ClientSocketManager {
     private _handleTriggerEngineEvent(id: string): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
-            const ship = scene?.getShipsMap()?.get(id);
+            const ship = scene?.getShip(id);
             if (ship) {
                 ship.getThruster().trigger();
             }
@@ -279,7 +279,7 @@ export class ClientSocketManager {
     private _handleTriggerWeaponEvent(id: string): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
-            const ship = scene?.getShipsMap()?.get(id);
+            const ship = scene?.getShip(id);
             if (ship) {
                 ship.getWeapons().trigger();
             }

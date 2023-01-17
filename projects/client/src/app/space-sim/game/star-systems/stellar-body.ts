@@ -1,4 +1,5 @@
 import { HasGameObject, Updatable, Constants, Helpers, NumberOrRange } from "space-sim-shared";
+import { environment } from "../../../../environments/environment";
 
 export type StellarBodyOptions = {
     spriteName: 'sun' | 'mercury' | 'venus' | 'asteroids';
@@ -20,6 +21,20 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
     readonly scale: number;
     readonly scrollFactor: number;
     readonly rotationSpeed: number; // in degrees per second
+
+    static preload(scene: Phaser.Scene): void {
+        scene.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
+        scene.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
+        scene.load.image('mercury', `${environment.baseUrl}/assets/backgrounds/mercury.png`);
+        scene.load.spritesheet('asteroids', `${environment.baseUrl}/assets/tiles/asteroids-tile.png`, {
+            frameWidth: 100,
+            frameHeight: 100,
+            startFrame: 0,
+            endFrame: 63,
+            margin: 14,
+            spacing: 28
+        });
+    }
     
     constructor(scene: Phaser.Scene, options: StellarBodyOptions) {
         this.id = Phaser.Math.RND.uuid();

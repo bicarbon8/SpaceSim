@@ -1,8 +1,9 @@
 import { CanShoot } from "../../../interfaces/can-shoot";
 import { Ship } from "../../ship";
 import { ShipAttachment } from "../ship-attachment";
-import { Bullet } from "./bullet";
 import { Constants } from "../../../utilities/constants";
+import { Exploder } from "../../../utilities/exploder";
+import { BulletFactory } from "./bullet-factory";
 
 export type WeaponsOptions = {
     maxAmmo?: number;
@@ -10,9 +11,11 @@ export type WeaponsOptions = {
     remainingAmmo?: number;
     heatPerShot?: number;
     bulletMass?: number;
-    bulletScale?: number;
+    bulletRadius?: number;
     damagePerHit?: number;
     force?: number;
+    exploder: Exploder;
+    bulletFactory: BulletFactory<any>;
 };
 
 export abstract class Weapons extends ShipAttachment implements CanShoot {
@@ -26,6 +29,8 @@ export abstract class Weapons extends ShipAttachment implements CanShoot {
     private _bulletScale: number;
     private _damagePerHit: number;
     private _force: number;
+    private _exploder: Exploder;
+    private _bulletFactory: BulletFactory<any>
 
     public remainingAmmo: number;
 
@@ -38,9 +43,11 @@ export abstract class Weapons extends ShipAttachment implements CanShoot {
         this.remainingAmmo = options.remainingAmmo ?? this._maxAmmo;
         this._heatPerShot = options.heatPerShot ?? 0.5;
         this._bulletMass = options.bulletMass ?? 0.01;
-        this._bulletScale = options.bulletScale ?? 1;
+        this._bulletScale = options.bulletRadius ?? 1;
         this._damagePerHit = options.damagePerHit ?? 1;
         this._force = options.force ?? 500;
+        this._exploder = options.exploder;
+        this._bulletFactory = options.bulletFactory;
     }
 
     addAmmo(amount: number): this {
@@ -73,16 +80,16 @@ export abstract class Weapons extends ShipAttachment implements CanShoot {
         let bulletOffset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(-20, 0).add(shipLoc);
         let shipRealLocation: Phaser.Math.Vector2 = this.ship.getLocation();
         let adjustedLocation: Phaser.Math.Vector2 = Phaser.Math.RotateAround(bulletOffset, shipRealLocation.x, shipRealLocation.y, Phaser.Math.DegToRad(shipAngle));
-        new Bullet(this.scene, {
+        this._bulletFactory.generate({
             weapon: this,
             location: adjustedLocation,
             force: this._force,
             damage: this._damagePerHit,
             angle: shipAngle,
             startingV: shipVel,
-            scale: this._bulletScale,
+            radius: this._bulletScale,
             mass: this._bulletMass,
-            spriteName: 'bullet'
+            exploder: this._exploder
         });
         this.remainingAmmo--;
     }

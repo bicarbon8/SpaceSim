@@ -81,7 +81,7 @@ export class ServerSocketManager {
         return this.socketEmit(socketId, Constants.Socket.PLAYER_DEATH, shipId);
     }
 
-    sendUpdatePlayersEvent(room: string, configs: Array<ShipOptions>): this {
+    sendUpdatePlayersEvent(room: string, configs: Array<Partial<ShipOptions>>): this {
         return this.roomEmit(room, Constants.Socket.UPDATE_PLAYERS, configs);
     }
 
@@ -308,7 +308,7 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
-                const ship = scene.getShip(user) ?? scene.createShip(user);
+                const ship = scene.getShipByData(user) ?? scene.createShip(user);
                 if (SpaceSim.debug) {
                     console.debug(`${Date.now()}: sending ship id ${ship.id} to client ${socketId}`);
                 }
@@ -348,9 +348,9 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
-                const ship = scene.getShip(user);
+                const ship = scene.getShipByData(user);
                 if (ship) {
-                    scene.removeShips(ship.id);
+                    scene.queueShipRemoval(ship.id);
                 }
             } else {
                 console.warn(`${Date.now()}: no scene could be found matching room '${user.room}' so player death not registered`);
@@ -376,7 +376,7 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
-                ship = scene.getShip(user);
+                ship = scene.getShipByData(user);
             } else {
                 console.warn(`${Date.now()}: no scene containing user could be found from data '${JSON.stringify(data)}'`);
             }

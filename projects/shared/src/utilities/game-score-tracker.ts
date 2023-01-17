@@ -39,7 +39,7 @@ export type UserScore = {
 export module GameScoreTracker {
     const _stats = new Map<string, Partial<GameStats>>();
 
-    export function start(opts: ShipOptions): void {
+    export function start(opts: Partial<ShipOptions>): void {
         if (opts) {
             GameScoreTracker.stop(opts.id);
             GameScoreTracker.updateStats(opts.id, {
@@ -49,9 +49,9 @@ export module GameScoreTracker {
                 opponentsDestroyed: new Array<Destroyed>(),
                 shotsFired: 0,
                 shotsLanded: new Array<HitsOnTarget>(),
-                ammoRemaining: opts.remainingAmmo,
-                integrityRemaining: opts.integrity,
-                fuelRemaining: opts.remainingFuel,
+                ammoRemaining: opts.remainingAmmo ?? 0,
+                integrityRemaining: opts.integrity ?? 0,
+                fuelRemaining: opts.remainingFuel ?? 0,
                 accuracy: 0
             });
         }

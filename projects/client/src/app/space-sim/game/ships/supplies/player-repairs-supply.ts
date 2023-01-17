@@ -1,7 +1,12 @@
 import { RepairsSupply, ShipSupplyOptions } from "space-sim-shared";
 import { BaseScene } from "space-sim-shared";
+import { environment } from "../../../../../environments/environment";
 
 export class PlayerRepairsSupply extends RepairsSupply {
+    static preload(scene: Phaser.Scene): void {
+        scene.load.image('repairs-canister', `${environment.baseUrl}/assets/sprites/repairs-canister.png`);
+    }
+    
     constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options);
 

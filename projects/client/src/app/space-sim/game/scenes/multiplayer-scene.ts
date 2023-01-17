@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, Constants, Helpers, GameLevelOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, GameStats, GameScoreTracker, Exploder, BaseScene, ShipSupply } from "space-sim-shared";
+import { GameLevel, Constants, Helpers, GameLevelOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -15,6 +15,9 @@ import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
 import { Animations } from "../ui-components/animations";
 import { MultiplayerHudSceneConfig } from "./multiplayer-hud-scene";
 import { GameOverSceneConfig } from "./game-over-scene";
+import { UiExploder } from "../ui-components/ui-exploder";
+import { PlayerBulletFactory } from "../ships/attachments/offence/player-bullet-factory";
+import { PlayerBullet } from "../ships/attachments/offence/player-bullet";
 
 export const MultiplayerSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -28,7 +31,8 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _stellarBodies: StellarBody[];
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
-    private _exploder: Exploder;
+    private _exploder: UiExploder;
+    private _bulletFactory: PlayerBulletFactory;
     private _disconnectTimer: number;
     private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
@@ -45,6 +49,12 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _shouldResize = false;
     private _shouldShowHud = false;
 
+    private readonly _updateShipsQueue = new Array<Partial<ShipOptions>>();
+    private readonly _removeShipsQueue = new Array<string>();
+    private readonly _updateSuppliesQueue = new Array<ShipSupplyOptions>();
+    private readonly _flickerSuppliesQueue = new Array<string>();
+    private readonly _removeSuppliesQueue = new Array<string>();
+
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || MultiplayerSceneConfig);
 
@@ -55,7 +65,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         return this._gameLevel as T;
     }
 
-    override setLevel<T extends GameLevelOptions>(opts: T): BaseScene {
+    override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         if (!this._gameLevel) {
             this._gameLevel = new GameLevel(this, opts);
             this._shouldCreateStellarBodies = true;
@@ -64,16 +74,16 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         return this;
     }
 
-    override getShipsMap<T extends Ship>(): Map<string, T> {
-        return this._ships as Map<string, T>;
+    override getShip<T extends Ship>(id: string): T {
+        return this._ships.get(id) as T;
     }
 
     override getShips<T extends Ship>(): Array<T> {
         return Array.from(this._ships.values()) as Array<T>;
     }
 
-    override getSuppliesMap<T extends ShipSupply>(): Map<string, T> {
-        return this._supplies as Map<string, T>;
+    override getSupply<T extends ShipSupply>(id: string): T {
+        return this._supplies.get(id) as T;
     }
 
     override getSupplies<T extends ShipSupply>(): Array<T> {
@@ -81,46 +91,14 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     preload(): void {
-        this.load.image('weapons-1', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-1.png`);
-        this.load.image('weapons-2', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-2.png`);
-        this.load.image('weapons-3', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-3.png`);
-        this.load.image('wings-1', `${environment.baseUrl}/assets/sprites/ship-parts/wings-1.png`);
-        this.load.image('wings-2', `${environment.baseUrl}/assets/sprites/ship-parts/wings-2.png`);
-        this.load.image('wings-3', `${environment.baseUrl}/assets/sprites/ship-parts/wings-3.png`);
-        this.load.image('cockpit-1', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-1.png`);
-        this.load.image('cockpit-2', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-2.png`);
-        this.load.image('cockpit-3', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-3.png`);
-        this.load.image('engine-1', `${environment.baseUrl}/assets/sprites/ship-parts/engine-1.png`);
-        this.load.image('engine-2', `${environment.baseUrl}/assets/sprites/ship-parts/engine-2.png`);
-        this.load.image('engine-3', `${environment.baseUrl}/assets/sprites/ship-parts/engine-3.png`);
-        this.load.image('minimap-player', `${environment.baseUrl}/assets/sprites/minimap-player.png`);
-
-        this.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
-        this.load.spritesheet('flares', `${environment.baseUrl}/assets/particles/flares.png`, {
-            frameWidth: 130,
-            frameHeight: 132,
-            startFrame: 0,
-            endFrame: 4
-        });
-        this.load.spritesheet('asteroids', `${environment.baseUrl}/assets/tiles/asteroids-tile.png`, {
-            frameWidth: 100,
-            frameHeight: 100,
-            startFrame: 0,
-            endFrame: 63,
-            margin: 14,
-            spacing: 28
-        });
-        
-        this.load.image('explosion', `${environment.baseUrl}/assets/particles/explosion.png`);
-        this.load.image('bullet', `${environment.baseUrl}/assets/sprites/bullet.png`);
-        this.load.image('ammo', `${environment.baseUrl}/assets/sprites/ammo.png`);
-        this.load.image('fuel-canister', `${environment.baseUrl}/assets/sprites/fuel-canister.png`);
-        this.load.image('coolant-canister', `${environment.baseUrl}/assets/sprites/coolant-canister.png`);
-        this.load.image('repairs-canister', `${environment.baseUrl}/assets/sprites/repairs-canister.png`);
-
-        this.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
-        this.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
-        this.load.image('mercury', `${environment.baseUrl}/assets/backgrounds/mercury.png`);
+        PlayerShip.preload(this);
+        StellarBody.preload(this);
+        UiExploder.preload(this);
+        PlayerBullet.preload(this);
+        PlayerAmmoSupply.preload(this);
+        PlayerCoolantSupply.preload(this);
+        PlayerFuelSupply.preload(this);
+        PlayerRepairsSupply.preload(this);
 
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
 
@@ -128,11 +106,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`);
         
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
-        this.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
-        this.load.audio('booster-fire', `${environment.baseUrl}/assets/audio/effects/booster-fire.ogg`);
-        this.load.audio('cannon-fire', `${environment.baseUrl}/assets/audio/effects/cannon-fire.ogg`);
-        this.load.audio('bullet-hit', `${environment.baseUrl}/assets/audio/effects/bullet-hit.ogg`);
-        this.load.audio('explosion', `${environment.baseUrl}/assets/audio/effects/ship-explosion.ogg`);
     }
 
     create(): void {
@@ -143,7 +116,8 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this._supplies.clear();
         this._stellarBodies = new Array<StellarBody>();
 
-        this._exploder = new Exploder(this);
+        this._exploder = new UiExploder(this);
+        this._bulletFactory = new PlayerBulletFactory(this);
 
         // disable camera until we have our ship
         this.cameras.main.fadeOut(0, 0, 0, 0);
@@ -177,15 +151,20 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             SpaceSim.game.scene.bringToTop(MultiplayerHudSceneConfig.key);
         }
         try {
+            this._processRemoveShipsQueue();
+            this._processUpdateShipsQueue();
             this.getShips().forEach(p => p?.update(time, delta));
+            this._processRemoveSuppliesQueue();
+            this._processFlickerSuppliesQueue();
+            this._processUpdateSuppliesQueue();
 
             this._stellarBodies.forEach((body) => {
                 body?.update(time, delta);
             });
 
-            if (!SpaceSimClient.socket?.connected) {
+            if (SpaceSimClient.socket?.disconnected) {
                 if (this._disconnectTimer == null) {
-                    this._disconnectTimer = window.setTimeout(() => this.endScene(), 10000);
+                    this._disconnectTimer = window.setTimeout(() => this.queueEndScene(), 10000);
                 }
             } else {
                 if (this._disconnectTimer != null) {
@@ -207,102 +186,28 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this._createMiniMap();
     }
 
-    public override updateSupplies<T extends ShipSupplyOptions>(opts: Array<T>): BaseScene {
-        Helpers.trycatch(() => {
-            opts.forEach(o => {
-                let supply = this._supplies.get(o.id);
-                if (supply) {
-                    // update existing supply
-                    supply?.configure(o);
-                } else {
-                    // or create new ship if doesn't already exist
-                    switch (o.supplyType) {
-                        case 'ammo':
-                            supply = new PlayerAmmoSupply(this, o);
-                            break;
-                        case 'coolant':
-                            supply = new PlayerCoolantSupply(this, o);
-                            break;
-                        case 'fuel':
-                            supply = new PlayerFuelSupply(this, o);
-                            break;
-                        case 'repairs':
-                            supply = new PlayerRepairsSupply(this, o);
-                            break;
-                        default:
-                            console.warn(`unknown supplyType of ${o.supplyType} provided`);
-                            break;
-                    }
-                    this._supplies.set(o.id, supply);
-                    Helpers.trycatch(() => this._radar?.ignore(supply), 'none');
-                }
-            });
-        }, 'debug', `error in handling ${Constants.Socket.UPDATE_SUPPLIES} event`, 'message');
+    public override queueSupplyUpdates<T extends ShipSupplyOptions>(opts: Array<T>): BaseScene {
+        this._updateSuppliesQueue.splice(this._updateSuppliesQueue.length, 0, ...opts);
         return this;
     }
 
-    public override removeSupplies(...ids: Array<string>): BaseScene {
-        for (let id of ids) {
-            const supply = this._supplies.get(id);
-            if (supply) {
-                supply.destroy();
-                this._supplies.delete(id);
-            }
-        }
+    public override queueSupplyRemoval(...ids: Array<string>): BaseScene {
+        this._removeSuppliesQueue.splice(this._removeSuppliesQueue.length, 0, ...ids);
         return this;
     }
 
-    public override flickerSupplies(...ids: Array<string>): BaseScene {
-        for (let id of ids) {
-            const supply = this._supplies.get(id);
-            if (supply) {
-                Animations.flicker(supply, -1, () => null);
-            }
-        }
+    public override queueSupplyFlicker(...ids: Array<string>): BaseScene {
+        this._flickerSuppliesQueue.splice(this._flickerSuppliesQueue.length, 0, ...ids);
         return this;
     }
 
-    public override updateShips<T extends ShipOptions>(opts: T[]): BaseScene {
-        Helpers.trycatch(() => {
-            opts.forEach(o => {
-                let ship = this._ships.get(o.id) as PlayerShip;
-                if (ship) {
-                    // update existing ship
-                    ship.configure(o);
-                } else {
-                    // or create new ship if doesn't already exist
-                    ship = new PlayerShip(this, o);
-                    this._ships.set(o.id, ship);
-                    this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
-                    this._addPlayerCollisionPhysicsWithPlayers(ship);
-                    Helpers.trycatch(() => this._camera?.ignore(ship.radarSprite), 'none');
-                }
-
-                if (this._needsResize && ship?.id === SpaceSimClient.playerShipId) {
-                    this._needsResize = false;
-                    this._shouldResize = true;
-                    this._shouldShowHud = true;
-                }
-            });
-        }, 'debug', `error in handling ${Constants.Socket.UPDATE_PLAYERS} event`, 'message');
+    public override queueShipUpdates<T extends Partial<ShipOptions>>(opts: T[]): BaseScene {
+        this._updateShipsQueue.splice(this._updateShipsQueue.length, 0, ...opts);
         return this;
     }
 
-    public override removeShips(...ids: Array<string>): BaseScene {
-        for (let id of ids) {
-            Helpers.trycatch(() => {
-                const ship = this._ships.get(id);
-                if (ship) {
-                    this._exploder.explode({location: ship.config.location});
-                    ship.destroy(false);
-                    this._ships.delete(ship.id);
-
-                    if (SpaceSimClient.playerShipId === ship.id) {
-                        this.endScene();
-                    }
-                }
-            }, 'debug', `error in removeShips ${JSON.stringify(ids)}`, 'message');
-        }
+    public override queueShipRemoval(...ids: Array<string>): BaseScene {
+        this._removeShipsQueue.splice(this._removeShipsQueue.length, 0, ...ids);
         return this;
     }
 
@@ -425,7 +330,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this.physics.add.collider(ship.getGameObject(), this.getShips().map(p => p?.getGameObject()));
     }
 
-    public override endScene(): BaseScene {
+    public override queueEndScene(): BaseScene {
         this._camera.cam.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
             if (progress === 1) {
                 this.game.scene.start(GameOverSceneConfig.key);
@@ -434,5 +339,112 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             }
         });
         return this;
+    }
+
+    private _processUpdateShipsQueue(): void {
+        Helpers.trycatch(() => {
+            const opts = this._updateShipsQueue.splice(0, this._updateShipsQueue.length);
+            opts.forEach(o => {
+                let ship = this._ships.get(o.id) as PlayerShip;
+                if (ship) {
+                    // update existing ship
+                    ship.configure(o);
+                } else {
+                    // or create new ship if doesn't already exist
+                    ship = new PlayerShip(this, {
+                        ...o,
+                        exploder: this._exploder,
+                        bulletFactory: this._bulletFactory
+                    });
+                    this._ships.set(o.id, ship);
+                    this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
+                    this._addPlayerCollisionPhysicsWithPlayers(ship);
+                    Helpers.trycatch(() => this._camera?.ignore(ship.radarSprite), 'none');
+                }
+
+                if (this._needsResize && ship?.id === SpaceSimClient.playerShipId) {
+                    this._needsResize = false;
+                    this._shouldResize = true;
+                    this._shouldShowHud = true;
+                }
+            });
+        }, 'debug', `error in processing ShipOptions array from Server`, 'message');
+    }
+
+    private _processRemoveShipsQueue(): void {
+        Helpers.trycatch(() => {
+            const ids = this._removeShipsQueue.splice(0, this._removeShipsQueue.length);
+            for (let id of ids) {
+                const ship = this._ships.get(id);
+                if (ship) {
+                    this._exploder.explode({location: ship.config.location});
+                    ship.destroy(false);
+                    this._ships.delete(ship.id);
+
+                    if (SpaceSimClient.playerShipId === ship.id) {
+                        this.queueEndScene();
+                    }
+                }
+            }
+        }, 'debug', `error in processing removeShipsQueue`, 'message');
+    }
+
+    private _processUpdateSuppliesQueue(): void {
+        Helpers.trycatch(() => {
+            const opts = this._updateSuppliesQueue.splice(0, this._updateSuppliesQueue.length);
+            opts.forEach(o => {
+                let supply = this._supplies.get(o.id);
+                if (supply) {
+                    // update existing supply
+                    supply?.configure(o);
+                } else {
+                    // or create new ship if doesn't already exist
+                    switch (o.supplyType) {
+                        case 'ammo':
+                            supply = new PlayerAmmoSupply(this, o);
+                            break;
+                        case 'coolant':
+                            supply = new PlayerCoolantSupply(this, o);
+                            break;
+                        case 'fuel':
+                            supply = new PlayerFuelSupply(this, o);
+                            break;
+                        case 'repairs':
+                            supply = new PlayerRepairsSupply(this, o);
+                            break;
+                        default:
+                            console.warn(`unknown supplyType of ${o.supplyType} provided`);
+                            break;
+                    }
+                    this._supplies.set(o.id, supply);
+                    Helpers.trycatch(() => this._radar?.ignore(supply), 'none');
+                }
+            });
+        }, 'debug', `error in processing ShipSupplyOptions array from server`, 'message');
+    }
+
+    private _processRemoveSuppliesQueue(): void {
+        Helpers.trycatch(() => {
+            const ids = this._removeSuppliesQueue.splice(0, this._removeSuppliesQueue.length);
+            for (let id of ids) {
+                const supply = this._supplies.get(id);
+                if (supply) {
+                    supply.destroy();
+                    this._supplies.delete(id);
+                }
+            }
+        }, 'debug', `error in processing removeSuppliesQueue`, 'message');
+    }
+
+    private _processFlickerSuppliesQueue(): void {
+        Helpers.trycatch(() => {
+            const ids = this._flickerSuppliesQueue.splice(0, this._flickerSuppliesQueue.length);
+            for (let id of ids) {
+                const supply = this._supplies.get(id);
+                if (supply) {
+                    Animations.flicker(supply, -1, () => null);
+                }
+            }
+        }, 'debug', `error in processing flickerSuppliesQueue`, 'message');
     }
 }

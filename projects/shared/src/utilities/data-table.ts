@@ -1,6 +1,18 @@
 export type DataTableOptions<T extends {}> = {
+    /**
+     * an array of fields in `T` whose values will be used to generate
+     * a unique record index for each record added to the table
+     */
     indexKeys?: Array<keyof T>;
+    /**
+     * an array of records to add on creation of the table; alternatively
+     * you can use the `add(record: T)` function after creation
+     */
     records?: Array<T>;
+    /**
+     * a string to use to separate the index key values when generating
+     * a unique key to index the table
+     */
     keyDelimiter?: string;
 };
 

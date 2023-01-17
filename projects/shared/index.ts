@@ -23,6 +23,7 @@ export * from "./src/levels/game-level";
 export * from "./src/scenes/base-scene";
 /** ships/attachments/offence */
 export * from "./src/ships/attachments/offence/bullet";
+export * from "./src/ships/attachments/offence/bullet-factory";
 export * from "./src/ships/attachments/offence/cannon";
 export * from "./src/ships/attachments/offence/machine-gun";
 export * from "./src/ships/attachments/offence/weapons";

@@ -1,6 +1,11 @@
 import { BaseScene, FuelSupply, ShipSupplyOptions } from "space-sim-shared";
+import { environment } from "../../../../../environments/environment";
 
 export class PlayerFuelSupply extends FuelSupply {
+    static preload(scene: Phaser.Scene): void {
+        scene.load.image('fuel-canister', `${environment.baseUrl}/assets/sprites/fuel-canister.png`);
+    }
+    
     constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options);
 

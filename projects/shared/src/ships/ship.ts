@@ -10,6 +10,8 @@ import { ShipLike } from "../interfaces/ship-like";
 import { IsConfigurable } from "../interfaces/is-configurable";
 import { PhysicsObject } from "../interfaces/physics-object";
 import { BaseScene } from "../scenes/base-scene";
+import { Exploder } from "../utilities/exploder";
+import { BulletFactory } from "./attachments/offence/bullet-factory";
 
 export type ShipOptions = Partial<PhysicsObject> & {
     readonly id?: string;
@@ -24,15 +26,19 @@ export type ShipOptions = Partial<PhysicsObject> & {
     readonly wingsKey?: number;
     readonly cockpitKey?: number;
     readonly engineKey?: number;
+    readonly exploder: Exploder;
+    readonly bulletFactory: BulletFactory<any>;
 }
 
-export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurable<ShipOptions> {
+export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurable<Partial<ShipOptions>> {
     /** ShipOptions */
     readonly id: string; // UUID
     readonly scene: BaseScene;
     readonly mass: number;
     readonly fingerprint: string;
     readonly name: string;
+    readonly exploder: Exploder;
+    readonly bulletFactory: BulletFactory<any>;
     
     private _active: boolean = true;
     private _temperature: number; // in Celcius
@@ -58,6 +64,8 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this.mass = options.mass ?? 100;
         this.name = options.name;
         this.fingerprint = options.fingerprint;
+        this.exploder = options.exploder;
+        this.bulletFactory = options.bulletFactory;
 
         // create ship-pod sprite, group and container
         this._createGameObj(options);
@@ -67,7 +75,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this.configure(options);
     }
 
-    configure(options: ShipOptions): this {
+    configure(options: Partial<ShipOptions>): this {
         if (this.active) {
             const loc = options.location ?? Helpers.vector2();
             this.setLocation(loc);
@@ -83,7 +91,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         return this;
     }
 
-    get config(): ShipOptions {
+    get config(): Partial<ShipOptions> {
         return {
             id: this.id,
             location: {x: this.location.x, y: this.location.y},
@@ -419,7 +427,7 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         this._engineKey = options.engineKey ?? 1;
 
         this._engine = new Engine(this);
-        this._weapons = new MachineGun(this);
+        this._weapons = new MachineGun(this, {exploder: this.exploder, bulletFactory: this.bulletFactory});
     }
 
     private _updateLastDamagedBy(damageOpts: DamageOptions): void {

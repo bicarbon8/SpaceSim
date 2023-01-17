@@ -1,40 +1,42 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, Exploder, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim } from "space-sim-shared";
+import { ServerBulletFactory } from "../ships/attachments/offence/server-bullet-factory";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
+import { NonUiExploder } from "../utilities/non-ui-exploder";
 
 export class BattleRoyaleScene extends BaseScene {
-    override setLevel<T extends GameLevelOptions>(opts: T): BaseScene {
+    override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    override updateShips<T extends ShipOptions>(opts: T[]): BaseScene {
+    override queueShipUpdates<T extends ShipOptions>(opts: T[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    override removeShips(...ids: string[]): BaseScene {
+    override queueShipRemoval(...ids: string[]): BaseScene {
         if (SpaceSim.debug) {
             console.debug(`${Date.now()}: queuing ships ${JSON.stringify(ids)} to be removed...`);
         }
         this._removeShipQueue.splice(this._removeShipQueue.length, 0, ...ids);
         return this;
     }
-    override updateSupplies<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
+    override queueSupplyUpdates<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    override removeSupplies(...ids: string[]): BaseScene {
+    override queueSupplyRemoval(...ids: string[]): BaseScene {
         if (SpaceSim.debug) {
             console.debug(`${Date.now()}: queuing supplies to be removed ${JSON.stringify(ids)}...`);
         }
         this._removeSuppliesQueue.splice(this._removeSuppliesQueue.length, 0, ...ids);
         return this;
     }
-    override flickerSupplies(...ids: string[]): BaseScene {
+    override queueSupplyFlicker(...ids: string[]): BaseScene {
         if (SpaceSim.debug) {
             console.debug(`${Date.now()}: queuing supplies to start flickering ${JSON.stringify(ids)}...`);
         }
         this._flickerSuppliesQueue.splice(this._flickerSuppliesQueue.length, 0, ...ids);
         return this;
     }
-    override endScene(): BaseScene {
+    override queueEndScene(): BaseScene {
         throw new Error("Method not implemented.");
     }
 
@@ -52,7 +54,8 @@ export class BattleRoyaleScene extends BaseScene {
     private readonly _flickerSuppliesQueue = new Array<string>();
     
     private _gameLevel: GameLevel;
-    private _exploder: Exploder;
+    private _exploder: NonUiExploder;
+    private _bulletFactory: ServerBulletFactory;
     private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
     private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
     private _ultraLowPriUpdateAt: number = Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
@@ -66,16 +69,16 @@ export class BattleRoyaleScene extends BaseScene {
         this.ROOM_NAME = room;
     }
 
-    override getShipsMap<T extends Ship>(): Map<string, T> {
-        return this._ships as Map<string, T>;
+    override getShip<T extends Ship>(id: string): T {
+        return this._ships.get(id) as T;
     }
 
     override getShips<T extends Ship>(): Array<T> {
         return Array.from(this._ships.values()) as Array<T>;
     }
 
-    override getSuppliesMap<T extends ShipSupply>(): Map<string, T> {
-        return this._supplies as Map<string, T>;
+    override getSupply<T extends ShipSupply>(id: string): T {
+        return this._supplies.get(id) as T;
     }
 
     override getSupplies<T extends ShipSupply>(): Array<T> {
@@ -87,14 +90,13 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     preload(): void {
-        this.load.image('bullet', `assets/sprites/bullet.png`);
-
         this.load.image('metaltiles', `assets/tiles/metaltiles_lg.png`);
         this.load.image('minimaptile', `assets/tiles/minimap-tile.png`);
     }
 
     create(): void {
-        this._exploder = new Exploder(this);
+        this._exploder = new NonUiExploder(this);
+        this._bulletFactory = new ServerBulletFactory(this);
         this._createMap();
         this._setupSceneEventHandling();
     }
@@ -132,7 +134,7 @@ export class BattleRoyaleScene extends BaseScene {
         }
     }
 
-    getShip(data: SpaceSimUserData): Ship {
+    getShipByData(data: SpaceSimUserData): Ship {
         const id = this._dataToShipId.get(SpaceSimServer.users.generateKey(data));
         let ship: Ship;
         if (id) {
@@ -158,7 +160,9 @@ export class BattleRoyaleScene extends BaseScene {
             weaponsKey: Phaser.Math.RND.between(1, 3),
             wingsKey: Phaser.Math.RND.between(1, 3),
             cockpitKey: Phaser.Math.RND.between(1, 3),
-            engineKey: Phaser.Math.RND.between(1, 3)
+            engineKey: Phaser.Math.RND.between(1, 3),
+            exploder: this._exploder,
+            bulletFactory: this._bulletFactory
         });
         this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
         this._addPlayerCollisionPhysicsWithPlayers(ship);
@@ -190,7 +194,7 @@ export class BattleRoyaleScene extends BaseScene {
     removePlayer(player: SpaceSimServerUserData): void {
         console.debug(`removing player '${JSON.stringify(player)}' and associated ship...`);
         const id = this._dataToShipId.get(SpaceSimServer.users.generateKey(player));
-        this.removeShips(id);
+        this.queueShipRemoval(id);
         player.room = null;
         SpaceSimServer.io.leaveRoom(player.socketId, this.ROOM_NAME);
     }
@@ -198,7 +202,7 @@ export class BattleRoyaleScene extends BaseScene {
     private _setupSceneEventHandling(): void {
         // setup listener for player death event (sent from ship.destroy())
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
-            this.removeShips(shipOpts.id);
+            this.queueShipRemoval(shipOpts.id);
         });
     }
 
@@ -208,7 +212,7 @@ export class BattleRoyaleScene extends BaseScene {
         this._gameLevel = map;
     }
 
-    private _removeShip(opts: ShipOptions): void {
+    private _removeShip(opts: Partial<ShipOptions>): void {
         if (SpaceSim.debug) {
             console.debug(`attempting to remove ship id: '${opts.id}' with name: '${opts.name}'...`);
         }
@@ -269,7 +273,7 @@ export class BattleRoyaleScene extends BaseScene {
         return false;
     }
 
-    private _expelSupplies(shipCfg: ShipOptions): void {
+    private _expelSupplies(shipCfg: Partial<ShipOptions>): void {
         console.debug(`expelling supplies at:`, shipCfg.location);
         const supplyOpts = this._exploder.emitSupplies(shipCfg);
         const supplies = this._addSupplyCollisionPhysics(...supplyOpts);
@@ -365,9 +369,9 @@ export class BattleRoyaleScene extends BaseScene {
      */
     private _cleanupSupplies(...supplies: Array<ShipSupply>): void {
         window.setTimeout(() => {
-            this.flickerSupplies(...supplies.map(s => s.id));
+            this.queueSupplyFlicker(...supplies.map(s => s.id));
             window.setTimeout(() => {
-                this.removeSupplies(...supplies.map(s => s.id));
+                this.queueSupplyRemoval(...supplies.map(s => s.id));
             }, 5000);
         }, 25000);
     }

@@ -15,6 +15,8 @@ import { PlayerFuelSupply } from "../ships/supplies/player-fuel-supply";
 import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
 import { GameOverSceneConfig } from "./game-over-scene";
 import { GameplayHudSceneConfig } from "./gameplay-hud-scene";
+import { UiExploder } from "../ui-components/ui-exploder";
+import { PlayerBulletFactory } from "../ships/attachments/offence/player-bullet-factory";
 
 export const GameplaySceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -23,25 +25,25 @@ export const GameplaySceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 } as const;
 
 export class GameplayScene extends BaseScene implements Resizable {
-    setLevel<T extends GameLevelOptions>(opts: T): BaseScene {
+    queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    updateShips<T extends ShipOptions>(opts: T[]): BaseScene {
+    queueShipUpdates<T extends ShipOptions>(opts: T[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    removeShips(...ids: string[]): BaseScene {
+    queueShipRemoval(...ids: string[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    updateSupplies<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
+    queueSupplyUpdates<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    removeSupplies(...ids: string[]): BaseScene {
+    queueSupplyRemoval(...ids: string[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    flickerSupplies(...ids: string[]): BaseScene {
+    queueSupplyFlicker(...ids: string[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    endScene(): BaseScene {
+    queueEndScene(): BaseScene {
         throw new Error("Method not implemented.");
     }
     private _width: number;
@@ -49,7 +51,8 @@ export class GameplayScene extends BaseScene implements Resizable {
     private _stellarBodies: StellarBody[];
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
-    private _exploder: Exploder;
+    private _exploder: UiExploder;
+    private _bulletFactory: PlayerBulletFactory;
     private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
@@ -75,16 +78,16 @@ export class GameplayScene extends BaseScene implements Resizable {
         return this._gameLevel as T;
     }
 
-    override getShipsMap<T extends Ship>(): Map<string, T> {
-        return this._ships as Map<string, T>;
+    override getShip<T extends Ship>(id: string): T {
+        return this._ships.get(id) as T;
     }
 
     override getShips<T extends Ship>(): Array<T> {
         return Array.from(this._ships.values()) as Array<T>;
     }
 
-    override getSuppliesMap<T extends ShipSupply>(): Map<string, T> {
-        return this._supplies as Map<string, T>;
+    override getSupply<T extends ShipSupply>(id: string): T {
+        return this._supplies.get(id) as T;
     }
 
     override getSupplies<T extends ShipSupply>(): Array<T> {
@@ -92,7 +95,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     }
 
     get playerShip(): PlayerShip {
-        return this.getShipsMap<PlayerShip>()?.get(SpaceSimClient.playerShipId);
+        return this.getShip<PlayerShip>(SpaceSimClient.playerShipId);
     }
 
     preload(): void {
@@ -155,7 +158,8 @@ export class GameplayScene extends BaseScene implements Resizable {
         this.cameras.resetAll();
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
-        this._exploder = new Exploder(this);
+        this._exploder = new UiExploder(this);
+        this._bulletFactory = new PlayerBulletFactory(this);
         this._createMapAndPlayer();
         this._createStellarBodiesLayer();
         this._createBackground();
@@ -252,7 +256,9 @@ export class GameplayScene extends BaseScene implements Resizable {
                 weaponsKey: Phaser.Math.RND.between(1, 3),
                 wingsKey: Phaser.Math.RND.between(1, 3),
                 cockpitKey: Phaser.Math.RND.between(1, 3),
-                engineKey: Phaser.Math.RND.between(1, 3)
+                engineKey: Phaser.Math.RND.between(1, 3),
+                exploder: this._exploder,
+                bulletFactory: this._bulletFactory
             });
             p.getGameObject().setAlpha(0); // hidden until player enters room
             this.physics.world.disable(p.getGameObject()); // disabled until player close to opponent
@@ -281,7 +287,9 @@ export class GameplayScene extends BaseScene implements Resizable {
             weaponsKey: Phaser.Math.RND.between(1, 3),
             wingsKey: Phaser.Math.RND.between(1, 3),
             cockpitKey: Phaser.Math.RND.between(1, 3),
-            engineKey: Phaser.Math.RND.between(1, 3)
+            engineKey: Phaser.Math.RND.between(1, 3),
+            exploder: this._exploder,
+            bulletFactory: this._bulletFactory
         });
         SpaceSimClient.playerShipId = ship.id;
         this._ships.set(ship.id, ship);

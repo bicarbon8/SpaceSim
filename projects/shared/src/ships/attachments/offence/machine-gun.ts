@@ -1,8 +1,8 @@
 import { Ship } from "../../ship";
-import { Weapons } from "./weapons";
+import { Weapons, WeaponsOptions } from "./weapons";
 
 export class MachineGun extends Weapons {
-    constructor(ship: Ship) {
+    constructor(ship: Ship, options: Pick<WeaponsOptions, 'exploder' | 'bulletFactory'>) {
         super(ship, {
             maxAmmo: 500,
             firingDelay: 200,
@@ -10,7 +10,8 @@ export class MachineGun extends Weapons {
             force: 1000,
             damagePerHit: 10,
             bulletMass: 0.01,
-            bulletScale: 0.25
+            bulletRadius: 5,
+            ...options
         });
     }
 }

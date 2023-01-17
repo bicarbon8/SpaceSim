@@ -1,6 +1,11 @@
 import { BaseScene, CoolantSupply, ShipSupplyOptions } from "space-sim-shared"
+import { environment } from "../../../../../environments/environment";
 
 export class PlayerCoolantSupply extends CoolantSupply {
+    static preload(scene: Phaser.Scene): void {
+        scene.load.image('coolant-canister', `${environment.baseUrl}/assets/sprites/coolant-canister.png`);
+    }
+    
     constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options);
 

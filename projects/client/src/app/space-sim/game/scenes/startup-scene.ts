@@ -1,5 +1,5 @@
 import { Card, Colors, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
-import { environment } from "src/environments/environment";
+import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { Constants, Helpers } from "space-sim-shared";
 import { GameplaySceneConfig } from "./gameplay-scene";

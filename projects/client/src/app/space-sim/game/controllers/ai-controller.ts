@@ -19,7 +19,7 @@ export class AiController extends InputController {
     update(time: number, delta: number): void {
         const attackerId = Helpers.getLastAttackerId(this.ship);
         if (attackerId) {
-            const attacker = this.scene.getShipsMap().get(attackerId);
+            const attacker = this.scene.getShip(attackerId);
             if (attacker) {
                 this.ship.lookAt(attacker.location);
             }
@@ -29,11 +29,11 @@ export class AiController extends InputController {
         if (attackerId) {
             if (this._nextWeaponsFireAt == null || this._nextWeaponsFireAt <= time) {
                 this.ship.getWeapons().trigger();
-                this._nextWeaponsFireAt = time + (this.scene.getShipsMap().size * 50);
+                this._nextWeaponsFireAt = time + (this.scene.getShips().length * 50);
             } else {
                 if (this._nextThrusterFireAt == null || this._nextThrusterFireAt <= time) {
                     this.ship.getThruster().trigger();
-                    this._nextThrusterFireAt = time + (this.scene.getShipsMap().size * 10);
+                    this._nextThrusterFireAt = time + (this.scene.getShips().length * 10);
                 }
             }
         } else {

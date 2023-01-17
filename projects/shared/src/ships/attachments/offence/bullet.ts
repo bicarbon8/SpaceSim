@@ -11,7 +11,10 @@ import { BaseScene } from "../../../scenes/base-scene";
 export type BulletOptions = {
     readonly location: Phaser.Math.Vector2;
     readonly weapon: Weapons;
-    readonly spriteName: string;
+    /**
+     * an implementation of the `Exploder` abstract class to be used on collision
+     */
+    readonly exploder: Exploder;
     /**
      * the force imparted on the bullet when fired. larger numbers
      * travel faster
@@ -26,7 +29,7 @@ export type BulletOptions = {
     /**
      * the size of this bullet
      */
-    readonly scale?: number;
+    readonly radius?: number;
     /**
      * number of milliseconds before the bullet self-destructs
      * after being fired
@@ -43,17 +46,16 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
     readonly scene: BaseScene;
     readonly force: number;
     readonly damage: number;
-    readonly scale: number;
-    readonly spriteName: string;
+    readonly radius: number;
     readonly weapon: Weapons;
     readonly timeout: number;
     readonly mass: number;
+    readonly exploder: Exploder;
 
     active: boolean;
 
     private _startLoc: Phaser.Math.Vector2;
     private _gameObj: Phaser.GameObjects.Container;
-    private _hitSound: Phaser.Sound.BaseSound;
     
     constructor(scene: BaseScene, options: BulletOptions) {
         this.id = Phaser.Math.RND.uuid();
@@ -61,12 +63,12 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         this.scene = scene;
         this._startLoc = options.location || Helpers.vector2();
         this.weapon = options.weapon;
-        this.spriteName = options.spriteName;
         this.force = options.force ?? 1;
         this.damage = options.damage ?? 1;
-        this.scale = options.scale ?? 1;
+        this.radius = options.radius ?? 5;
         this.timeout = options.timeout ?? 500;
         this.mass = options.mass ?? 0;
+        this.exploder = options.exploder;
         
         this._createGameObj();
 
@@ -85,6 +87,27 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
         return this.getLocation();
     }
 
+    onShipCollision(ship: Ship): void {
+        this.destroy();
+        if (ship.active) {
+            GameScoreTracker.shotLanded(this.weapon.ship.id, ship.id, this.damage);
+            let remainingIntegrity = ship.integrity - this.damage;
+            if (remainingIntegrity < 0) {
+                remainingIntegrity = 0;
+            }
+            GameScoreTracker.damageTaken(ship.id, remainingIntegrity);
+            if (remainingIntegrity <= 0) {
+                GameScoreTracker.opponentDestroyed(this.weapon.ship.id, ship.id);
+            }
+            ship.sustainDamage({
+                amount: this.damage, 
+                timestamp: this.scene.time.now,
+                attackerId: this.weapon.ship.id,
+                message: `projectile hit`
+            });
+        }
+    }
+
     private addCollisionDetection(): void {
         this.scene.physics.add.collider(this.getGameObject(), this.scene.getLevel().getGameObject(), () => {
             this.destroy();
@@ -94,29 +117,7 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
             .forEach((opp: Ship) => {
                 if (opp.id !== this.weapon.ship.id) {
                     this.scene.physics.add.collider(this.getGameObject(), opp.getGameObject(), () => {
-                        this._hitSound?.play();
-                        new Exploder(this.scene).explode({
-                            location: this.getLocation(),
-                            scale: 0.25
-                        });
-                        this.destroy();
-                        if (opp.active) {
-                            GameScoreTracker.shotLanded(this.weapon.ship.id, opp.id, this.damage);
-                            let remainingIntegrity = opp.integrity - this.damage;
-                            if (remainingIntegrity < 0) {
-                                remainingIntegrity = 0;
-                            }
-                            GameScoreTracker.damageTaken(opp.id, remainingIntegrity);
-                            if (remainingIntegrity <= 0) {
-                                GameScoreTracker.opponentDestroyed(this.weapon.ship.id, opp.id);
-                            }
-                            opp.sustainDamage({
-                                amount: this.damage, 
-                                timestamp: this.scene.time.now,
-                                attackerId: this.weapon.ship.id,
-                                message: `projectile hit`
-                            });
-                        }
+                        this.onShipCollision(opp);
                     });
                 }
             });
@@ -190,29 +191,12 @@ export class Bullet implements BulletOptions, HasGameObject<Phaser.GameObjects.C
     }
 
     private _createGameObj(): void {
-        const ball = this.scene.add.sprite(0, 0, 'bullet');
-        let glow: Phaser.GameObjects.Sprite;
-        Helpers.trycatch(() => {
-            glow = this.scene.add.sprite(0, 0, 'flares', Constants.UI.SpriteMaps.Flares.green);
-        }, 'warn', 'bullet glow texture not loaded', 'none');
-        glow?.setScale(this.scale);
-        const maxScale = this.scale + 0.1;
-        this.scene.add.tween({
-            targets: glow,
-            scale: maxScale,
-            angle: 359,
-            yoyo: true,
-            duration: 250
-        });
-        this._gameObj = this.scene.add.container(0, 0, [ball, glow]);
-        this._gameObj.setSize(ball.displayWidth, ball.displayHeight);
-        this._gameObj.setDepth(Constants.UI.Layers.PLAYER);
+        this._gameObj = this.scene.add.container(0, 0);
+        this._gameObj.setSize(this.radius * 2, this.radius * 2);
         this.setLocation(this._startLoc);
+        
         this.scene.physics.add.existing(this._gameObj);
-
         this.getPhysicsBody().setMass(this.mass);
-        this.getPhysicsBody().setCircle(ball.displayWidth / 2);
-
-        Helpers.trycatch(() => this._hitSound = this.scene.sound.add('bullet-hit'), 'warn');
+        this.getPhysicsBody().setCircle(this.radius);
     }
 }

@@ -10,7 +10,7 @@ import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
 import { AiController } from "./controllers/ai-controller";
 import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
-import { environment } from "src/environments/environment";
+import { environment } from "../../../environments/environment";
 import { ClientSocketManager } from "./utilities/client-socket-manager";
 
 

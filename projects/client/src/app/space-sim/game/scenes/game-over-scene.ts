@@ -1,5 +1,5 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
-import { environment } from "src/environments/environment";
+import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { Constants, GameScoreTracker, GameStats, Helpers } from "space-sim-shared";
 import { MultiplayerSceneConfig } from "./multiplayer-scene";

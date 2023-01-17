@@ -1,5 +1,6 @@
 import { LayoutContainer } from "phaser-ui-components";
 import { BaseScene, Constants, DamageOptions, Ship, ShipOptions } from "space-sim-shared";
+import { environment } from "../../../../environments/environment";
 import { Animations } from "../ui-components/animations";
 
 export class PlayerShip extends Ship {
@@ -9,6 +10,26 @@ export class PlayerShip extends Ship {
     private _shipDamageFlicker: Phaser.Tweens.Tween;
     private _radarSprite: Phaser.GameObjects.Sprite;
     private _selfDestructText: Phaser.GameObjects.Text;
+
+    static preload(scene: Phaser.Scene): void {
+        scene.load.image('weapons-1', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-1.png`);
+        scene.load.image('weapons-2', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-2.png`);
+        scene.load.image('weapons-3', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-3.png`);
+        scene.load.image('wings-1', `${environment.baseUrl}/assets/sprites/ship-parts/wings-1.png`);
+        scene.load.image('wings-2', `${environment.baseUrl}/assets/sprites/ship-parts/wings-2.png`);
+        scene.load.image('wings-3', `${environment.baseUrl}/assets/sprites/ship-parts/wings-3.png`);
+        scene.load.image('cockpit-1', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-1.png`);
+        scene.load.image('cockpit-2', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-2.png`);
+        scene.load.image('cockpit-3', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-3.png`);
+        scene.load.image('engine-1', `${environment.baseUrl}/assets/sprites/ship-parts/engine-1.png`);
+        scene.load.image('engine-2', `${environment.baseUrl}/assets/sprites/ship-parts/engine-2.png`);
+        scene.load.image('engine-3', `${environment.baseUrl}/assets/sprites/ship-parts/engine-3.png`);
+        scene.load.image('minimap-player', `${environment.baseUrl}/assets/sprites/minimap-player.png`);
+        scene.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
+        // TODO: move to Engine attachment
+        scene.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
+        scene.load.audio('booster-fire', `${environment.baseUrl}/assets/audio/effects/booster-fire.ogg`);
+    }
 
     constructor(scene: BaseScene, options: ShipOptions) {
         super(scene, options);

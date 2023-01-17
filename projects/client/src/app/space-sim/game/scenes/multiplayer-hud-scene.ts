@@ -58,7 +58,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     }
 
     get playerShip(): Ship {
-        return this._parentScene.getShipsMap().get(SpaceSimClient.playerShipId);
+        return this._parentScene.getShip(SpaceSimClient.playerShipId);
     }
 
     private _createHUD(): void {
