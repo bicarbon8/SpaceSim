@@ -2,12 +2,14 @@ import { Card, Colors, FlexLayout, LayoutContainer, LinearLayout, Styles, TextBu
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { Constants, Helpers } from "space-sim-shared";
+import { GameplaySceneConfig } from "./gameplay-scene";
+import { SetNameSceneConfig } from "./set-name-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const StartupSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
     visible: true,
     key: 'startup-scene'
-};
+} as const;
 
 export class StartupScene extends Phaser.Scene {
     private _width: number;
@@ -44,7 +46,7 @@ export class StartupScene extends Phaser.Scene {
     } as const;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || StartupSceneConfig);
     }
 
     preload(): void {
@@ -137,7 +139,7 @@ export class StartupScene extends Phaser.Scene {
             padding: 5,
             cornerRadius: 14,
             onClick: () => {
-                this.game.scene.start('gameplay-scene');
+                this.game.scene.start(GameplaySceneConfig.key);
                 this.game.scene.stop(this);
             },
             onHover: () => {
@@ -284,7 +286,7 @@ export class StartupScene extends Phaser.Scene {
             this._startMultiplayerButton
                 .setText({style: this.buttonTextStyle})
                 .setOnClick(() => {
-                    this.game.scene.start('set-name-scene');
+                    this.game.scene.start(SetNameSceneConfig.key);
                     this.game.scene.stop(this);
                 })
                 .setOnHover(() => {

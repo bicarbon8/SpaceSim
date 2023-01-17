@@ -210,7 +210,7 @@ export class BattleRoyaleScene extends BaseScene {
             const player = this._ships.get(opts.id);
             this._ships.delete(opts.id);
             
-            const socketIds = Helpers.getMapKeysByValue(this._dataToShipId, opts.id).find(sid => sid != null);
+            const socketIds = Helpers.getMapKeysByValue(this._dataToShipId, opts.id).filter(sid => sid != null);
             for (let socketId of socketIds) {
                 if (SpaceSim.debug) {
                     console.debug(`${Date.now()}: sending player death notice to socket '${socketId}' for ship '${opts.id}'`);

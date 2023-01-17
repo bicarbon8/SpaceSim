@@ -51,6 +51,6 @@ export module SpaceSimServer {
         .map(s => s as BattleRoyaleScene);
 }
 
-SpaceSim.debug = false;
+SpaceSim.debug = true;
 const server = new SpaceSimServer();
 SpaceSim.game = server.game;

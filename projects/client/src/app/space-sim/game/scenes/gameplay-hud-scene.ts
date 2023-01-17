@@ -5,12 +5,13 @@ import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { Resizable } from "../interfaces/resizable";
 import { GridLayout, LayoutContainer, Styles, TextButton, TextButtonOptions } from "phaser-ui-components";
+import { GameplaySceneConfig } from "./gameplay-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const GameplayHudSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'gameplay-hud-scene'
-};
+} as const;
 
 export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _width: number;
@@ -27,13 +28,13 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || GameplayHudSceneConfig);
 
         this.debug = SpaceSim.debug;
     }
 
     create(): void {
-        this._parentScene = SpaceSim.game.scene.getScene('gameplay-scene') as BaseScene;
+        this._parentScene = SpaceSim.game.scene.getScene(GameplaySceneConfig.key) as BaseScene;
         this.resize();
         GameScoreTracker.start(this.playerShip.config);
     }

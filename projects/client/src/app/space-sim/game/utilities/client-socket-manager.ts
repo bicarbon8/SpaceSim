@@ -1,6 +1,8 @@
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
 import { BaseScene, Constants, GameLevelOptions, GameScoreTracker, GameStats, Helpers, ShipOptions, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { MultiplayerSceneConfig } from "../scenes/multiplayer-scene";
+import { SetNameSceneConfig } from "../scenes/set-name-scene";
 import { SpaceSimClient } from "../space-sim-client";
 
 export type ClientSocketManagerOptions = {
@@ -149,7 +151,7 @@ export class ClientSocketManager {
         if (SpaceSim.debug) {
             console.debug(`${Date.now()}: connected to server at: ${this.url}`);
         }
-        if (this.isReconnect() && SpaceSim.game.scene.isActive('multiplayer-scene')) {
+        if (this.isReconnect() && SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             // handle reconnect scenario
             this.sendSetPlayerDataRequest(SpaceSimClient.playerData);
         }
@@ -167,30 +169,30 @@ export class ClientSocketManager {
 
     private _handleInvalidUserDataEvent(): void {
         SpaceSimClient.playerData = null;
-        if (SpaceSim.game.scene.isActive('set-name-scene')) {
+        if (SpaceSim.game.scene.isActive(SetNameSceneConfig.key)) {
             window.alert(`user data either already in use or is invalid; please pick a different value.`);
         }
     }
 
     private _handleUserAcceptedEvent(data: SpaceSimUserData): void {
         SpaceSimClient.playerData = data;
-        if (SpaceSim.game.scene.isActive('set-name-scene')) {
+        if (SpaceSim.game.scene.isActive(SetNameSceneConfig.key)) {
             this.sendJoinRoomRequest(data);
         }
     }
 
     private _handleJoinRoomEvent(): void {
-        if (SpaceSim.game.scene.isActive('set-name-scene')) {
-            SpaceSim.game.scene.stop('set-name-scene');
+        if (SpaceSim.game.scene.isActive(SetNameSceneConfig.key)) {
+            SpaceSim.game.scene.stop(SetNameSceneConfig.key);
         }
-        if (!SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            SpaceSim.game.scene.start('multiplayer-scene');
+        if (!SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            SpaceSim.game.scene.start(MultiplayerSceneConfig.key);
         }
     }
 
     private _handleUpdateSuppliesEvent(opts: Array<ShipSupplyOptions>): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
                 scene.updateSupplies(opts);
             }
@@ -198,8 +200,8 @@ export class ClientSocketManager {
     }
 
     private _handleRemoveSuppliesEvent(...ids: Array<string>): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
                 scene.removeSupplies(...ids);
             }
@@ -207,8 +209,8 @@ export class ClientSocketManager {
     }
 
     private _handleFlickerSuppliesEvent(...ids: Array<string>): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
                 scene.flickerSupplies(...ids);
             }
@@ -216,8 +218,8 @@ export class ClientSocketManager {
     }
 
     private _handleUpdatePlayersEvent(opts: Array<ShipOptions>): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
                 scene.updateShips(opts);
             }
@@ -225,8 +227,8 @@ export class ClientSocketManager {
     }
 
     private _handlePlayerDeathEvent(id?: string): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (!id) {
                 if (SpaceSimClient.playerShipId) {
                     id = SpaceSimClient.playerShipId;
@@ -250,8 +252,8 @@ export class ClientSocketManager {
     }
 
     private _handleUpdateMapEvent(opts: GameLevelOptions): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
                 scene.setLevel(opts);
             }
@@ -259,14 +261,14 @@ export class ClientSocketManager {
     }
 
     private _handleSetPlayerIdEvent(id: string): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             SpaceSimClient.playerShipId = id;
         }
     }
 
     private _handleTriggerEngineEvent(id: string): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             const ship = scene?.getShipsMap()?.get(id);
             if (ship) {
                 ship.getThruster().trigger();
@@ -275,8 +277,8 @@ export class ClientSocketManager {
     }
 
     private _handleTriggerWeaponEvent(id: string): void {
-        if (SpaceSim.game.scene.isActive('multiplayer-scene')) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene('multiplayer-scene') as BaseScene;
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             const ship = scene?.getShipsMap()?.get(id);
             if (ship) {
                 ship.getWeapons().trigger();

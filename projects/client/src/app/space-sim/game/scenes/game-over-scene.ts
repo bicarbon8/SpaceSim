@@ -2,12 +2,15 @@ import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "src/environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { Constants, GameScoreTracker, GameStats, Helpers } from "space-sim-shared";
+import { MultiplayerSceneConfig } from "./multiplayer-scene";
+import { GameplaySceneConfig } from "./gameplay-scene";
+import { StartupSceneConfig } from "./startup-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const GameOverSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'game-over-scene'
-};
+} as const;
 
 export class GameOverScene extends Phaser.Scene {
     private _width: number;
@@ -18,7 +21,7 @@ export class GameOverScene extends Phaser.Scene {
     private _layout: LinearLayout;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || GameOverSceneConfig);
     }
 
     preload(): void {
@@ -134,13 +137,13 @@ export class GameOverScene extends Phaser.Scene {
             onClick: () => {
                 switch (SpaceSimClient.mode) {
                     case 'singleplayer':
-                        this.game.scene.start('gameplay-scene');
+                        this.game.scene.start(GameplaySceneConfig.key);
                         break;
                     case 'multiplayer':
-                        this.game.scene.start('multiplayer-scene');
+                        this.game.scene.start(MultiplayerSceneConfig.key);
                         break;
                     default:
-                        this.game.scene.start('startup-scene');
+                        this.game.scene.start(StartupSceneConfig.key);
                         break;
                 }
                 this._music.stop();
@@ -159,7 +162,7 @@ export class GameOverScene extends Phaser.Scene {
                     .setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
             },
             onClick: () => {
-                this.game.scene.start('startup-scene');
+                this.game.scene.start(StartupSceneConfig.key);
                 this.game.scene.stop(this);
             }
         });

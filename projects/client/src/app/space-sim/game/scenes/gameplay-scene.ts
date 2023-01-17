@@ -13,12 +13,14 @@ import { PlayerAmmoSupply } from "../ships/supplies/player-ammo-supply";
 import { PlayerCoolantSupply } from "../ships/supplies/player-coolant-supply";
 import { PlayerFuelSupply } from "../ships/supplies/player-fuel-supply";
 import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
+import { GameOverSceneConfig } from "./game-over-scene";
+import { GameplayHudSceneConfig } from "./gameplay-hud-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const GameplaySceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'gameplay-scene'
-};
+} as const;
 
 export class GameplayScene extends BaseScene implements Resizable {
     setLevel<T extends GameLevelOptions>(opts: T): BaseScene {
@@ -59,7 +61,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || GameplaySceneConfig);
 
         this.debug = SpaceSim.debug;
         this._stellarBodies = [];
@@ -160,8 +162,8 @@ export class GameplayScene extends BaseScene implements Resizable {
         this._createOpponents();
         this._playMusic();
 
-        SpaceSim.game.scene.start('gameplay-hud-scene');
-        SpaceSim.game.scene.bringToTop('gameplay-hud-scene');
+        SpaceSim.game.scene.start(GameplayHudSceneConfig.key);
+        SpaceSim.game.scene.bringToTop(GameplayHudSceneConfig.key);
 
         this.resize();
     }
@@ -293,8 +295,8 @@ export class GameplayScene extends BaseScene implements Resizable {
             if (this.playerShip.id == shipOpts?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
-                        this.game.scene.start('game-over-scene');
-                        this.game.scene.stop('gameplay-hud-scene');
+                        this.game.scene.start(GameOverSceneConfig.key);
+                        this.game.scene.stop(GameplayHudSceneConfig.key);
                         this.game.scene.stop(this);
                     }
                 });

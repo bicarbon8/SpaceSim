@@ -101,8 +101,8 @@ export class ServerSocketManager {
         Helpers.trycatch(() => {
             const socket = this.getSocket(socketId);
             if (socket) {
-                if (SpaceSim.debug) {
-                    console.debug(`${Date.now()}: sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
+                if (false && SpaceSim.debug) {
+                    console.trace(`${Date.now()}: sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
                 }
                 socket.emit(event, ...args);
             }
@@ -114,8 +114,8 @@ export class ServerSocketManager {
         Helpers.trycatch(() => {
             const socket = this.getSocket(socketId);
             if (socket) {
-                if (SpaceSim.debug) {
-                    console.debug(`${Date.now()}: broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
+                if (false && SpaceSim.debug) {
+                    console.trace(`${Date.now()}: broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
                 }
                 socket.broadcast.in(room).emit(event, ...args);
             }
@@ -125,8 +125,8 @@ export class ServerSocketManager {
 
     private roomEmit(room: string, event: string, ...args: Array<any>): this {
         Helpers.trycatch(() => {
-            if (SpaceSim.debug) {
-                console.debug(`${Date.now()}: sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
+            if (false && SpaceSim.debug) {
+                console.trace(`${Date.now()}: sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
             }
             this.io.in(room).emit(event, ...args);
         }, 'warn', `${Date.now()}: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');

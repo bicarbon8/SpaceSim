@@ -13,12 +13,14 @@ import { PlayerCoolantSupply } from "../ships/supplies/player-coolant-supply";
 import { PlayerFuelSupply } from "../ships/supplies/player-fuel-supply";
 import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
 import { Animations } from "../ui-components/animations";
+import { MultiplayerHudSceneConfig } from "./multiplayer-hud-scene";
+import { GameOverSceneConfig } from "./game-over-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const MultiplayerSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'multiplayer-scene'
-};
+} as const;
 
 export class MultiplayerScene extends BaseScene implements Resizable {
     private _width: number;
@@ -44,7 +46,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _shouldShowHud = false;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || MultiplayerSceneConfig);
 
         this.debug = SpaceSim.debug;
     }
@@ -171,8 +173,8 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         }
         if (this._shouldShowHud) {
             this._shouldShowHud = false;
-            SpaceSim.game.scene.start('multiplayer-hud-scene');
-            SpaceSim.game.scene.bringToTop('multiplayer-hud-scene');
+            SpaceSim.game.scene.start(MultiplayerHudSceneConfig.key);
+            SpaceSim.game.scene.bringToTop(MultiplayerHudSceneConfig.key);
         }
         try {
             this.getShips().forEach(p => p?.update(time, delta));
@@ -299,7 +301,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     ship?.destroy(false);
                     this._ships.delete(ship.id);
                 }
-            }, 'debug', `error in handling ${Constants.Socket.PLAYER_DEATH} event`, 'message');
+            }, 'debug', `error in removeShips ${JSON.stringify(ids)}`, 'message');
         }
         return this;
     }
@@ -426,8 +428,8 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     public override endScene(): BaseScene {
         this._camera.cam.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
             if (progress === 1) {
-                this.game.scene.start('game-over-scene');
-                this.game.scene.stop('multiplayer-hud-scene');
+                this.game.scene.start(GameOverSceneConfig.key);
+                this.game.scene.stop(MultiplayerHudSceneConfig.key);
                 this.game.scene.stop(this);
             }
         });

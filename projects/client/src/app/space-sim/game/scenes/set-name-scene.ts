@@ -5,11 +5,11 @@ import { environment } from "src/environments/environment";
 import { SpaceSimUserData } from "space-sim-shared";
 import getBrowserFingerprint from "get-browser-fingerprint";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const SetNameSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'set-name-scene'
-};
+} as const;
 
 export class SetNameScene extends Phaser.Scene {
     private _width: number;
@@ -22,7 +22,7 @@ export class SetNameScene extends Phaser.Scene {
     private readonly _continueButtonStylesDisabled;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || SetNameSceneConfig);
 
         this._continueButtonStylesDisabled = Styles.Outline.secondary();
     }
