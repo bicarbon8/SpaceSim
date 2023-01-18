@@ -17,6 +17,12 @@ export class AiController extends InputController {
     }
     
     update(time: number, delta: number): void {
+        if (this.ship.weapon.enabled) {
+            this.ship.weapon.setEnabled(false);
+        }
+        if (this.ship.engine.enabled) {
+            this.ship.engine.setEnabled(false);
+        }
         const attackerId = Helpers.getLastAttackerId(this.ship);
         if (attackerId) {
             const attacker = this.scene.getShip(attackerId);

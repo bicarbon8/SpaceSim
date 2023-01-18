@@ -153,14 +153,14 @@ export class ServerSocketManager {
     private _handleSocketEvents(socketId: string, event: string, ...args: Array<any>): void {
         Helpers.trycatch(() => {
             if (SpaceSim.debug 
-                && ![Constants.Socket.SET_PLAYER_ANGLE, Constants.Socket.ENGINE_ENABLED, Constants.Socket.WEAPON_ENABLED]
+                && ![Constants.Socket.SET_PLAYER_ANGLE]
                     .includes(event)) {
                 console.debug(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
             }
             if (SpaceSimServer.trace 
-                && [Constants.Socket.SET_PLAYER_ANGLE, Constants.Socket.ENGINE_ENABLED, Constants.Socket.WEAPON_ENABLED]
+                && [Constants.Socket.SET_PLAYER_ANGLE]
                     .includes(event)) {
-                console.debug(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
+                console.trace(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
             }
             switch(event) {
                 case 'disconnect':
@@ -368,7 +368,7 @@ export class ServerSocketManager {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
-            ship.setRotation(d);
+            ship.rotationContainer.setAngle(d);
         } else {
             this.sendPlayerDeathEvent(socketId);
         }

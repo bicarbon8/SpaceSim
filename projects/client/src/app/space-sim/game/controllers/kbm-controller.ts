@@ -19,6 +19,8 @@ export class KbmController extends InputController {
     private _grabAttachmentKey: Phaser.Input.Keyboard.Key;
 
     private _container: Phaser.GameObjects.Container;
+    private _engineStateChanged: boolean = false;
+    private _weaponStateChanged: boolean = false;
     
     constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
@@ -32,12 +34,18 @@ export class KbmController extends InputController {
         
     update(time: number, delta: number): void {
         this._mouseTracker.update(time, delta);
-        this.ship.engine.setEnabled(false);
-        this.ship.weapon.setEnabled(false);
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
-                this.ship.engine.setEnabled(true);
+                if (!this.ship.engine.enabled) {
+                    this._engineStateChanged = true;
+                    this.ship.engine.setEnabled(true);
+                }
+            } else {
+                if (this.ship.engine.enabled) {
+                    this._engineStateChanged = true;
+                    this.ship.engine.setEnabled(false);
+                }
             }
             // reverse Thruster
             if (this._thrustBackwardsKey.isDown) {
@@ -57,7 +65,15 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                this.ship.weapon.setEnabled(true);
+                if (!this.ship.weapon.enabled) {
+                    this._weaponStateChanged = true;
+                    this.ship.weapon.setEnabled(true);
+                }
+            } else {
+                if (this.ship.weapon.enabled) {
+                    this._weaponStateChanged = true;
+                    this.ship.weapon.setEnabled(false);
+                }
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {
                 // this.player.attachments.rotateAttachmentsClockwise();
@@ -77,8 +93,14 @@ export class KbmController extends InputController {
             if (this._grabAttachmentKey.isDown) {
                 // TODO: grab nearby attachments and attach them to player
             }
-            SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData, this.ship?.engine?.enabled);
-            SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData, this.ship?.weapon?.enabled);
+            if (this._engineStateChanged) {
+                this._engineStateChanged = false;
+                SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData, this.ship?.engine?.enabled);
+            }
+            if (this._weaponStateChanged) {
+                this._weaponStateChanged = false;
+                SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData, this.ship?.weapon?.enabled);
+            }
         }
     }
 

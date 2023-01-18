@@ -18,7 +18,12 @@ export class ClientSocketManager {
 
     constructor(options: ClientSocketManagerOptions) {
         this.url = options.serverUrl;
-        this.socket = io(this.url);
+        this.socket = io(this.url, {
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax : 300000,
+            reconnectionAttempts: 10
+        });
         this.socket.onAny((event: string, ...args: any[]) => {
             this._handleAllEvents(event, ...args);
         });

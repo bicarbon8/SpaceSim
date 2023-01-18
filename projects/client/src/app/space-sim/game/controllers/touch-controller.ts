@@ -9,6 +9,9 @@ export class TouchController extends InputController {
     private _thrusterButtonActive: boolean;
     private _throwButtonActive: boolean;
     private _boostButtonActive: boolean;
+
+    private _engineStateChanged: boolean = false;
+    private _weaponStateChanged: boolean = false;
     
     constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
@@ -41,20 +44,38 @@ export class TouchController extends InputController {
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
-            this.ship.weapon?.setEnabled(true);
+            if (!this.ship.weapon.enabled) {
+                this._weaponStateChanged = true;
+                this.ship.weapon?.setEnabled(true);
+            }
         } else {
-            this.ship.weapon?.setEnabled(false);
+            if (this.ship.weapon.enabled) {
+                this._weaponStateChanged = true;
+                this.ship.weapon?.setEnabled(false);
+            }
         }
-        SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData, this.ship?.weapon?.enabled);
+        if (this._weaponStateChanged) {
+            this._weaponStateChanged = false;
+            SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData, this.ship?.weapon?.enabled);
+        }
     }
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
-            this.ship.engine?.setEnabled(true);
+            if (!this.ship.engine.enabled) {
+                this._engineStateChanged = true;
+                this.ship.engine?.setEnabled(true);
+            }
         } else {
-            this.ship.engine?.setEnabled(false);
+            if (this.ship.engine.enabled) {
+                this._engineStateChanged = true;
+                this.ship.engine?.setEnabled(false);
+            }
         }
-        SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData, this.ship?.engine?.enabled);
+        if (this._engineStateChanged) {
+            this._engineStateChanged = false;
+            SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData, this.ship?.engine?.enabled);
+        }
     }
 
     private _handleThrowTouch(): void {

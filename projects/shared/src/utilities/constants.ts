@@ -25,7 +25,7 @@ export module Constants {
         export module Supplies {
             export const RADIUS = 16;
             export const BOUNCE = 0.5;
-            export const MASS = 0.1;
+            export const MASS = 0;
         }
     }
     export module UI {

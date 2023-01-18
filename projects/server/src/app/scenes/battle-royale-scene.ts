@@ -230,9 +230,8 @@ export class BattleRoyaleScene extends BaseScene {
 
     private _removeShip(opts: Partial<ShipOptions>): void {
         if (SpaceSim.debug) {
-            console.debug(`[${Date.now()}]: attempting to remove ship id: '${opts.id}' with name: '${opts.name}'...`);
+            console.debug(`[${Date.now()}]: emitting player death event to room '${this.ROOM_NAME}' for ship '${opts.id}' with name: '${opts.name}'...`);
         }
-
         SpaceSimServer.io.broadcastPlayerDeathEvent(this.ROOM_NAME, opts.id);
 
         if (this._ships.has(opts.id)) {
@@ -245,7 +244,7 @@ export class BattleRoyaleScene extends BaseScene {
             if (SpaceSim.debug) {
                 console.debug(`[${Date.now()}]: calling ship.destroyObjects(false) for ship: ${opts.id}, with name: ${opts.name}`);
             }
-            player?.destroyObjects(false); // don't emit event locally
+            player?.destroy();
         } else {
             console.warn(`[${Date.now()}]: no ship with id '${opts.id}' was found.`);
         }
