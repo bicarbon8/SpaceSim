@@ -32,11 +32,12 @@ export class KbmController extends InputController {
         
     update(time: number, delta: number): void {
         this._mouseTracker.update(time, delta);
+        this.ship.engine.setEnabled(false);
+        this.ship.weapon.setEnabled(false);
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
-                SpaceSimClient.socket?.sendTriggerEngineRequest(SpaceSimClient.playerData);
-                this.ship.getThruster()?.trigger();
+                this.ship.engine.setEnabled(true);
             }
             // reverse Thruster
             if (this._thrustBackwardsKey.isDown) {
@@ -56,8 +57,7 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                SpaceSimClient.socket?.sendTriggerWeaponRequest(SpaceSimClient.playerData);
-                this.ship.getWeapons()?.trigger();
+                this.ship.weapon.setEnabled(true);
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {
                 // this.player.attachments.rotateAttachmentsClockwise();
@@ -77,6 +77,8 @@ export class KbmController extends InputController {
             if (this._grabAttachmentKey.isDown) {
                 // TODO: grab nearby attachments and attach them to player
             }
+            SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData, this.ship?.engine?.enabled);
+            SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData, this.ship?.weapon?.enabled);
         }
     }
 

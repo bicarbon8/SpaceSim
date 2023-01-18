@@ -1,9 +1,11 @@
 import { BaseScene, Bullet, BulletOptions, Constants, Helpers, Ship } from "space-sim-shared";
 import { environment } from "../../../../../../environments/environment";
+import { UiExploder } from "../../../ui-components/ui-exploder";
 
 export class PlayerBullet extends Bullet {
     private _fireSound: Phaser.Sound.BaseSound;
     private _hitSound: Phaser.Sound.BaseSound;
+    private _exploder: UiExploder;
     
     static preload(scene: Phaser.Scene): void {
         scene.load.image('bullet', `${environment.baseUrl}/assets/sprites/bullet.png`);
@@ -14,6 +16,7 @@ export class PlayerBullet extends Bullet {
     constructor(scene: BaseScene, options: BulletOptions) {
         super(scene, options);
 
+        this._exploder = new UiExploder(this.scene);
         this._addUiElements();
 
         this._fireSound?.play();
@@ -22,8 +25,8 @@ export class PlayerBullet extends Bullet {
     override onShipCollision(ship: Ship): void {
         super.onShipCollision(ship);
         this._hitSound?.play();
-        this.exploder.explode({
-            location: this.getLocation(),
+        this._exploder.explode({
+            location: this.location,
             scale: 0.25
         });
     }
@@ -43,8 +46,7 @@ export class PlayerBullet extends Bullet {
             yoyo: true,
             duration: 250
         });
-        this.getGameObject()
-            .setDepth(Constants.UI.Layers.PLAYER)
+        this.setDepth(Constants.UI.Layers.PLAYER)
             .add([ball, glow]);
         Helpers.trycatch(() => this._fireSound = this.scene.sound.add('cannon-fire'), 'warn');
         Helpers.trycatch(() => this._hitSound = this.scene.sound.add('bullet-hit'), 'warn');

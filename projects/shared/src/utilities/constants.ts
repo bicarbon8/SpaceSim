@@ -66,8 +66,8 @@ export module Constants {
         export const UPDATE_PLAYERS = 'update-players';
         export const COMMAND_PLAYER = 'player-command';
         export const PLAYER_DEATH = 'player-death';
-        export const TRIGGER_ENGINE = 'trigger-engine';
-        export const TRIGGER_WEAPON = 'trigger-weapon';
+        export const ENGINE_ENABLED = 'engine-enabled';
+        export const WEAPON_ENABLED = 'weapon-enabled';
         export const SET_PLAYER_ANGLE = 'set-player-angle';
         export const UPDATE_SUPPLIES = 'update-supplies';
         export const FLICKER_SUPPLIES = 'flicker-supplies';

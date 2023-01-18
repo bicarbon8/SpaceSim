@@ -1,6 +1,5 @@
-export interface DamageOptions {
-    amount: number;
+export type DamageMetadata = {
     timestamp: number;
     attackerId?: string;
     message?: string;
-}
+};

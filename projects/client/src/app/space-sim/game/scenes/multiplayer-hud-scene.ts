@@ -165,12 +165,12 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                 `Kills: ${stats.opponentsDestroyed.length}`,
                 `Active Players: ${this._parentScene.getShips()?.length}`,
                 `Accuracy: ${stats.accuracy.toFixed(0)}%`,
-                `Fuel: ${this.playerShip.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${this.playerShip.getWeapons()?.remainingAmmo || 0}`,
+                `Fuel: ${this.playerShip.remainingFuel.toFixed(1)}`,
+                `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore(this.playerShip.id).toFixed(0)}`
             ];
             if (SpaceSim.debug) {
-                const loc: Phaser.Math.Vector2 = this.playerShip.getLocation();
+                const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             if (!this._connectedToServer) {

@@ -2,45 +2,42 @@ import * as Phaser from "phaser";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { Engine } from "./attachments/utility/engine";
-import { DamageOptions } from './damage-options';
-import { HasPhysicsBody } from '../interfaces/has-physics-body';
-import { Weapons } from "./attachments/offence/weapons";
-import { MachineGun } from "./attachments/offence/machine-gun";
-import { ShipLike } from "../interfaces/ship-like";
+import { DamageMetadata } from '../interfaces/damage-metadata';
+import { Weapon } from "./attachments/offence/weapon";
 import { IsConfigurable } from "../interfaces/is-configurable";
 import { PhysicsObject } from "../interfaces/physics-object";
 import { BaseScene } from "../scenes/base-scene";
-import { Exploder } from "../utilities/exploder";
-import { BulletFactory } from "./attachments/offence/bullet-factory";
+import { HasId } from "../interfaces/has-id";
+import { HasLocation } from "../interfaces/has-location";
 
-export type ShipOptions = Partial<PhysicsObject> & {
-    readonly id?: string;
-    readonly name?: string;
-    readonly fingerprint?: string;
-    readonly integrity?: number;
-    readonly remainingFuel?: number;
-    readonly remainingAmmo?: number;
-    readonly temperature?: number;
-    readonly mass?: number;
-    readonly weaponsKey?: number;
-    readonly wingsKey?: number;
-    readonly cockpitKey?: number;
-    readonly engineKey?: number;
-    readonly exploder: Exploder;
-    readonly bulletFactory: BulletFactory<any>;
-}
+export type ShipConfig = PhysicsObject & {
+    id: string;
+    name: string;
+    integrity: number;
+    remainingFuel: number;
+    remainingAmmo: number;
+    temperature: number;
+    mass: number;
+    weaponsKey: number;
+    wingsKey: number;
+    cockpitKey: number;
+    engineKey: number;
+};
 
-export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurable<Partial<ShipOptions>> {
+export type ShipOptions = Partial<ShipConfig> & {
+    fingerprint?: string;
+    engine: Engine | (new (scene: BaseScene) => Engine);
+    weapon: Weapon | (new (scene: BaseScene) => Weapon);
+};
+
+export class Ship extends Phaser.GameObjects.Container implements HasId, HasLocation, IsConfigurable<ShipConfig> {
     /** ShipOptions */
     readonly id: string; // UUID
-    readonly scene: BaseScene;
-    readonly mass: number;
     readonly fingerprint: string;
     readonly name: string;
-    readonly exploder: Exploder;
-    readonly bulletFactory: BulletFactory<any>;
     
-    private _active: boolean = true;
+    private readonly _lastDamagedBy: Array<DamageMetadata>;
+    
     private _temperature: number; // in Celcius
     private _integrity: number;
     private _remainingFuel: number;
@@ -50,73 +47,68 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     private _engineKey: number;
 
     private _engine: Engine;
-    private _weapons: Weapons;
+    private _weapon: Weapon;
 
-    private _positionContainer: Phaser.GameObjects.Container; // used for position and physics
     private _rotationContainer: Phaser.GameObjects.Container; // used for rotation
-    private _lastDamagedBy: DamageOptions[];
+    
     
     private _destroyAtTime: number;
+
+    // override property types
+    public scene: BaseScene
+    public body: Phaser.Physics.Arcade.Body;
     
     constructor(scene: BaseScene, options: ShipOptions) {
+        super(scene, options.location?.x, options.location?.y);
         this.id = options.id ?? Phaser.Math.RND.uuid();
-        this.scene = scene;
-        this.mass = options.mass ?? 100;
         this.name = options.name;
         this.fingerprint = options.fingerprint;
-        this.exploder = options.exploder;
-        this.bulletFactory = options.bulletFactory;
+
+        this._lastDamagedBy = new Array<DamageMetadata>();
 
         // create ship-pod sprite, group and container
         this._createGameObj(options);
-        
-        this._lastDamagedBy = [];
 
+        this.setEngine(options.engine);
+        this.setWeapon(options.weapon);
+        
         this.configure(options);
     }
 
-    configure(options: Partial<ShipOptions>): this {
+    configure(options: Partial<ShipConfig>): this {
         if (this.active) {
             const loc = options.location ?? Helpers.vector2();
-            this.setLocation(loc);
+            this.setPosition(loc.x, loc.y);
             const v = options.velocity ?? Helpers.vector2();
-            this.getPhysicsBody().setVelocity(v.x, v.y);
+            this.body.setVelocity(v.x, v.y);
             const angle = options.angle ?? 0;
-            this.setRotation(angle);
+            this.rotationContainer.setAngle(angle);
             this._integrity = options.integrity ?? Constants.Ship.MAX_INTEGRITY;
             this._remainingFuel = options.remainingFuel ?? Constants.Ship.MAX_FUEL;
-            this.getWeapons().remainingAmmo = options.remainingAmmo ?? Constants.Ship.Weapons.MAX_AMMO;
+            this.weapon.remainingAmmo = options.remainingAmmo ?? Constants.Ship.Weapons.MAX_AMMO;
             this._temperature = options.temperature ?? 0;
         }
         return this;
     }
 
-    get config(): Partial<ShipOptions> {
+    get config(): ShipConfig {
         return {
             id: this.id,
-            location: {x: this.location.x, y: this.location.y},
-            velocity: {x: this.velocity.x, y: this.velocity.y},
-            angle: this.angle,
+            location: this.location,
+            velocity: {x: this.body.velocity.x, y: this.body.velocity.y},
+            angle: this.rotationContainer.angle,
             angularVelocity: 0,
             integrity: this.integrity,
             remainingFuel: this.remainingFuel,
-            remainingAmmo: this.getWeapons().remainingAmmo,
+            remainingAmmo: this.weapon.remainingAmmo,
             temperature: this.temperature,
-            mass: this.mass,
+            mass: this.body.mass,
             name: this.name,
             weaponsKey: this.weaponsKey,
             wingsKey: this.wingsKey,
             cockpitKey: this.cockpitKey,
             engineKey: this.engineKey
         };
-    }
-
-    get active(): boolean {
-        return this._active && this.getGameObject()?.active && this.getPhysicsBody()?.enable;
-    }
-
-    get positionContainer(): Phaser.GameObjects.Container {
-        return this._positionContainer;
     }
 
     get rotationContainer(): Phaser.GameObjects.Container {
@@ -139,38 +131,35 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         return this._engineKey;
     }
 
-    get location(): Phaser.Math.Vector2 {
-        let go: Phaser.GameObjects.Container = this._positionContainer;
-        if (go) {
-            return new Phaser.Math.Vector2(go.x, go.y);
-        }
-        return Phaser.Math.Vector2.ZERO;
-    }
-
-    get velocity(): Phaser.Math.Vector2 {
-        return this.getPhysicsBody()?.velocity ?? Helpers.vector2();
-    }
-
-    get angle(): number {
-        return this._rotationContainer?.angle || 0;
-    }
-
+    /**
+     * the remaining "health" of this ship
+     */
     get integrity(): number {
         return this._integrity;
     }
 
+    /**
+     * the number of litres of fuel remaining in this ship
+     */
     get remainingFuel(): number {
         return this._remainingFuel;
     }
 
+    /**
+     * the temperature of this ship in degrees Celcius
+     */
     get temperature(): number {
         return this._temperature;
     }
 
-    get damageSources(): Array<DamageOptions> {
+    /**
+     * a copy of the Array of `DamageOptions` listing objects that caused
+     * damage to this ship
+     */
+    get damageSources(): Array<DamageMetadata> {
         return this._lastDamagedBy
             .map(d => {
-                return {...d} as DamageOptions;
+                return {...d} as DamageMetadata;
             });
     }
 
@@ -181,13 +170,33 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
     get destroyAt(): number {
         return this._destroyAtTime;
     }
-    
-    getWeapons(): Weapons {
-        return this._weapons;
+
+    setEngine(engine: Engine | (new (scene: BaseScene) => Engine)): this {
+        if (typeof engine === 'function') {
+            this._engine = new engine(this.scene);
+        } else {
+            this._engine = engine;
+        }
+        this.engine.setShip(this);
+        return this;
     }
 
-    getThruster(): Engine {
+    get engine(): Engine {
         return this._engine;
+    }
+
+    setWeapon(weapon: Weapon | (new (scene: BaseScene) => Weapon)): this {
+        if (typeof weapon === 'function') {
+            this._weapon = new weapon(this.scene);
+        } else {
+            this._weapon = weapon;
+        }
+        this.weapon.setShip(this);
+        return this;
+    }
+
+    get weapon(): Weapon {
+        return this._weapon;
     }
 
     /**
@@ -198,12 +207,12 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
      */
     update(time: number, delta: number): void {
         if (this.active) {
-            if (this.scene.game.getTime() >= this.destroyAt) {
-                this.destroy();
+            if (time >= this.destroyAt) {
+                this.death();
             } else {
-                this._checkOverheatCondition(time, delta);
+                this._checkOverheatCondition(delta);
                 this._engine.update(time, delta);
-                this._weapons.update(time, delta);
+                this._weapon.update(time, delta);
             }
         }
     }
@@ -212,20 +221,18 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
      * checks for and applies damage based on degrees over safe temperature at a rate
      * of {delta} milliseconds between each check.
      * also applies cooling at a rate of {Constants.COOLING_RATE}
-     * @param time the current game time elapsed
      * @param delta the number of elapsed milliseconds since last update
      */
-    private _checkOverheatCondition(time: number, delta: number): void {
+    private _checkOverheatCondition(delta: number): void {
         if (this.active) {
-            if (this.isOverheating()) {
+            if (this.isOverheating) {
                 if (this._temperature > Constants.Ship.MAX_TEMPERATURE) {
-                    this.destroy(); // we are dead
+                    this.death(); // we are dead
                     return;
                 } else {
                     // reduce integrity at a fixed rate of 1 per second
                     let damage: number = 1 * (delta / 1000);
-                    this.sustainDamage({
-                        amount: damage, 
+                    this.subtractIntegrity(damage, {
                         timestamp: this.scene.time.now,
                         message: 'ship overheat damage'
                     });
@@ -233,98 +240,41 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
             }
 
             let amountCooled: number = Constants.Ship.COOLING_RATE_PER_SECOND * (delta / 1000);
-            this.applyCooling(amountCooled);
+            this.subtractHeat(amountCooled);
         }
     }
 
-    /**
-     * the location within coordinate space
-     * @returns a {Phaser.Math.Vector2} for the location of this
-     * {Ship} in coordinate space. this is different from the
-     * location on screen
-     */
-    getLocation(): Phaser.Math.Vector2 {
-        let go: Phaser.GameObjects.Container = this._positionContainer;
-        if (go) {
-            return new Phaser.Math.Vector2(go.x, go.y);
-        }
-        return Phaser.Math.Vector2.ZERO;
-    }
-
-    setLocation(location: Phaser.Types.Math.Vector2Like): void {
-        let go: Phaser.GameObjects.Container = this._positionContainer;
-        go.x = location.x;
-        go.y = location.y;
+    get location(): Phaser.Types.Math.Vector2Like {
+        return {x: this.x, y: this.y};
     }
 
     /**
      * the location within the viewable area
-     * @returns a `Phaser.Math.Vector2` offset for location within current 
+     * @returns a `Phaser.Types.Math.Vector2Like` offset for location within current 
      * viewable area. for the Player, this should always return 0,0 since the
      * camera follows the Player
      */
-    getLocationInView(): Phaser.Math.Vector2 {
-        return Helpers.convertLocToLocInView(this.getLocation(), this.scene);
+    get locationInView(): Phaser.Types.Math.Vector2Like {
+        return Helpers.convertLocToLocInView(this.location, this.scene);
     }
 
-    setLocationInView(location: Phaser.Types.Math.Vector2Like): void {
-        const loc = Helpers.convertLocInViewToLoc(location, this.scene);
-        this.setLocation(loc);
-    }
-
-    getGameObject(): Phaser.GameObjects.Container {
-        return this._positionContainer;
-    }
-
-    getPhysicsBody(): Phaser.Physics.Arcade.Body {
-        return this._positionContainer?.body as Phaser.Physics.Arcade.Body;
-    }
-
-    getRotationContainer(): Phaser.GameObjects.Container {
-        return this._rotationContainer;
+    get heading(): Phaser.Math.Vector2 {
+        return Helpers.getHeading(this.rotationContainer.angle);
     }
 
     lookAt(target: Phaser.Types.Math.Vector2Like): void {
-        if (target && this.getGameObject()) {
-            const shipPos = this.getLocation();
-            const radians: number = Phaser.Math.Angle.Between(target.x, target.y, shipPos.x, shipPos.y);
+        if (target) {
+            const radians: number = Phaser.Math.Angle.Between(target.x, target.y, this.x, this.y);
             const degrees: number = Phaser.Math.RadToDeg(radians);
-            this.setRotation(degrees);
+            this.rotationContainer.setAngle(degrees);
         }
     }
 
-    /**
-     * the rotation of the Ship's {GameObject.body} in degrees
-     */
-    getRotation(): number {
-        return this._rotationContainer?.angle || 0;
-    }
-
-    /**
-     * sets the ship's angle in degrees
-     * @param angle the angle in degrees
-     */
-    setRotation(angle: number): void {
-        this._rotationContainer.setAngle(angle);
-    }
-
-    getHeading(): Phaser.Math.Vector2 {
-        return Helpers.getHeading(this.getRotation());
-    }
-
-    getSpeed(): number {
-        return this.getVelocity().length();
-    }
-
-    getVelocity(): Phaser.Math.Vector2 {
-        return this.getPhysicsBody()?.velocity ?? Helpers.vector2();
-    }
-
-    applyHeating(degrees: number): void {
+    addHeat(degrees: number): void {
         this._temperature += degrees;
     }
 
-    applyCooling(degrees: number): void {
+    subtractHeat(degrees: number): void {
         this._temperature -= degrees;
         if (this._temperature < 0) {
             this._temperature = 0;
@@ -335,11 +285,11 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
      * determines if the current `temperature` is over the maximum safe value
      * @returns `true` if the current `temperature` is over the maximum safe value; otherwise `false`
      */
-    isOverheating(): boolean {
+    get isOverheating(): boolean {
         return this._temperature > Constants.Ship.MAX_SAFE_TEMPERATURE;
     }
 
-    reduceFuel(amount: number): void {
+    subtractFuel(amount: number): void {
         this._remainingFuel -= amount;
         if (this._remainingFuel < 0) {
             this._remainingFuel = 0;
@@ -353,25 +303,17 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
         }
     }
 
-    getRemainingFuel(): number {
-        return this._remainingFuel;
-    }
-
-    getIntegrity(): number {
-        return this.integrity;
-    }
-
-    sustainDamage(damageOpts: DamageOptions): void {
+    subtractIntegrity(amount: number, damageOpts?: DamageMetadata): void {
         this._updateLastDamagedBy(damageOpts);
-        this._integrity -= damageOpts.amount;
+        this._integrity -= amount;
         if (this.integrity <= 0) {
             this._integrity = 0;
-            this.destroy(); // we are dead
+            this.death(); // we are dead
             return;
         }
     }
 
-    repair(amount: number): void {
+    addIntegrity(amount: number): void {
         this._integrity += amount;
         if (this.integrity > Constants.Ship.MAX_INTEGRITY) {
             this._integrity = Constants.Ship.MAX_INTEGRITY;
@@ -380,57 +322,63 @@ export class Ship implements ShipOptions, ShipLike, HasPhysicsBody, IsConfigurab
 
     /**
      * start a 3 second countdown to ship destruction
+     * 
+     * NOTE: only runs when `update(time, delta)` function is called
      */
     selfDestruct(countdownSeconds: number = 3): void {
         this._destroyAtTime = this.scene.game.getTime() + (countdownSeconds * 1000);
     }
 
+    /**
+     * cancels the self destruct timer
+     */
     cancelSelfDestruct(): void {
         this._destroyAtTime = undefined;
     }
 
-    destroy(emit: boolean = true): void {
-        if (emit) {
-            this.scene.events.emit(Constants.Events.PLAYER_DEATH, this.config);
-        }
+    /**
+     * removes this ship the physics simulation
+     * @param emit a boolean indicating if a `PLAYER_DEATH` event should be emitted
+     * to the scene
+     * @default true
+     */
+    death(emit: boolean = true): void {
+        if (this.active) {
+            if (emit) {
+                this.scene.events.emit(Constants.Events.PLAYER_DEATH, this.config);
+            }
 
-        this._active = false;
-        Helpers.trycatch(() => {
-            this.getGameObject()?.setActive(false);
-            this.getGameObject()?.destroy();
-        }, 'warn', 'error destroying ship game object', 'message');
-        this._positionContainer = null;
+            Helpers.trycatch(() => {
+                this.destroy();
+            }, 'warn', 'error destroying ship game object', 'message');
+        }
     }
 
-    private _createGameObj(options?: ShipOptions): void {
-        // create container as parent to all ship parts
-        let loc = options?.location ?? Helpers.vector2();
-        this._positionContainer = this.scene.add.container(loc.x, loc.y);
-        
-        this._rotationContainer = this.scene.add.container(0, 0);
-        this._positionContainer.add(this._rotationContainer);
-        
+    private _createGameObj(options: ShipOptions): void {
+        this.scene.add.existing(this);
         const radius = Constants.Ship.RADIUS;
-        this._positionContainer.setSize(radius * 2, radius * 2);
+        this.setSize(radius * 2, radius * 2);
 
-        // setup physics for container
-        this.scene.physics.add.existing(this._positionContainer);
-
-        this.getPhysicsBody().setCircle(radius);
-        this.getPhysicsBody().setMass(this.mass);
-        this.getPhysicsBody().setBounce(0.2, 0.2);
-        this.getPhysicsBody().setMaxSpeed(Constants.Ship.MAX_SPEED);
+        this.scene.physics.add.existing(this);
+        this.body.setCircle(radius);
+        this.body.setMass(options.mass ?? 100);
+        this.body.setBounce(0.2, 0.2);
+        this.body.setMaxSpeed(Constants.Ship.MAX_SPEED);
 
         this._weaponsKey = options.weaponsKey ?? 1;
         this._wingsKey = options.wingsKey ?? 1;
         this._cockpitKey = options.cockpitKey ?? 1;
         this._engineKey = options.engineKey ?? 1;
 
-        this._engine = new Engine(this);
-        this._weapons = new MachineGun(this, {exploder: this.exploder, bulletFactory: this.bulletFactory});
+        this._rotationContainer = this.scene.add.container(0, 0);
+        this.add(this._rotationContainer);
     }
 
-    private _updateLastDamagedBy(damageOpts: DamageOptions): void {
+    /**
+     * appends to the `_lastDamagedBy` array and removes the oldest sources
+     * if more than 5 sources tracked
+     */
+    private _updateLastDamagedBy(damageOpts: DamageMetadata): void {
         this._lastDamagedBy.push(damageOpts);
         if (this._lastDamagedBy.length > 5) {
             this._lastDamagedBy.shift();

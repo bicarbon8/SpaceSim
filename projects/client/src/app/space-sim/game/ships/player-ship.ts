@@ -1,5 +1,5 @@
 import { LayoutContainer } from "phaser-ui-components";
-import { BaseScene, Constants, DamageOptions, Ship, ShipOptions } from "space-sim-shared";
+import { BaseScene, Constants, DamageMetadata, Ship, ShipOptions } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
 import { Animations } from "../ui-components/animations";
 
@@ -26,9 +26,6 @@ export class PlayerShip extends Ship {
         scene.load.image('engine-3', `${environment.baseUrl}/assets/sprites/ship-parts/engine-3.png`);
         scene.load.image('minimap-player', `${environment.baseUrl}/assets/sprites/minimap-player.png`);
         scene.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
-        // TODO: move to Engine attachment
-        scene.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
-        scene.load.audio('booster-fire', `${environment.baseUrl}/assets/audio/effects/booster-fire.ogg`);
     }
 
     constructor(scene: BaseScene, options: ShipOptions) {
@@ -50,8 +47,8 @@ export class PlayerShip extends Ship {
         }
     }
 
-    override sustainDamage(damageOpts: DamageOptions): void {
-        super.sustainDamage(damageOpts);
+    override subtractIntegrity(amount: number, damageOpts: DamageMetadata): void {
+        super.subtractIntegrity(amount, damageOpts);
 
         if (this.active) {
             // keep the health bar visible by killing any active fade out tweens
@@ -67,14 +64,14 @@ export class PlayerShip extends Ship {
         }
     }
 
-    override repair(amount: number): void {
-        super.repair(amount);
+    override addIntegrity(amount: number): void {
+        super.addIntegrity(amount);
 
         this._updateIntegrityIndicator();
     }
 
     private _addVisualsToGameObject(options: ShipOptions): void {
-        this.positionContainer.setDepth(Constants.UI.Layers.PLAYER);
+        this.setDepth(Constants.UI.Layers.PLAYER);
 
         // create ship sprite and set container bounds based on sprite size
         const weaponsSprite = this.scene.make.sprite({
@@ -124,7 +121,7 @@ export class PlayerShip extends Ship {
             y: 30 // under the ship
         });
         txt.setX(-(txt.width / 2));
-        this.positionContainer.add(txt);
+        this.add(txt);
     }
 
     private _createIntegrityIndicator(): void {
@@ -137,14 +134,14 @@ export class PlayerShip extends Ship {
             backgroundStyles: {fillStyle: {color: 0xffffff}}
         });
         this._shipIntegrityIndicator.setAlpha(0); // only visible when damage sustained
-        this.positionContainer.add(this._shipIntegrityIndicator);
+        this.add(this._shipIntegrityIndicator);
     }
 
     private _createHeatIndicator(): void {
         this._shipHeatIndicator = this.scene.add.sprite(0, 0, 'overheat-glow');
         this._shipHeatIndicator.setAlpha(0); // no heat
-        this.positionContainer.add(this._shipHeatIndicator);
-        this.positionContainer.sendToBack(this._shipHeatIndicator);
+        this.add(this._shipHeatIndicator);
+        this.sendToBack(this._shipHeatIndicator);
         this.scene.tweens.add({
             targets: this._shipHeatIndicator,
             scale: 1.05,
@@ -159,7 +156,7 @@ export class PlayerShip extends Ship {
         this._shipOverheatIndicator = this.scene.add.text(0, -75, 'OVERHEAT', {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4});
         this._shipOverheatIndicator.setAlpha(0);
         this._shipOverheatIndicator.setX(-this._shipOverheatIndicator.width / 2);
-        this.positionContainer.add(this._shipOverheatIndicator);
+        this.add(this._shipOverheatIndicator);
     }
 
     private _createRadarSprite(): void {
@@ -168,7 +165,7 @@ export class PlayerShip extends Ship {
             y: 0,
             key: 'minimap-player'
         }, true);
-        this.positionContainer.add(this._radarSprite)
+        this.add(this._radarSprite)
             .bringToTop(this._radarSprite);
     }
 
@@ -180,7 +177,7 @@ export class PlayerShip extends Ship {
             style: {font: '30px Courier', color: '#ffff00', stroke: '#ff0000', strokeThickness: 4}
         }).setAlpha(0);
         this._selfDestructText.setX(-this._selfDestructText.width / 2);
-        this.positionContainer.add(this._selfDestructText);
+        this.add(this._selfDestructText);
     }
 
     /**
@@ -193,7 +190,7 @@ export class PlayerShip extends Ship {
             const alpha = this.temperature / Constants.Ship.MAX_SAFE_TEMPERATURE;
             this._shipHeatIndicator.setAlpha(Math.min(alpha, 1));
             
-            if (this.isOverheating()) {
+            if (this.isOverheating) {
                 if (!this.scene.tweens.getTweensOf(this._shipOverheatIndicator)?.length) {
                     this._shipOverheatIndicator.setAlpha(1);
                     this.scene.tweens.add({

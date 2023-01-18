@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, Constants, Helpers, GameLevelOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply } from "space-sim-shared";
+import { GameLevel, Constants, Helpers, GameLevelOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -16,8 +16,9 @@ import { Animations } from "../ui-components/animations";
 import { MultiplayerHudSceneConfig } from "./multiplayer-hud-scene";
 import { GameOverSceneConfig } from "./game-over-scene";
 import { UiExploder } from "../ui-components/ui-exploder";
-import { PlayerBulletFactory } from "../ships/attachments/offence/player-bullet-factory";
 import { PlayerBullet } from "../ships/attachments/offence/player-bullet";
+import { PlayerEngine } from "../ships/attachments/utility/player-engine";
+import { PlayerMachineGun } from "../ships/attachments/offence/player-machine-gun";
 
 export const MultiplayerSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -32,7 +33,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: UiExploder;
-    private _bulletFactory: PlayerBulletFactory;
     private _disconnectTimer: number;
     private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
@@ -93,6 +93,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     preload(): void {
         PlayerShip.preload(this);
+        PlayerEngine.preload(this);
         StellarBody.preload(this);
         UiExploder.preload(this);
         PlayerBullet.preload(this);
@@ -118,7 +119,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this._stellarBodies = new Array<StellarBody>();
 
         this._exploder = new UiExploder(this);
-        this._bulletFactory = new PlayerBulletFactory(this);
 
         // disable camera until we have our ship
         this.cameras.main.fadeOut(0, 0, 0, 0);
@@ -203,7 +203,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         return this;
     }
 
-    public override queueShipUpdates<T extends Partial<ShipOptions>>(opts: T[]): BaseScene {
+    public override queueShipUpdates<T extends ShipConfig>(opts: T[]): BaseScene {
         this._updateShipsQueue.splice(this._updateShipsQueue.length, 0, ...opts);
         return this;
     }
@@ -290,7 +290,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     .filter(p => p != null)
             ],
             backgroundColor: 0x000000,
-            followObject: this._ships.get(SpaceSimClient.playerShipId)?.getGameObject()
+            followObject: this._ships.get(SpaceSimClient.playerShipId)
         });
         this._camera.cam.fadeIn(1000, 255, 255, 255);
     }
@@ -315,7 +315,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 ...this._stellarBodies.map(b => b.getGameObject()),
                 this.getLevel().getGameObject()
             ],
-            followObject: this._ships.get(SpaceSimClient.playerShipId)?.getGameObject()
+            followObject: this._ships.get(SpaceSimClient.playerShipId)
         });
     }
 
@@ -332,7 +332,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         const activeShips = this.getShips().filter(s => s.active);
         for (let activeShip of activeShips) {
             if (ship.id !== activeShip.id) {
-                this.physics.add.collider(ship.getGameObject(), activeShip.getGameObject());
+                this.physics.add.collider(ship, activeShip);
             }
         }
     }
@@ -370,11 +370,11 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     }
                     ship = new PlayerShip(this, {
                         ...o,
-                        exploder: this._exploder,
-                        bulletFactory: this._bulletFactory
+                        engine: PlayerEngine,
+                        weapon: PlayerMachineGun
                     });
                     this._ships.set(o.id, ship);
-                    this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
+                    this.physics.add.collider(ship, this.getLevel().getGameObject());
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
                     Helpers.trycatch(() => this._camera?.ignore(ship.radarSprite), 'none');
                 }

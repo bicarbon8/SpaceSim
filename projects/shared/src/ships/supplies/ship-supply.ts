@@ -1,4 +1,3 @@
-import { ShipLike } from "../../interfaces/ship-like";
 import { Constants } from "../../utilities/constants";
 import { IsConfigurable } from "../../interfaces/is-configurable";
 import { PhysicsObject } from "../../interfaces/physics-object";
@@ -19,7 +18,9 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
     private _amount: number;
     private _type: SupplyType;
 
-    public scene: BaseScene;
+    // override property types
+    public scene: BaseScene
+    public body: Phaser.Physics.Arcade.Body;
     
     constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options.location.x, options.location.y);
@@ -28,9 +29,9 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         const radius = Constants.Ship.Supplies.RADIUS;
         this.setSize(radius * 2, radius * 2);
         this.scene.physics.add.existing(this);
-        this._body.setMass(Constants.Ship.Supplies.MASS);
-        this._body.setCircle(radius);
-        this._body.setBounce(Constants.Ship.Supplies.BOUNCE, Constants.Ship.Supplies.BOUNCE);
+        this.body.setMass(Constants.Ship.Supplies.MASS);
+        this.body.setCircle(radius);
+        this.body.setBounce(Constants.Ship.Supplies.BOUNCE, Constants.Ship.Supplies.BOUNCE);
 
         this.configure(options);
     }
@@ -41,9 +42,9 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
             amount: this.amount,
             supplyType: this.supplyType,
             location: {x: this.x, y: this.y},
-            velocity: {x: this._body?.velocity?.x ?? 0, y: this._body?.velocity?.y ?? 0},
+            velocity: {x: this.body?.velocity?.x ?? 0, y: this.body?.velocity?.y ?? 0},
             angle: this.angle,
-            angularVelocity: this._body?.angularVelocity
+            angularVelocity: this.body?.angularVelocity
         };
     }
 
@@ -60,11 +61,7 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
     }
 
     get location(): Phaser.Math.Vector2 {
-        return this._body.center;
-    }
-
-    protected get _body(): Phaser.Physics.Arcade.Body {
-        return this.body as Phaser.Physics.Arcade.Body;
+        return this.body.center;
     }
 
     configure(config: ShipSupplyOptions): this {
@@ -77,10 +74,10 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         const speed = Phaser.Math.RND.realInRange(50, 200);
         const heading = Helpers.vector2(Phaser.Math.RND.realInRange(-1, 1), Phaser.Math.RND.realInRange(-1, 1));
         const velocity = config.velocity || heading.multiply({x: speed, y: speed});
-        this._body.setVelocity(velocity.x, velocity.y);
-        this._body.setAngularVelocity(config.angularVelocity ?? 0);
+        this.body.setVelocity(velocity.x, velocity.y);
+        this.body.setAngularVelocity(config.angularVelocity ?? 0);
         return this;
     }
 
-    abstract apply(ship: ShipLike): void;
+    abstract apply(ship: Ship): void;
 }

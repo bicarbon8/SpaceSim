@@ -3,20 +3,31 @@ import { Updatable } from "../../interfaces/updatable";
 import { BaseScene } from "../../scenes/base-scene";
 
 export abstract class ShipAttachment implements Updatable {
-    readonly ship: Ship;
+    public readonly scene: BaseScene;
+
+    private _ship: Ship;
+    private _enabled: boolean = false;
+
+    constructor(scene: BaseScene) {
+        this.scene = scene;
+    }
     
-    active: boolean;
-    
-    constructor(ship: Ship) {
-        this.ship = ship;
-        this.active = true;
+    get ship(): Ship {
+        return this._ship;
     }
 
-    get scene(): BaseScene {
-        return this.ship.scene;
+    setShip(s: Ship): this {
+        this._ship = s;
+        return this;
     }
 
     abstract update(time: number, delta: number): void;
 
-    abstract trigger(): void;
+    get enabled(): boolean {
+        return this._enabled;
+    }
+
+    setEnabled(enabled: boolean): void {
+        this._enabled = enabled;
+    }
 }

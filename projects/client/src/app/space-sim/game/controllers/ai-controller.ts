@@ -1,4 +1,4 @@
-import { BaseScene, Helpers, SpaceSim } from "space-sim-shared";
+import { BaseScene, Helpers } from "space-sim-shared";
 import { PlayerShip } from "../ships/player-ship";
 import { InputController } from "./input-controller";
 
@@ -28,15 +28,17 @@ export class AiController extends InputController {
 
         if (attackerId) {
             if (this._nextWeaponsFireAt == null || this._nextWeaponsFireAt <= time) {
-                this.ship.getWeapons().trigger();
+                this.ship.weapon.setEnabled(true);
                 this._nextWeaponsFireAt = time + (this.scene.getShips().length * 50);
             } else {
                 if (this._nextThrusterFireAt == null || this._nextThrusterFireAt <= time) {
-                    this.ship.getThruster().trigger();
+                    this.ship.engine.setEnabled(true);
                     this._nextThrusterFireAt = time + (this.scene.getShips().length * 10);
                 }
             }
         } else {
+            this.ship.weapon.setEnabled(false);
+            this.ship.engine.setEnabled(false);
             this._patrol();
         }
     }
@@ -46,7 +48,7 @@ export class AiController extends InputController {
     }
 
     private _patrol(): void {
-        this.ship.setRotation(this.ship.getRotation() + 1);
+        this.ship.rotationContainer.setAngle(this.ship.rotationContainer.angle + 1);
     }
 
     private _canSeePlayer(): boolean {

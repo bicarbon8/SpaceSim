@@ -1,5 +1,5 @@
 import { GameLevel, GameLevelOptions } from "../levels/game-level";
-import { Ship, ShipOptions } from "../ships/ship";
+import { Ship, ShipConfig, ShipOptions } from "../ships/ship";
 import { ShipSupply, ShipSupplyOptions } from "../ships/supplies/ship-supply";
 
 export abstract class BaseScene extends Phaser.Scene {
@@ -10,7 +10,7 @@ export abstract class BaseScene extends Phaser.Scene {
     abstract getSupplies<T extends ShipSupply>(): Array<T>;
 
     abstract queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene;
-    abstract queueShipUpdates<T extends ShipOptions>(opts: Array<T>): BaseScene;
+    abstract queueShipUpdates<T extends ShipConfig>(opts: Array<T>): BaseScene;
     abstract queueShipRemoval(...ids: Array<string>): BaseScene;
     abstract queueSupplyUpdates<T extends ShipSupplyOptions>(opts: Array<T>): BaseScene;
     abstract queueSupplyRemoval(...ids: Array<string>): BaseScene;

@@ -3,8 +3,8 @@ import Dungeon, { Room } from "@mikewesthad/dungeon";
 import { HasGameObject } from "../interfaces/has-game-object";
 import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
-import { ShipLike } from "../interfaces/ship-like";
 import { Ship } from "../ships/ship";
+import { BaseScene } from "../scenes/base-scene";
 
 export type RoomPlus = Room & {
     visible?: boolean;
@@ -24,14 +24,15 @@ export type GameLevelOptions = {
 };
 
 export class GameLevel implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
-    private _scene: Phaser.Scene;
+    public readonly scene: BaseScene;
+
     private _dungeon: Dungeon;
     private _layer: Phaser.Tilemaps.TilemapLayer;
     private _minimapLayer: Phaser.Tilemaps.TilemapLayer;
     private _tileMap: Phaser.Tilemaps.Tilemap;
 
-    constructor(scene: Phaser.Scene, options?: GameLevelOptions) {
-        this._scene = scene;
+    constructor(scene: BaseScene, options?: GameLevelOptions) {
+        this.scene = scene;
         this._createGameObj(options);
     }
 
@@ -115,11 +116,11 @@ export class GameLevel implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
         return furthest;
     }
 
-    getActiveShipsWithinRadius(ships: Array<Ship>, location: Phaser.Types.Math.Vector2Like, radius: number): Array<ShipLike> {
-        return ships
+    getActiveShipsWithinRadius(location: Phaser.Types.Math.Vector2Like, radius: number): Array<Ship> {
+        return this.scene.getShips()
             .filter(s => {
                 if (s?.active) {
-                    if (Phaser.Math.Distance.BetweenPoints(s.getLocation(), location) <= radius) {
+                    if (Phaser.Math.Distance.BetweenPoints(s.location, location) <= radius) {
                         return true;
                     }
                 }
@@ -149,7 +150,7 @@ export class GameLevel implements HasGameObject<Phaser.Tilemaps.TilemapLayer> {
             doorPadding: doorPadding
         });
 
-        this._tileMap = this._scene.make.tilemap({
+        this._tileMap = this.scene.make.tilemap({
             tileWidth: 96,
             tileHeight: 96,
             width: this._dungeon.width,

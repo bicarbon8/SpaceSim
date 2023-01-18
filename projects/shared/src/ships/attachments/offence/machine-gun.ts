@@ -1,17 +1,16 @@
-import { Ship } from "../../ship";
-import { Weapons, WeaponsOptions } from "./weapons";
+import { BaseScene } from "../../../scenes/base-scene";
+import { Weapon, WeaponOptions } from "./weapon";
 
-export class MachineGun extends Weapons {
-    constructor(ship: Ship, options: Pick<WeaponsOptions, 'exploder' | 'bulletFactory'>) {
-        super(ship, {
+export class MachineGun extends Weapon {
+    constructor(scene: BaseScene) {
+        super(scene, {
             maxAmmo: 500,
             firingDelay: 200,
             heatPerShot: 1,
             force: 1000,
             damagePerHit: 10,
-            bulletMass: 0.01,
-            bulletRadius: 5,
-            ...options
+            bulletMass: 0.1,
+            bulletRadius: 5
         });
     }
 }

@@ -39,7 +39,7 @@ export class Camera implements HasLocation {
         return this._cam;
     }
 
-    getLocationInView(): Phaser.Math.Vector2 {
+    get locationInView(): Phaser.Types.Math.Vector2Like {
         return Helpers.vector2(this._cam.x, this._cam.y);
     }
 
@@ -49,7 +49,7 @@ export class Camera implements HasLocation {
         this._cam.setPosition(loc.x, loc.y);
     }
 
-    getLocation(): Phaser.Math.Vector2 {
+    get location(): Phaser.Types.Math.Vector2Like {
         return this._cam.getWorldPoint(0, 0);
     }
 

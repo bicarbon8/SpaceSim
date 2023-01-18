@@ -1,5 +1,4 @@
 /** interfaces */
-export * from "./src/interfaces/can-shoot";
 export * from "./src/interfaces/can-target";
 export * from "./src/interfaces/game-object-plus";
 export * from "./src/interfaces/has-engine";
@@ -23,10 +22,9 @@ export * from "./src/levels/game-level";
 export * from "./src/scenes/base-scene";
 /** ships/attachments/offence */
 export * from "./src/ships/attachments/offence/bullet";
-export * from "./src/ships/attachments/offence/bullet-factory";
 export * from "./src/ships/attachments/offence/cannon";
 export * from "./src/ships/attachments/offence/machine-gun";
-export * from "./src/ships/attachments/offence/weapons";
+export * from "./src/ships/attachments/offence/weapon";
 /** ships/attachments/utility */
 export * from "./src/ships/attachments/utility/engine";
 /** ships/attachments */
@@ -39,7 +37,7 @@ export * from "./src/ships/supplies/repairs-supply";
 export * from "./src/ships/supplies/ship-supply";
 export * from "./src/ships/supplies/supply-type";
 /** ships */
-export * from "./src/ships/damage-options";
+export * from "./src/interfaces/damage-metadata";
 export * from "./src/ships/ship";
 /** utilities */
 export * from "./src/utilities/constants";

@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { Constants, Exploder, GameLevel, GameObjectPlus, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions } from "space-sim-shared";
+import { Constants, Exploder, GameLevel, GameObjectPlus, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -16,7 +16,9 @@ import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
 import { GameOverSceneConfig } from "./game-over-scene";
 import { GameplayHudSceneConfig } from "./gameplay-hud-scene";
 import { UiExploder } from "../ui-components/ui-exploder";
-import { PlayerBulletFactory } from "../ships/attachments/offence/player-bullet-factory";
+import { PlayerEngine } from "../ships/attachments/utility/player-engine";
+import { PlayerBullet } from "../ships/attachments/offence/player-bullet";
+import { PlayerMachineGun } from "../ships/attachments/offence/player-machine-gun";
 
 export const GameplaySceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -28,7 +30,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    queueShipUpdates<T extends ShipOptions>(opts: T[]): BaseScene {
+    queueShipUpdates<T extends ShipConfig>(opts: T[]): BaseScene {
         throw new Error("Method not implemented.");
     }
     queueShipRemoval(...ids: string[]): BaseScene {
@@ -52,7 +54,6 @@ export class GameplayScene extends BaseScene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: UiExploder;
-    private _bulletFactory: PlayerBulletFactory;
     private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
@@ -99,46 +100,15 @@ export class GameplayScene extends BaseScene implements Resizable {
     }
 
     preload(): void {
-        this.load.image('weapons-1', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-1.png`);
-        this.load.image('weapons-2', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-2.png`);
-        this.load.image('weapons-3', `${environment.baseUrl}/assets/sprites/ship-parts/weapons-3.png`);
-        this.load.image('wings-1', `${environment.baseUrl}/assets/sprites/ship-parts/wings-1.png`);
-        this.load.image('wings-2', `${environment.baseUrl}/assets/sprites/ship-parts/wings-2.png`);
-        this.load.image('wings-3', `${environment.baseUrl}/assets/sprites/ship-parts/wings-3.png`);
-        this.load.image('cockpit-1', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-1.png`);
-        this.load.image('cockpit-2', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-2.png`);
-        this.load.image('cockpit-3', `${environment.baseUrl}/assets/sprites/ship-parts/cockpit-3.png`);
-        this.load.image('engine-1', `${environment.baseUrl}/assets/sprites/ship-parts/engine-1.png`);
-        this.load.image('engine-2', `${environment.baseUrl}/assets/sprites/ship-parts/engine-2.png`);
-        this.load.image('engine-3', `${environment.baseUrl}/assets/sprites/ship-parts/engine-3.png`);
-        this.load.image('minimap-player', `${environment.baseUrl}/assets/sprites/minimap-player.png`);
-
-        this.load.image('overheat-glow', `${environment.baseUrl}/assets/particles/red-glow.png`);
-        this.load.spritesheet('flares', `${environment.baseUrl}/assets/particles/flares.png`, {
-            frameWidth: 130,
-            frameHeight: 132,
-            startFrame: 0,
-            endFrame: 4
-        });
-        this.load.spritesheet('asteroids', `${environment.baseUrl}/assets/tiles/asteroids-tile.png`, {
-            frameWidth: 100,
-            frameHeight: 100,
-            startFrame: 0,
-            endFrame: 63,
-            margin: 14,
-            spacing: 28
-        });
-        
-        this.load.image('explosion', `${environment.baseUrl}/assets/particles/explosion.png`);
-        this.load.image('bullet', `${environment.baseUrl}/assets/sprites/bullet.png`);
-        this.load.image('ammo', `${environment.baseUrl}/assets/sprites/ammo.png`);
-        this.load.image('fuel-canister', `${environment.baseUrl}/assets/sprites/fuel-canister.png`);
-        this.load.image('coolant-canister', `${environment.baseUrl}/assets/sprites/coolant-canister.png`);
-        this.load.image('repairs-canister', `${environment.baseUrl}/assets/sprites/repairs-canister.png`);
-
-        this.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
-        this.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
-        this.load.image('mercury', `${environment.baseUrl}/assets/backgrounds/mercury.png`);
+        PlayerShip.preload(this);
+        PlayerEngine.preload(this);
+        StellarBody.preload(this);
+        UiExploder.preload(this);
+        PlayerBullet.preload(this);
+        PlayerAmmoSupply.preload(this);
+        PlayerCoolantSupply.preload(this);
+        PlayerFuelSupply.preload(this);
+        PlayerRepairsSupply.preload(this);
 
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
 
@@ -146,11 +116,6 @@ export class GameplayScene extends BaseScene implements Resizable {
         this.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`);
         
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
-        this.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
-        this.load.audio('booster-fire', `${environment.baseUrl}/assets/audio/effects/booster-fire.ogg`);
-        this.load.audio('cannon-fire', `${environment.baseUrl}/assets/audio/effects/cannon-fire.ogg`);
-        this.load.audio('bullet-hit', `${environment.baseUrl}/assets/audio/effects/bullet-hit.ogg`);
-        this.load.audio('explosion', `${environment.baseUrl}/assets/audio/effects/ship-explosion.ogg`);
     }
 
     create(): void {
@@ -159,7 +124,6 @@ export class GameplayScene extends BaseScene implements Resizable {
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
         this._exploder = new UiExploder(this);
-        this._bulletFactory = new PlayerBulletFactory(this);
         this._createMapAndPlayer();
         this._createStellarBodiesLayer();
         this._createBackground();
@@ -186,7 +150,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             this.getShips().forEach(p => p.update(time, delta));
 
             // If the player has entered a new room, make it visible
-            const currentLoc = this.playerShip.getLocation();
+            const currentLoc = this.playerShip.location;
             const currentRoom = this.getLevel().getRoomAtWorldXY(currentLoc.x, currentLoc.y);
             this._showRoom(currentRoom);
 
@@ -213,7 +177,7 @@ export class GameplayScene extends BaseScene implements Resizable {
      * don't spend too much time and delay the calls to `scene.update`
      */
     private *_updatePhysics(): Generator<void, void, unknown> {
-        const loc = this.playerShip.getLocation();
+        const loc = this.playerShip.location;
         const {width, height} = SpaceSimClient.getSize();
         const dist = (width > height) ? width : height;
         const children = this.children.getAll();
@@ -257,11 +221,11 @@ export class GameplayScene extends BaseScene implements Resizable {
                 wingsKey: Phaser.Math.RND.between(1, 3),
                 cockpitKey: Phaser.Math.RND.between(1, 3),
                 engineKey: Phaser.Math.RND.between(1, 3),
-                exploder: this._exploder,
-                bulletFactory: this._bulletFactory
+                engine: PlayerEngine,
+                weapon: PlayerMachineGun
             });
-            p.getGameObject().setAlpha(0); // hidden until player enters room
-            this.physics.world.disable(p.getGameObject()); // disabled until player close to opponent
+            p.setAlpha(0); // hidden until player enters room
+            this.physics.world.disable(p); // disabled until player close to opponent
             let controller = new AiController(this, p);
             SpaceSimClient.opponents.push(controller);
             this._ships.set(p.id, p);
@@ -288,19 +252,19 @@ export class GameplayScene extends BaseScene implements Resizable {
             wingsKey: Phaser.Math.RND.between(1, 3),
             cockpitKey: Phaser.Math.RND.between(1, 3),
             engineKey: Phaser.Math.RND.between(1, 3),
-            exploder: this._exploder,
-            bulletFactory: this._bulletFactory
+            engine: PlayerEngine,
+            weapon: PlayerMachineGun
         });
         SpaceSimClient.playerShipId = ship.id;
         this._ships.set(ship.id, ship);
         
         // setup collision with map walls
-        this.physics.add.collider(this.playerShip.getGameObject(), this.getLevel().getGameObject());
+        this.physics.add.collider(this.playerShip, this.getLevel().getGameObject());
 
         // setup listener for player death event
         this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
             this._exploder.explode({location: shipOpts.location});
-            if (this.playerShip.id == shipOpts?.id) {
+            if (SpaceSimClient.playerShipId == shipOpts?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start(GameOverSceneConfig.key);
@@ -370,7 +334,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                     .filter(p => p != null)
             ],
             backgroundColor: 0x000000,
-            followObject: this.playerShip.getGameObject()
+            followObject: this.playerShip
         });
     }
 
@@ -394,7 +358,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 ...this._stellarBodies.map(b => b.getGameObject()),
                 this.getLevel().getGameObject()
             ],
-            followObject: this.playerShip.getGameObject()
+            followObject: this.playerShip
         });
     }
 
@@ -413,7 +377,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             const opponentsInRoom = SpaceSimClient.opponents
                 .map(o => o?.ship)
                 .filter(s => {
-                    const shipLoc = s.getLocation();
+                    const shipLoc = s.location;
                     const shipRoom = this.getLevel().getRoomAtWorldXY(shipLoc.x, shipLoc.y);
                     return shipRoom === room;
                 });
@@ -421,7 +385,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 targets: [
                     ...this.getLevel().getLayer().getTilesWithin(room.x, room.y, room.width, room.height),
                     ...this.getLevel().minimapLayer.getTilesWithin(room.x, room.y, room.width, room.height), 
-                    ...opponentsInRoom.map(o => o.getGameObject())
+                    ...opponentsInRoom
                 ],
                 alpha: 1,
                 duration: 250
@@ -429,23 +393,23 @@ export class GameplayScene extends BaseScene implements Resizable {
             // enable physics for enemies in the room
             opponentsInRoom.forEach(o => {
                 // setup collision with map walls
-                this.physics.add.collider(o.getGameObject(), this.getLevel().getGameObject());
+                this.physics.add.collider(o, this.getLevel().getGameObject());
                 // setup collision with player
-                this.physics.add.collider(o.getGameObject(), this.playerShip.getGameObject(), () => {
-                    const collisionSpeed = o.getVelocity().clone().subtract(this.playerShip.getVelocity()).length();
-                    const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
-                    o.sustainDamage({
-                        amount: damage, 
-                        timestamp: this.time.now,
-                        attackerId: this.playerShip.id,
-                        message: 'ship collision'
-                    });
-                    this.playerShip.sustainDamage({
-                        amount: damage, 
-                        timestamp: this.time.now,
-                        attackerId: o.id,
-                        message: 'ship collision'
-                    });
+                this.physics.add.collider(o, this.playerShip, () => {
+                    if (o?.active && this.playerShip?.active) {
+                        const collisionSpeed = o.body.velocity.clone().subtract(this.playerShip.body.velocity).length();
+                        const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
+                        o.subtractIntegrity(damage, {
+                            timestamp: this.time.now,
+                            attackerId: this.playerShip.id,
+                            message: 'ship collision'
+                        });
+                        this.playerShip.subtractIntegrity(damage, {
+                            timestamp: this.time.now,
+                            attackerId: o.id,
+                            message: 'ship collision'
+                        });
+                    }
                 });
             });
         }
@@ -481,7 +445,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 break;
         }
         this.physics.add.collider(supply, this.getLevel().getGameObject());
-        this.physics.add.collider(supply, this.playerShip.getGameObject(), () => {
+        this.physics.add.collider(supply, this.playerShip, () => {
                 this._supplies.delete(supply.id);
                 supply.apply(this.playerShip);
                 supply.destroy();

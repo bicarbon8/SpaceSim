@@ -162,12 +162,12 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             const info: string[] = [
                 `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
                 `Enemies: ${GameScoreTracker.destroyedCount(id)}/${SpaceSimClient.opponents.length}`,
-                `Fuel: ${this.playerShip.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${this.playerShip.getWeapons()?.remainingAmmo || 0}`,
+                `Fuel: ${this.playerShip.remainingFuel.toFixed(1)}`,
+                `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`
             ];
             if (SpaceSim.debug) {
-                const loc: Phaser.Math.Vector2 = this.playerShip.getLocation();
+                const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             this._hudText.setText(info);

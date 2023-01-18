@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { DisconnectReason } from "socket.io/dist/socket";
-import { Constants, GameStats, Helpers, Ship, ShipOptions, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { Constants, GameStats, Helpers, Ship, ShipConfig, ShipOptions, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
 import { BattleRoyaleScene } from "../scenes/battle-royale-scene";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -69,12 +69,12 @@ export class ServerSocketManager {
         return this.socketEmit(socketId, Constants.Socket.SET_PLAYER_ID, shipId);
     }
 
-    broadcastTriggerEngineEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, Constants.Socket.TRIGGER_ENGINE, shipId);
+    broadcastEnableEngineEventToRoom(socketId: string, room: string, shipId: string, enabled: boolean): this {
+        return this.socketRoomBroadcast(socketId, room, Constants.Socket.ENGINE_ENABLED, shipId, enabled);
     }
 
-    broadcastTriggerWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, Constants.Socket.TRIGGER_WEAPON, shipId);
+    broadcastEnableWeaponEventToRoom(socketId: string, room: string, shipId: string, enabled: boolean): this {
+        return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_ENABLED, shipId, enabled);
     }
 
     broadcastPlayerDeathEvent(room: string, shipId: string): this {
@@ -85,7 +85,7 @@ export class ServerSocketManager {
         return this.socketEmit(socketId, Constants.Socket.PLAYER_DEATH, shipId);
     }
 
-    sendUpdatePlayersEvent(room: string, configs: Array<Partial<ShipOptions>>): this {
+    sendUpdatePlayersEvent(room: string, configs: Array<ShipConfig>): this {
         return this.roomEmit(room, Constants.Socket.UPDATE_PLAYERS, configs);
     }
 
@@ -153,12 +153,12 @@ export class ServerSocketManager {
     private _handleSocketEvents(socketId: string, event: string, ...args: Array<any>): void {
         Helpers.trycatch(() => {
             if (SpaceSim.debug 
-                && ![Constants.Socket.SET_PLAYER_ANGLE, Constants.Socket.TRIGGER_ENGINE, Constants.Socket.TRIGGER_WEAPON]
+                && ![Constants.Socket.SET_PLAYER_ANGLE, Constants.Socket.ENGINE_ENABLED, Constants.Socket.WEAPON_ENABLED]
                     .includes(event)) {
                 console.debug(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
             }
             if (SpaceSimServer.trace 
-                && [Constants.Socket.SET_PLAYER_ANGLE, Constants.Socket.TRIGGER_ENGINE, Constants.Socket.TRIGGER_WEAPON]
+                && [Constants.Socket.SET_PLAYER_ANGLE, Constants.Socket.ENGINE_ENABLED, Constants.Socket.WEAPON_ENABLED]
                     .includes(event)) {
                 console.debug(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
             }
@@ -178,11 +178,11 @@ export class ServerSocketManager {
                 case Constants.Socket.REQUEST_SHIP:
                     this._handleRequestShipResponse(socketId, args[0]);
                     break;
-                case Constants.Socket.TRIGGER_ENGINE:
-                    this._handleTriggerEngineResponse(socketId, args[0]);
+                case Constants.Socket.ENGINE_ENABLED:
+                    this._handleEnableEngineResponse(socketId, args[0], args[1]);
                     break;
-                case Constants.Socket.TRIGGER_WEAPON:
-                    this._handleTriggerWeaponResponse(socketId, args[0]);
+                case Constants.Socket.WEAPON_ENABLED:
+                    this._handleEnableWeaponResponse(socketId, args[0], args[1]);
                     break;
                 case Constants.Socket.PLAYER_DEATH:
                     this._handlePlayerDeathEvent(socketId, args[0]);
@@ -325,23 +325,23 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleTriggerEngineResponse(socketId: string, data: SpaceSimUserData): void {
+    private _handleEnableEngineResponse(socketId: string, data: SpaceSimUserData, enabled: boolean): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const room = SpaceSimServer.users.selectFirst(data).room;
-            this.broadcastTriggerEngineEventToRoom(socketId, room, ship.id);
-            ship.getThruster().trigger();
+            this.broadcastEnableEngineEventToRoom(socketId, room, ship.id, enabled);
+            ship.engine.setEnabled(enabled);
         } else {
             this.sendPlayerDeathEvent(socketId);
         }
     }
 
-    private _handleTriggerWeaponResponse(socketId: string, data: SpaceSimUserData): void {
+    private _handleEnableWeaponResponse(socketId: string, data: SpaceSimUserData, enabled: boolean): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const room = SpaceSimServer.users.selectFirst(data).room;
-            this.broadcastTriggerWeaponEventToRoom(socketId, room, ship.id);
-            ship.getWeapons().trigger();
+            this.broadcastEnableWeaponEventToRoom(socketId, room, ship.id, enabled);
+            ship.weapon.setEnabled(enabled);
         } else {
             this.sendPlayerDeathEvent(socketId);
         }

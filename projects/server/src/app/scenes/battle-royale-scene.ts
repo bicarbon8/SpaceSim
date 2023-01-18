@@ -1,6 +1,5 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim } from "space-sim-shared";
-import { ServerBulletFactory } from "../ships/attachments/offence/server-bullet-factory";
+import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -10,7 +9,7 @@ export class BattleRoyaleScene extends BaseScene {
     override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    override queueShipUpdates<T extends ShipOptions>(opts: T[]): BaseScene {
+    override queueShipUpdates<T extends ShipConfig>(opts: T[]): BaseScene {
         throw new Error("Method not implemented.");
     }
     override queueShipRemoval(...ids: string[]): BaseScene {
@@ -56,7 +55,6 @@ export class BattleRoyaleScene extends BaseScene {
     
     private _gameLevel: GameLevel;
     private _exploder: NonUiExploder;
-    private _bulletFactory: ServerBulletFactory;
     private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
     private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
     private _ultraLowPriUpdateAt: number = Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
@@ -97,7 +95,6 @@ export class BattleRoyaleScene extends BaseScene {
 
     create(): void {
         this._exploder = new NonUiExploder(this);
-        this._bulletFactory = new ServerBulletFactory(this);
         this._createMap();
         this._setupSceneEventHandling();
     }
@@ -180,10 +177,10 @@ export class BattleRoyaleScene extends BaseScene {
             wingsKey: Phaser.Math.RND.between(1, 3),
             cockpitKey: Phaser.Math.RND.between(1, 3),
             engineKey: Phaser.Math.RND.between(1, 3),
-            exploder: this._exploder,
-            bulletFactory: this._bulletFactory
+            engine: Engine,
+            weapon: MachineGun
         });
-        this.physics.add.collider(ship.getGameObject(), this.getLevel().getGameObject());
+        this.physics.add.collider(ship, this.getLevel().getGameObject());
         this._addPlayerCollisionPhysicsWithPlayers(ship);
         this._addPlayerCollisionPhysicsWithSupplies(ship);
         if (SpaceSim.debug) {
@@ -269,8 +266,8 @@ export class BattleRoyaleScene extends BaseScene {
         const players = Array.from(this._ships.values());
         for (var i=0; i<players.length; i++) {
             const p = players[i];
-            const loc = p.getLocation();
-            const circleB = new Phaser.Geom.Circle(loc.x, loc.y, p.getGameObject().width / 2)
+            const loc = p.location;
+            const circleB = new Phaser.Geom.Circle(loc.x, loc.y, p.width / 2);
             const occupied = Phaser.Geom.Intersects.CircleToCircle(circleA, circleB);
             if (occupied) {
                 console.debug(`[${Date.now()}]: location collides with existing player: `, location);
@@ -315,7 +312,7 @@ export class BattleRoyaleScene extends BaseScene {
             this.physics.add.collider(supply, this.getLevel().getGameObject());
             const activeShips = this.getShips().filter(p => p?.active);
             for (let activeShip of activeShips) {
-                this.physics.add.collider(supply, activeShip.getGameObject(), () => {
+                this.physics.add.collider(supply, activeShip, () => {
                         this.queueSupplyRemoval(supply.id);
                         supply.apply(activeShip);
                     }
@@ -328,24 +325,19 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     private _addPlayerCollisionPhysicsWithSupplies(ship: Ship): void {
-        this.physics.add.collider(ship.getGameObject(), this.getSupplies().filter(p => p?.active), 
-            (obj1, obj2) => {
-                let supply: ShipSupply;
-                if (obj1 === ship.getGameObject()) {
-                    supply = obj2 as ShipSupply;
-                } else {
-                    supply = obj1 as ShipSupply;
-                }
-                SpaceSimServer.io.sendRemoveSuppliesEvent(supply.id);
-                this._supplies.delete(supply.id);
-                supply.apply(ship);
-                supply.destroy();
+        this.physics.add.collider(ship, this.getSupplies().filter(p => p?.active), 
+            (shipGameObj, supplyGameObj) => {
+                const s: ShipSupply = supplyGameObj as ShipSupply;
+                SpaceSimServer.io.sendRemoveSuppliesEvent(s.id);
+                this._supplies.delete(s.id);
+                s.apply(ship);
+                s.destroy();
             }
         );
     }
 
     private _addPlayerCollisionPhysicsWithPlayers(ship: Ship): void {
-        this.physics.add.collider(ship.getGameObject(), this.getShips().map(p => p?.getGameObject()));
+        this.physics.add.collider(ship, this.getShips());
     }
 
     /**

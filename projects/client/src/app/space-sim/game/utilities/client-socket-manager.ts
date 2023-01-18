@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
-import { BaseScene, Constants, GameLevelOptions, GameScoreTracker, GameStats, Helpers, ShipOptions, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { BaseScene, Constants, GameLevelOptions, GameScoreTracker, GameStats, Helpers, ShipConfig, ShipOptions, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
 import { MultiplayerSceneConfig } from "../scenes/multiplayer-scene";
 import { SetNameSceneConfig } from "../scenes/set-name-scene";
 import { SpaceSimClient } from "../space-sim-client";
@@ -76,13 +76,13 @@ export class ClientSocketManager {
         return this;
     }
 
-    sendTriggerEngineRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.TRIGGER_ENGINE, data);
+    sendEnableEngineRequest(data: SpaceSimUserData, enabled: boolean): this {
+        this._emit(Constants.Socket.ENGINE_ENABLED, data, enabled);
         return this;
     }
 
-    sendTriggerWeaponRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.TRIGGER_WEAPON, data);
+    sendEnableWeaponRequest(data: SpaceSimUserData, enabled: boolean): this {
+        this._emit(Constants.Socket.WEAPON_ENABLED, data, enabled);
         return this;
     }
 
@@ -133,11 +133,11 @@ export class ClientSocketManager {
                     case Constants.Socket.SET_PLAYER_ID:
                         this._handleSetPlayerIdEvent(args[0]);
                         break;
-                    case Constants.Socket.TRIGGER_ENGINE:
-                        this._handleTriggerEngineEvent(args[0]);
+                    case Constants.Socket.ENGINE_ENABLED:
+                        this._handleEnableEngineEvent(args[0], args[1]);
                         break;
-                    case Constants.Socket.TRIGGER_WEAPON:
-                        this._handleTriggerWeaponEvent(args[0]);
+                    case Constants.Socket.WEAPON_ENABLED:
+                        this._handleEnableWeaponEvent(args[0], args[1]);
                         break;
                     default:
                         console.warn(`[${Date.now()}]: unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
@@ -218,7 +218,7 @@ export class ClientSocketManager {
         }
     }
 
-    private _handleUpdatePlayersEvent(opts: Array<ShipOptions>): void {
+    private _handleUpdatePlayersEvent(opts: Array<ShipConfig>): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
@@ -267,22 +267,22 @@ export class ClientSocketManager {
         }
     }
 
-    private _handleTriggerEngineEvent(id: string): void {
+    private _handleEnableEngineEvent(id: string, enabled: boolean): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             const ship = scene?.getShip(id);
             if (ship) {
-                ship.getThruster().trigger();
+                ship.engine.setEnabled(enabled);
             }
         }
     }
 
-    private _handleTriggerWeaponEvent(id: string): void {
+    private _handleEnableWeaponEvent(id: string, enabled: boolean): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             const ship = scene?.getShip(id);
             if (ship) {
-                ship.getWeapons().trigger();
+                ship.weapon.setEnabled(enabled);
             }
         }
     }
