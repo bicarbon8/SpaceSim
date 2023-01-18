@@ -1,4 +1,4 @@
-import { ShipOptions } from "../ships/ship";
+import { ShipConfig, ShipOptions } from "../ships/ship";
 import { SpaceSim } from "../space-sim";
 import { Constants } from "./constants";
 import { Helpers } from "./helpers";
@@ -39,7 +39,7 @@ export type UserScore = {
 export module GameScoreTracker {
     const _stats = new Map<string, Partial<GameStats>>();
 
-    export function start(opts: Partial<ShipOptions>): void {
+    export function start(opts: ShipConfig): void {
         if (opts) {
             GameScoreTracker.stop(opts.id);
             GameScoreTracker.updateStats(opts.id, {

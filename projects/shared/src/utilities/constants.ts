@@ -67,7 +67,9 @@ export module Constants {
         export const COMMAND_PLAYER = 'player-command';
         export const PLAYER_DEATH = 'player-death';
         export const ENGINE_ENABLED = 'engine-enabled';
+        export const ENGINE_DISABLED = 'engine-disabled';
         export const WEAPON_ENABLED = 'weapon-enabled';
+        export const WEAPON_DISABLED = 'weapon-disabled';
         export const SET_PLAYER_ANGLE = 'set-player-angle';
         export const UPDATE_SUPPLIES = 'update-supplies';
         export const FLICKER_SUPPLIES = 'flicker-supplies';

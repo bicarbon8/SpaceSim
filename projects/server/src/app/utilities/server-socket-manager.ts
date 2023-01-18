@@ -69,12 +69,20 @@ export class ServerSocketManager {
         return this.socketEmit(socketId, Constants.Socket.SET_PLAYER_ID, shipId);
     }
 
-    broadcastEnableEngineEventToRoom(socketId: string, room: string, shipId: string, enabled: boolean): this {
-        return this.socketRoomBroadcast(socketId, room, Constants.Socket.ENGINE_ENABLED, shipId, enabled);
+    broadcastEnableEngineEventToRoom(socketId: string, room: string, shipId: string): this {
+        return this.socketRoomBroadcast(socketId, room, Constants.Socket.ENGINE_ENABLED, shipId);
     }
 
-    broadcastEnableWeaponEventToRoom(socketId: string, room: string, shipId: string, enabled: boolean): this {
-        return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_ENABLED, shipId, enabled);
+    broadcastDisableEngineEventToRoom(socketId: string, room: string, shipId: string): this {
+        return this.socketRoomBroadcast(socketId, room, Constants.Socket.ENGINE_DISABLED, shipId);
+    }
+
+    broadcastEnableWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
+        return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_ENABLED, shipId);
+    }
+
+    broadcastDisableWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
+        return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_DISABLED, shipId);
     }
 
     broadcastPlayerDeathEvent(room: string, shipId: string): this {
@@ -143,7 +151,9 @@ export class ServerSocketManager {
                 this._connections++;
                 console.info(`[${Date.now()}]: new socket connection: '${socket.id}' from '${socket.request.connection.remoteAddress}'`);
                 // TODO: add measures to prevent abuse
-                socket.onAny((event: string, ...args: Array<any>) => {
+                socket.once('disconnect', (reason: DisconnectReason) => {
+                    this._handleDisconnectEvent(socket.id, reason)
+                }).onAny((event: string, ...args: Array<any>) => {
                     this._handleSocketEvents(socket.id, event, ...args);
                 });
             });
@@ -164,7 +174,9 @@ export class ServerSocketManager {
             }
             switch(event) {
                 case 'disconnect':
-                    this._handleDisconnectEvent(socketId, args[0]);
+                    if (SpaceSim.debug) {
+                        console.debug(`[${Date.now()}]: disconnect event received in 'onAny' handler`);
+                    }
                     break;
                 case Constants.Socket.SET_PLAYER_DATA:
                     this._handleSetPlayerDataEvent(socketId, args[0]);
@@ -179,10 +191,16 @@ export class ServerSocketManager {
                     this._handleRequestShipResponse(socketId, args[0]);
                     break;
                 case Constants.Socket.ENGINE_ENABLED:
-                    this._handleEnableEngineResponse(socketId, args[0], args[1]);
+                    this._handleEnableEngineResponse(socketId, args[0]);
+                    break;
+                case Constants.Socket.ENGINE_DISABLED:
+                    this._handleDisableEngineResponse(socketId, args[0]);
                     break;
                 case Constants.Socket.WEAPON_ENABLED:
-                    this._handleEnableWeaponResponse(socketId, args[0], args[1]);
+                    this._handleEnableWeaponResponse(socketId, args[0]);
+                    break;
+                case Constants.Socket.WEAPON_DISABLED:
+                    this._handleDisableWeaponResponse(socketId, args[0]);
                     break;
                 case Constants.Socket.PLAYER_DEATH:
                     this._handlePlayerDeathEvent(socketId, args[0]);
@@ -325,23 +343,45 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleEnableEngineResponse(socketId: string, data: SpaceSimUserData, enabled: boolean): void {
+    private _handleEnableEngineResponse(socketId: string, data: SpaceSimUserData): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const room = SpaceSimServer.users.selectFirst(data).room;
-            this.broadcastEnableEngineEventToRoom(socketId, room, ship.id, enabled);
-            ship.engine.setEnabled(enabled);
+            this.broadcastEnableEngineEventToRoom(socketId, room, ship.id);
+            ship.engine.setEnabled(true);
         } else {
             this.sendPlayerDeathEvent(socketId);
         }
     }
 
-    private _handleEnableWeaponResponse(socketId: string, data: SpaceSimUserData, enabled: boolean): void {
+    private _handleDisableEngineResponse(socketId: string, data: SpaceSimUserData): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const room = SpaceSimServer.users.selectFirst(data).room;
-            this.broadcastEnableWeaponEventToRoom(socketId, room, ship.id, enabled);
-            ship.weapon.setEnabled(enabled);
+            this.broadcastDisableEngineEventToRoom(socketId, room, ship.id);
+            ship.engine.setEnabled(false);
+        } else {
+            this.sendPlayerDeathEvent(socketId);
+        }
+    }
+
+    private _handleEnableWeaponResponse(socketId: string, data: SpaceSimUserData): void {
+        const ship = this._getShipFromUserData(data);
+        if (ship) {
+            const room = SpaceSimServer.users.selectFirst(data).room;
+            this.broadcastEnableWeaponEventToRoom(socketId, room, ship.id);
+            ship.weapon.setEnabled(true);
+        } else {
+            this.sendPlayerDeathEvent(socketId);
+        }
+    }
+
+    private _handleDisableWeaponResponse(socketId: string, data: SpaceSimUserData): void {
+        const ship = this._getShipFromUserData(data);
+        if (ship) {
+            const room = SpaceSimServer.users.selectFirst(data).room;
+            this.broadcastDisableWeaponEventToRoom(socketId, room, ship.id);
+            ship.weapon.setEnabled(false);
         } else {
             this.sendPlayerDeathEvent(socketId);
         }

@@ -95,11 +95,19 @@ export class KbmController extends InputController {
             }
             if (this._engineStateChanged) {
                 this._engineStateChanged = false;
-                SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData, this.ship?.engine?.enabled);
+                if (this.ship?.engine?.enabled) {
+                    SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData);
+                } else {
+                    SpaceSimClient.socket?.sendDisableEngineRequest(SpaceSimClient.playerData);
+                }
             }
             if (this._weaponStateChanged) {
                 this._weaponStateChanged = false;
-                SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData, this.ship?.weapon?.enabled);
+                if (this.ship?.weapon?.enabled) {
+                    SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData);
+                } else {
+                    SpaceSimClient.socket?.sendDisableWeaponRequest(SpaceSimClient.playerData);
+                }
             }
         }
     }
