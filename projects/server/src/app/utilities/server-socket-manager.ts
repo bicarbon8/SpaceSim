@@ -85,12 +85,16 @@ export class ServerSocketManager {
         return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_DISABLED, shipId);
     }
 
-    broadcastPlayerDeathEvent(room: string, shipId: string): this {
-        return this.roomEmit(room, Constants.Socket.PLAYER_DEATH, shipId);
+    sendShipDestroyedEventToRoom(room: string, shipId: string): this {
+        return this.roomEmit(room, Constants.Socket.SHIP_DESTROYED, shipId);
     }
 
-    sendPlayerDeathEvent(socketId: string, shipId?: string): this {
-        return this.socketEmit(socketId, Constants.Socket.PLAYER_DEATH, shipId);
+    /**
+     * sent when a socket attempts to reconnect and their ship no longer
+     * exists to let them know they should go to game over
+     */
+    sendShipDestroyedEventToSocket(socketId: string): this {
+        return this.socketEmit(socketId, Constants.Socket.SHIP_DESTROYED);
     }
 
     sendUpdatePlayersEvent(room: string, configs: Array<ShipConfig>): this {
@@ -202,8 +206,8 @@ export class ServerSocketManager {
                 case Constants.Socket.WEAPON_DISABLED:
                     this._handleDisableWeaponResponse(socketId, args[0]);
                     break;
-                case Constants.Socket.PLAYER_DEATH:
-                    this._handlePlayerDeathEvent(socketId, args[0]);
+                case Constants.Socket.SHIP_DESTROYED:
+                    this._handleShipDestroyedEvent(socketId, args[0]);
                     break;
                 case Constants.Socket.SET_PLAYER_ANGLE:
                     this._handleSetPlayerAngleEvent(socketId, args[0], args[1]);
@@ -350,7 +354,7 @@ export class ServerSocketManager {
             this.broadcastEnableEngineEventToRoom(socketId, room, ship.id);
             ship.engine.setEnabled(true);
         } else {
-            this.sendPlayerDeathEvent(socketId);
+            this.sendShipDestroyedEventToSocket(socketId);
         }
     }
 
@@ -361,7 +365,7 @@ export class ServerSocketManager {
             this.broadcastDisableEngineEventToRoom(socketId, room, ship.id);
             ship.engine.setEnabled(false);
         } else {
-            this.sendPlayerDeathEvent(socketId);
+            this.sendShipDestroyedEventToSocket(socketId);
         }
     }
 
@@ -372,7 +376,7 @@ export class ServerSocketManager {
             this.broadcastEnableWeaponEventToRoom(socketId, room, ship.id);
             ship.weapon.setEnabled(true);
         } else {
-            this.sendPlayerDeathEvent(socketId);
+            this.sendShipDestroyedEventToSocket(socketId);
         }
     }
 
@@ -383,11 +387,11 @@ export class ServerSocketManager {
             this.broadcastDisableWeaponEventToRoom(socketId, room, ship.id);
             ship.weapon.setEnabled(false);
         } else {
-            this.sendPlayerDeathEvent(socketId);
+            this.sendShipDestroyedEventToSocket(socketId);
         }
     }
 
-    private _handlePlayerDeathEvent(socketId: string, data: SpaceSimUserData): void {
+    private _handleShipDestroyedEvent(socketId: string, data: SpaceSimUserData): void {
         const user = SpaceSimServer.users.selectFirst(data);
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
@@ -410,7 +414,7 @@ export class ServerSocketManager {
             const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
             ship.rotationContainer.setAngle(d);
         } else {
-            this.sendPlayerDeathEvent(socketId);
+            this.sendShipDestroyedEventToSocket(socketId);
         }
     }
 

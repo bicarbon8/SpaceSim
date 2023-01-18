@@ -1,4 +1,4 @@
-import { ShipOptions } from "../ships/ship";
+import { ShipConfig, ShipOptions } from "../ships/ship";
 import { ShipSupplyOptions } from "../ships/supplies/ship-supply";
 import { Constants } from "./constants";
 import { Helpers } from "./helpers";
@@ -17,7 +17,7 @@ export abstract class Exploder {
 
     abstract explode(options: ExploderOptions): this;
 
-    emitSupplies(shipOpts: Partial<ShipOptions>): Array<ShipSupplyOptions> {
+    emitSupplies(shipOpts: ShipConfig): Array<ShipSupplyOptions> {
         const supplies = new Array<ShipSupplyOptions>();
         const loc = shipOpts.location;
         let remainingFuel = shipOpts.remainingFuel / 2;

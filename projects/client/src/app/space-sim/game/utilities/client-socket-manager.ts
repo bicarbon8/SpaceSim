@@ -67,7 +67,7 @@ export class ClientSocketManager {
     }
 
     sendPlayerDeathNotice(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.PLAYER_DEATH, data);
+        this._emit(Constants.Socket.SHIP_DESTROYED, data);
         return this;
     }
 
@@ -136,7 +136,7 @@ export class ClientSocketManager {
                     case Constants.Socket.UPDATE_PLAYERS:
                         this._handleUpdatePlayersEvent(args[0]);
                         break;
-                    case Constants.Socket.PLAYER_DEATH:
+                    case Constants.Socket.SHIP_DESTROYED:
                         this._handlePlayerDeathEvent(args[0]);
                         break;
                     case Constants.Socket.UPDATE_STATS:

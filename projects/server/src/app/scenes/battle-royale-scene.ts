@@ -217,8 +217,11 @@ export class BattleRoyaleScene extends BaseScene {
 
     private _setupSceneEventHandling(): void {
         // setup listener for player death event (sent from ship.destroy())
-        this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
-            this.queueShipRemoval(shipOpts.id);
+        this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+            if (SpaceSim.debug) {
+                console.debug(`[${Date.now()}]: received '${Constants.Events.SHIP_DEATH}' event in scene`);
+            }
+            this.queueShipRemoval(cfg.id);
         });
     }
 
@@ -228,11 +231,11 @@ export class BattleRoyaleScene extends BaseScene {
         this._gameLevel = map;
     }
 
-    private _removeShip(opts: Partial<ShipOptions>): void {
+    private _removeShip(opts: ShipConfig): void {
         if (SpaceSim.debug) {
             console.debug(`[${Date.now()}]: emitting player death event to room '${this.ROOM_NAME}' for ship '${opts.id}' with name: '${opts.name}'...`);
         }
-        SpaceSimServer.io.broadcastPlayerDeathEvent(this.ROOM_NAME, opts.id);
+        SpaceSimServer.io.sendShipDestroyedEventToRoom(this.ROOM_NAME, opts.id);
 
         if (this._ships.has(opts.id)) {
             // prevent further updates to ship
@@ -276,7 +279,7 @@ export class BattleRoyaleScene extends BaseScene {
         return false;
     }
 
-    private _expelSupplies(shipCfg: Partial<ShipOptions>): void {
+    private _expelSupplies(shipCfg: ShipConfig): void {
         console.debug(`[${Date.now()}]: expelling supplies at:`, shipCfg.location);
         const supplyOpts = this._exploder.emitSupplies(shipCfg);
         const supplies = this._addSupplyCollisionPhysics(...supplyOpts);

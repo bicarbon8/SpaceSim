@@ -50,7 +50,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _shouldShowHud = false;
     private _shouldEndScene = false;
 
-    private readonly _updateShipsQueue = new Array<Partial<ShipOptions>>();
+    private readonly _updateShipsQueue = new Array<ShipConfig>();
     private readonly _removeShipsQueue = new Array<string>();
     private readonly _updateSuppliesQueue = new Array<ShipSupplyOptions>();
     private readonly _flickerSuppliesQueue = new Array<string>();
@@ -215,8 +215,8 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     private async _getPlayerFromServer(): Promise<void> {
         // handle case of client self destruct by notifying server of our destruction
-        this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
-            if (shipOpts.id === SpaceSimClient.playerShipId) {
+        this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+            if (cfg.id === SpaceSimClient.playerShipId) {
                 SpaceSimClient.socket?.sendPlayerDeathNotice(SpaceSimClient.playerData);
             }
         });

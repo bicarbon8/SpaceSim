@@ -345,7 +345,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
     death(emit: boolean = true): void {
         if (this.active) {
             if (emit) {
-                this.scene.events.emit(Constants.Events.PLAYER_DEATH, this.config);
+                this.scene.events.emit(Constants.Events.SHIP_DEATH, this.config);
             }
 
             Helpers.trycatch(() => {
@@ -380,7 +380,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
      */
     private _updateLastDamagedBy(damageOpts: DamageMetadata): void {
         this._lastDamagedBy.push(damageOpts);
-        if (this._lastDamagedBy.length > 5) {
+        while (this._lastDamagedBy.length > 5) {
             this._lastDamagedBy.shift();
         }
     }

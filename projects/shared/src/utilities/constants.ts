@@ -52,7 +52,7 @@ export module Constants {
         }
     }
     export module Events {
-        export const PLAYER_DEATH: string = 'player-death';
+        export const SHIP_DEATH: string = 'ship-death';
     }
     export module Socket {
         export const MAX_USERS_PER_ROOM = 50;
@@ -65,7 +65,7 @@ export module Constants {
         export const SET_PLAYER_ID = 'set-player-id';
         export const UPDATE_PLAYERS = 'update-players';
         export const COMMAND_PLAYER = 'player-command';
-        export const PLAYER_DEATH = 'player-death';
+        export const SHIP_DESTROYED = 'ship-destroyed';
         export const ENGINE_ENABLED = 'engine-enabled';
         export const ENGINE_DISABLED = 'engine-disabled';
         export const WEAPON_ENABLED = 'weapon-enabled';
