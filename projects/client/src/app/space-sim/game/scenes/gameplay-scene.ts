@@ -262,9 +262,9 @@ export class GameplayScene extends BaseScene implements Resizable {
         this.physics.add.collider(this.playerShip, this.getLevel().getGameObject());
 
         // setup listener for player death event
-        this.events.on(Constants.Events.PLAYER_DEATH, (shipOpts: ShipOptions) => {
-            this._exploder.explode({location: shipOpts.location});
-            if (SpaceSimClient.playerShipId == shipOpts?.id) {
+        this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+            this._exploder.explode({location: cfg?.location});
+            if (SpaceSimClient.playerShipId == cfg?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
                     if (progress === 1) {
                         this.game.scene.start(GameOverSceneConfig.key);
@@ -273,9 +273,9 @@ export class GameplayScene extends BaseScene implements Resizable {
                     }
                 });
             } else {
-                this._expelSupplies(shipOpts);
+                this._expelSupplies(cfg);
             }
-            this._ships.delete(shipOpts?.id);
+            this._ships.delete(cfg?.id);
         });
     }
 
@@ -415,7 +415,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         }
     }
 
-    private _expelSupplies(shipCfg: ShipOptions): void {
+    private _expelSupplies(shipCfg: ShipConfig): void {
         const supplyOpts = this._exploder.emitSupplies(shipCfg);
         for (var i=0; i<supplyOpts.length; i++) {
             let options = supplyOpts[i];

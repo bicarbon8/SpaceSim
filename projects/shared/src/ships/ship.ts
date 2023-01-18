@@ -309,7 +309,6 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
         if (this.integrity <= 0) {
             this._integrity = 0;
             this.death(); // we are dead
-            return;
         }
     }
 
@@ -338,7 +337,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
 
     /**
      * removes this ship the physics simulation
-     * @param emit a boolean indicating if a `PLAYER_DEATH` event should be emitted
+     * @param emit a boolean indicating if a `SHIP_DEATH` event should be emitted
      * to the scene
      * @default true
      */
