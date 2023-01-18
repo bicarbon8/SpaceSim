@@ -395,13 +395,13 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 const ship = this._ships.get(id);
                 if (ship) {
                     if (SpaceSim.debug) {
-                        console.debug(`removing ship '${ship.id}'`);
+                        console.debug(`removing ship '${id}'`);
                     }
-                    this._exploder.explode({location: ship.config.location});
-                    ship.destroy(false);
-                    this._ships.delete(ship.id);
+                    this._exploder.explode({location: ship.location});
+                    this._ships.delete(id);
+                    ship.destroy();
 
-                    if (SpaceSimClient.playerShipId === ship.id) {
+                    if (SpaceSimClient.playerShipId === id) {
                         console.info(`player ship removed; queuing game over...`);
                         this.queueEndScene();
                     }
