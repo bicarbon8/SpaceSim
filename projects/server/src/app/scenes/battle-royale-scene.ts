@@ -242,11 +242,11 @@ export class BattleRoyaleScene extends BaseScene {
             this._expelSupplies(opts);
 
             if (SpaceSim.debug) {
-                console.debug(`[${Date.now()}]: calling ship.destroyObjects(false) for ship: ${opts.id}, with name: ${opts.name}`);
+                console.debug(`[${Date.now()}]: calling ship.destroy() for ship: ${opts.id}, with name: ${opts.name}`);
             }
             player?.destroy();
         } else {
-            console.warn(`[${Date.now()}]: no ship with id '${opts.id}' was found.`);
+            console.warn(`[${Date.now()}]: [_removeShip] no ship with id '${opts.id}' was found.`);
         }
     }
 
