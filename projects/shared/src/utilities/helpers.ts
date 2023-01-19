@@ -198,4 +198,14 @@ export module Helpers {
         }
         return keys;
     }
+
+    /**
+     * D.T.S (Date Time String) formats the passed in date (or Date.now()) as a string
+     * @param time the time in milliseconds since the epoch @default `Date.now()`
+     * @returns a formatted string in the form of `YYYY-MM-DDTHH:mm:SS.sssZ`
+     */
+    export function dts(time?: number): string {
+        const date = new Date(time ?? Date.now());
+        return date.toISOString();
+    }
 }

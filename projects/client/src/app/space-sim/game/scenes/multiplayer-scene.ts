@@ -180,7 +180,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     resize(): void {
-        console.debug(`[${Date.now()}]: resize called; resetting width, height, background, camera and radar`);
+        console.debug(`[${Helpers.dts()}]: resize called; resetting width, height, background, camera and radar`);
         this._width = this.game.scale.displaySize.width;
         this._height = this.game.scale.displaySize.height;
         this._createBackground();
@@ -225,7 +225,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _createStellarBodiesLayer(): void {
-        console.debug(`[${Date.now()}]: creating StellarBodies...`);
+        console.debug(`[${Helpers.dts()}]: creating StellarBodies...`);
         const room: RoomPlus = this.getLevel().getRooms()[0];
         const bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 

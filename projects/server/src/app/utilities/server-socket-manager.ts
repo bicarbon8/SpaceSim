@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { DisconnectReason } from "socket.io/dist/socket";
-import { Constants, GameStats, Helpers, Ship, ShipConfig, ShipOptions, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { Constants, GameStats, Helpers, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
 import { BattleRoyaleScene } from "../scenes/battle-royale-scene";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -118,11 +118,11 @@ export class ServerSocketManager {
             const socket = this.getSocket(socketId);
             if (socket) {
                 if (SpaceSimServer.trace) {
-                    console.trace(`[${Date.now()}]: sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
+                    console.trace(`[${Helpers.dts()}]: sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
                 }
                 socket.emit(event, ...args);
             }
-        }, 'warn', `[${Date.now()}]: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Helpers.dts()}]: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
@@ -131,21 +131,21 @@ export class ServerSocketManager {
             const socket = this.getSocket(socketId);
             if (socket) {
                 if (SpaceSimServer.trace) {
-                    console.trace(`[${Date.now()}]: broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
+                    console.trace(`[${Helpers.dts()}]: broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
                 }
                 socket.broadcast.in(room).emit(event, ...args);
             }
-        }, 'warn', `[${Date.now()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Helpers.dts()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
     private roomEmit(room: string, event: string, ...args: Array<any>): this {
         Helpers.trycatch(() => {
             if (SpaceSimServer.trace) {
-                console.trace(`[${Date.now()}]: sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
+                console.trace(`[${Helpers.dts()}]: sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
             }
             this.io.in(room).emit(event, ...args);
-        }, 'warn', `[${Date.now()}]: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Helpers.dts()}]: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
@@ -153,7 +153,7 @@ export class ServerSocketManager {
         Helpers.trycatch(() => {
             this.io.on('connection', (socket: Socket) => {
                 this._connections++;
-                console.info(`[${Date.now()}]: new socket connection: '${socket.id}' from '${socket.request.connection.remoteAddress}'`);
+                console.info(`[${Helpers.dts()}]: new socket connection (#${this._connections}): '${socket.id}' from '${socket.request.connection.remoteAddress}'`);
                 // TODO: add measures to prevent abuse
                 socket.once('disconnect', (reason: DisconnectReason) => {
                     this._handleDisconnectEvent(socket.id, reason)
@@ -169,17 +169,17 @@ export class ServerSocketManager {
             if (SpaceSim.debug 
                 && ![Constants.Socket.SET_PLAYER_ANGLE]
                     .includes(event)) {
-                console.debug(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
+                console.debug(`[${Helpers.dts()}]: received '${event}' event from client '${socketId}'...`);
             }
             if (SpaceSimServer.trace 
                 && [Constants.Socket.SET_PLAYER_ANGLE]
                     .includes(event)) {
-                console.trace(`[${Date.now()}]: received '${event}' event from client '${socketId}'...`);
+                console.trace(`[${Helpers.dts()}]: received '${event}' event from client '${socketId}'...`);
             }
             switch(event) {
                 case 'disconnect':
                     if (SpaceSim.debug) {
-                        console.debug(`[${Date.now()}]: disconnect event received in 'onAny' handler`);
+                        console.debug(`[${Helpers.dts()}]: disconnect event received in 'onAny' handler`);
                     }
                     break;
                 case Constants.Socket.SET_PLAYER_DATA:
@@ -213,18 +213,18 @@ export class ServerSocketManager {
                     this._handleSetPlayerAngleEvent(socketId, args[0], args[1]);
                     break;
                 default:
-                    console.warn(`[${Date.now()}]: unknown socket event received from client '${socketId}': event '${event}', args ${JSON.stringify(args)}`);
+                    console.warn(`[${Helpers.dts()}]: unknown socket event received from client '${socketId}': event '${event}', args ${JSON.stringify(args)}`);
                     break;
             }
-        }, 'warn', `[${Date.now()}]: error handling event '${event}' with arguments: ${JSON.stringify(args)} from socket '${socketId}'`, 'all');
+        }, 'warn', `[${Helpers.dts()}]: error handling event '${event}' with arguments: ${JSON.stringify(args)} from socket '${socketId}'`, 'all');
     }
 
     private _handleDisconnectEvent(socketId: string, reason: DisconnectReason): void {
         this._disconnects++;
-        console.info(`socket: ${socketId} disconnected due to:`, reason);
+        console.info(`[${Helpers.dts()}]: socket: ${socketId} disconnected (#${this._disconnects}) due to:`, reason);
         const user = SpaceSimServer.users.selectFirst({socketId: socketId});
         if (user) {
-            console.info(`creating timeout to remove user '${JSON.stringify(user)}' in ${Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
+            console.info(`[${Helpers.dts()}]: creating timeout to remove user '${JSON.stringify(user)}' in ${Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
             this._disconnectTimers.set(SpaceSimServer.users.generateKey(user), window.setTimeout(() => {
                 SpaceSimServer.users.delete(user);
                 const scene = SpaceSim.game.scene.getScene(user.room) as BattleRoyaleScene;
@@ -249,7 +249,7 @@ export class ServerSocketManager {
     private _tryReconnectUser(socketId: string, data: SpaceSimUserData): boolean {
         const previousConnection = SpaceSimServer.users.selectFirst(data);
         if (previousConnection) {
-            console.info(`known users list updated with user '${JSON.stringify(data)}' who is reconnecting over socket '${socketId}'`);
+            console.info(`[${Helpers.dts()}]: known users list updated with user '${JSON.stringify(data)}' who is reconnecting over socket '${socketId}'`);
             // user is reconnecting...
             const updated: SpaceSimServerUserData = {
                 ...previousConnection,
@@ -273,7 +273,7 @@ export class ServerSocketManager {
         const nameInUseBy = SpaceSimServer.users.select({name: data.name}).length;
         if (nameInUseBy > 0) {
             if (SpaceSim.debug) {
-                console.debug(`name already in use so user cannot be added: ${JSON.stringify(data)}`);
+                console.debug(`[${Helpers.dts()}]: name already in use so user cannot be added: ${JSON.stringify(data)}`);
             }
             return false;
         } else {
@@ -281,7 +281,7 @@ export class ServerSocketManager {
                 ...data,
                 socketId: socketId
             });
-            console.info(`user '${JSON.stringify(data)}' added to known users over socket '${socketId}'`);
+            console.info(`[${Helpers.dts()}]: user '${JSON.stringify(data)}' added to known users over socket '${socketId}'`);
             return true;
         }
     }
@@ -291,7 +291,7 @@ export class ServerSocketManager {
         const user = SpaceSimServer.users.get(data);
         if (user) {
             if (SpaceSim.debug) {
-                console.debug(`[${Date.now()}]: attempting to add user ${JSON.stringify(user)} to a room...`);
+                console.debug(`[${Helpers.dts()}]: attempting to add user ${JSON.stringify(user)} to a room...`);
             }
             // iterate over rooms and see if any have less than max allowed players
             for (let scene of SpaceSimServer.rooms()) {
@@ -322,10 +322,10 @@ export class ServerSocketManager {
                 // TODO: add `GameLevel.config` method and use that data instead
                 this.socketEmit(socketId, Constants.Socket.UPDATE_MAP, SpaceSimServer.MAP_OPTIONS);
             } else {
-                console.warn(`[${Date.now()}]: no scene could be found matching room '${user.room}' so map data will not be sent`);
+                console.warn(`[${Helpers.dts()}]: no scene could be found matching room '${user.room}' so map data will not be sent`);
             }
         } else {
-            console.warn(`[${Date.now()}]: no user could be found using socket '${socketId}' so map data will not be sent`);
+            console.warn(`[${Helpers.dts()}]: no user could be found using socket '${socketId}' so map data will not be sent`);
         }
     }
 
@@ -336,14 +336,14 @@ export class ServerSocketManager {
             if (scene) {
                 const ship = scene.getShipByData(user) ?? scene.createShip(user);
                 if (SpaceSim.debug) {
-                    console.debug(`[${Date.now()}]: sending ship id ${ship.id} to client ${socketId}`);
+                    console.debug(`[${Helpers.dts()}]: sending ship id ${ship.id} to client ${socketId}`);
                 }
                 this.sendSetShipIdResponse(socketId, ship.id);
             } else {
-                console.warn(`[${Date.now()}]: no scene could be found matching room '${user.room}' so new ship not created`);
+                console.warn(`[${Helpers.dts()}]: no scene could be found matching room '${user.room}' so new ship not created`);
             }
         } else {
-            console.warn(`[${Date.now()}]: no user could be found using socket '${socketId}' so new ship not created`);
+            console.warn(`[${Helpers.dts()}]: no user could be found using socket '${socketId}' so new ship not created`);
         }
     }
 
@@ -401,10 +401,10 @@ export class ServerSocketManager {
                     scene.queueShipRemoval(ship.id);
                 }
             } else {
-                console.warn(`[${Date.now()}]: no scene could be found matching room '${user.room}' so player death not registered`);
+                console.warn(`[${Helpers.dts()}]: no scene could be found matching room '${user.room}' so player death not registered`);
             }
         } else {
-            console.warn(`[${Date.now()}]: no user could be found using socket '${socketId}' so player death not registered`);
+            console.warn(`[${Helpers.dts()}]: no user could be found using socket '${socketId}' so player death not registered`);
         }
     }
 
@@ -426,10 +426,10 @@ export class ServerSocketManager {
             if (scene) {
                 ship = scene.getShipByData(user);
             } else {
-                console.warn(`[${Date.now()}]: no scene containing user could be found from data '${JSON.stringify(data)}'`);
+                console.warn(`[${Helpers.dts()}]: no scene containing user could be found from data '${JSON.stringify(data)}'`);
             }
         } else {
-            console.warn(`[${Date.now()}]: no user could be found from data '${JSON.stringify(data)}'`);
+            console.warn(`[${Helpers.dts()}]: no user could be found from data '${JSON.stringify(data)}'`);
         }
         return ship;
     }
