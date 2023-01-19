@@ -1,4 +1,4 @@
-import { GameObjectPlus, HasLocation, Helpers } from "space-sim-shared";
+import { HasLocation, Helpers } from "space-sim-shared";
 
 export type CameraOptions = Phaser.Types.Math.Vector2Like & {
     camera?: Phaser.Cameras.Scene2D.Camera;
@@ -8,7 +8,7 @@ export type CameraOptions = Phaser.Types.Math.Vector2Like & {
     zoom?: number;
     backgroundColor?: string | number | Phaser.Types.Display.InputColorObject;
     alpha?: number;
-    followObject?: GameObjectPlus;
+    followObject?: Phaser.GameObjects.GameObject;
     ignore?: Array<Phaser.GameObjects.GameObject>;
 };
 
@@ -81,9 +81,9 @@ export class Camera implements HasLocation {
         return this;
     }
 
-    follow(obj: GameObjectPlus): this {
+    follow(obj: Phaser.GameObjects.GameObject): this {
         if (obj) {
-            this._cam.centerOn(obj.x, obj.y)
+            this._cam.centerOn(obj['x'], obj['y'])
                 .startFollow(obj, true, 1, 1);
         }
         return this;

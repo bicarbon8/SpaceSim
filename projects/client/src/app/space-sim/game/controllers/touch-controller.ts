@@ -34,7 +34,7 @@ export class TouchController extends InputController {
         const pos: Phaser.Math.Vector2 = Helpers.vector2(x, y).subtract(Helpers.vector2(60));
         const radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
         const degrees: number = +Helpers.rad2deg(radians).toFixed(0);
-        // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
+        // Helpers.log('info', `handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
         // only update if angle changed more than minimum allowed degrees
         if (!Phaser.Math.Fuzzy.Equal(this.ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
             SpaceSimClient.socket?.sendSetShipAngleRequest(degrees, SpaceSimClient.playerData);

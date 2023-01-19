@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, Constants, Helpers, GameLevelOptions, SpaceSim, Ship, ShipOptions, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig } from "space-sim-shared";
+import { GameLevel, Constants, Helpers, GameLevelOptions, SpaceSim, Ship, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -19,6 +19,7 @@ import { UiExploder } from "../ui-components/ui-exploder";
 import { PlayerBullet } from "../ships/attachments/offence/player-bullet";
 import { PlayerEngine } from "../ships/attachments/utility/player-engine";
 import { PlayerMachineGun } from "../ships/attachments/offence/player-machine-gun";
+import { ClientGameLevel } from "../levels/client-game-level";
 
 export const MultiplayerSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -34,7 +35,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _music: Phaser.Sound.BaseSound;
     private _exploder: UiExploder;
     private _disconnectTimer: number;
-    private _gameLevel: GameLevel;
+    private _gameLevel: ClientGameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
     private _camera: Camera;
@@ -68,7 +69,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         if (!this._gameLevel) {
-            this._gameLevel = new GameLevel(this, opts);
+            this._gameLevel = new ClientGameLevel(this, opts);
             this._shouldCreateStellarBodies = true;
             this._shouldGetPlayer = true;
         }
@@ -101,12 +102,9 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         PlayerCoolantSupply.preload(this);
         PlayerFuelSupply.preload(this);
         PlayerRepairsSupply.preload(this);
+        ClientGameLevel.preload(this);
 
         this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
-
-        this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
-        this.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`);
-        
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
     }
 
@@ -180,7 +178,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     resize(): void {
-        console.debug(`[${Helpers.dts()}]: resize called; resetting width, height, background, camera and radar`);
+        Helpers.log('debug', `resize called; resetting width, height, background, camera and radar`);
         this._width = this.game.scale.displaySize.width;
         this._height = this.game.scale.displaySize.height;
         this._createBackground();
@@ -225,8 +223,8 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _createStellarBodiesLayer(): void {
-        console.debug(`[${Helpers.dts()}]: creating StellarBodies...`);
-        const room: RoomPlus = this.getLevel().getRooms()[0];
+        Helpers.log('debug', `creating StellarBodies...`);
+        const room: RoomPlus = this.getLevel().rooms[0];
         const bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
             {spriteName: 'venus', rotationSpeed: 0}, 
@@ -284,7 +282,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             name: 'main',
             zoom: zoom,
             ignore: [
-                this.getLevel().minimapLayer,
+                this.getLevel().radarLayer,
                 ...this.getShips<PlayerShip>()
                     .map(p => p.radarSprite)
                     .filter(p => p != null)
@@ -313,7 +311,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                this.getLevel().getGameObject()
+                this.getLevel().primaryLayer
             ],
             followObject: this._ships.get(SpaceSimClient.playerShipId)
         });
@@ -365,16 +363,14 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     ship.configure(o);
                 } else {
                     // or create new ship if doesn't already exist
-                    if (SpaceSim.debug) {
-                        console.debug(`creating new PlayerShip ${JSON.stringify(o)}`);
-                    }
+                    Helpers.log('debug', `creating new PlayerShip ${JSON.stringify(o)}`);
                     ship = new PlayerShip(this, {
                         ...o,
                         engine: PlayerEngine,
                         weapon: PlayerMachineGun
                     });
                     this._ships.set(o.id, ship);
-                    this.physics.add.collider(ship, this.getLevel().getGameObject());
+                    this.physics.add.collider(ship, this.getLevel().primaryLayer);
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
                     Helpers.trycatch(() => this._camera?.ignore(ship.radarSprite), 'none');
                 }
@@ -394,15 +390,13 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             for (let id of ids) {
                 const ship = this._ships.get(id);
                 if (ship) {
-                    if (SpaceSim.debug) {
-                        console.debug(`removing ship '${id}'`);
-                    }
+                    Helpers.log('debug', `removing ship '${id}'`);
                     this._exploder.explode({location: ship.location});
                     this._ships.delete(id);
                     ship.destroy();
 
                     if (SpaceSimClient.playerShipId === id) {
-                        console.info(`player ship removed; queuing game over...`);
+                        Helpers.log('info', `player ship removed; queuing game over...`);
                         this.queueEndScene();
                     }
                 }
@@ -420,9 +414,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     supply?.configure(o);
                 } else {
                     // or create new supply if doesn't already exist
-                    if (SpaceSim.debug) {
-                        console.debug(`creating new ShipSupply ${JSON.stringify(o)}`);
-                    }
+                    Helpers.log('debug', `creating new ShipSupply ${JSON.stringify(o)}`);
                     switch (o.supplyType) {
                         case 'ammo':
                             supply = new PlayerAmmoSupply(this, o);
@@ -453,9 +445,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             for (let id of ids) {
                 const supply = this.getSupply(id);
                 if (supply) {
-                    if (SpaceSim.debug) {
-                        console.debug(`removing supply '${supply.id}'`);
-                    }
+                    Helpers.log('debug', `removing supply '${supply.id}'`);
                     supply.destroy();
                     this._supplies.delete(id);
                 }

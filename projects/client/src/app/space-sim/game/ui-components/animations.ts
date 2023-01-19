@@ -1,5 +1,3 @@
-import { GameObjectPlus } from "space-sim-shared/src/interfaces/game-object-plus";
-
 export module Animations {
     /**
      * fades the passed in `obj` to 0 alpha over the specified `duration` and then calls
@@ -8,7 +6,7 @@ export module Animations {
      * @param duration the total amount of time to run the animation
      * @param onComplete a function to run on completion of the tween
      */
-    export function fadeOut(obj: GameObjectPlus | Array<GameObjectPlus>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
+    export function fadeOut(obj: Phaser.GameObjects.GameObject | Array<Phaser.GameObjects.GameObject>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
         let scene: Phaser.Scene;
         if (Array.isArray(obj)) {
             scene = obj[0].scene;
@@ -30,7 +28,7 @@ export module Animations {
      * @param duration the total amount of time for the animation to run
      * @param onComplete a function to be run on completion
      */
-    export function flickerOut(obj: GameObjectPlus | Array<GameObjectPlus>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
+    export function flickerOut(obj: Phaser.GameObjects.GameObject | Array<Phaser.GameObjects.GameObject>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
         return Animations.flicker(obj, duration - (duration / 5), () => {
             Animations.fadeOut(obj, duration / 5, onComplete);
         });
@@ -43,7 +41,7 @@ export module Animations {
      * @param duration the total amount of time for the animation to run
      * @param onComplete a function to be run on completion
      */
-    export function flicker(obj: GameObjectPlus | Array<GameObjectPlus>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
+    export function flicker(obj: Phaser.GameObjects.GameObject | Array<Phaser.GameObjects.GameObject>, duration: number, onComplete: () => void): Phaser.Tweens.Tween {
         let scene: Phaser.Scene;
         if (Array.isArray(obj)) {
             scene = obj[0].scene;

@@ -80,7 +80,8 @@ export class SpaceSimClient {
 export module SpaceSimClient {
     var _inst: SpaceSimClient;
     export function start(options?: SpaceSimClientOptions): SpaceSimClient {
-        SpaceSim.debug = options?.debug || false;
+        SpaceSim.debug = options?.debug ?? false;
+        SpaceSim.loglevel = options?.loglevel ?? 'warn';
         if (!_inst) {
             _inst = new SpaceSimClient(options);
         }

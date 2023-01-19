@@ -12,10 +12,8 @@ export class SpaceSimServer extends GameServerEngine {
         width: SpaceSimServer.MAP_WIDTH, // in tiles, not pixels
         height: SpaceSimServer.MAP_HEIGHT,
         maxRooms: 1,
-        roomMinWidth: SpaceSimServer.MAP_WIDTH-1,
-        roomMaxWidth: SpaceSimServer.MAP_WIDTH,
-        roomMinHeight: SpaceSimServer.MAP_HEIGHT-1,
-        roomMaxHeight: SpaceSimServer.MAP_HEIGHT,
+        roomWidth: {min: SpaceSimServer.MAP_WIDTH-1, max: SpaceSimServer.MAP_WIDTH},
+        roomHeight: {min: SpaceSimServer.MAP_HEIGHT-1, max: SpaceSimServer.MAP_HEIGHT},
         doorPadding: 0
     };
     
@@ -36,6 +34,7 @@ export module SpaceSimServer {
         .map(s => s as BattleRoyaleScene);
 }
 
-SpaceSim.debug = true;
+SpaceSim.debug = false;
+SpaceSim.loglevel = 'debug';
 const server = new SpaceSimServer();
 SpaceSim.game = server.game;

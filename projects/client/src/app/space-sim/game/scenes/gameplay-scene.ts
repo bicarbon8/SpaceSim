@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { Constants, Exploder, GameLevel, GameObjectPlus, Helpers, RoomPlus, Ship, ShipOptions, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig } from "space-sim-shared";
+import { Constants, Helpers, RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -19,6 +19,7 @@ import { UiExploder } from "../ui-components/ui-exploder";
 import { PlayerEngine } from "../ships/attachments/utility/player-engine";
 import { PlayerBullet } from "../ships/attachments/offence/player-bullet";
 import { PlayerMachineGun } from "../ships/attachments/offence/player-machine-gun";
+import { ClientGameLevel } from "../levels/client-game-level";
 
 export const GameplaySceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -54,7 +55,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: UiExploder;
-    private _gameLevel: GameLevel;
+    private _gameLevel: ClientGameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
     private _camera: Camera;
@@ -109,12 +110,9 @@ export class GameplayScene extends BaseScene implements Resizable {
         PlayerCoolantSupply.preload(this);
         PlayerFuelSupply.preload(this);
         PlayerRepairsSupply.preload(this);
+        ClientGameLevel.preload(this);
 
-        this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);
-
-        this.load.image('metaltiles', `${environment.baseUrl}/assets/tiles/metaltiles_lg.png`);
-        this.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`);
-        
+        this.load.image('far-stars', `${environment.baseUrl}/assets/backgrounds/starfield-tile-512x512.png`);        
         this.load.audio('background-music', `${environment.baseUrl}/assets/audio/space-marine-theme.ogg`);
     }
 
@@ -184,12 +182,11 @@ export class GameplayScene extends BaseScene implements Resizable {
         for (var i=0; i<children.length; i++) {
             const c = children[i];
             // skip over the map tiles
-            if (c !== this.getLevel().getGameObject()) {
+            if (c !== this.getLevel().primaryLayer) {
                 // and skip over objects that don't have physics bodies 
                 const arcade = c.body as Phaser.Physics.Arcade.Body;
                 if (arcade) {
-                    const gop = c as GameObjectPlus;
-                    const d = Phaser.Math.Distance.BetweenPoints(gop, loc);
+                    const d = Phaser.Math.Distance.BetweenPoints({x: c['x'], y: c['y']}, loc);
                     if (d <= dist * 2) {
                         // enable physics on objects close to player
                         this.physics.world.enable(c);
@@ -208,7 +205,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         SpaceSimClient.opponents.splice(0, SpaceSimClient.opponents.length);
         
         // add opponent in each room
-        for (var room of this.getLevel().getRooms()) {
+        for (var room of this.getLevel().rooms) {
             let tl: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left + 1, room.top + 1);
             let br: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right - 1, room.bottom - 1);
             let pos: Phaser.Math.Vector2 = Helpers.vector2(
@@ -233,10 +230,9 @@ export class GameplayScene extends BaseScene implements Resizable {
     }
 
     private _createMapAndPlayer(): void {
-        this._gameLevel = new GameLevel(this, {
+        this._gameLevel = new ClientGameLevel(this, {
             doorPadding: 2
-        });
-        this.getLevel().alpha = 0; // hide until player enters room
+        }).setAlpha(0); // hide until player enters room
         
         // Place the player in random empty tile in the first room
         const startingRoom = this.getLevel().getRoomClosestToOrigin();
@@ -259,7 +255,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         this._ships.set(ship.id, ship);
         
         // setup collision with map walls
-        this.physics.add.collider(this.playerShip, this.getLevel().getGameObject());
+        this.physics.add.collider(this.playerShip, this.getLevel().primaryLayer);
 
         // setup listener for player death event
         this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
@@ -280,7 +276,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     }
 
     private _createStellarBodiesLayer(): void {
-        let rooms = this.getLevel().getRooms();
+        let rooms = this.getLevel().rooms;
         let bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
             {spriteName: 'venus', rotationSpeed: 0}, 
@@ -328,7 +324,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             name: 'main',
             zoom: zoom,
             ignore: [
-                this.getLevel().minimapLayer,
+                this.getLevel().radarLayer,
                 ...this.getShips<PlayerShip>()
                     .map(p => p.radarSprite)
                     .filter(p => p != null)
@@ -356,7 +352,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                this.getLevel().getGameObject()
+                this.getLevel().primaryLayer
             ],
             followObject: this.playerShip
         });
@@ -383,8 +379,8 @@ export class GameplayScene extends BaseScene implements Resizable {
                 });
             this.add.tween({
                 targets: [
-                    ...this.getLevel().getLayer().getTilesWithin(room.x, room.y, room.width, room.height),
-                    ...this.getLevel().minimapLayer.getTilesWithin(room.x, room.y, room.width, room.height), 
+                    ...this.getLevel().primaryLayer.getTilesWithin(room.x, room.y, room.width, room.height),
+                    ...this.getLevel().radarLayer.getTilesWithin(room.x, room.y, room.width, room.height),
                     ...opponentsInRoom
                 ],
                 alpha: 1,
@@ -393,7 +389,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             // enable physics for enemies in the room
             opponentsInRoom.forEach(o => {
                 // setup collision with map walls
-                this.physics.add.collider(o, this.getLevel().getGameObject());
+                this.physics.add.collider(o, this.getLevel().primaryLayer);
                 // setup collision with player
                 this.physics.add.collider(o, this.playerShip, () => {
                     if (o?.active && this.playerShip?.active) {
@@ -444,7 +440,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
                 break;
         }
-        this.physics.add.collider(supply, this.getLevel().getGameObject());
+        this.physics.add.collider(supply, this.getLevel().primaryLayer);
         this.physics.add.collider(supply, this.playerShip, () => {
                 this._supplies.delete(supply.id);
                 supply.apply(this.playerShip);

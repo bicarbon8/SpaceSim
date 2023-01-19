@@ -1,6 +1,5 @@
 /** interfaces */
 export * from "./src/interfaces/can-target";
-export * from "./src/interfaces/game-object-plus";
 export * from "./src/interfaces/has-engine";
 export * from "./src/interfaces/has-fuel";
 export * from "./src/interfaces/has-game-object";
@@ -13,7 +12,6 @@ export * from "./src/interfaces/has-weapons";
 export * from "./src/interfaces/is-configurable";
 export * from "./src/interfaces/number-range";
 export * from "./src/interfaces/physics-object";
-export * from "./src/interfaces/ship-like";
 export * from "./src/interfaces/size";
 export * from "./src/interfaces/updatable";
 /** levels */

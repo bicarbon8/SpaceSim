@@ -166,7 +166,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
                 `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`
             ];
-            if (SpaceSim.debug) {
+            if (Helpers.shouldLog('debug')) {
                 const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }

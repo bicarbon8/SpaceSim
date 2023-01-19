@@ -1,3 +1,4 @@
+import { SpaceSim } from "../space-sim";
 import { NumberOrRange } from "../interfaces/number-range";
 import { Ship } from "../ships/ship";
 
@@ -91,45 +92,31 @@ export module Helpers {
         }
     }
 
+    export type ErrorFormat = 'none' | 'message' | 'stack' | 'all';
+
     export function trycatch(func: () => void, 
-        level: 'debug' | 'info' | 'warn' | 'error' | 'none' = 'debug',
+        level: LogLevel = 'warn',
         message: string = '', 
-        errorFormat: 'none' | 'message' | 'stack' | 'all' = 'message'): void {
+        errorFormat: ErrorFormat = 'message'): void {
         try {
             func();
         } catch (e) {
-            let out: (...data: Array<any>) => void;
             if (level !== 'none') {
-                switch(level) {
-                    case 'debug':
-                        out = console.debug;
-                        break;
-                    case 'info':
-                        out = console.info;
-                        break;
-                    case 'warn':
-                        out = console.warn;
-                        break;
-                    case 'error':
-                    default:
-                        out = console.error;
-                        break;
-                }
                 if (errorFormat !== 'none') {
                     switch(errorFormat) {
                         case 'stack':
                             const s = (e as Error)?.stack ?? e;
                             message = (message?.length) ? `${message}\n${s}` : s;
-                            out(message);
+                            Helpers.log(level, message);
                             break;
                         case 'all':
-                            out(message, e);
+                            Helpers.log(level, message, e);
                             break;
                         case 'message':
                         default:
                             const m = (e as Error)?.message ?? e;
                             message = (message?.length) ? `${message}\n${m}` : m;
-                            out(message);
+                            Helpers.log(level, message);
                             break;
                     }
                 }
@@ -207,5 +194,67 @@ export module Helpers {
     export function dts(time?: number): string {
         const date = new Date(time ?? Date.now());
         return date.toISOString();
+    }
+
+    export type LogLevel = 'none' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+
+    export function log(level: LogLevel, ...data: Array<any>): void {
+        if (Helpers.shouldLog(level)) {
+            let func: (...data: Array<any>) => void;
+            switch (level) {
+                case 'error':
+                    func = console.error;
+                    break;
+                case 'warn':
+                    func = console.warn;
+                    break;
+                case 'info':
+                    func = console.info;
+                    break;
+                case 'debug':
+                    func = console.debug;
+                    break;
+                case 'trace':
+                    func = console.trace;
+                    break;
+                case 'none':
+                default:
+                    return;
+            }
+            func(`${Helpers.dts()} - [${level.toUpperCase()}]:`, ...data);
+        }
+    }
+
+    export function shouldLog(level: LogLevel): boolean {
+        switch (SpaceSim.loglevel) {
+            case 'error':
+                if (['error'].includes(level)) {
+                    return true;
+                }
+                break;
+            case 'warn':
+                if (['error', 'warn'].includes(level)) {
+                    return true;
+                }
+                break;
+            case 'info':
+                if (['error', 'warn', 'info'].includes(level)) {
+                    return true;
+                }
+                break;
+            case 'debug':
+                if (['error', 'warn', 'info', 'debug'].includes(level)) {
+                    return true;
+                }
+                break;
+            case 'trace':
+                if (['error', 'warn', 'info', 'debug', 'trace'].includes(level)) {
+                    return true;
+                }
+                break;
+            case 'none':
+            default:
+                return false;
+        }
     }
 }

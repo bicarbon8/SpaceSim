@@ -1,4 +1,4 @@
-import { Constants, GameScoreTracker, GameStats, SpaceSim, BaseScene, Ship } from "space-sim-shared";
+import { Constants, GameScoreTracker, GameStats, SpaceSim, BaseScene, Ship, Helpers } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
@@ -169,7 +169,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                 `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
                 `Score: ${GameScoreTracker.getScore(this.playerShip.id).toFixed(0)}`
             ];
-            if (SpaceSim.debug) {
+            if (Helpers.shouldLog('debug')) {
                 const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
