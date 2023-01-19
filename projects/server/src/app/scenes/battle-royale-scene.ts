@@ -1,9 +1,8 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipOptions, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
-import { NonUiExploder } from "../utilities/non-ui-exploder";
 
 export class BattleRoyaleScene extends BaseScene {
     override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
@@ -54,7 +53,7 @@ export class BattleRoyaleScene extends BaseScene {
     private readonly _flickerSuppliesQueue = new Array<string>();
     
     private _gameLevel: GameLevel;
-    private _exploder: NonUiExploder;
+    private _exploder: Exploder;
     private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
     private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
     private _ultraLowPriUpdateAt: number = Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
@@ -94,7 +93,7 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     create(): void {
-        this._exploder = new NonUiExploder(this);
+        this._exploder = new Exploder(this);
         this._createMap();
         this._setupSceneEventHandling();
     }

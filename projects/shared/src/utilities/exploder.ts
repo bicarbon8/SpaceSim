@@ -1,21 +1,22 @@
-import { ShipConfig, ShipOptions } from "../ships/ship";
+import { ShipConfig } from "../ships/ship";
 import { ShipSupplyOptions } from "../ships/supplies/ship-supply";
 import { Constants } from "./constants";
-import { Helpers } from "./helpers";
 
 export type ExploderOptions = {
     scale?: number;
     location: Phaser.Types.Math.Vector2Like;
 }
 
-export abstract class Exploder {
+export class Exploder {
     public readonly scene: Phaser.Scene;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
     }
 
-    abstract explode(options: ExploderOptions): this;
+    explode(options: ExploderOptions): this {
+        return this;
+    }
 
     emitSupplies(shipOpts: ShipConfig): Array<ShipSupplyOptions> {
         const supplies = new Array<ShipSupplyOptions>();
