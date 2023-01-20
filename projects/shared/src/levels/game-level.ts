@@ -238,9 +238,19 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
      */
     isWallObscuring(start: Phaser.Types.Math.Vector2Like, end: Phaser.Types.Math.Vector2Like): boolean {
         const ray = new Phaser.Geom.Line(start.x, start.y, end.x, end.y);
-        const wallTiles = this.getTilesWithinShape(ray, {
-                isColliding: true
-            }, this.scene.cameras.main, this._wallsLayer);
+        // TODO: doesn't work due to https://github.com/photonstorm/phaser/issues/5640
+        // const wallTiles = this.getTilesWithinShape(ray, {
+        //         isColliding: true
+        //     }, this.scene.cameras.main, this._wallsLayer);
+        
+        const rayPoints = ray.getPoints(0, 5);
+        const wallTiles = new Array<Phaser.Tilemaps.Tile>();
+        for (let p of rayPoints) {
+            const tile = this.getTileAtWorldXY(p.x, p.y, false, this.scene.cameras.main, this._wallsLayer);
+            if (tile) {
+                wallTiles.push(tile);
+            }
+        }
         if (wallTiles?.length) {
             return true;
         }

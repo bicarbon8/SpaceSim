@@ -17,7 +17,7 @@ export class SpaceSimComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.zone.runOutsideAngular(() => {
       SpaceSimClient.start({
-        debug: true
+        debug: false
       });
     });
   }
