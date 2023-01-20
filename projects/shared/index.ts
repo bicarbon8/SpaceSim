@@ -1,5 +1,7 @@
 /** interfaces */
 export * from "./src/interfaces/can-target";
+export * from "./src/interfaces/damage-metadata";
+export * from "./src/interfaces/dynamic-game-object"
 export * from "./src/interfaces/has-engine";
 export * from "./src/interfaces/has-fuel";
 export * from "./src/interfaces/has-game-object";

@@ -217,33 +217,6 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
         }
     }
 
-    /**
-     * checks for and applies damage based on degrees over safe temperature at a rate
-     * of {delta} milliseconds between each check.
-     * also applies cooling at a rate of {Constants.COOLING_RATE}
-     * @param delta the number of elapsed milliseconds since last update
-     */
-    private _checkOverheatCondition(delta: number): void {
-        if (this.active) {
-            if (this.isOverheating) {
-                if (this._temperature > Constants.Ship.MAX_TEMPERATURE) {
-                    this.death(); // we are dead
-                    return;
-                } else {
-                    // reduce integrity at a fixed rate of 1 per second
-                    let damage: number = 1 * (delta / 1000);
-                    this.subtractIntegrity(damage, {
-                        timestamp: this.scene.time.now,
-                        message: 'ship overheat damage'
-                    });
-                }
-            }
-
-            let amountCooled: number = Constants.Ship.COOLING_RATE_PER_SECOND * (delta / 1000);
-            this.subtractHeat(amountCooled);
-        }
-    }
-
     get location(): Phaser.Types.Math.Vector2Like {
         return {x: this.x, y: this.y};
     }
@@ -350,6 +323,33 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
             Helpers.trycatch(() => {
                 this.destroy();
             }, 'warn', 'error destroying ship game object', 'message');
+        }
+    }
+
+    /**
+     * checks for and applies damage based on degrees over safe temperature at a rate
+     * of {delta} milliseconds between each check.
+     * also applies cooling at a rate of {Constants.COOLING_RATE}
+     * @param delta the number of elapsed milliseconds since last update
+     */
+    private _checkOverheatCondition(delta: number): void {
+        if (this.active) {
+            if (this.isOverheating) {
+                if (this._temperature > Constants.Ship.MAX_TEMPERATURE) {
+                    this.death(); // we are dead
+                    return;
+                } else {
+                    // reduce integrity at a fixed rate of 1 per second
+                    let damage: number = 1 * (delta / 1000);
+                    this.subtractIntegrity(damage, {
+                        timestamp: this.scene.time.now,
+                        message: 'ship overheat damage'
+                    });
+                }
+            }
+
+            let amountCooled: number = Constants.Ship.COOLING_RATE_PER_SECOND * (delta / 1000);
+            this.subtractHeat(amountCooled);
         }
     }
 

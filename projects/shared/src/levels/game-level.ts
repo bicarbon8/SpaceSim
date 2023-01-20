@@ -5,6 +5,8 @@ import { Helpers } from "../utilities/helpers";
 import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
 import { NumberOrRange } from "../interfaces/number-range";
+import { DynamicGameObject } from "../interfaces/dynamic-game-object";
+import { SpaceSim } from "../space-sim";
 
 export type RoomPlus = Room & {
     visible?: boolean;
@@ -18,6 +20,8 @@ export type GameLevelOptions = {
     roomHeight?: NumberOrRange;
     doorPadding?: number;
     maxRooms?: number;
+    tileWidth?: number;
+    tileHeight?: number;
 };
 
 export class GameLevel extends Phaser.Tilemaps.Tilemap {
@@ -35,8 +39,10 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
             height: 200,
             roomWidth: {min: 10, max: 25}, // in tiles, not pixels
             roomHeight: {min: 25, max: 25},
-            maxRooms: 100,
             doorPadding: 2,
+            maxRooms: 100,
+            tileWidth: 96,
+            tileHeight: 96,
             ...options
         };
         super(scene, new Phaser.Tilemaps.MapData({
@@ -69,6 +75,16 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
 
     getMapTileWorldLocation(tilePositionX: number, tilePositionY: number): Phaser.Math.Vector2 {
         return this.tileToWorldXY(tilePositionX, tilePositionY);
+    }
+
+    isWithinTile(worldLocation: Phaser.Types.Math.Vector2Like, tilePosition: Phaser.Types.Math.Vector2Like): boolean {
+        const tileLoc = this.getTileAtWorldXY(worldLocation.x, worldLocation.y, false, this.scene.cameras.main, this._radarLayer);
+        if (tileLoc) {
+            if (tileLoc.x === tilePosition.x && tileLoc.y === tilePosition.y) {
+                return true;
+            }
+        }
+        return false;
     }
 
     getRoomAt(tileX: number, tileY: number): RoomPlus {
@@ -124,6 +140,119 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
                 }
                 return false;
             });
+    }
+
+    /**
+     * takes in a starting and ending position in world coordinates and returns a queue of tile
+     * positions to follow
+     * @param start a world location for the starting position
+     * @param end a world location for the deisired ending position
+     * @returns an array of tile locations (not world) that form a valid path to the `end`
+     */
+    findPathTo(start: Phaser.Types.Math.Vector2Like, end: Phaser.Types.Math.Vector2Like): Array<Phaser.Types.Math.Vector2Like> {
+        const startTileLoc = this.getTileAtWorldXY(start.x, start.y, true, this.scene.cameras.main, this._radarLayer);
+        const endTileLoc = this.getTileAtWorldXY(end.x, end.y, true, this.scene.cameras.main, this._radarLayer);
+        // no path if select invalid tile
+        if (!this._radarLayer.getTileAt(endTileLoc.x, endTileLoc.y)) {
+            return null; // no path
+        }
+        // no path if select a wall
+        if (this._primaryLayer.getTileAt(endTileLoc.x, endTileLoc.y)) {
+            return null; // no path
+        }
+
+        const toKey = (loc: Phaser.Types.Math.Vector2Like) => `${loc.x}x${loc.y}`;
+        type TilePosition = {key: string, position: Phaser.Types.Math.Vector2Like};
+        const queue = new Array<Phaser.Types.Math.Vector2Like>();
+        const parentForKey = new Map<string, TilePosition>();
+
+        const startKey = toKey(startTileLoc);
+        const targetKey = toKey(endTileLoc);
+        parentForKey.set(startKey, null); // no parent for starting location so we end
+
+        queue.push(startTileLoc)
+
+        while (queue.length > 0) {
+            const currentLoc = queue.shift();
+            const currentKey = toKey(currentLoc);
+
+            if (currentKey === targetKey) {
+                break
+            }
+
+            const neighbors = [
+                { x: currentLoc.x, y: currentLoc.y - 1 },	// top
+                { x: currentLoc.x + 1, y: currentLoc.y }, 	// right
+                { x: currentLoc.x, y: currentLoc.y + 1 },	// bottom
+                { x: currentLoc.x - 1, y: currentLoc.y}		// left
+            ];
+
+            for (let i = 0; i < neighbors.length; ++i) {
+                const neighbor = neighbors[i];
+                const key = toKey(neighbor);
+                const tile = this._radarLayer.getTileAt(neighbor.x, neighbor.y);
+                const wall = this._primaryLayer.getTileAt(neighbor.x, neighbor.y);
+
+                if (tile == null || wall != null || parentForKey.has(key)) {
+                    continue; // either no tile, a wall or we already have this path
+                }
+
+                parentForKey.set(key, {
+                    key: currentKey,
+                    position: { x: currentLoc.x, y: currentLoc.y }
+                });
+                queue.push(neighbor);
+            }
+        }
+
+        const path = new Array<Phaser.Types.Math.Vector2Like>();
+
+        let currentKey = targetKey
+        let currentPos = parentForKey.get(targetKey)?.position
+
+        while (currentKey !== startKey) {
+            const pos = this._radarLayer.tileToWorldXY(currentPos.x, currentPos.y)
+            pos.x += this._radarLayer.tilemap.tileWidth * 0.5
+            pos.y += this._radarLayer.tilemap.tileHeight * 0.5
+
+            path.push(pos)
+
+            const tilePosition = parentForKey.get(currentKey);
+            if (!tilePosition) {
+                break; // we've reached the start
+            }
+            currentKey = tilePosition.key;
+            currentPos = tilePosition.position;
+        }
+
+        return path.reverse();
+    }
+
+    canSee(observer: DynamicGameObject, target: DynamicGameObject, maxDistance: number): boolean {
+        const observerHeading = Helpers.getHeading(observer.angle);
+        const origin = {x: observer.x, y: observer.y};
+        const rightAnglePoint = Helpers.vector2(origin.x, origin.y)
+            .add(observerHeading.clone().multiply(Helpers.vector2(maxDistance)));
+        const hypotenusePoint1 = rightAnglePoint.clone()
+            .add(observerHeading.clone().normalizeRightHand()
+                .multiply(Helpers.vector2(maxDistance / 4)));
+        const hypotenusePoint2 = rightAnglePoint.clone()
+            .add(observerHeading.clone().normalizeLeftHand()
+                .multiply(Helpers.vector2(maxDistance / 4)));
+        const view = new Phaser.Geom.Triangle(origin.x, origin.y, hypotenusePoint2.x, hypotenusePoint2.y, hypotenusePoint1.x, hypotenusePoint1.y);
+        
+        if (SpaceSim.debug) {
+            const graphics = this.scene.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xffff00 } });
+            graphics.strokeTriangleShape(view);
+            this.scene.tweens.add({
+                targets: graphics,
+                alpha: 0,
+                duration: 1000,
+                onComplete: () => graphics.destroy()
+            });
+        }
+
+        return view.contains(target.x, target.y);
     }
 
     private _createDungeon(options: GameLevelOptions): Dungeon {
@@ -191,6 +320,11 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         });
 
         this._primaryLayer.setCollisionBetween(1, 14);
+
+        if (SpaceSim.debug) {
+            const graphics = this.scene.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xffff00 } });
+            this._primaryLayer.renderDebug(graphics);
+        }
         // this.scene.physics.add.existing(this._primaryLayer);
         // this._primaryLayer.body.mass = 1000000;
     }
