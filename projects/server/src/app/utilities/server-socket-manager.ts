@@ -117,9 +117,7 @@ export class ServerSocketManager {
         Helpers.trycatch(() => {
             const socket = this.getSocket(socketId);
             if (socket) {
-                if (SpaceSimServer.trace) {
-                    console.trace(`[${Helpers.dts()}]: sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
-                }
+                console.trace(`[${Helpers.dts()}]: sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
                 socket.emit(event, ...args);
             }
         }, 'warn', `[${Helpers.dts()}]: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
@@ -130,9 +128,7 @@ export class ServerSocketManager {
         Helpers.trycatch(() => {
             const socket = this.getSocket(socketId);
             if (socket) {
-                if (SpaceSimServer.trace) {
-                    console.trace(`[${Helpers.dts()}]: broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
-                }
+                console.trace(`[${Helpers.dts()}]: broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
                 socket.broadcast.in(room).emit(event, ...args);
             }
         }, 'warn', `[${Helpers.dts()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
@@ -141,9 +137,7 @@ export class ServerSocketManager {
 
     private roomEmit(room: string, event: string, ...args: Array<any>): this {
         Helpers.trycatch(() => {
-            if (SpaceSimServer.trace) {
-                console.trace(`[${Helpers.dts()}]: sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
-            }
+            console.trace(`[${Helpers.dts()}]: sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
             this.io.in(room).emit(event, ...args);
         }, 'warn', `[${Helpers.dts()}]: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
