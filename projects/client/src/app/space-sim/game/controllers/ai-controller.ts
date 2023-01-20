@@ -12,7 +12,7 @@ export class AiController extends InputController {
     private _nextWeaponsFireAt: number;
     private _nextThrusterFireAt: number;
     private _canCheckView: boolean;
-    private _view: Phaser.GameObjects.Graphics;
+    private _viewGeom: Phaser.Geom.Triangle;
 
     private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
     private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
@@ -31,6 +31,27 @@ export class AiController extends InputController {
     get state(): AiState {
         return this._state;
     }
+
+    get view(): Phaser.Geom.Triangle {
+        if (!this._viewGeom) {
+            this._viewGeom = new Phaser.Geom.Triangle();
+        }
+
+        const viewDistance = 500;
+        const heading = this.ship.heading;
+        const origin = this.ship.location;
+        const rightAnglePoint = Helpers.vector2(origin.x, origin.y)
+            .add(heading.clone().multiply(Helpers.vector2(viewDistance)));
+        const hypotenusePoint1 = rightAnglePoint.clone()
+            .add(heading.clone().normalizeRightHand()
+                .multiply(Helpers.vector2(viewDistance / 4)));
+        const hypotenusePoint2 = rightAnglePoint.clone()
+            .add(heading.clone().normalizeLeftHand()
+                .multiply(Helpers.vector2(viewDistance / 4)));
+        this._viewGeom.setTo(origin.x, origin.y, hypotenusePoint2.x, hypotenusePoint2.y, hypotenusePoint1.x, hypotenusePoint1.y);
+
+        return this._viewGeom;
+    }
     
     update(time: number, delta: number): void {
         this._medPriUpdateAt += delta;
@@ -48,7 +69,7 @@ export class AiController extends InputController {
         
         const attacker = this._hasAttacker();
         if (attacker) {
-            if (this._canSee(attacker.location)) {
+            if (this.canSee(attacker.location)) {
                 this._setLastKnown(attacker);
                 this._attack(attacker);
             } else {
@@ -81,7 +102,7 @@ export class AiController extends InputController {
         this.ship.rotationContainer.setAngle(this.ship.rotationContainer.angle + 1);
         const player = this.scene.getShip(SpaceSimClient.playerShipId);
         if (player) {
-            if (this._canSee(player.location)) {
+            if (this.canSee(player.location)) {
                 this._setLastKnown(player);
                 this._attack(player);
             } else if (this._lastKnownPlayerLocation) {
@@ -136,35 +157,30 @@ export class AiController extends InputController {
         return null;
     }
 
-    private _canSee(target: Phaser.Types.Math.Vector2Like): boolean {
-        const viewDistance = 500;
-        const observerHeading = this.ship.heading;
-        const origin = this.ship.location;
-        const rightAnglePoint = Helpers.vector2(origin.x, origin.y)
-            .add(observerHeading.clone().multiply(Helpers.vector2(viewDistance)));
-        const hypotenusePoint1 = rightAnglePoint.clone()
-            .add(observerHeading.clone().normalizeRightHand()
-                .multiply(Helpers.vector2(viewDistance / 4)));
-        const hypotenusePoint2 = rightAnglePoint.clone()
-            .add(observerHeading.clone().normalizeLeftHand()
-                .multiply(Helpers.vector2(viewDistance / 4)));
-        const viewGeom = new Phaser.Geom.Triangle(origin.x, origin.y, hypotenusePoint2.x, hypotenusePoint2.y, hypotenusePoint1.x, hypotenusePoint1.y);
-        
-        if (SpaceSim.debug) {
-            const graphics = this.scene.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xffff00, alpha: 0.25 } });
-            graphics.strokeTriangleShape(viewGeom);
-            this.scene.tweens.add({
-                targets: graphics,
-                alpha: 0,
-                duration: Constants.Timing.LOW_PRI_UPDATE_FREQ,
-                onComplete: () => {
-                    graphics.destroy()
-                }
-            });
-        }
+    canSee(target: Phaser.Types.Math.Vector2Like): boolean {
+        if (this._canCheckView) {
+            this._canCheckView = false;
+            const viewGeom = this.view;
+            if (SpaceSim.debug) {
+                const graphics = this.scene.add.graphics({ 
+                    lineStyle: { width: 2, color: 0x00ff00 }, 
+                    fillStyle: { color: 0xffff00, alpha: 0.25 } 
+                }).setDepth(Constants.UI.Layers.PLAYER);
+                graphics.fillTriangleShape(viewGeom);
+                this.scene.tweens.add({
+                    targets: graphics,
+                    alpha: 0,
+                    duration: Constants.Timing.LOW_PRI_UPDATE_FREQ,
+                    onComplete: () => {
+                        graphics.destroy();
+                    }
+                });
+            }
 
-        const inView = viewGeom.contains(target.x, target.y);
-        return inView && !this.scene.getLevel().isWallObscuring(this.ship.location, target);
+            const inView = viewGeom.contains(target.x, target.y);
+            return inView && !this.scene.getLevel().isWallObscuring(this.ship.location, target);
+        }
+        return false;
     }
 
     private _goToLocation(location: Phaser.Types.Math.Vector2Like): void {
