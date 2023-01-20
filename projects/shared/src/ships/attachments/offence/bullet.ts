@@ -142,7 +142,7 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
 
     private _addCollisionDetection(): void {
         // collide with `GameLevel` walls
-        this.scene.physics.add.collider(this, this.scene.getLevel().primaryLayer, () => {
+        this.scene.physics.add.collider(this, this.scene.getLevel().wallsLayer, () => {
             this.destroy();
         });
         // collide with ships within 2x distance possible to travel

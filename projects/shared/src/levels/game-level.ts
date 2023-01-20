@@ -29,7 +29,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
 
     private readonly _dungeon: Dungeon;
 
-    private _primaryLayer: Phaser.Tilemaps.TilemapLayer;
+    private _wallsLayer: Phaser.Tilemaps.TilemapLayer;
     private _radarLayer: Phaser.Tilemaps.TilemapLayer;
 
     constructor(scene: BaseScene, options?: GameLevelOptions) {
@@ -56,13 +56,13 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
     }
 
     setAlpha(alpha: number): this {
-        this._primaryLayer.forEachTile(tile => tile.setAlpha(alpha));
+        this._wallsLayer.forEachTile(tile => tile.setAlpha(alpha));
         this._radarLayer.forEachTile(tile => tile.setAlpha(alpha));
         return this;
     }
 
-    get primaryLayer(): Phaser.Tilemaps.TilemapLayer {
-        return this._primaryLayer;
+    get wallsLayer(): Phaser.Tilemaps.TilemapLayer {
+        return this._wallsLayer;
     }
 
     get radarLayer(): Phaser.Tilemaps.TilemapLayer {
@@ -92,7 +92,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
     }
 
     getRoomAtWorldXY(x: number, y: number): RoomPlus {
-        const tile = this._primaryLayer?.worldToTileXY(x, y);
+        const tile = this._wallsLayer?.worldToTileXY(x, y);
         return this.getRoomAt(tile.x, tile.y);
     }
 
@@ -157,7 +157,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
             return null; // no path
         }
         // no path if select a wall
-        if (this._primaryLayer.getTileAt(endTileLoc.x, endTileLoc.y)) {
+        if (this._wallsLayer.getTileAt(endTileLoc.x, endTileLoc.y)) {
             return null; // no path
         }
 
@@ -191,7 +191,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
                 const neighbor = neighbors[i];
                 const key = toKey(neighbor);
                 const tile = this._radarLayer.getTileAt(neighbor.x, neighbor.y);
-                const wall = this._primaryLayer.getTileAt(neighbor.x, neighbor.y);
+                const wall = this._wallsLayer.getTileAt(neighbor.x, neighbor.y);
 
                 if (tile == null || wall != null || parentForKey.has(key)) {
                     continue; // either no tile, a wall or we already have this path
@@ -228,9 +228,19 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         return path.reverse();
     }
 
+    /**
+     * performs a ray cast to determine if any walls are between the
+     * start and end locations
+     * @param start the observer location in world coordinates
+     * @param end the target location in world coordinates
+     * @returns true if a wall is obscuring the view between the `start`
+     * and `end` locations
+     */
     isWallObscuring(start: Phaser.Types.Math.Vector2Like, end: Phaser.Types.Math.Vector2Like): boolean {
         const ray = new Phaser.Geom.Line(start.x, start.y, end.x, end.y);
-        const wallTiles = this.getTilesWithinShape(ray, {isNotEmpty: true, isColliding: true}, this.scene.cameras.main, this._primaryLayer);
+        const wallTiles = this.getTilesWithinShape(ray, {
+                isColliding: true
+            }, this.scene.cameras.main, this._wallsLayer);
         if (wallTiles?.length) {
             return true;
         }
@@ -261,7 +271,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
 
     private _createLayers(): void {
         const wallsTileSet: Phaser.Tilemaps.Tileset = this.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
-        this._primaryLayer = this.createBlankLayer('walls', wallsTileSet);
+        this._wallsLayer = this.createBlankLayer('walls', wallsTileSet);
         const radarTileSet = this.addTilesetImage('minimaptile', 'minimaptile', 96, 96, 0, 0);
         this._radarLayer = this.createBlankLayer('radar', radarTileSet);
         
@@ -269,13 +279,13 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
             const { x, y, width, height, left, right, top, bottom } = room;
 
             // top wall
-            this._primaryLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, top, width, 1);
+            this._wallsLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, top, width, 1);
             // left wall
-            this._primaryLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, top, 1, height);
+            this._wallsLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, top, 1, height);
             // bottom wall
-            this._primaryLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, bottom, width, 1);
+            this._wallsLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, bottom, width, 1);
             // right wall
-            this._primaryLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, right, top, 1, height);
+            this._wallsLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, right, top, 1, height);
 
             this._radarLayer.fill(0, left+1, top+1, width-2, height-2);
 
@@ -286,22 +296,22 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
                 let door = doors[i];
 
                 if (door.y === 0) {
-                    this._primaryLayer.removeTileAt(x + door.x - 1, y + door.y);
+                    this._wallsLayer.removeTileAt(x + door.x - 1, y + door.y);
                     this._radarLayer.putTileAt(0, x + door.x - 1, y + door.y);
                 } else if (door.y === room.height - 1) {
-                    this._primaryLayer.removeTileAt(x + door.x - 1, y + door.y);
+                    this._wallsLayer.removeTileAt(x + door.x - 1, y + door.y);
                     this._radarLayer.putTileAt(0, x + door.x - 1, y + door.y);
                 } else if (door.x === 0) {
-                    this._primaryLayer.removeTileAt(x + door.x, y + door.y - 1);
+                    this._wallsLayer.removeTileAt(x + door.x, y + door.y - 1);
                     this._radarLayer.putTileAt(0, x + door.x, y + door.y - 1);
                 } else if (door.x === room.width - 1) {
-                    this._primaryLayer.removeTileAt(x + door.x, y + door.y - 1);
+                    this._wallsLayer.removeTileAt(x + door.x, y + door.y - 1);
                     this._radarLayer.putTileAt(0, x + door.x, y + door.y - 1);
                 }
             }
         });
 
-        this._primaryLayer.setCollisionBetween(1, 14);
+        this._wallsLayer.setCollisionBetween(1, 14);
         // this.scene.physics.add.existing(this._primaryLayer);
         // this._primaryLayer.body.mass = 1000000;
     }

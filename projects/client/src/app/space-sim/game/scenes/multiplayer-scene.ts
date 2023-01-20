@@ -311,7 +311,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                this.getLevel().primaryLayer
+                this.getLevel().wallsLayer
             ],
             followObject: this._ships.get(SpaceSimClient.playerShipId)
         });
@@ -370,7 +370,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                         weapon: PlayerMachineGun
                     });
                     this._ships.set(o.id, ship);
-                    this.physics.add.collider(ship, this.getLevel().primaryLayer);
+                    this.physics.add.collider(ship, this.getLevel().wallsLayer);
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
                     Helpers.trycatch(() => this._camera?.ignore(ship.radarSprite), 'none');
                 }

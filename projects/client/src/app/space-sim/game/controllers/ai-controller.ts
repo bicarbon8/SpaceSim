@@ -67,16 +67,18 @@ export class AiController extends InputController {
 
         this.ship.update(time, delta);
         
-        const attacker = this._hasAttacker();
-        if (attacker) {
-            if (this.canSee(attacker.location)) {
-                this._setLastKnown(attacker);
-                this._attack(attacker);
+        if (this.ship.active) {
+            const attacker = this._hasAttacker();
+            if (attacker) {
+                if (this.canSee(attacker.location)) {
+                    this._setLastKnown(attacker);
+                    this._attack(attacker);
+                } else {
+                    this._chase(attacker);
+                }
             } else {
-                this._chase(attacker);
+                this._patrol();
             }
-        } else {
-            this._patrol();
         }
 
         if (this._medPriUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {

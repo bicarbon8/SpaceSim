@@ -152,14 +152,8 @@ export class GameplayScene extends BaseScene implements Resizable {
             const currentRoom = this.getLevel().getRoomAtWorldXY(currentLoc.x, currentLoc.y);
             this._showRoom(currentRoom);
 
-            // disable all objects offscreen (plus margin of error)
-            if (this._physicsUpdator == null || this._physicsUpdator?.next().done) {
-                this._physicsUpdator = this._updatePhysics();
-                this._physicsUpdator?.next();
-            }
-
-            const nearbyEnemies = SpaceSimClient.opponents.filter(o => o?.ship?.active);
-            nearbyEnemies.forEach(o => o.update(time, delta));
+            const activeEnemies = SpaceSimClient.opponents.filter(o => o?.ship?.active);
+            activeEnemies.forEach(o => o.update(time, delta));
 
             this._stellarBodies.forEach((body) => {
                 body.update(time, delta);
@@ -182,17 +176,17 @@ export class GameplayScene extends BaseScene implements Resizable {
         for (var i=0; i<children.length; i++) {
             const c = children[i];
             // skip over the map tiles
-            if (c !== this.getLevel().primaryLayer) {
+            if (c !== this.getLevel().wallsLayer) {
                 // and skip over objects that don't have physics bodies 
                 const arcade = c.body as Phaser.Physics.Arcade.Body;
                 if (arcade) {
                     const d = Phaser.Math.Distance.BetweenPoints({x: c['x'], y: c['y']}, loc);
                     if (d <= dist * 2) {
                         // enable physics on objects close to player
-                        this.physics.world.enable(c);
+                        c.setActive(true);
                     } else {
                         // and disable physics on objects far offscreen
-                        this.physics.world.disable(c);
+                        c.setActive(false);
                     }
                     yield;
                 }
@@ -222,7 +216,9 @@ export class GameplayScene extends BaseScene implements Resizable {
                 weapon: PlayerMachineGun
             });
             p.setAlpha(0); // hidden until player enters room
-            this.physics.world.disable(p); // disabled until player close to opponent
+            p.setActive(false);
+            // setup collision with map walls
+            this.physics.add.collider(p, this.getLevel().wallsLayer);
             let controller = new AiController(this, p);
             SpaceSimClient.opponents.push(controller);
             this._ships.set(p.id, p);
@@ -255,7 +251,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         this._ships.set(ship.id, ship);
         
         // setup collision with map walls
-        this.physics.add.collider(this.playerShip, this.getLevel().primaryLayer);
+        this.physics.add.collider(this.playerShip, this.getLevel().wallsLayer);
 
         // setup listener for player death event
         this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
@@ -352,7 +348,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             ignore: [
                 this._backgroundStars, 
                 ...this._stellarBodies.map(b => b.getGameObject()),
-                this.getLevel().primaryLayer
+                this.getLevel().wallsLayer
             ],
             followObject: this.playerShip
         });
@@ -379,7 +375,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 });
             this.add.tween({
                 targets: [
-                    ...this.getLevel().primaryLayer.getTilesWithin(room.x, room.y, room.width, room.height),
+                    ...this.getLevel().wallsLayer.getTilesWithin(room.x, room.y, room.width, room.height),
                     ...this.getLevel().radarLayer.getTilesWithin(room.x, room.y, room.width, room.height),
                     ...opponentsInRoom
                 ],
@@ -388,9 +384,8 @@ export class GameplayScene extends BaseScene implements Resizable {
             });
             // enable physics for enemies in the room
             opponentsInRoom.forEach(o => {
-                // setup collision with map walls
-                this.physics.add.collider(o, this.getLevel().primaryLayer);
                 // setup collision with player
+                o.setActive(true);
                 this.physics.add.collider(o, this.playerShip, () => {
                     if (o?.active && this.playerShip?.active) {
                         const collisionSpeed = o.body.velocity.clone().subtract(this.playerShip.body.velocity).length();
@@ -440,7 +435,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
                 break;
         }
-        this.physics.add.collider(supply, this.getLevel().primaryLayer);
+        this.physics.add.collider(supply, this.getLevel().wallsLayer);
         this.physics.add.collider(supply, this.playerShip, () => {
                 this._supplies.delete(supply.id);
                 supply.apply(this.playerShip);
