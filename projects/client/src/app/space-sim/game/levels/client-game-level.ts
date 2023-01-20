@@ -1,4 +1,4 @@
-import { BaseScene, Constants, GameLevel, GameLevelOptions } from "space-sim-shared";
+import { BaseScene, Constants, GameLevel, GameLevelOptions, SpaceSim } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
 
 export class ClientGameLevel extends GameLevel {
@@ -11,5 +11,9 @@ export class ClientGameLevel extends GameLevel {
         super(scene, options);
 
         this.primaryLayer.setDepth(Constants.UI.Layers.PLAYER);
+        if (SpaceSim.debug) {
+            const graphics = this.scene.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xffff00 } });
+            this.primaryLayer.renderDebug(graphics);
+        }
     }
 }

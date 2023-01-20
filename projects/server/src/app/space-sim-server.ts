@@ -27,7 +27,6 @@ export class SpaceSimServer extends GameServerEngine {
 }
 
 export module SpaceSimServer {
-    export var trace: boolean = false;
     export var io: ServerSocketManager;
     export const users = new DataTable<SpaceSimServerUserData>({indexKeys: ['fingerprint', 'name']});
     export const rooms = (): Array<BattleRoyaleScene> => SpaceSim.game.scene.getScenes(true)

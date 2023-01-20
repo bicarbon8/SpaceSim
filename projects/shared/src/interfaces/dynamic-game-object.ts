@@ -1,5 +1,4 @@
 export type DynamicGameObject = Phaser.GameObjects.GameObject & {
-    x: number;
-    y: number;
-    angle: number;
+    location: Phaser.Types.Math.Vector2Like;
+    heading: Phaser.Types.Math.Vector2Like;
 }

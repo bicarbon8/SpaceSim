@@ -228,31 +228,13 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         return path.reverse();
     }
 
-    canSee(observer: DynamicGameObject, target: DynamicGameObject, maxDistance: number): boolean {
-        const observerHeading = Helpers.getHeading(observer.angle);
-        const origin = {x: observer.x, y: observer.y};
-        const rightAnglePoint = Helpers.vector2(origin.x, origin.y)
-            .add(observerHeading.clone().multiply(Helpers.vector2(maxDistance)));
-        const hypotenusePoint1 = rightAnglePoint.clone()
-            .add(observerHeading.clone().normalizeRightHand()
-                .multiply(Helpers.vector2(maxDistance / 4)));
-        const hypotenusePoint2 = rightAnglePoint.clone()
-            .add(observerHeading.clone().normalizeLeftHand()
-                .multiply(Helpers.vector2(maxDistance / 4)));
-        const view = new Phaser.Geom.Triangle(origin.x, origin.y, hypotenusePoint2.x, hypotenusePoint2.y, hypotenusePoint1.x, hypotenusePoint1.y);
-        
-        if (SpaceSim.debug) {
-            const graphics = this.scene.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xffff00 } });
-            graphics.strokeTriangleShape(view);
-            this.scene.tweens.add({
-                targets: graphics,
-                alpha: 0,
-                duration: 1000,
-                onComplete: () => graphics.destroy()
-            });
+    isWallObscuring(start: Phaser.Types.Math.Vector2Like, end: Phaser.Types.Math.Vector2Like): boolean {
+        const ray = new Phaser.Geom.Line(start.x, start.y, end.x, end.y);
+        const wallTiles = this.getTilesWithinShape(ray, {isNotEmpty: true, isColliding: true}, this.scene.cameras.main, this._primaryLayer);
+        if (wallTiles?.length) {
+            return true;
         }
-
-        return view.contains(target.x, target.y);
+        return false;
     }
 
     private _createDungeon(options: GameLevelOptions): Dungeon {
@@ -279,9 +261,9 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
 
     private _createLayers(): void {
         const wallsTileSet: Phaser.Tilemaps.Tileset = this.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
-        this._primaryLayer = this.createBlankLayer('Map Layer', wallsTileSet);
+        this._primaryLayer = this.createBlankLayer('walls', wallsTileSet);
         const radarTileSet = this.addTilesetImage('minimaptile', 'minimaptile', 96, 96, 0, 0);
-        this._radarLayer = this.createBlankLayer('MiniMap Layer', radarTileSet);
+        this._radarLayer = this.createBlankLayer('radar', radarTileSet);
         
         this._dungeon.rooms.forEach(room => {
             const { x, y, width, height, left, right, top, bottom } = room;
@@ -320,11 +302,6 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         });
 
         this._primaryLayer.setCollisionBetween(1, 14);
-
-        if (SpaceSim.debug) {
-            const graphics = this.scene.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xffff00 } });
-            this._primaryLayer.renderDebug(graphics);
-        }
         // this.scene.physics.add.existing(this._primaryLayer);
         // this._primaryLayer.body.mass = 1000000;
     }
