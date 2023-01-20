@@ -172,7 +172,7 @@ export class BattleRoyaleScene extends BaseScene {
             engine: Engine,
             weapon: MachineGun
         });
-        this.physics.add.collider(ship, this.getLevel().primaryLayer);
+        this.physics.add.collider(ship, this.getLevel().wallsLayer);
         this._addPlayerCollisionPhysicsWithPlayers(ship);
         this._addPlayerCollisionPhysicsWithSupplies(ship);
         Helpers.log('debug', `adding ship with fingerprint: ${data.fingerprint},`,
@@ -241,7 +241,7 @@ export class BattleRoyaleScene extends BaseScene {
         const circleA = new Phaser.Geom.Circle(location.x, location.y, radius);
 
         // ensure within walls of room
-        const tiles: Array<Phaser.Tilemaps.Tile> = this.getLevel().primaryLayer
+        const tiles: Array<Phaser.Tilemaps.Tile> = this.getLevel().wallsLayer
             .getTilesWithinShape(circleA)?.filter(t => t.collides);
         if (tiles?.length > 0) {
             Helpers.log('debug', `location collides with map tiles: `, location);
@@ -295,7 +295,7 @@ export class BattleRoyaleScene extends BaseScene {
                     console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, opts.supplyType);
                     break;
             }
-            this.physics.add.collider(supply, this.getLevel().primaryLayer);
+            this.physics.add.collider(supply, this.getLevel().wallsLayer);
             const activeShips = this.getShips().filter(p => p?.active);
             for (let activeShip of activeShips) {
                 this.physics.add.collider(supply, activeShip, () => {
