@@ -36,9 +36,9 @@ export class TouchController extends InputController {
         const degrees: number = +Helpers.rad2deg(radians).toFixed(0);
         // Helpers.log('info', `handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
         // only update if angle changed more than minimum allowed degrees
-        if (!Phaser.Math.Fuzzy.Equal(this.ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
+        if (!Phaser.Math.Fuzzy.Equal(this.ship.rotationContainer.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
             SpaceSimClient.socket?.sendSetShipAngleRequest(degrees, SpaceSimClient.playerData);
-            this.ship.setRotation(degrees);
+            this.ship.rotationContainer.setAngle(degrees);
         }
     }
 
