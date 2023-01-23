@@ -35,11 +35,6 @@ export class BattleRoyaleScene extends BaseScene {
 
     readonly ROOM_NAME: string;
     
-    /**
-     * mapping of `fingerprint-name` to ship.id since socket disconnect
-     * results in new socket id on reconnect so it can't be used.
-     */
-    private readonly _dataToShipId = new Map<string, string>();
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
     private readonly _removeShipQueue = new Array<string>();
@@ -137,13 +132,12 @@ export class BattleRoyaleScene extends BaseScene {
                 // TODO: filter out stats from other rooms
                 SpaceSimServer.io.sendUpdateStatsToRoom(this.ROOM_NAME, GameScoreTracker.getAllStats());
                 this._processFlickerSupplyQueue();
-                this._cleanup()
             }, 'warn');
         }
     }
 
     getShipByData(data: SpaceSimUserData): Ship {
-        const id = this._dataToShipId.get(SpaceSimServer.users.generateKey(data));
+        const id = SpaceSimServer.users.selectFirst(data)?.shipId;
         let ship: Ship;
         if (id) {
             ship = this._ships.get(id);
@@ -181,9 +175,8 @@ export class BattleRoyaleScene extends BaseScene {
         this._ships.set(ship.id, ship);
         GameScoreTracker.start(ship.config);
 
-        const key = SpaceSimServer.users.generateKey(data);
-        Helpers.log('info', `created new ship and associating data '${key}' to ship '${ship.id}'`);
-        this._dataToShipId.set(key, ship.id);
+        Helpers.log('info', `updating user ${JSON.stringify(data)} record to include shipId: '${ship.id}'`);
+        SpaceSimServer.users.update({...data, shipId: ship.id});
         
         return ship;
     }
@@ -199,7 +192,7 @@ export class BattleRoyaleScene extends BaseScene {
 
     removePlayer(player: SpaceSimServerUserData): void {
         Helpers.log('debug', `removing player '${JSON.stringify(player)}' and associated ship...`);
-        const id = this._dataToShipId.get(SpaceSimServer.users.generateKey(player));
+        const id = SpaceSimServer.users.selectFirst(player)?.shipId;
         this.queueShipRemoval(id);
         player.room = null;
         SpaceSimServer.io.leaveRoom(player.socketId, this.ROOM_NAME);
@@ -337,25 +330,6 @@ export class BattleRoyaleScene extends BaseScene {
                 this.queueSupplyRemoval(...supplies.map(s => s.id));
             }, 5000);
         }, 25000);
-    }
-
-    private _cleanup(): void {
-        this._removeSocketToShipMappingForNonexistingShips();
-    }
-
-    private _removeSocketToShipMappingForNonexistingShips(): void {
-        const shipids = Array.from(this._dataToShipId.values());
-        if (shipids?.length) {
-            for (let shipid of shipids) {
-                if (!this._ships.has(shipid)) {
-                    const socketids = Helpers.getMapKeysByValue(this._dataToShipId, shipid);
-                    for (let socketid of socketids) {
-                        Helpers.log('debug', `removing socketToShipId mapping for socket: '${socketid}'`);
-                        this._dataToShipId.delete(socketid);
-                    }
-                }
-            }
-        }
     }
 
     private _processRemoveShipQueue(): void {

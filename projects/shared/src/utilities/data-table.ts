@@ -21,8 +21,12 @@ export class DataTable<T extends {}> {
     private readonly _indexKeys = new Array<keyof T>();
     private readonly _keyDelim: string;
     
-    constructor(options: DataTableOptions<T>) {
-        this._keyDelim = options.keyDelimiter ?? '-';
+    constructor(options?: DataTableOptions<T>) {
+        options = {
+            keyDelimiter: '-',
+            ...options
+        };
+        this._keyDelim = options.keyDelimiter;
         if (options.indexKeys) {
             this._indexKeys.splice(this._indexKeys.length, 0, ...options.indexKeys);
         }
@@ -75,11 +79,11 @@ export class DataTable<T extends {}> {
     /**
      * finds all objects containing matching values for the supplied
      * fields in `partial`
-     * @param partial an object containing one or more fields in type `T`
+     * @param partial an optional object containing one or more fields in type `T`
      * @returns an array of objects containing matching values for all
-     * fields supplied in `partial`
+     * fields supplied in `partial` or all objects if `partial` is not supplied
      */
-    select(partial: Partial<T>): Array<T> {
+    select(partial?: Partial<T>): Array<T> {
         let results: Array<T>;
         if (partial) {
             const findByKeys = Object.keys(partial);
@@ -92,6 +96,9 @@ export class DataTable<T extends {}> {
                 }
                 return true;
             });
+        } else {
+            // return all records in the table
+            results = Array.from(this._tableMap.values());
         }
         return results;
     }
@@ -99,11 +106,11 @@ export class DataTable<T extends {}> {
     /**
      * finds the first object containing matching values for the supplied fields
      * in `partial`
-     * @param partial an object containing one or more fields in type `T`
+     * @param partial an optional object containing one or more fields in type `T`
      * @returns the first non-null (and non-undefined) object matching values
      * for all fields supplied in `partial`
      */
-    selectFirst(partial: Partial<T>): T {
+    selectFirst(partial?: Partial<T>): T {
         const results = this.select(partial);
         return results.find(r => r != null);
     }
@@ -119,6 +126,18 @@ export class DataTable<T extends {}> {
     get(containsIndexKeys: Partial<T>): T {
         const key = this.generateKey(containsIndexKeys);
         return this._tableMap.get(key);
+    }
+
+    /**
+     * returns the number of fields matching the specified selection
+     * criteria passed in `partial`
+     * @param partial an optional object containing one or more fields in type `T`
+     * @returns the number of records found that match the passed in `partial` or
+     * all if no `partial` is supplied
+     */
+    count(partial?: Partial<T>): number {
+        const records = this.select(partial);
+        return records.length;
     }
 
     /**

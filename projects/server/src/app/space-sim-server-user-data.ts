@@ -1,6 +1,7 @@
 import { SpaceSimUserData } from "space-sim-shared";
 
 export type SpaceSimServerUserData = SpaceSimUserData & {
-    socketId: string;
+    socketId?: string;
     room?: string;
+    shipId?: string;
 }
