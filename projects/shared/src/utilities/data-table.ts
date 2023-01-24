@@ -46,7 +46,7 @@ export class DataTable<T extends {}> {
      */
     add(record: T): boolean {
         if (record) {
-            const key = this.generateKey(record);
+            const key = this.getKey(record);
             if (!this._tableMap.has(key)) {
                 this._tableMap.set(key, record);
             }
@@ -66,7 +66,7 @@ export class DataTable<T extends {}> {
         if (partial) {
             const oldRecord = this.get(partial);
             if (oldRecord) {
-                this._tableMap.set(this.generateKey(oldRecord), {
+                this._tableMap.set(this.getKey(oldRecord), {
                     ...oldRecord,
                     ...partial
                 });
@@ -100,7 +100,7 @@ export class DataTable<T extends {}> {
             // return all records in the table
             results = Array.from(this._tableMap.values());
         }
-        return results;
+        return JSON.parse(JSON.stringify(results));
     }
 
     /**
@@ -124,8 +124,12 @@ export class DataTable<T extends {}> {
      * `undefined` if none exist
      */
     get(containsIndexKeys: Partial<T>): T {
-        const key = this.generateKey(containsIndexKeys);
-        return this._tableMap.get(key);
+        const key = this.getKey(containsIndexKeys);
+        const record = this._tableMap.get(key);
+        if (record) {
+            return JSON.parse(JSON.stringify(record));
+        }
+        return undefined;
     }
 
     /**
@@ -151,7 +155,7 @@ export class DataTable<T extends {}> {
     delete(partial: Partial<T>): Array<T> {
         const found = this.select(partial);
         for (let f of found) {
-            let key = this.generateKey(f);
+            let key = this.getKey(f);
             this._tableMap.delete(key);
         }
         return found;
@@ -174,7 +178,7 @@ export class DataTable<T extends {}> {
      * converted into a `string` key
      * @returns the `string` key
      */
-    generateKey(record: Partial<T>): string {
+    getKey(record: Partial<T>): string {
         let key: string;
         if (this._indexKeys.length) {
             for (let k of this._indexKeys) {

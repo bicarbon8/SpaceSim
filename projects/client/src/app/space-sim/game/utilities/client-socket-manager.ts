@@ -108,7 +108,7 @@ export class ClientSocketManager {
                         this._handleDisconnectEvent(args[0], args[1]);
                         break;
                     case Constants.Socket.INVALID_USER_DATA:
-                        this._handleInvalidUserDataEvent();
+                        this._handleInvalidUserDataEvent(args[0]);
                         break;
                     case Constants.Socket.USER_ACCEPTED:
                         this._handleUserAcceptedEvent(args[0]);
@@ -179,11 +179,13 @@ export class ClientSocketManager {
         }
     }
 
-    private _handleInvalidUserDataEvent(): void {
+    private _handleInvalidUserDataEvent(message: string): void {
         SpaceSimClient.playerData = null;
-        if (SpaceSim.game.scene.isActive(SetNameSceneConfig.key)) {
-            window.alert(`user data either already in use or is invalid; please pick a different value.`);
+        if (!SpaceSim.game.scene.isActive(SetNameSceneConfig.key)) {
+            SpaceSim.game.scene.getScenes(true).forEach(s => SpaceSim.game.scene.stop(s));
+            SpaceSim.game.scene.start(SetNameSceneConfig.key);
         }
+        window.alert(message ?? `user data either already in use or is invalid; please pick a different value.`);
     }
 
     private _handleUserAcceptedEvent(data: SpaceSimUserData): void {

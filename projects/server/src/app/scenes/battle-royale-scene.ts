@@ -181,20 +181,24 @@ export class BattleRoyaleScene extends BaseScene {
         return ship;
     }
 
-    addPlayer(player: SpaceSimServerUserData): void {
+    addPlayerToScene(player: SpaceSimServerUserData): void {
         if (player) {
-            Helpers.log('debug', `adding player ${JSON.stringify(player)} to scene ${this.ROOM_NAME}`);
+            Helpers.log('debug', `adding player ${JSON.stringify(player)} to scene '${this.ROOM_NAME}'`);
             player.room = this.ROOM_NAME;
             SpaceSimServer.io.joinRoom(player.socketId, this.ROOM_NAME);
+            SpaceSimServer.users.update(player);
             SpaceSimServer.io.sendJoinRoomResponse(player.socketId);
         }
     }
 
-    removePlayer(player: SpaceSimServerUserData): void {
-        Helpers.log('debug', `removing player '${JSON.stringify(player)}' and associated ship...`);
+    removePlayerFromScene(player: SpaceSimServerUserData): void {
+        Helpers.log('debug', `removing player '${JSON.stringify(player)}' and associated ship from scene '${this.ROOM_NAME}'...`);
         const id = SpaceSimServer.users.selectFirst(player)?.shipId;
-        this.queueShipRemoval(id);
+        if (id) {
+            this.queueShipRemoval(id);
+        }
         player.room = null;
+        SpaceSimServer.users.update(player);
         SpaceSimServer.io.leaveRoom(player.socketId, this.ROOM_NAME);
     }
 
@@ -217,6 +221,11 @@ export class BattleRoyaleScene extends BaseScene {
         SpaceSimServer.io.sendShipDestroyedEventToRoom(this.ROOM_NAME, opts.id);
 
         if (this._ships.has(opts.id)) {
+            // remove association of ship to user
+            const user = SpaceSimServer.users.selectFirst({shipId: opts.id});
+            if (user) {
+                SpaceSimServer.users.update({...user, shipId: null});
+            }
             // prevent further updates to ship
             const player = this.getShip<ServerShip>(opts.id);
             this._ships.delete(opts.id);

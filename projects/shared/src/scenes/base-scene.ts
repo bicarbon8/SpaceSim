@@ -1,5 +1,5 @@
 import { GameLevel, GameLevelOptions } from "../levels/game-level";
-import { Ship, ShipConfig, ShipOptions } from "../ships/ship";
+import { Ship, ShipConfig } from "../ships/ship";
 import { ShipSupply, ShipSupplyOptions } from "../ships/supplies/ship-supply";
 
 export abstract class BaseScene extends Phaser.Scene {
