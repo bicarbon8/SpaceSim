@@ -5,6 +5,7 @@ import { Constants, GameScoreTracker, GameStats, Helpers } from "space-sim-share
 import { MultiplayerSceneConfig } from "./multiplayer-scene";
 import { GameplaySceneConfig } from "./gameplay-scene";
 import { StartupSceneConfig } from "./startup-scene";
+import { SetNameSceneConfig } from "./set-name-scene";
 
 export const GameOverSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -140,7 +141,11 @@ export class GameOverScene extends Phaser.Scene {
                         this.game.scene.start(GameplaySceneConfig.key);
                         break;
                     case 'multiplayer':
-                        this.game.scene.start(MultiplayerSceneConfig.key);
+                        if (SpaceSimClient.socket?.connected) {
+                            this.game.scene.start(SetNameSceneConfig.key);
+                        } else {
+                            this.game.scene.start(StartupSceneConfig.key);
+                        }
                         break;
                     default:
                         this.game.scene.start(StartupSceneConfig.key);

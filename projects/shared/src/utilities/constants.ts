@@ -77,6 +77,7 @@ export module Constants {
         export const UPDATE_STATS = 'update-stats';
         export const INVALID_USER_DATA = 'invalid-user-data';
         export const USER_ACCEPTED = 'user-accepted';
+        export const INVALID_REQUEST = 'invalid-request';
     }
     export module Timing {
         export const HIGH_PRI_UPDATE_FREQ = 1000/60; // 60 fps

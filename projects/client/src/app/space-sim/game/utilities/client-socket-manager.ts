@@ -1,6 +1,7 @@
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
 import { BaseScene, Constants, GameLevelOptions, GameScoreTracker, GameStats, Helpers, ShipConfig, ShipOptions, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { GameOverSceneConfig } from "../scenes/game-over-scene";
 import { MultiplayerSceneConfig } from "../scenes/multiplayer-scene";
 import { SetNameSceneConfig } from "../scenes/set-name-scene";
 import { SpaceSimClient } from "../space-sim-client";
@@ -152,6 +153,9 @@ export class ClientSocketManager {
                     case Constants.Socket.WEAPON_DISABLED:
                         this._handleDisableWeaponEvent(args[0]);
                         break;
+                    case Constants.Socket.INVALID_REQUEST:
+                        this._handleInvalidRequestEvent(args[0]);
+                        break;
                     default:
                         Helpers.log('warn', `unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
                         break;
@@ -186,6 +190,19 @@ export class ClientSocketManager {
             SpaceSim.game.scene.start(SetNameSceneConfig.key);
         }
         window.alert(message ?? `user data either already in use or is invalid; please pick a different value.`);
+    }
+
+    private _handleInvalidRequestEvent(message: string): void {
+        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
+            const scene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
+            if (scene) {
+                scene.queueEndScene();
+            }
+        } else {
+            window.alert(message);
+            SpaceSim.game.scene.getScenes(true).forEach(s => SpaceSim.game.scene.stop(s));
+            SpaceSim.game.scene.start(SetNameSceneConfig.key);
+        }
     }
 
     private _handleUserAcceptedEvent(data: SpaceSimUserData): void {
@@ -243,17 +260,10 @@ export class ClientSocketManager {
     private _handlePlayerDeathEvent(id?: string): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
-            if (!id) {
-                if (SpaceSimClient.playerShipId) {
-                    id = SpaceSimClient.playerShipId;
-                } else {
-                    if (scene) {
-                        scene.queueEndScene();
-                        return;
-                    }
-                }
-            }
             if (scene) {
+                if (!id) {
+                    id = SpaceSimClient.playerShipId;
+                }
                 scene.queueShipRemoval(id);
             }
         }

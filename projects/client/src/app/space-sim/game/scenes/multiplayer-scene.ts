@@ -151,12 +151,12 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         }
         try {
             this._processEndScene();
-            this._processRemoveShipsQueue();
             this._processUpdateShipsQueue();
+            this._processRemoveShipsQueue();
             this.getShips().forEach(p => p?.update(time, delta));
+            this._processUpdateSuppliesQueue();
             this._processRemoveSuppliesQueue();
             this._processFlickerSuppliesQueue();
-            this._processUpdateSuppliesQueue();
 
             this._stellarBodies.forEach((body) => {
                 body?.update(time, delta);
@@ -393,11 +393,12 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     Helpers.log('debug', `removing ship '${id}'`);
                     this._exploder.explode({location: ship.location});
                     this._ships.delete(id);
-                    ship.destroy();
-
+                    
                     if (SpaceSimClient.playerShipId === id) {
                         Helpers.log('info', `player ship removed; queuing game over...`);
                         this.queueEndScene();
+                    } else {
+                        ship.destroy();
                     }
                 }
             }

@@ -49,10 +49,6 @@ export class SetNameScene extends Phaser.Scene {
         if (SpaceSimUserData.isValid(SpaceSimClient.playerData)) {
             this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
             this._updateContinueButton();
-        } else {
-            SpaceSimClient.playerData = {
-                fingerprint: getBrowserFingerprint()
-            };
         }
     }
 
@@ -145,7 +141,7 @@ export class SetNameScene extends Phaser.Scene {
         const pname = Helpers.sanitise(text);
         if (pname.length > 2) {
             SpaceSimClient.socket.sendSetPlayerDataRequest({
-                ...SpaceSimClient.playerData,
+                fingerprint: getBrowserFingerprint(),
                 name: pname
             });
         } else {

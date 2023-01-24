@@ -57,6 +57,10 @@ export class ServerSocketManager {
         return this.socketEmit(socketId, Constants.Socket.INVALID_USER_DATA, message);
     }
 
+    sendInvalidRequestEvent(socketId: string, message: string): this {
+        return this.socketEmit(socketId, Constants.Socket.INVALID_REQUEST, message);
+    }
+
     sendUpdateStatsToRoom(room, stats: Array<Partial<GameStats>>): this {
         return this.roomEmit(room, Constants.Socket.UPDATE_STATS, stats);
     }
@@ -215,14 +219,14 @@ export class ServerSocketManager {
         this._disconnects++;
         Helpers.log('info', `socket: ${socketId} disconnected (#${this._disconnects}) due to:`, reason);
         const user = SpaceSimServer.users.selectFirst({socketId: socketId});
-        if (user) {
-            Helpers.log('info', `creating timeout to remove user '${JSON.stringify(user)}' in ${Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
+        if (user?.room) {
+            Helpers.log('info', `creating timeout to remove user`, user, `in ${Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
             this._disconnectTimers.set(SpaceSimServer.users.getKey(user), window.setTimeout(() => {
-                SpaceSimServer.users.delete(user);
                 const scene = SpaceSim.game.scene.getScene(user.room) as BattleRoyaleScene;
                 if (scene) {
                     scene.removePlayerFromScene(user);
                 }
+                SpaceSimServer.users.delete(user);
             }, Constants.Timing.DISCONNECT_TIMEOUT_MS));
         }
     }
@@ -235,7 +239,7 @@ export class ServerSocketManager {
             }
         }
 
-        this.sendInvalidUserDataResponse(socketId, 'unable to reconnect or add new user using supplied data; please correct and try again.');
+        this.sendInvalidUserDataResponse(socketId, 'unable to reconnect or add new user using supplied data; please choose a different name and try again.');
     }
 
     private _tryReconnectUser(socketId: string, data: SpaceSimUserData): boolean {
@@ -262,17 +266,20 @@ export class ServerSocketManager {
     }
 
     private _tryAddNewUser(socketId: string, data: SpaceSimUserData): boolean {
-        const nameInUseBy = SpaceSimServer.users.select({name: data.name}).length;
-        if (nameInUseBy > 0) {
-            Helpers.log('debug', `name already in use so user cannot be added: ${JSON.stringify(data)}`);
+        if (SpaceSimServer.users.count({name: data.name}) > 0) {
+            Helpers.log('debug', `name already in use so user cannot be added:`, data);
             return false;
         } else {
-            SpaceSimServer.users.add({
+            const added = SpaceSimServer.users.add({
                 ...data,
                 socketId: socketId
             });
-            Helpers.log('info', `user '${JSON.stringify(data)}' added to known users over socket '${socketId}'`);
-            return true;
+            if (added) {
+                Helpers.log('info', `user '${JSON.stringify(data)}' added to known users over socket '${socketId}'`);
+            } else {
+                Helpers.log('warn', 'user with same fingerprint and name already exist:', data);
+            }
+            return added;
         }
     }
 
@@ -298,7 +305,7 @@ export class ServerSocketManager {
             }
         } else {
             console.error(`unable to join room due to: no existing user found for socket '${socketId}' with data '${JSON.stringify(data)}'`);
-            this.sendInvalidUserDataResponse(socketId, 'no existing user found on server matching request to join room; please resubmit user data and try again');
+            this.sendInvalidRequestEvent(socketId, 'no existing user found on server matching request to join room; please resubmit user data and try again');
         }
     }
 
@@ -311,11 +318,11 @@ export class ServerSocketManager {
                 this.socketEmit(socketId, Constants.Socket.UPDATE_MAP, SpaceSimServer.MAP_OPTIONS);
             } else {
                 Helpers.log('warn', `no scene could be found matching room '${user.room}' so map data will not be sent`);
-                this.sendInvalidUserDataResponse(socketId, 'supplied user is not in a room so is not allowed to request a GameLevel');
+                this.sendInvalidRequestEvent(socketId, 'supplied user is not in a room so is not allowed to request a GameLevel');
             }
         } else {
             Helpers.log('warn', `no user could be found using socket '${socketId}' so map data will not be sent`);
-            this.sendInvalidUserDataResponse(socketId, 'supplied user could not be found; please resend user data and try again');
+            this.sendInvalidRequestEvent(socketId, 'supplied user could not be found; please resend user data and try again');
         }
     }
 
@@ -324,16 +331,16 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
-                const ship = scene.getShipByData(user) ?? scene.createShip(user);
+                const ship = scene.getShip(user.shipId) ?? scene.createShip(user);
                 Helpers.log('debug', `sending ship id ${ship.id} to client ${socketId}`);
                 this.sendSetShipIdResponse(socketId, ship.id);
             } else {
                 Helpers.log('warn', `no scene could be found matching room '${user.room}' so new ship not created`);
-                this.sendInvalidUserDataResponse(socketId, 'supplied user is not in a room so is not allowed to request a Ship');
+                this.sendInvalidRequestEvent(socketId, 'supplied user is not in a room so is not allowed to request a Ship');
             }
         } else {
             Helpers.log('warn', `no user could be found using socket '${socketId}' so new ship not created`);
-            this.sendInvalidUserDataResponse(socketId, 'supplied user could not be found; please resend user data and try again');
+            this.sendInvalidRequestEvent(socketId, 'supplied user could not be found; please resend user data and try again');
         }
     }
 
@@ -386,7 +393,7 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
-                const ship = scene.getShipByData(user);
+                const ship = scene.getShip(user.shipId);
                 if (ship) {
                     scene.queueShipRemoval(ship.id);
                 }
@@ -414,12 +421,12 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
-                ship = scene.getShipByData(user);
+                ship = scene.getShip(user.shipId);
             } else {
-                Helpers.log('warn', `no scene containing user could be found from data '${JSON.stringify(data)}'`);
+                Helpers.log('warn', `no scene containing user could be found from data:`, data);
             }
         } else {
-            Helpers.log('warn', `no user could be found from data '${JSON.stringify(data)}'`);
+            Helpers.log('warn', `no user could be found from data:`, data);
         }
         return ship;
     }

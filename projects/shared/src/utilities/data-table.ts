@@ -49,6 +49,7 @@ export class DataTable<T extends {}> {
             const key = this.getKey(record);
             if (!this._tableMap.has(key)) {
                 this._tableMap.set(key, record);
+                return true;
             }
         }
         return false;

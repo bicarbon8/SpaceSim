@@ -136,15 +136,6 @@ export class BattleRoyaleScene extends BaseScene {
         }
     }
 
-    getShipByData(data: SpaceSimUserData): Ship {
-        const id = SpaceSimServer.users.selectFirst(data)?.shipId;
-        let ship: Ship;
-        if (id) {
-            ship = this._ships.get(id);
-        }
-        return ship;
-    }
-
     createShip(data: SpaceSimUserData): Ship {
         const room = this.getLevel().rooms[0];
         const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+1, room.top+1);
@@ -182,24 +173,29 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     addPlayerToScene(player: SpaceSimServerUserData): void {
-        if (player) {
-            Helpers.log('debug', `adding player ${JSON.stringify(player)} to scene '${this.ROOM_NAME}'`);
-            player.room = this.ROOM_NAME;
-            SpaceSimServer.io.joinRoom(player.socketId, this.ROOM_NAME);
-            SpaceSimServer.users.update(player);
-            SpaceSimServer.io.sendJoinRoomResponse(player.socketId);
+        const user = SpaceSimServer.users.selectFirst(player);
+        if (user) {
+            Helpers.log('debug', `adding player:`, user, `to scene:`, this.ROOM_NAME);
+            user.room = this.ROOM_NAME;
+            SpaceSimServer.io.joinRoom(user.socketId, this.ROOM_NAME);
+            SpaceSimServer.users.update(user);
+            SpaceSimServer.io.sendJoinRoomResponse(user.socketId);
         }
     }
 
     removePlayerFromScene(player: SpaceSimServerUserData): void {
-        Helpers.log('debug', `removing player '${JSON.stringify(player)}' and associated ship from scene '${this.ROOM_NAME}'...`);
-        const id = SpaceSimServer.users.selectFirst(player)?.shipId;
-        if (id) {
-            this.queueShipRemoval(id);
+        const user = SpaceSimServer.users.selectFirst(player);
+        if (user) {
+            Helpers.log('debug', `removing player:`, user, `from scene:`, this.ROOM_NAME);
+            const id = user.shipId;
+            if (id) {
+                this.queueShipRemoval(id);
+            }
+            user.room = null;
+            user.shipId = null;
+            SpaceSimServer.users.update(user);
+            SpaceSimServer.io.leaveRoom(user.socketId, this.ROOM_NAME);
         }
-        player.room = null;
-        SpaceSimServer.users.update(player);
-        SpaceSimServer.io.leaveRoom(player.socketId, this.ROOM_NAME);
     }
 
     private _setupSceneEventHandling(): void {
@@ -224,7 +220,7 @@ export class BattleRoyaleScene extends BaseScene {
             // remove association of ship to user
             const user = SpaceSimServer.users.selectFirst({shipId: opts.id});
             if (user) {
-                SpaceSimServer.users.update({...user, shipId: null});
+                this.removePlayerFromScene(user);
             }
             // prevent further updates to ship
             const player = this.getShip<ServerShip>(opts.id);
@@ -334,9 +330,9 @@ export class BattleRoyaleScene extends BaseScene {
      */
     private _cleanupSupplies(...supplies: Array<ShipSupply>): void {
         window.setTimeout(() => {
-            this.queueSupplyFlicker(...supplies.map(s => s.id));
+            this.queueSupplyFlicker(...supplies.filter(s => s.active).map(s => s.id));
             window.setTimeout(() => {
-                this.queueSupplyRemoval(...supplies.map(s => s.id));
+                this.queueSupplyRemoval(...supplies.filter(s => s.active).map(s => s.id));
             }, 5000);
         }, 25000);
     }
