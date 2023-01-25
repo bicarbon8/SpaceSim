@@ -219,7 +219,8 @@ export class GameplayScene extends BaseScene implements Resizable {
             p.setActive(false);
             // setup collision with map walls
             this.physics.add.collider(p, this.getLevel().wallsLayer);
-            let controller = new AiController(this, p);
+            let controller = new AiController(this, p)
+                .setEnemyIds(SpaceSimClient.playerShipId);
             SpaceSimClient.opponents.push(controller);
             this._ships.set(p.id, p);
         };

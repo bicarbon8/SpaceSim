@@ -1,6 +1,6 @@
-import { HasGameObject, Updatable, Ship } from "space-sim-shared";
+import { Updatable, Ship } from "space-sim-shared";
 
-export abstract class InputController implements Updatable, HasGameObject<Phaser.GameObjects.Container> {
+export abstract class InputController implements Updatable {
     readonly id: string;
 
     private _scene: Phaser.Scene;
@@ -32,13 +32,4 @@ export abstract class InputController implements Updatable, HasGameObject<Phaser
     }
 
     abstract update(time: number, delta: number): void;
-    abstract getGameObject(): Phaser.GameObjects.Container;
-
-    getRotation(): number {
-        return this.getGameObject().angle;
-    }
-
-    setRotation(degrees: number): void {
-        this.getGameObject().setAngle(degrees);
-    }
 }

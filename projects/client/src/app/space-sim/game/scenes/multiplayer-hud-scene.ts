@@ -144,17 +144,15 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     }
 
     private _createController(): void {
-        if (this._controller) {
-            this._controller.getGameObject()?.destroy();
-        }
         if (this.game.device.os.desktop) {
             this._controller = new KbmController(this, this.playerShip);
         } else {
-            this._controller = new TouchController(this, this.playerShip);
-        }
-        const obj = this._controller.getGameObject();
-        if (obj) {
-            this.add.existing(obj);
+            if (this._controller) {
+                (this._controller as TouchController).getGameObject()?.destroy();
+            }
+            const controller = new TouchController(this, this.playerShip);
+            this.add.existing(controller.getGameObject());
+            this._controller = controller;
         }
     }
 
