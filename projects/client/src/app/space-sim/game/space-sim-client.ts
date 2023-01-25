@@ -1,5 +1,5 @@
 import "phaser";
-import { SpaceSim, Size, SpaceSimUserData } from "space-sim-shared";
+import { SpaceSim, Size, SpaceSimUserData, AiController } from "space-sim-shared";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
@@ -7,7 +7,6 @@ import { StartupScene } from "./scenes/startup-scene";
 import { SpaceSimClientOptions } from "./space-sim-client-options";
 import { MultiplayerScene } from "./scenes/multiplayer-scene";
 import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
-import { AiController } from "./controllers/ai-controller";
 import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
 import { environment } from "../../../environments/environment";

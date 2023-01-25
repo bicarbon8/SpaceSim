@@ -1,6 +1,5 @@
-import { Constants, Ship } from "space-sim-shared";
+import { InputController, Ship } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
-import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
 
 export class KbmController extends InputController {

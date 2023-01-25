@@ -1,11 +1,10 @@
 import * as Phaser from "phaser";
-import { Constants, Helpers, RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel } from "space-sim-shared";
+import { Constants, Helpers, RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, AiController } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { StellarBodyOptions } from "../star-systems/stellar-body";
 import { Resizable } from "../interfaces/resizable";
-import { AiController } from "../controllers/ai-controller";
 import { Radar } from "../ui-components/radar";
 import { Camera } from "../ui-components/camera";
 import { PlayerShip } from "../ships/player-ship";

@@ -1,6 +1,5 @@
-import { Constants, GameScoreTracker, GameStats, Helpers, SpaceSim, BaseScene, Ship } from "space-sim-shared";
+import { Constants, GameScoreTracker, GameStats, Helpers, SpaceSim, BaseScene, Ship, InputController } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
-import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { Resizable } from "../interfaces/resizable";

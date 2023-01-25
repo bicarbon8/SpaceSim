@@ -1,3 +1,6 @@
+/** controllers */
+export * from "./src/controllers/ai-controller";
+export * from "./src/controllers/input-controller";
 /** interfaces */
 export * from "./src/interfaces/can-target";
 export * from "./src/interfaces/damage-metadata";
