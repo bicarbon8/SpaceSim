@@ -226,6 +226,9 @@ export class ClientSocketManager {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
                 scene.queueSupplyUpdates(opts);
+                const updatedIds = Array.from(new Set(opts.map(o => o.id)));
+                const zombieIds = scene.getSupplies().map(s => s.id).filter(id => !updatedIds.includes(id));
+                scene.queueSupplyRemoval(...zombieIds);
             }
         }
     }
@@ -253,6 +256,9 @@ export class ClientSocketManager {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
                 scene.queueShipUpdates(opts);
+                const updatedIds = Array.from(new Set(opts.map(o => o.id)));
+                const zombieIds = scene.getShips().map(s => s.id).filter(id => !updatedIds.includes(id));
+                scene.queueShipRemoval(...zombieIds);
             }
         }
     }
