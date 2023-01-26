@@ -23,7 +23,6 @@ export class AiController extends InputController {
 
     private readonly _enemyIds = new Array<string>();
     private readonly _patrolPath = new Array<Phaser.Types.Math.Vector2Like>();
-    private _patrolSweepAngle: number = 0;
 
     constructor(scene: BaseScene, ship?: Ship) {
         super(scene, ship);

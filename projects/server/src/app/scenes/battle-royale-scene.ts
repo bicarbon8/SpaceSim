@@ -406,7 +406,7 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     private _updateBotEnemyIds(...bots: Array<AiController>): void {
-        const AIs = bots || Array.from(this._bots.values());
+        const AIs = (bots.length > 0) ? bots : Array.from(this._bots.values());
         const botIds = Array.from(this._bots.keys());
         const allShipIds = Array.from(this._ships.keys());
         const notBots = allShipIds.filter(id => !botIds.includes(id));
