@@ -5,18 +5,6 @@ import { SpaceSimServerUserData } from "./space-sim-server-user-data";
 import { ServerSocketManager } from "./utilities/server-socket-manager";
 
 export class SpaceSimServer extends GameServerEngine {
-    private static readonly MAP_WIDTH = 50; // tiles, not pixels
-    private static readonly MAP_HEIGHT = 50;
-    public static readonly MAP_OPTIONS: GameLevelOptions = {
-        seed: 'bicarbon8',
-        width: SpaceSimServer.MAP_WIDTH, // in tiles, not pixels
-        height: SpaceSimServer.MAP_HEIGHT,
-        maxRooms: 1,
-        roomWidth: {min: SpaceSimServer.MAP_WIDTH-1, max: SpaceSimServer.MAP_WIDTH},
-        roomHeight: {min: SpaceSimServer.MAP_HEIGHT-1, max: SpaceSimServer.MAP_HEIGHT},
-        doorPadding: 0
-    };
-    
     constructor() {
         super({scene: [BattleRoyaleScene]});
 
@@ -31,6 +19,24 @@ export module SpaceSimServer {
     export const users = new DataTable<SpaceSimServerUserData>({indexKeys: ['fingerprint', 'name']});
     export const rooms = (): Array<BattleRoyaleScene> => SpaceSim.game.scene.getScenes(true)
         .map(s => s as BattleRoyaleScene);
+    export module Constants {
+        export module Rooms {
+            export const MAX_BOTS = 25;
+        }
+        export module Map {
+            export const MAP_WIDTH = 50; // tiles, not pixels
+            export const MAP_HEIGHT = 50;
+            export const MAP_OPTIONS: GameLevelOptions = {
+                seed: 'bicarbon8',
+                width: MAP_WIDTH, // in tiles, not pixels
+                height: MAP_HEIGHT,
+                maxRooms: 1,
+                roomWidth: {min: MAP_WIDTH-1, max: MAP_WIDTH},
+                roomHeight: {min: MAP_HEIGHT-1, max: MAP_HEIGHT},
+                doorPadding: 0
+            } as const;
+        }
+    }
 }
 
 SpaceSim.debug = false;

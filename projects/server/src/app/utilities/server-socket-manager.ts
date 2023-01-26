@@ -331,7 +331,7 @@ export class ServerSocketManager {
                 const scene = new BattleRoyaleScene();
                 Helpers.log('info', `starting new scene '${scene.ROOM_NAME}'`)
                 SpaceSim.game.scene.add(scene.ROOM_NAME, scene, true);
-                scene.addPlayerToScene(user);
+                scene.events.on(Phaser.Core.Events.READY, () => scene.addPlayerToScene(user));
             }
         } else {
             console.error(`unable to join room due to: no existing user found for socket '${socketId}' with data '${JSON.stringify(data)}'`);
@@ -345,7 +345,7 @@ export class ServerSocketManager {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
                 // TODO: add `GameLevel.config` method and use that data instead
-                this.socketEmit(socketId, Constants.Socket.UPDATE_MAP, SpaceSimServer.MAP_OPTIONS);
+                this.socketEmit(socketId, Constants.Socket.UPDATE_MAP, SpaceSimServer.Constants.Map.MAP_OPTIONS);
             } else {
                 Helpers.log('warn', `no scene could be found matching room '${user.room}' so map data will not be sent`);
                 this.sendInvalidRequestEvent(socketId, 'supplied user is not in a room so is not allowed to request a GameLevel');
@@ -361,9 +361,9 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
-                if (scene.getShips().length < 50) {
+                if (scene.getShips().length < SpaceSimServer.Constants.Rooms.MAX_BOTS) {
                     const battle = scene as BattleRoyaleScene;
-                    const diff = 50 - scene.getShips().length;
+                    const diff = SpaceSimServer.Constants.Rooms.MAX_BOTS - scene.getShips().length;
                     for (let i=0; i<diff; i++) {
                         battle.createBot();
                     }

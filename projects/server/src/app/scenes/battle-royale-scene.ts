@@ -85,7 +85,7 @@ export class BattleRoyaleScene extends BaseScene {
         this._exploder = new Exploder(this);
         this._createGameLevel();
         this._setupSceneEventHandling();
-        for (let i=0; i<50; i++) {
+        for (let i=0; i<SpaceSimServer.Constants.Rooms.MAX_BOTS; i++) {
             this.createBot();
         }
     }
@@ -238,7 +238,7 @@ export class BattleRoyaleScene extends BaseScene {
 
     private _createGameLevel(): void {
         Helpers.log('debug', `creating GameLevel in room ${this.ROOM_NAME}`);
-        const map = new GameLevel(this, SpaceSimServer.MAP_OPTIONS);
+        const map = new GameLevel(this, SpaceSimServer.Constants.Map.MAP_OPTIONS);
         this._gameLevel = map;
     }
 
