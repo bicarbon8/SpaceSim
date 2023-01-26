@@ -17,6 +17,17 @@ export class Engine extends ShipAttachment {
         this._lastUsedAt = Constants.Ship.Engine.USAGE_DELAY_MS;
     }
 
+    override setEnabled(enabled: boolean): void {
+        super.setEnabled(enabled);
+        let event: any;
+        if (enabled) {
+            event = Constants.Events.ENGINE_ENABLED;
+        } else {
+            event = Constants.Events.ENGINE_DISABLED;
+        }
+        this.scene.events.emit(event, this.ship.id);
+    }
+
     update(time: number, delta: number): void {
         if (this._canThrust(time)) {
             this._applyThrust({

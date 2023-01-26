@@ -52,10 +52,14 @@ export module Constants {
         }
     }
     export module Events {
-        export const SHIP_DEATH: string = 'ship-death';
+        export const SHIP_DEATH = 'ship-death';
+        export const WEAPON_ENABLED = 'weapon-enabled';
+        export const WEAPON_DISABLED = 'weapon-disabled';
+        export const ENGINE_ENABLED = 'engine-enabled';
+        export const ENGINE_DISABLED = 'engine-disabled';
     }
     export module Socket {
-        export const MAX_USERS_PER_ROOM = 50;
+        export const MAX_USERS_PER_ROOM = 100;
         export const TOO_MANY_CONNECTIONS = 'too-many-connections';
         export const SET_PLAYER_DATA = 'set-player-data';
         export const JOIN_ROOM = 'join-room';

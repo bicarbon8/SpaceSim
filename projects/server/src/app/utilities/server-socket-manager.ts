@@ -73,20 +73,50 @@ export class ServerSocketManager {
         return this.socketEmit(socketId, Constants.Socket.SET_PLAYER_ID, shipId);
     }
 
+    /**
+     * used to tell all sockets except the one originating the event that engines are enabled
+     * for the specified ship id
+     * @param socketId socket to not get event
+     * @param room room to broadcast to
+     * @param shipId the id of the ship with engine enabled
+     * @returns this
+     */
     broadcastEnableEngineEventToRoom(socketId: string, room: string, shipId: string): this {
         return this.socketRoomBroadcast(socketId, room, Constants.Socket.ENGINE_ENABLED, shipId);
+    }
+
+    /**
+     * used to tell all sockets in a room that a ship has engines enabled
+     * @param room the room to emit within
+     * @param shipId the id of the ship with engine enabled
+     * @returns this
+     */
+    sendEnableEngineEventToRoom(room: string, shipId: string): this {
+        return this.roomEmit(room, Constants.Socket.ENGINE_ENABLED, shipId);
     }
 
     broadcastDisableEngineEventToRoom(socketId: string, room: string, shipId: string): this {
         return this.socketRoomBroadcast(socketId, room, Constants.Socket.ENGINE_DISABLED, shipId);
     }
 
+    sendDisableEngineEventToRoom(room: string, shipId: string): this {
+        return this.roomEmit(room, Constants.Socket.ENGINE_DISABLED, shipId);
+    }
+
     broadcastEnableWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
         return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_ENABLED, shipId);
     }
 
+    sendEnableWeaponEventToRoom(room: string, shipId: string): this {
+        return this.roomEmit(room, Constants.Socket.WEAPON_ENABLED, shipId);
+    }
+
     broadcastDisableWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
         return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_DISABLED, shipId);
+    }
+
+    sendDisableWeaponEventToRoom(room: string, shipId: string): this {
+        return this.roomEmit(room, Constants.Socket.WEAPON_DISABLED, shipId);
     }
 
     sendShipDestroyedEventToRoom(room: string, shipId: string): this {
@@ -331,6 +361,13 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
+                if (scene.getShips().length < 50) {
+                    const battle = scene as BattleRoyaleScene;
+                    const diff = 50 - scene.getShips().length;
+                    for (let i=0; i<diff; i++) {
+                        battle.createBot();
+                    }
+                }
                 const ship = scene.getShip(user.shipId) ?? scene.createShip(user);
                 Helpers.log('debug', `sending ship id ${ship.id} to client ${socketId}`);
                 this.sendSetShipIdResponse(socketId, ship.id);

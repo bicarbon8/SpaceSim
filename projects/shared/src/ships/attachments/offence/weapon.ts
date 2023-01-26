@@ -40,6 +40,17 @@ export abstract class Weapon extends ShipAttachment {
         this._force = options.force ?? 500;
     }
 
+    override setEnabled(enabled: boolean): void {
+        super.setEnabled(enabled);
+        let event: any;
+        if (enabled) {
+            event = Constants.Events.WEAPON_ENABLED;
+        } else {
+            event = Constants.Events.WEAPON_DISABLED;
+        }
+        this.scene.events.emit(event, this.ship.id);
+    }
+
     addAmmo(amount: number): this {
         this.remainingAmmo += amount;
         if (this.remainingAmmo > this._maxAmmo) {

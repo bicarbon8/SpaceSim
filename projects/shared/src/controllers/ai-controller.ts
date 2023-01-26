@@ -13,7 +13,7 @@ export class AiController extends InputController {
     private _nextWeaponsFireAt: number;
     private _nextThrusterFireAt: number;
     private _canCheckView: boolean;
-    private _viewGeom: Phaser.Geom.Triangle;
+    private _viewGeom: Phaser.Geom.Polygon;
     
     private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
     private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
@@ -37,9 +37,9 @@ export class AiController extends InputController {
         return this._state;
     }
 
-    get view(): Phaser.Geom.Triangle {
+    get view(): Phaser.Geom.Polygon {
         if (!this._viewGeom) {
-            this._viewGeom = new Phaser.Geom.Triangle();
+            this._viewGeom = new Phaser.Geom.Polygon();
         }
 
         const viewDistance = (this.isAggro()) ? 500 : 500 - (this.scene.getShips().length * 2); // less ships = longer view distance
@@ -47,13 +47,26 @@ export class AiController extends InputController {
         const origin = this.ship.location;
         const rightAnglePoint = Helpers.vector2(origin.x, origin.y)
             .add(heading.clone().multiply(Helpers.vector2(viewDistance)));
-        const hypotenusePoint1 = rightAnglePoint.clone()
-            .add(heading.clone().normalizeRightHand()
-                .multiply(Helpers.vector2(viewDistance / 4)));
-        const hypotenusePoint2 = rightAnglePoint.clone()
-            .add(heading.clone().normalizeLeftHand()
-                .multiply(Helpers.vector2(viewDistance / 4)));
-        this._viewGeom.setTo(origin.x, origin.y, hypotenusePoint2.x, hypotenusePoint2.y, hypotenusePoint1.x, hypotenusePoint1.y);
+        const centrePointA = new Phaser.Geom.Point(origin.x, origin.y);
+        const centrePointB = new Phaser.Geom.Point(rightAnglePoint.x, rightAnglePoint.y);
+        const centreLine = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
+        const minus90Line = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
+        Phaser.Geom.Line.RotateAroundPoint(minus90Line, centrePointA, Helpers.deg2rad(-90));
+        const minus45Line = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
+        Phaser.Geom.Line.RotateAroundPoint(minus45Line, centrePointA, Helpers.deg2rad(-45));
+        const plus45Line = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
+        Phaser.Geom.Line.RotateAroundPoint(plus45Line, centrePointA, Helpers.deg2rad(45));
+        const plus90Line = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
+        Phaser.Geom.Line.RotateAroundPoint(plus90Line, centrePointA, Helpers.deg2rad(90));
+        
+        this._viewGeom.setTo([
+            centreLine.getPointA(), 
+            minus90Line.getPointB(), 
+            minus45Line.getPointB(), 
+            centreLine.getPointB(),
+            plus45Line.getPointB(),
+            plus90Line.getPointB()
+        ]);
 
         return this._viewGeom;
     }
@@ -135,11 +148,19 @@ export class AiController extends InputController {
             this._canCheckView = false;
             const viewGeom = this.view;
             if (SpaceSim.debug) {
+                const viewPoints = viewGeom.points;
                 const graphics = this.scene.add.graphics({ 
                     lineStyle: { width: 2, color: 0x00ff00 }, 
                     fillStyle: { color: 0xffff00, alpha: 0.25 } 
                 }).setDepth(Constants.UI.Layers.PLAYER);
-                graphics.fillTriangleShape(viewGeom);
+                graphics.beginPath();
+                graphics.moveTo(viewPoints[0].x, viewPoints[0].y);
+                for (let i=1; i<viewPoints.length; i++) {
+                    graphics.lineTo(viewPoints[i].x, viewPoints[i].y);
+                }
+                graphics.closePath();
+                graphics.fillPath();
+
                 this.scene.tweens.add({
                     targets: graphics,
                     alpha: 0,
@@ -211,30 +232,16 @@ export class AiController extends InputController {
     }
 
     private _patrol(): void {
-        switch(this._state) {
-            case 'sweeping':
-                this.ship.rotationContainer.setAngle(this._patrolSweepAngle);
-                if (this._patrolSweepAngle >= 360) {
-                    this._patrolSweepAngle = 0;
-                    this._state = 'navigating';
-                }
-                this._patrolSweepAngle += 10 - (this.scene.getShips().length / 10);
-                break;
-            case 'navigating':
-            default:
-                if (this._patrolPath.length < 1) {
-                    const shipLoc = this.ship.location;
-                    const { width, height, left, top } = this.scene.getLevel().getRoomAtWorldXY(shipLoc.x, shipLoc.y);
-                    const randTileXInRoom = Phaser.Math.RND.between(left + 2, (left + width) - 2);
-                    const randTileYInRoom = Phaser.Math.RND.between(top + 2, (top + height) - 2);
-                    const worldLoc = this.scene.getLevel().tileToWorldXY(randTileXInRoom, randTileYInRoom);
-                    this._patrolPath.push(worldLoc);
-                }
-                if (this._search(this._patrolPath[0])) {
-                    this._patrolPath.shift();
-                }
-                this._state = 'sweeping';
-                break;
+        if (this._patrolPath.length < 1) {
+            const shipLoc = this.ship.location;
+            const { width, height, left, top } = this.scene.getLevel().getRoomAtWorldXY(shipLoc.x, shipLoc.y);
+            const randTileXInRoom = Phaser.Math.RND.between(left + 2, (left + width) - 2);
+            const randTileYInRoom = Phaser.Math.RND.between(top + 2, (top + height) - 2);
+            const worldLoc = this.scene.getLevel().tileToWorldXY(randTileXInRoom, randTileYInRoom);
+            this._patrolPath.push(worldLoc);
+        }
+        if (this._search(this._patrolPath[0])) {
+            this._patrolPath.shift();
         }
     }
 
@@ -273,7 +280,7 @@ export class AiController extends InputController {
         const now = this.scene.time.now;
         if (this.canUseEngines()) {
             this.ship.engine.setEnabled(true);
-            this._nextThrusterFireAt = now + (this.scene.getShips().length * 10);
+            this._nextThrusterFireAt = now + (this.scene.getShips().length * 10) + Phaser.Math.RND.realInRange(0, 1);
             return true;
         }
         return false;
@@ -283,7 +290,7 @@ export class AiController extends InputController {
         const now = this.scene.time.now;
         if (this.canUseWeapons()) {
             this.ship.weapon.setEnabled(true);
-            this._nextWeaponsFireAt = now + (this.scene.getShips().length * 50);
+            this._nextWeaponsFireAt = now + (this.scene.getShips().length * 50) + Phaser.Math.RND.realInRange(0, 1);
             return true;
         }
         return false;

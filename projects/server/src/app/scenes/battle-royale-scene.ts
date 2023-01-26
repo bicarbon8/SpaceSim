@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -37,6 +37,7 @@ export class BattleRoyaleScene extends BaseScene {
     
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
+    private readonly _bots = new Map<string, AiController>();
     private readonly _removeShipQueue = new Array<string>();
     private readonly _removeSuppliesQueue = new Array<string>();
     private readonly _flickerSuppliesQueue = new Array<string>();
@@ -84,6 +85,9 @@ export class BattleRoyaleScene extends BaseScene {
         this._exploder = new Exploder(this);
         this._createGameLevel();
         this._setupSceneEventHandling();
+        for (let i=0; i<50; i++) {
+            this.createBot();
+        }
     }
 
     update(time: number, delta: number): void {
@@ -97,6 +101,9 @@ export class BattleRoyaleScene extends BaseScene {
             this.getShips()
                 .filter(s => s.active)
                 .forEach(ship => ship?.update(time, delta));
+        });
+        Helpers.trycatch(() => {
+            this._bots.forEach((bot: AiController) => bot.update(time, delta));
         });
         
         // 30 fps
@@ -165,11 +172,31 @@ export class BattleRoyaleScene extends BaseScene {
             `and id: ${ship.id} at x: ${ship.location.x}, y: ${ship.location.y}`);
         this._ships.set(ship.id, ship);
         GameScoreTracker.start(ship.config);
-
+        
         Helpers.log('info', `updating user ${JSON.stringify(data)} record to include shipId: '${ship.id}'`);
         SpaceSimServer.users.update({...data, shipId: ship.id});
+
+        this._updateBotEnemyIds();
         
         return ship;
+    }
+
+    createBot(): void {
+        const botData: SpaceSimUserData = {
+            fingerprint: Phaser.Math.RND.uuid()
+        };
+        let index = 1;
+        const botNames = Array.from(this._bots.values()).map(ai => ai.ship.name);
+        let name = `bot-${index}`;
+        while (SpaceSimServer.users.count({name: name}) > 0 || botNames.includes(name)) {
+            index++;
+            name = `bot-${index}`;
+        }
+        botData.name = `bot-${index}`;
+        const bot = this.createShip(botData);
+        const botController = new AiController(this, bot);
+        this._bots.set(bot.id, botController);
+        this._updateBotEnemyIds(botController);
     }
 
     addPlayerToScene(player: SpaceSimServerUserData): void {
@@ -199,11 +226,14 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     private _setupSceneEventHandling(): void {
-        // setup listener for player death event (sent from ship.destroy())
+        // setup listeners for scene events
         this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
             Helpers.log('debug', `received '${Constants.Events.SHIP_DEATH}' event in scene`);
             this.queueShipRemoval(cfg.id);
-        });
+        }).on(Constants.Events.WEAPON_ENABLED, (id: string) => SpaceSimServer.io.sendEnableWeaponEventToRoom(this.ROOM_NAME, id))
+        .on(Constants.Events.WEAPON_DISABLED, (id: string) => SpaceSimServer.io.sendDisableWeaponEventToRoom(this.ROOM_NAME, id))
+        .on(Constants.Events.ENGINE_ENABLED, (id: string) => SpaceSimServer.io.sendEnableEngineEventToRoom(this.ROOM_NAME, id))
+        .on(Constants.Events.ENGINE_DISABLED, (id: string) => SpaceSimServer.io.sendDisableEngineEventToRoom(this.ROOM_NAME, id));
     }
 
     private _createGameLevel(): void {
@@ -221,6 +251,9 @@ export class BattleRoyaleScene extends BaseScene {
             const user = SpaceSimServer.users.selectFirst({shipId: opts.id});
             if (user) {
                 this.removePlayerFromScene(user);
+            }
+            if (this._bots.has(opts.id)) {
+                this._bots.delete(opts.id);
             }
             // prevent further updates to ship
             const player = this.getShip<ServerShip>(opts.id);
@@ -369,6 +402,16 @@ export class BattleRoyaleScene extends BaseScene {
         const flickerSupplies = this._flickerSuppliesQueue.splice(0, this._flickerSuppliesQueue.length);
         if (flickerSupplies.length) {
             SpaceSimServer.io.sendFlickerSuppliesEvent(this.ROOM_NAME, ...flickerSupplies);
+        }
+    }
+
+    private _updateBotEnemyIds(...bots: Array<AiController>): void {
+        const AIs = bots || Array.from(this._bots.values());
+        const botIds = Array.from(this._bots.keys());
+        const allShipIds = Array.from(this._ships.keys());
+        const notBots = allShipIds.filter(id => !botIds.includes(id));
+        for (let ai of AIs) {
+            ai.setEnemyIds(...notBots);
         }
     }
 }
