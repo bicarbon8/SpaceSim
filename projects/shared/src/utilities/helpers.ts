@@ -257,4 +257,31 @@ export module Helpers {
                 return false;
         }
     }
+
+    /**
+     * create a view window for an object based on field of view, location, angle and distance
+     * that can be used with `view.contains(Phaser.GameObjects.GameObject)` to determine if an object
+     * can be seen or not
+     * @param location the location of the object where the view originates
+     * @param angle the heading angle of the object (where the object is looking)
+     * @param distance how far the object can see from itself
+     * @param fieldOfView the width of the view in degrees @default 160
+     * @param steps the number of steps used to generate (less is faster, but less accurate) @default 6
+     * @returns a Phaser Geometry Polygon representing the view
+     */
+    export function getView(location: Phaser.Types.Math.Vector2Like, angle: number, distance: number, fieldOfView: number = 160, steps: number = 6): Phaser.Geom.Polygon {
+        let rotationAngle = angle - (fieldOfView / 2);
+        const offsetAngle = fieldOfView / steps;
+        const lines = new Array<Phaser.Geom.Line>();
+        for (let i=0; i<steps; i++) {
+            lines[i] = new Phaser.Geom.Line(location.x, location.y, location.x - distance, location.y);
+            Phaser.Geom.Line.RotateAroundPoint(lines[i], lines[i].getPointA(), Helpers.deg2rad(rotationAngle));
+            rotationAngle += offsetAngle;
+        }
+        const view = new Phaser.Geom.Polygon([
+            lines[0].getPointA(),
+            ...lines.map(l => l.getPointB())
+        ]);
+        return view;
+    }
 }

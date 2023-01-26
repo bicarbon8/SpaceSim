@@ -35,7 +35,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _music: Phaser.Sound.BaseSound;
     private _exploder: UiExploder;
     private _disconnectTimer: number;
-    private _gameLevel: ClientGameLevel;
+    private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
     private _camera: Camera;

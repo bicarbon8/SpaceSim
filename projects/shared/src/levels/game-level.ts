@@ -5,8 +5,6 @@ import { Helpers } from "../utilities/helpers";
 import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
 import { NumberOrRange } from "../interfaces/number-range";
-import { DynamicGameObject } from "../interfaces/dynamic-game-object";
-import { SpaceSim } from "../space-sim";
 
 export type RoomPlus = Room & {
     visible?: boolean;
@@ -74,7 +72,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
     }
 
     getMapTileWorldLocation(tilePositionX: number, tilePositionY: number): Phaser.Math.Vector2 {
-        return this.tileToWorldXY(tilePositionX, tilePositionY);
+        return this.tileToWorldXY(tilePositionX, tilePositionY, null, this.scene.cameras.main, this._radarLayer);
     }
 
     isWithinTile(worldLocation: Phaser.Types.Math.Vector2Like, tilePosition: Phaser.Types.Math.Vector2Like): boolean {
@@ -147,7 +145,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
      * positions to follow
      * @param start a world location for the starting position
      * @param end a world location for the deisired ending position
-     * @returns an array of tile locations (not world) that form a valid path to the `end`
+     * @returns an array of world locations (not tile) that form a valid path to the `end`
      */
     findPathTo(start: Phaser.Types.Math.Vector2Like, end: Phaser.Types.Math.Vector2Like): Array<Phaser.Types.Math.Vector2Like> {
         const startTileLoc = this.getTileAtWorldXY(start.x, start.y, true, this.scene.cameras.main, this._radarLayer);

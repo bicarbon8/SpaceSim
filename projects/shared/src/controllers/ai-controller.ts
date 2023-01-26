@@ -3,9 +3,8 @@ import { BaseScene } from "../scenes/base-scene";
 import { Constants } from "../utilities/constants";
 import { InputController } from "./input-controller";
 import { Helpers } from "../utilities/helpers";
-import { SpaceSim } from "../space-sim";
 
-export type AiPatrolState = 'sweeping' | 'navigating';
+export type AiState = 'patrolling' | 'attacking' | 'chasing';
 
 export class AiController extends InputController {
     private _lastKnownEnemyLocation: Phaser.Types.Math.Vector2Like;
@@ -13,13 +12,13 @@ export class AiController extends InputController {
     private _nextWeaponsFireAt: number;
     private _nextThrusterFireAt: number;
     private _canCheckView: boolean;
-    private _viewGeom: Phaser.Geom.Polygon;
     
     private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
     private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
     private _ultraLowPriUpdateAt: number = Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
     
-    private _state: AiPatrolState = 'sweeping';
+    private _previousState: AiState;
+    private _state: AiState;
 
     private readonly _enemyIds = new Array<string>();
     private readonly _patrolPath = new Array<Phaser.Types.Math.Vector2Like>();
@@ -32,42 +31,13 @@ export class AiController extends InputController {
         return super.scene as BaseScene;
     }
 
-    get state(): AiPatrolState {
+    get state(): AiState {
         return this._state;
     }
 
     get view(): Phaser.Geom.Polygon {
-        if (!this._viewGeom) {
-            this._viewGeom = new Phaser.Geom.Polygon();
-        }
-
         const viewDistance = (this.isAggro()) ? 500 : 500 - (this.scene.getShips().length * 2); // less ships = longer view distance
-        const heading = this.ship.heading;
-        const origin = this.ship.location;
-        const rightAnglePoint = Helpers.vector2(origin.x, origin.y)
-            .add(heading.clone().multiply(Helpers.vector2(viewDistance)));
-        const centrePointA = new Phaser.Geom.Point(origin.x, origin.y);
-        const centrePointB = new Phaser.Geom.Point(rightAnglePoint.x, rightAnglePoint.y);
-        const centreLine = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
-        const minus90Line = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
-        Phaser.Geom.Line.RotateAroundPoint(minus90Line, centrePointA, Helpers.deg2rad(-90));
-        const minus45Line = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
-        Phaser.Geom.Line.RotateAroundPoint(minus45Line, centrePointA, Helpers.deg2rad(-45));
-        const plus45Line = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
-        Phaser.Geom.Line.RotateAroundPoint(plus45Line, centrePointA, Helpers.deg2rad(45));
-        const plus90Line = new Phaser.Geom.Line(centrePointA.x, centrePointA.y, centrePointB.x, centrePointB.y);
-        Phaser.Geom.Line.RotateAroundPoint(plus90Line, centrePointA, Helpers.deg2rad(90));
-        
-        this._viewGeom.setTo([
-            centreLine.getPointA(), 
-            minus90Line.getPointB(), 
-            minus45Line.getPointB(), 
-            centreLine.getPointB(),
-            plus45Line.getPointB(),
-            plus90Line.getPointB()
-        ]);
-
-        return this._viewGeom;
+        return Helpers.getView(this.ship.location, this.ship.rotationContainer.angle, viewDistance);
     }
     
     update(time: number, delta: number): void {
@@ -94,7 +64,7 @@ export class AiController extends InputController {
                     // no cannot see attacker
                     if (this.hasLastKnown()) { // has last known?
                         // yes has last known...
-                        if (this._search(this._lastKnownEnemyLocation)) { // is at last known?
+                        if (this._goToWorldLocation(this._lastKnownEnemyLocation)) { // is at last known?
                             // yes so clear it
                             this._clearLastKnown();
                         }
@@ -113,7 +83,7 @@ export class AiController extends InputController {
                     // no cannot see enemy...
                     if (this.hasLastKnown()) { // has last known?
                         // yes has last known...
-                        if (this._search(this._lastKnownEnemyLocation)) { // is at last known?
+                        if (this._goToWorldLocation(this._lastKnownEnemyLocation)) { // is at last known?
                             // yes so clear it
                             this._clearLastKnown();
                         }
@@ -145,32 +115,7 @@ export class AiController extends InputController {
     canSee(target: Phaser.Types.Math.Vector2Like): boolean {
         if (this._canCheckView) {
             this._canCheckView = false;
-            const viewGeom = this.view;
-            if (SpaceSim.debug) {
-                const viewPoints = viewGeom.points;
-                const graphics = this.scene.add.graphics({ 
-                    lineStyle: { width: 2, color: 0x00ff00 }, 
-                    fillStyle: { color: 0xffff00, alpha: 0.25 } 
-                }).setDepth(Constants.UI.Layers.PLAYER);
-                graphics.beginPath();
-                graphics.moveTo(viewPoints[0].x, viewPoints[0].y);
-                for (let i=1; i<viewPoints.length; i++) {
-                    graphics.lineTo(viewPoints[i].x, viewPoints[i].y);
-                }
-                graphics.closePath();
-                graphics.fillPath();
-
-                this.scene.tweens.add({
-                    targets: graphics,
-                    alpha: 0,
-                    duration: Constants.Timing.LOW_PRI_UPDATE_FREQ,
-                    onComplete: () => {
-                        graphics.destroy();
-                    }
-                });
-            }
-
-            const inView = viewGeom.contains(target.x, target.y);
+            const inView = this.view.contains(target.x, target.y);
             return inView && !this.scene.getLevel().isWallObscuring(this.ship.location, target);
         }
         return false;
@@ -208,7 +153,10 @@ export class AiController extends InputController {
 
     canUseWeapons(): boolean {
         const now = this.scene.time.now;
-        if (this._nextWeaponsFireAt == null || this._nextWeaponsFireAt <= now) {
+        if (this._nextWeaponsFireAt == null) {
+            this._nextWeaponsFireAt = now + (this.scene.getShips().length * 50) + Phaser.Math.RND.realInRange(0, 1);
+        }
+        if (this._nextWeaponsFireAt <= now) {
             return true;
         }
         return false;
@@ -230,16 +178,27 @@ export class AiController extends InputController {
         return false;
     }
 
+    private _setState(state: AiState): void {
+        this._previousState = this._state;
+        this._state = state;
+        if (this._previousState != this._state) {
+            Helpers.log('debug', `ship: '${this.ship.name}' state changed from '${this._previousState}' to '${this._state}'`);
+        }
+    }
+
     private _patrol(): void {
+        this._setState('patrolling');
         if (this._patrolPath.length < 1) {
             const shipLoc = this.ship.location;
             const { width, height, left, top } = this.scene.getLevel().getRoomAtWorldXY(shipLoc.x, shipLoc.y);
             const randTileXInRoom = Phaser.Math.RND.between(left + 2, (left + width) - 2);
             const randTileYInRoom = Phaser.Math.RND.between(top + 2, (top + height) - 2);
             const worldLoc = this.scene.getLevel().tileToWorldXY(randTileXInRoom, randTileYInRoom);
-            this._patrolPath.push(worldLoc);
+            const pathTileLocations = this._getPathTo(worldLoc);
+            this._patrolPath.splice(0, this._patrolPath.length, ...pathTileLocations);
         }
-        if (this._search(this._patrolPath[0])) {
+        if (this._goToWorldLocation(this._patrolPath[0])) {
+            // we reached the location so remove it from path array
             this._patrolPath.shift();
         }
     }
@@ -248,38 +207,54 @@ export class AiController extends InputController {
         this._setLastKnown(target);
         this._lookAtLastKnown();
         if (this.canUseWeapons()) {
+            this._setState('attacking');
             this._useWeapons();
         } else {
-            this._search(target);
+            this._setState('chasing');
+            this._goToWorldLocation(target);
         }
     }
 
     /**
-     * has ship look at the specified `location` and engage engines. this should
-     * be called until it returns `true` indicating the `location` was reached
-     * @param location a location to navigate to
+     * has ship look at the specified world location and engage engines. this should
+     * be called until it returns `true` indicating the location was reached
+     * @param worldXY a world location to navigate to
      * @returns `true` if we reached the location, otherwise `false`
      */
-    private _search(location: Phaser.Types.Math.Vector2Like): boolean {
-        const tile = this.scene.getLevel().getTileAtWorldXY(location.x, location.y);
-        if (this.scene.getLevel().isWithinTile(this.ship.location, tile)) {
+    private _goToWorldLocation(worldXY: Phaser.Types.Math.Vector2Like): boolean {
+        const tile = this.scene.getLevel().getTileAtWorldXY(worldXY.x, worldXY.y);
+        if (tile) {
+            return this._goToTileLocation(tile);
+        }
+        return false;
+    }
+
+    /**
+     * has ship look at the specified tile location and engage engines. this should
+     * be called until it returns `true` indicating the location was reached
+     * @param tileXY a map tile location to navigate to
+     * @returns `true` if we reached the location, otherwise `false`
+     */
+    private _goToTileLocation(tileXY: Phaser.Types.Math.Vector2Like): boolean {
+        if (this.scene.getLevel().isWithinTile(this.ship.location, tileXY)) {
             return true;
         } else {
-            this.ship.lookAt(location);
+            const worldXY = this.scene.getLevel().getMapTileWorldLocation(tileXY.x, tileXY.y);
+            this.ship.lookAt(worldXY);
             this._useEngines();
             return false;
         }
     }
 
-    private _goToLocation(location: Phaser.Types.Math.Vector2Like): void {
-        const path = this.scene.getLevel().findPathTo(this.ship.location, location);
+    private _getPathTo(location: Phaser.Types.Math.Vector2Like): Array<Phaser.Types.Math.Vector2Like> {
+        return this.scene.getLevel().findPathTo(this.ship.location, location);
     }
 
     private _useEngines(): boolean {
         const now = this.scene.time.now;
         if (this.canUseEngines()) {
             this.ship.engine.setEnabled(true);
-            this._nextThrusterFireAt = now + (this.scene.getShips().length * 10) + Phaser.Math.RND.realInRange(0, 1);
+            this._nextThrusterFireAt = now + (this.scene.getShips().length * 10) + Phaser.Math.RND.realInRange(0, 500);
             return true;
         }
         return false;

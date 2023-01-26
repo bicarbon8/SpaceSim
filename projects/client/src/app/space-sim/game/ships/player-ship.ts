@@ -1,5 +1,5 @@
 import { LayoutContainer } from "phaser-ui-components";
-import { BaseScene, Constants, DamageMetadata, Ship, ShipOptions } from "space-sim-shared";
+import { BaseScene, Constants, DamageMetadata, Helpers, Ship, ShipOptions, SpaceSim } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
 import { Animations } from "../ui-components/animations";
 

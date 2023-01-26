@@ -19,6 +19,7 @@ import { PlayerEngine } from "../ships/attachments/utility/player-engine";
 import { PlayerBullet } from "../ships/attachments/offence/player-bullet";
 import { PlayerMachineGun } from "../ships/attachments/offence/player-machine-gun";
 import { ClientGameLevel } from "../levels/client-game-level";
+import { ClientAiController } from "../controllers/client-ai-controller";
 
 export const GameplaySceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -54,7 +55,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     private _backgroundStars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _exploder: UiExploder;
-    private _gameLevel: ClientGameLevel;
+    private _gameLevel: GameLevel;
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
     private _camera: Camera;
@@ -218,7 +219,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             p.setActive(false);
             // setup collision with map walls
             this.physics.add.collider(p, this.getLevel().wallsLayer);
-            let controller = new AiController(this, p)
+            let controller = new ClientAiController(this, p)
                 .setEnemyIds(SpaceSimClient.playerShipId);
             SpaceSimClient.opponents.push(controller);
             this._ships.set(p.id, p);

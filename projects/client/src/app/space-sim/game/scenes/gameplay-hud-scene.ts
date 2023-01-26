@@ -166,6 +166,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             if (Helpers.shouldLog('debug')) {
                 const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
+                info.push(`Angle: ${this.playerShip.rotationContainer.angle.toFixed(1)}`);
             }
             this._hudText.setText(info);
             this._hudLayout.updateSize(this._width, this._height);

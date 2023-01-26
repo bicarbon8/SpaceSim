@@ -167,13 +167,11 @@ export class BattleRoyaleScene extends BaseScene {
         this.physics.add.collider(ship, this.getLevel().wallsLayer);
         this._addPlayerCollisionPhysicsWithPlayers(ship);
         this._addPlayerCollisionPhysicsWithSupplies(ship);
-        Helpers.log('debug', `adding ship with fingerprint: ${data.fingerprint},`,
-            `name: ${data.name.substring(0, 10)},`,
-            `and id: ${ship.id} at x: ${ship.location.x}, y: ${ship.location.y}`);
+        Helpers.log('info', `adding ship`, ship.config);
         this._ships.set(ship.id, ship);
         GameScoreTracker.start(ship.config);
         
-        Helpers.log('info', `updating user ${JSON.stringify(data)} record to include shipId: '${ship.id}'`);
+        Helpers.log('debug', `updating user ${JSON.stringify(data)} record to include shipId: '${ship.id}'`);
         SpaceSimServer.users.update({...data, shipId: ship.id});
 
         this._updateBotEnemyIds();
@@ -202,7 +200,7 @@ export class BattleRoyaleScene extends BaseScene {
     addPlayerToScene(player: SpaceSimServerUserData): void {
         const user = SpaceSimServer.users.selectFirst(player);
         if (user) {
-            Helpers.log('debug', `adding player:`, user, `to scene:`, this.ROOM_NAME);
+            Helpers.log('info', `adding player:`, user, `to scene:`, this.ROOM_NAME);
             user.room = this.ROOM_NAME;
             SpaceSimServer.io.joinRoom(user.socketId, this.ROOM_NAME);
             SpaceSimServer.users.update(user);
@@ -213,7 +211,7 @@ export class BattleRoyaleScene extends BaseScene {
     removePlayerFromScene(player: SpaceSimServerUserData): void {
         const user = SpaceSimServer.users.selectFirst(player);
         if (user) {
-            Helpers.log('debug', `removing player:`, user, `from scene:`, this.ROOM_NAME);
+            Helpers.log('info', `removing player:`, user, `from scene:`, this.ROOM_NAME);
             const id = user.shipId;
             if (id) {
                 this.queueShipRemoval(id);

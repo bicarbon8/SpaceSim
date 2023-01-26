@@ -40,6 +40,6 @@ export module SpaceSimServer {
 }
 
 SpaceSim.debug = false;
-SpaceSim.loglevel = 'debug';
+SpaceSim.loglevel = 'info';
 const server = new SpaceSimServer();
 SpaceSim.game = server.game;
