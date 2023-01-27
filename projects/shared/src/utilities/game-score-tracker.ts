@@ -66,6 +66,7 @@ export module GameScoreTracker {
 
     export function shotFired(id: string): void {
         if (_stats.has(id)) {
+            Helpers.log('trace', 'ship', id, 'fired a shot');
             const stats = _stats.get(id);
             GameScoreTracker.updateStats(id, {shotsFired: stats.shotsFired + 1});
         }
@@ -82,6 +83,7 @@ export module GameScoreTracker {
                 });
                 index = shotsLanded.length - 1;
             }
+            Helpers.log('debug', 'ship', shotFiredBy, 'hit ship', targetId, 'for', damage, 'damage');
             // add hit on target
             shotsLanded[index].hits.push({
                 damage: damage,
@@ -96,7 +98,7 @@ export module GameScoreTracker {
             const index = destroyed.findIndex(d => d.targetId === targetId);
             // if target not already listed then add it to list of destroyed
             if (index < 0) {
-                Helpers.log('debug', `ship '${destroyedBy}' destroyed ship '${targetId}'`);
+                Helpers.log('info', 'ship', destroyedBy, 'destroyed ship', targetId);
                 destroyed.push({
                     targetId: targetId,
                     time: SpaceSim.game.loop.time

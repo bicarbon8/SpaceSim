@@ -140,11 +140,11 @@ export class BattleRoyaleScene extends BaseScene {
         this.physics.add.collider(ship, this.getLevel().wallsLayer);
         this._addPlayerCollisionPhysicsWithPlayers(ship);
         this._addPlayerCollisionPhysicsWithSupplies(ship);
-        Helpers.log('info', `adding ship`, ship.config);
+        Helpers.log('info', 'adding ship', ship.config);
         this._ships.set(ship.id, ship);
         GameScoreTracker.start(ship.config);
         
-        Helpers.log('debug', `updating user ${JSON.stringify(data)} record to include shipId: '${ship.id}'`);
+        Helpers.log('debug', 'updating user', data, 'record to include shipId:', ship.id);
         SpaceSimServer.users.update({...data, shipId: ship.id});
 
         this._updateBotEnemyIds();
@@ -173,7 +173,7 @@ export class BattleRoyaleScene extends BaseScene {
     addPlayerToScene(player: SpaceSimServerUserData): void {
         const user = SpaceSimServer.users.selectFirst(player);
         if (user) {
-            Helpers.log('info', `adding player:`, user, `to scene:`, this.ROOM_NAME);
+            Helpers.log('info', 'adding player:', user, 'to scene:', this.ROOM_NAME);
             user.room = this.ROOM_NAME;
             SpaceSimServer.io.joinRoom(user.socketId, this.ROOM_NAME);
             SpaceSimServer.users.update(user);
@@ -184,7 +184,7 @@ export class BattleRoyaleScene extends BaseScene {
     removePlayerFromScene(player: SpaceSimServerUserData): void {
         const user = SpaceSimServer.users.selectFirst(player);
         if (user) {
-            Helpers.log('info', `removing player:`, user, `from scene:`, this.ROOM_NAME);
+            Helpers.log('info', 'removing player:', user, 'from scene:', this.ROOM_NAME);
             const id = user.shipId;
             if (id) {
                 this.queueShipRemoval(id);
@@ -273,7 +273,7 @@ export class BattleRoyaleScene extends BaseScene {
             this._supplies.set(supply.id, supply);
         }
         this._cleanupSupplies(...supplies);
-        Helpers.log('debug', `${supplyOpts.length} supplies expelled from ship ${shipCfg.id}`);
+        Helpers.log('debug', supplyOpts.length, 'supplies expelled from ship', shipCfg.id);
     }
 
     private _addSupplyCollisionPhysics(...options: Array<ShipSupplyOptions>): Array<ShipSupply> {
@@ -294,7 +294,7 @@ export class BattleRoyaleScene extends BaseScene {
                     supply = new RepairsSupply(this, opts);
                     break;
                 default:
-                    console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, opts.supplyType);
+                    Helpers.log('warn', 'unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:', opts.supplyType);
                     break;
             }
             this.physics.add.collider(supply, this.getLevel().wallsLayer);
@@ -356,7 +356,7 @@ export class BattleRoyaleScene extends BaseScene {
         for (let id of removeSupplies) {
             let supply = this.getSupply(id);
             if (supply) {
-                Helpers.log('debug', `removing supply '${supply.id}'`);
+                Helpers.log('debug', 'removing supply', supply.id);
                 this._supplies.delete(id);
                 supply.destroy();
             }
