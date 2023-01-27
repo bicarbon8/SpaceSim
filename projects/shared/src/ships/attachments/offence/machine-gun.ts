@@ -1,5 +1,5 @@
 import { BaseScene } from "../../../scenes/base-scene";
-import { Weapon, WeaponOptions } from "./weapon";
+import { Weapon } from "./weapon";
 
 export class MachineGun extends Weapon {
     constructor(scene: BaseScene) {

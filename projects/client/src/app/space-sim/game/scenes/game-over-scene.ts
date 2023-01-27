@@ -19,6 +19,7 @@ export class GameOverScene extends Phaser.Scene {
     private _stars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _layout: LinearLayout;
+    private _scoreText: Phaser.GameObjects.Text;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || GameOverSceneConfig);
@@ -54,6 +55,29 @@ export class GameOverScene extends Phaser.Scene {
         }
         this._stars.tilePositionX += 0.01;
         this._stars.tilePositionY += 0.02;
+
+        this._updateScore();
+    }
+
+    private _updateScore(): void {
+        if (SpaceSimClient.mode === 'singleplayer') {
+            const id = SpaceSimClient.playerShipId;
+            const stats: GameStats = GameScoreTracker.getStats(id);
+            this._scoreText.setText([
+                `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`,
+                `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
+                `Accuracy: ${stats.accuracy.toFixed(0)}%`,
+                `Kills: ${GameScoreTracker.destroyedCount(id)}`
+            ]);
+        } else {
+            const leaderboard = GameScoreTracker.getLeaderboard();
+            this._scoreText.setText([
+                'Leaderboard:',
+                ...leaderboard.map((s, i) => `${i+1}. ${s.name} - ${s.score.toFixed(0)}`)
+                .splice(0, 5)
+            ]);
+        }
+        this._layout.refreshLayout();
     }
 
     private _createBackground(): void {
@@ -91,30 +115,12 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _createScore(): void {
-        const scoreText: Phaser.GameObjects.Text = this.make.text({
+        this._scoreText = this.make.text({
             text: '', 
             style: {font: '30px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4}
         }, false);
-        
-        if (SpaceSimClient.mode === 'singleplayer') {
-            const id = SpaceSimClient.playerShipId;
-            const stats: GameStats = GameScoreTracker.getStats(id);
-            scoreText.setText([
-                `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`,
-                `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
-                `Accuracy: ${stats.accuracy.toFixed(0)}%`,
-                `Kills: ${GameScoreTracker.destroyedCount(id)}`
-            ]);
-        } else {
-            const leaderboard = GameScoreTracker.getLeaderboard();
-            scoreText.setText([
-                'Leaderboard:',
-                ...leaderboard.map((s, i) => `${i+1}. ${s.name} - ${s.score.toFixed(0)}`)
-                .splice(0, 10)
-            ]);
-        }
 
-        this._layout.addContents(scoreText);
+        this._layout.addContents(this._scoreText);
     }
 
     private _createMenuItems(): void {
