@@ -5,6 +5,27 @@ import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
 
 export class BattleRoyaleScene extends BaseScene {
+    readonly ROOM_NAME: string;
+    
+    private readonly _supplies = new Map<string, ShipSupply>();
+    private readonly _ships = new Map<string, Ship>();
+    private readonly _bots = new Map<string, AiController>();
+    private readonly _removeShipQueue = new Array<string>();
+    private readonly _removeSuppliesQueue = new Array<string>();
+    private readonly _flickerSuppliesQueue = new Array<string>();
+    
+    private _gameLevel: GameLevel;
+    private _exploder: Exploder;
+    
+    constructor(options?: Phaser.Types.Scenes.SettingsConfig) {
+        const room = options?.key ?? Phaser.Math.RND.uuid();
+        super({
+            ...options,
+            key: room
+        });
+        this.ROOM_NAME = room;
+    }
+
     override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
@@ -32,53 +53,24 @@ export class BattleRoyaleScene extends BaseScene {
     override queueEndScene(): BaseScene {
         throw new Error("Method not implemented.");
     }
-
-    readonly ROOM_NAME: string;
-    
-    private readonly _supplies = new Map<string, ShipSupply>();
-    private readonly _ships = new Map<string, Ship>();
-    private readonly _bots = new Map<string, AiController>();
-    private readonly _removeShipQueue = new Array<string>();
-    private readonly _removeSuppliesQueue = new Array<string>();
-    private readonly _flickerSuppliesQueue = new Array<string>();
-    
-    private _gameLevel: GameLevel;
-    private _exploder: Exploder;
-    private _medPriUpdateAt: number = SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ;
-    private _lowPriUpdateAt: number = SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ;
-    private _ultraLowPriUpdateAt: number = SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
-
-    constructor(options?: Phaser.Types.Scenes.SettingsConfig) {
-        const room = options?.key ?? Phaser.Math.RND.uuid();
-        super({
-            ...options,
-            key: room
-        });
-        this.ROOM_NAME = room;
-    }
-
     override getShip<T extends Ship>(id: string): T {
         return this._ships.get(id) as T;
     }
-
     override getShips<T extends Ship>(): Array<T> {
         return Array.from(this._ships.values()) as Array<T>;
     }
-
     override getSupply<T extends ShipSupply>(id: string): T {
         return this._supplies.get(id) as T;
     }
-
     override getSupplies<T extends ShipSupply>(): Array<T> {
         return Array.from(this._supplies.values()) as Array<T>;
     }
-
     override getLevel<T extends GameLevel>(): T {
         return this._gameLevel as T;
     }
 
     preload(): void {
-        
+        /* do nothing */
     }
 
     create(): void {
@@ -88,59 +80,40 @@ export class BattleRoyaleScene extends BaseScene {
         for (let i=0; i<SpaceSimServer.Constants.Rooms.MAX_BOTS; i++) {
             this.createBot();
         }
-    }
 
-    update(time: number, delta: number): void {
-        this._medPriUpdateAt += delta;
-        this._lowPriUpdateAt += delta;
-        this._ultraLowPriUpdateAt += delta;
-
-        Helpers.trycatch(() => this._processRemoveShipQueue());
-        Helpers.trycatch(() => this._processRemoveSupplyQueue());
-        Helpers.trycatch(() => {
+        this.addRepeatingAction('high', 'remove-ships', () => this._processRemoveShipQueue());
+        this.addRepeatingAction('high', 'remove-supplies', () => this._processRemoveSupplyQueue());
+        this.addRepeatingAction('high', 'update-ships', (time: number, delta: number) => {
             this.getShips()
                 .filter(s => s.active)
                 .forEach(ship => ship?.update(time, delta));
         });
-        Helpers.trycatch(() => {
+        this.addRepeatingAction('high', 'update-bot-controllers', (time: number, delta: number) => {
             this._bots.forEach((bot: AiController) => bot.update(time, delta));
         });
-        
-        // 30 fps
-        if (this._medPriUpdateAt >= SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ) {
-            this._medPriUpdateAt = 0;
-            Helpers.trycatch(() => {
-                const ships = this.getShips()
-                    .filter(s => s.active)
-                    .map(s => s.config);
-                if (ships) {
-                    SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, ships);
-                }
-            }, 'warn');
-        }
-
-        // 15 fps
-        if (this._lowPriUpdateAt >= SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ) {
-            this._lowPriUpdateAt = 0;
-            Helpers.trycatch(() => {
-                const supplies = this.getSupplies()
-                    .filter(s => s.active)
-                    .map(s => s.config);
-                if (supplies.length) {
-                    SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, supplies);
-                }
-            }, 'warn');
-        }
-
-        // 1 fps
-        if (this._ultraLowPriUpdateAt >= SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
-            this._ultraLowPriUpdateAt = 0;
-            Helpers.trycatch(() => {
-                // TODO: filter out stats from other rooms
-                SpaceSimServer.io.sendUpdateStatsToRoom(this.ROOM_NAME, GameScoreTracker.getAllStats());
-                this._processFlickerSupplyQueue();
-            }, 'warn');
-        }
+        this.addRepeatingAction('medium', 'send-ships-update', () => {
+            const ships = this.getShips()
+                .filter(s => s.active)
+                .map(s => s.config);
+            if (ships) {
+                SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, ships);
+            }
+        });
+        this.addRepeatingAction('low', 'send-supplies-update', () => {
+            const supplies = this.getSupplies()
+                .filter(s => s.active)
+                .map(s => s.config);
+            if (supplies.length) {
+                SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, supplies);
+            }
+        });
+        this.addRepeatingAction('ultralow', 'send-stats-update', () => {
+            // TODO: filter out stats from other rooms
+            SpaceSimServer.io.sendUpdateStatsToRoom(this.ROOM_NAME, GameScoreTracker.getAllStats());
+        });
+        this.addRepeatingAction('ultralow', 'send-supply-flicker', () => {
+            this._processFlickerSupplyQueue();
+        });
     }
 
     createShip(data: SpaceSimUserData): Ship {

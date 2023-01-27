@@ -125,42 +125,47 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
         this._shouldGetMap = true;
         this._needsResize = true;
-    }
 
-    update(time: number, delta: number): void {
-        if (this._shouldGetMap) {
-            this._shouldGetMap = false;
-            SpaceSimClient.socket.sendRequestMapRequest(SpaceSimClient.playerData);
-        }
-        if (this._shouldCreateStellarBodies) {
-            this._shouldCreateStellarBodies = false;
-            this._createStellarBodiesLayer();
-        }
-        if (this._shouldGetPlayer) {
-            this._shouldGetPlayer = false;
-            this._getPlayerFromServer();
-        }
-        if (this._shouldResize) {
-            this._shouldResize = false;
-            this.resize();
-        }
-        if (this._shouldShowHud) {
-            this._shouldShowHud = false;
-            SpaceSim.game.scene.start(MultiplayerHudSceneConfig.key);
-            SpaceSim.game.scene.bringToTop(MultiplayerHudSceneConfig.key);
-        }
-        try {
+        this.addRepeatingAction('high', 'get-game-level', () => {
+            if (this._shouldGetMap) {
+                this._shouldGetMap = false;
+                SpaceSimClient.socket.sendRequestMapRequest(SpaceSimClient.playerData);
+                this.removeRepeatingAction('high', 'get-game-level');
+            }
+        }).addRepeatingAction('high', 'create-stellar-bodies', () => {
+            if (this._shouldCreateStellarBodies) {
+                this._shouldCreateStellarBodies = false;
+                this._createStellarBodiesLayer();
+                this.removeRepeatingAction('high', 'create-stellar-bodies');
+            }
+        }).addRepeatingAction('high', 'get-player', () => {
+            if (this._shouldGetPlayer) {
+                this._shouldGetPlayer = false;
+                this._getPlayerFromServer();
+                this.removeRepeatingAction('high', 'get-player');
+            }
+        }).addRepeatingAction('high', 'resize', () => {
+            if (this._shouldResize) {
+                this._shouldResize = false;
+                this.resize();
+                this.removeRepeatingAction('high', 'resize');
+            }
+        }).addRepeatingAction('high', 'show-hud', () => {
+            if (this._shouldShowHud) {
+                this._shouldShowHud = false;
+                SpaceSim.game.scene.start(MultiplayerHudSceneConfig.key);
+                SpaceSim.game.scene.bringToTop(MultiplayerHudSceneConfig.key);
+
+                this.removeRepeatingAction('high', 'show-hud');
+            }
+        }).addRepeatingAction('high', 'main-update-loop', (time: number, delta: number) => {
             this._processEndScene();
             this._processUpdateShipsQueue();
             this._processRemoveShipsQueue();
-            this.getShips().forEach(p => p?.update(time, delta));
+            this.getShips().forEach(s => s?.update(time, delta));
             this._processUpdateSuppliesQueue();
             this._processRemoveSuppliesQueue();
             this._processFlickerSuppliesQueue();
-
-            this._stellarBodies.forEach((body) => {
-                body?.update(time, delta);
-            });
 
             if (SpaceSimClient.socket?.disconnected) {
                 if (this._disconnectTimer == null) {
@@ -172,9 +177,11 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     this._disconnectTimer = null;
                 }
             }
-        } catch (e) {
-            /* ignore */
-        }
+        }).addRepeatingAction('low', 'update-stellar-bodies', (time: number, delta: number) => {
+            this._stellarBodies.forEach((body) => {
+                body?.update(time, delta);
+            });
+        });
     }
 
     resize(): void {

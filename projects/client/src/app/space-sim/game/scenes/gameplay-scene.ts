@@ -132,6 +132,22 @@ export class GameplayScene extends BaseScene implements Resizable {
         SpaceSim.game.scene.bringToTop(GameplayHudSceneConfig.key);
 
         this.resize();
+
+        this.addRepeatingAction('high', 'update-ships', (time: number, delta: number) => {
+            this.getShips().forEach(p => p.update(time, delta));
+        }).addRepeatingAction('high', 'update-enemy-controllers', (time: number, delta: number) => {
+            const activeEnemies = SpaceSimClient.opponents.filter(o => o?.ship?.active);
+            activeEnemies.forEach(o => o.update(time, delta));
+        }).addRepeatingAction('medium', 'reveal-room', () => {
+            // If the player has entered a new room, make it visible
+            const currentLoc = this.playerShip.location;
+            const currentRoom = this.getLevel().getRoomAtWorldXY(currentLoc.x, currentLoc.y);
+            this._showRoom(currentRoom);
+        }).addRepeatingAction('low', 'update-stellar-bodies', (time: number, delta: number) => {
+            this._stellarBodies.forEach((body) => {
+                body.update(time, delta);
+            });
+        });
     }
 
     resize(): void {
@@ -141,26 +157,6 @@ export class GameplayScene extends BaseScene implements Resizable {
         this._createBackground();
         this._setupCamera();
         this._createMiniMap();
-    }
-
-    update(time: number, delta: number): void {
-        try {
-            this.getShips().forEach(p => p.update(time, delta));
-
-            // If the player has entered a new room, make it visible
-            const currentLoc = this.playerShip.location;
-            const currentRoom = this.getLevel().getRoomAtWorldXY(currentLoc.x, currentLoc.y);
-            this._showRoom(currentRoom);
-
-            const activeEnemies = SpaceSimClient.opponents.filter(o => o?.ship?.active);
-            activeEnemies.forEach(o => o.update(time, delta));
-
-            this._stellarBodies.forEach((body) => {
-                body.update(time, delta);
-            });
-        } catch (e) {
-            /* ignore */
-        }
     }
 
     /**

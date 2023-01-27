@@ -51,10 +51,9 @@ export class PlayerShip extends Ship {
     override subtractIntegrity(amount: number, damageOpts: DamageMetadata): void {
         super.subtractIntegrity(amount, damageOpts);
 
-        if (this.active) {
+        if (this.active && amount !== 0) {
             // keep the health bar visible by killing any active fade out tweens
             this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
-
             this._updateIntegrityIndicator();
             
             if (!this._shipDamageFlicker?.isPlaying()) {
@@ -68,7 +67,11 @@ export class PlayerShip extends Ship {
     override addIntegrity(amount: number): void {
         super.addIntegrity(amount);
 
-        this._updateIntegrityIndicator();
+        if (this.active && amount !== 0) {
+            // keep the health bar visible by killing any active fade out tweens
+            this.scene.tweens.killTweensOf(this._shipIntegrityIndicator);
+            this._updateIntegrityIndicator();
+        }
     }
 
     private _addVisualsToGameObject(options: ShipOptions): void {
