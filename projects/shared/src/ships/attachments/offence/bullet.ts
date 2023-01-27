@@ -7,32 +7,36 @@ import { HasId } from "../../../interfaces/has-id";
 import { HasLocation } from "../../../interfaces/has-location";
 
 export type BulletOptions = {
-    readonly location: Phaser.Types.Math.Vector2Like;
+    readonly startingLoc: Phaser.Types.Math.Vector2Like;
     readonly weapon: Weapon;
     /**
      * the force imparted on the bullet when fired. larger numbers
      * travel faster
      */
-    readonly force?: number;
+    readonly force: number;
     /**
      * amount of damage this bullet causes if it hits a target
      */
-    readonly damage?: number;
-    readonly angle?: number;
-    readonly startingV?: Phaser.Types.Math.Vector2Like;
+    readonly damage: number;
+    /**
+     * amount of heat added to target on impact
+     */
+    readonly heat: number;
+    readonly startingA: number;
+    readonly startingV: Phaser.Types.Math.Vector2Like;
     /**
      * the size of this bullet
      */
-    readonly radius?: number;
+    readonly radius: number;
     /**
      * number of milliseconds before the bullet self-destructs
      * after being fired
      */
-    readonly timeout?: number;
+    readonly timeout: number;
     /**
      * how much influence the impact will have on targets
      */
-    readonly mass?: number;
+    readonly mass: number;
 };
 
 export class Bullet extends Phaser.GameObjects.Container implements BulletOptions, HasId, HasLocation {
@@ -40,34 +44,33 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
     readonly scene: BaseScene;
     readonly force: number;
     readonly damage: number;
+    readonly heat: number;
     readonly radius: number;
     readonly weapon: Weapon;
     readonly timeout: number;
     readonly mass: number;
-
-    private _startLoc: Phaser.Types.Math.Vector2Like;
-    private _startAngle: number;
-    private _startVel: Phaser.Types.Math.Vector2Like;
+    readonly startingLoc: Phaser.Types.Math.Vector2Like;
+    readonly startingA: number;
+    readonly startingV: Phaser.Types.Math.Vector2Like;
 
     public body: Phaser.Physics.Arcade.Body;
     
     constructor(scene: BaseScene, options: BulletOptions) {
-        super(scene, options.location?.x, options.location?.y);
+        super(scene, options.startingLoc?.x, options.startingLoc?.y);
 
         this.id = Phaser.Math.RND.uuid();
-
-        this._startLoc = options.location || Helpers.vector2();
-        this._startAngle = options.angle ?? 0;
-        this._startVel = options.startingV || Phaser.Math.Vector2.ZERO;
-        
         this.weapon = options.weapon;
-        this.force = options.force ?? 1;
-        this.damage = options.damage ?? 1;
-        this.radius = options.radius ?? 5;
-        this.timeout = options.timeout ?? 500;
+        this.force = options.force ?? 0;
+        this.damage = options.damage ?? 0;
+        this.heat = options.heat ?? 0;
+        this.radius = options.radius ?? 0;
+        this.timeout = options.timeout ?? 0;
         this.mass = options.mass ?? 0;
+        this.startingLoc = options.startingLoc || Helpers.vector2();
+        this.startingA = options.startingA ?? 0;
+        this.startingV = options.startingV || Phaser.Math.Vector2.ZERO;
         
-        this._createGameObj(options);
+        this._createGameObj();
 
         GameScoreTracker.shotFired(this.weapon.ship.id);
 
@@ -98,6 +101,7 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
                 attackerId: this.weapon.ship.id,
                 message: `projectile hit`
             });
+            ship.addHeat(this.heat);
             this.destroy();
         }
     }
@@ -125,16 +129,16 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
         window.setTimeout(() => this.destroy(), this.timeout);
     }
 
-    private _createGameObj(options: BulletOptions): void {
+    private _createGameObj(): void {
         this.scene.add.existing(this);
         this.setSize(this.radius * 2, this.radius * 2);
-        this.setPosition(this._startLoc.x, this._startLoc.y);
-        this.setAngle(this._startAngle);
+        this.setPosition(this.startingLoc.x, this.startingLoc.y);
+        this.setAngle(this.startingA);
 
         this.scene.physics.add.existing(this);
         this.body.setMass(this.mass);
         this.body.setCircle(this.radius);
-        this.body.setVelocity(this._startVel.x, this._startVel.y);
+        this.body.setVelocity(this.startingV.x, this.startingV.y);
         this.body.setBounce(0, 0);
 
         this._addCollisionDetection();

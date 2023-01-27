@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -116,7 +116,7 @@ export class BattleRoyaleScene extends BaseScene {
         });
     }
 
-    createShip(data: SpaceSimUserData): Ship {
+    createShip(data: SpaceSimUserData, config?: Partial<ShipConfig>): Ship {
         const room = this.getLevel().rooms[0];
         const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+1, room.top+1);
         const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right-1, room.bottom-1);
@@ -126,6 +126,32 @@ export class BattleRoyaleScene extends BaseScene {
             let y = Phaser.Math.RND.realInRange(topleft.y, botright.y);
             loc = Helpers.vector2(x, y);
         } while (this._isMapLocationOccupied(loc, 100));
+        let engine: (new (scene: BaseScene) => Engine);
+        switch (config?.engineModel) {
+            case 'economy':
+                engine = EconomyEngine;
+                break;
+            case 'sports':
+                engine = SportsEngine;
+                break;
+            case 'standard':
+            default:
+                engine = StandardEngine;
+                break;
+        }
+        let weapon: (new (scene: BaseScene) => Weapon);
+        switch (config?.weaponModel) {
+            case 'cannon':
+                weapon = Cannon;
+                break;
+            case 'plasma':
+                weapon = PlasmaGun;
+                break;
+            case 'machinegun':
+            default:
+                weapon = MachineGun;
+                break;
+        }
         const ship = new ServerShip(this, {
             location: loc,
             fingerprint: data.fingerprint,
@@ -134,7 +160,7 @@ export class BattleRoyaleScene extends BaseScene {
             wingsKey: Phaser.Math.RND.between(1, 3),
             cockpitKey: Phaser.Math.RND.between(1, 3),
             engineKey: Phaser.Math.RND.between(1, 3),
-            engine: Engine,
+            engine: engine,
             weapon: MachineGun
         });
         this.physics.add.collider(ship, this.getLevel().wallsLayer);

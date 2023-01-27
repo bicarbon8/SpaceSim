@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, Helpers, GameLevelOptions, SpaceSim, Ship, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig } from "space-sim-shared";
+import { GameLevel, Helpers, GameLevelOptions, SpaceSim, Ship, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig, Engine, Weapon } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -17,9 +17,13 @@ import { MultiplayerHudSceneConfig } from "./multiplayer-hud-scene";
 import { GameOverSceneConfig } from "./game-over-scene";
 import { UiExploder } from "../ui-components/ui-exploder";
 import { PlayerBullet } from "../ships/attachments/offence/player-bullet";
-import { PlayerEngine } from "../ships/attachments/utility/player-engine";
+import { PlayerStandardEngine } from "../ships/attachments/utility/player-standard-engine";
 import { PlayerMachineGun } from "../ships/attachments/offence/player-machine-gun";
 import { ClientGameLevel } from "../levels/client-game-level";
+import { PlayerEconomyEngine } from "../ships/attachments/utility/player-economy-engine";
+import { PlayerSportsEngine } from "../ships/attachments/utility/player-sports-engine";
+import { PlayerCannon } from "../ships/attachments/offence/player-cannon";
+import { PlayerPlasmaGun } from "../ships/attachments/offence/player-plasma-gun";
 
 export const MultiplayerSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -94,7 +98,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     preload(): void {
         PlayerShip.preload(this);
-        PlayerEngine.preload(this);
+        PlayerStandardEngine.preload(this);
         StellarBody.preload(this);
         UiExploder.preload(this);
         PlayerBullet.preload(this);
@@ -371,10 +375,36 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 } else {
                     // or create new ship if doesn't already exist
                     Helpers.log('debug', `creating new PlayerShip ${JSON.stringify(o)}`);
+                    let engine: (new (scene: BaseScene) => Engine);
+                    switch (o.engineModel) {
+                        case 'economy':
+                            engine = PlayerEconomyEngine;
+                            break;
+                        case 'sports':
+                            engine = PlayerSportsEngine;
+                            break;
+                        case 'standard':
+                        default:
+                            engine = PlayerStandardEngine;
+                            break;
+                    }
+                    let weapon: (new (scene: BaseScene) => Weapon);
+                    switch (o.weaponModel) {
+                        case 'cannon':
+                            weapon = PlayerCannon;
+                            break;
+                        case 'plasma':
+                            weapon = PlayerPlasmaGun;
+                            break;
+                        case 'machinegun':
+                        default:
+                            weapon = PlayerMachineGun;
+                            break;
+                    }
                     ship = new PlayerShip(this, {
                         ...o,
-                        engine: PlayerEngine,
-                        weapon: PlayerMachineGun
+                        engine: engine,
+                        weapon: weapon
                     });
                     this._ships.set(o.id, ship);
                     this.physics.add.collider(ship, this.getLevel().wallsLayer);

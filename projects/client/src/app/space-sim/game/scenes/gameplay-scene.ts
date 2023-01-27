@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { Helpers, RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel } from "space-sim-shared";
+import { Helpers, RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, StandardEngine } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -15,11 +15,15 @@ import { PlayerRepairsSupply } from "../ships/supplies/player-repairs-supply";
 import { GameOverSceneConfig } from "./game-over-scene";
 import { GameplayHudSceneConfig } from "./gameplay-hud-scene";
 import { UiExploder } from "../ui-components/ui-exploder";
-import { PlayerEngine } from "../ships/attachments/utility/player-engine";
+import { PlayerStandardEngine } from "../ships/attachments/utility/player-standard-engine";
 import { PlayerBullet } from "../ships/attachments/offence/player-bullet";
 import { PlayerMachineGun } from "../ships/attachments/offence/player-machine-gun";
 import { ClientGameLevel } from "../levels/client-game-level";
 import { ClientAiController } from "../controllers/client-ai-controller";
+import { PlayerPlasmaGun } from "../ships/attachments/offence/player-plasma-gun";
+import { PlayerSportsEngine } from "../ships/attachments/utility/player-sports-engine";
+import { PlayerEconomyEngine } from "../ships/attachments/utility/player-economy-engine";
+import { PlayerCannon } from "../ships/attachments/offence/player-cannon";
 
 export const GameplaySceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
@@ -61,8 +65,6 @@ export class GameplayScene extends BaseScene implements Resizable {
     private _camera: Camera;
     private _radar: Radar;
 
-    private _physicsUpdator: Generator<void, void, unknown>;
-
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
@@ -102,7 +104,7 @@ export class GameplayScene extends BaseScene implements Resizable {
 
     preload(): void {
         PlayerShip.preload(this);
-        PlayerEngine.preload(this);
+        PlayerStandardEngine.preload(this);
         StellarBody.preload(this);
         UiExploder.preload(this);
         PlayerBullet.preload(this);
@@ -159,37 +161,6 @@ export class GameplayScene extends BaseScene implements Resizable {
         this._createMiniMap();
     }
 
-    /**
-     * use Generator function to allow yielding control while iterating
-     * through all the scene's children to enable / disable physics so we
-     * don't spend too much time and delay the calls to `scene.update`
-     */
-    private *_updatePhysics(): Generator<void, void, unknown> {
-        const loc = this.playerShip.location;
-        const {width, height} = SpaceSimClient.getSize();
-        const dist = (width > height) ? width : height;
-        const children = this.children.getAll();
-        for (var i=0; i<children.length; i++) {
-            const c = children[i];
-            // skip over the map tiles
-            if (c !== this.getLevel().wallsLayer) {
-                // and skip over objects that don't have physics bodies 
-                const arcade = c.body as Phaser.Physics.Arcade.Body;
-                if (arcade) {
-                    const d = Phaser.Math.Distance.BetweenPoints({x: c['x'], y: c['y']}, loc);
-                    if (d <= dist * 2) {
-                        // enable physics on objects close to player
-                        c.setActive(true);
-                    } else {
-                        // and disable physics on objects far offscreen
-                        c.setActive(false);
-                    }
-                    yield;
-                }
-            }
-        }
-    }
-
     private _createOpponents(): void {
         // remove all pre-existing (happens on replay)
         SpaceSimClient.opponents.splice(0, SpaceSimClient.opponents.length);
@@ -208,7 +179,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 wingsKey: Phaser.Math.RND.between(1, 3),
                 cockpitKey: Phaser.Math.RND.between(1, 3),
                 engineKey: Phaser.Math.RND.between(1, 3),
-                engine: PlayerEngine,
+                engine: StandardEngine,
                 weapon: PlayerMachineGun
             });
             p.setAlpha(0); // hidden until player enters room
@@ -241,7 +212,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             wingsKey: Phaser.Math.RND.between(1, 3),
             cockpitKey: Phaser.Math.RND.between(1, 3),
             engineKey: Phaser.Math.RND.between(1, 3),
-            engine: PlayerEngine,
+            engine: PlayerStandardEngine,
             weapon: PlayerMachineGun
         });
         SpaceSimClient.playerShipId = ship.id;

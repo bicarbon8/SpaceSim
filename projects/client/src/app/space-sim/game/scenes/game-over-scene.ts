@@ -60,16 +60,7 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _updateScore(): void {
-        if (SpaceSimClient.mode === 'singleplayer') {
-            const id = SpaceSimClient.playerShipId;
-            const stats: GameStats = GameScoreTracker.getStats(id);
-            this._scoreText.setText([
-                `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`,
-                `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
-                `Accuracy: ${stats.accuracy.toFixed(0)}%`,
-                `Kills: ${GameScoreTracker.destroyedCount(id)}`
-            ]);
-        } else {
+        if (SpaceSimClient.mode === 'multiplayer') {
             const leaderboard = GameScoreTracker.getLeaderboard();
             this._scoreText.setText([
                 'Leaderboard:',
@@ -119,6 +110,15 @@ export class GameOverScene extends Phaser.Scene {
             text: '', 
             style: {font: '30px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4}
         }, false);
+
+        const id = SpaceSimClient.playerShipId;
+        const stats: GameStats = GameScoreTracker.getStats(id);
+        this._scoreText.setText([
+            `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`,
+            `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
+            `Accuracy: ${stats.accuracy.toFixed(0)}%`,
+            `Kills: ${GameScoreTracker.destroyedCount(id)}`
+        ]);
 
         this._layout.addContents(this._scoreText);
     }

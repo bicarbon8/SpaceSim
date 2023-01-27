@@ -27,9 +27,15 @@ export * from "./src/scenes/base-scene";
 export * from "./src/ships/attachments/offence/bullet";
 export * from "./src/ships/attachments/offence/cannon";
 export * from "./src/ships/attachments/offence/machine-gun";
+export * from "./src/ships/attachments/offence/plasma-gun";
+export * from "./src/ships/attachments/offence/weapon-model";
 export * from "./src/ships/attachments/offence/weapon";
 /** ships/attachments/utility */
+export * from "./src/ships/attachments/utility/economy-engine";
+export * from "./src/ships/attachments/utility/engine-model";
 export * from "./src/ships/attachments/utility/engine";
+export * from "./src/ships/attachments/utility/sports-engine";
+export * from "./src/ships/attachments/utility/standard-engine";
 /** ships/attachments */
 export * from "./src/ships/attachments/ship-attachment";
 /** ships/supplies */

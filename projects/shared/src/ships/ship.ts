@@ -9,6 +9,8 @@ import { BaseScene } from "../scenes/base-scene";
 import { HasId } from "../interfaces/has-id";
 import { HasLocation } from "../interfaces/has-location";
 import { SpaceSim } from "../space-sim";
+import { WeaponModel } from "./attachments/offence/weapon-model";
+import { EngineModel } from "./attachments/utility/engine-model";
 
 export type ShipConfig = PhysicsObject & {
     id: string;
@@ -22,6 +24,8 @@ export type ShipConfig = PhysicsObject & {
     wingsKey: number;
     cockpitKey: number;
     engineKey: number;
+    weaponModel: WeaponModel;
+    engineModel: EngineModel;
 };
 
 export type ShipOptions = Partial<ShipConfig> & {
@@ -115,7 +119,9 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
             weaponsKey: this.weaponsKey,
             wingsKey: this.wingsKey,
             cockpitKey: this.cockpitKey,
-            engineKey: this.engineKey
+            engineKey: this.engineKey,
+            weaponModel: this.weapon.model,
+            engineModel: this.engine.model
         };
     }
 

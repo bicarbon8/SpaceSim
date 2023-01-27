@@ -1,14 +1,13 @@
-import { Engine, Helpers, Ship } from "space-sim-shared";
+import { Helpers, Ship, EconomyEngine } from "space-sim-shared";
 import { environment } from "../../../../../../environments/environment";
 import { SpaceSimClient } from "../../../space-sim-client";
 
-export class PlayerEngine extends Engine {
+export class PlayerEconomyEngine extends EconomyEngine {
     private _thrusterSound: Phaser.Sound.BaseSound;
     private _flareParticles: Phaser.GameObjects.Particles.ParticleEmitterManager;
 
     static preload(scene: Phaser.Scene): void {
         scene.load.audio('thruster-fire', `${environment.baseUrl}/assets/audio/effects/thrusters.wav`);
-        scene.load.audio('booster-fire', `${environment.baseUrl}/assets/audio/effects/booster-fire.ogg`);
     }
 
     override setShip(s: Ship): this {
@@ -25,19 +24,20 @@ export class PlayerEngine extends Engine {
             // sound effects
             if (!this._thrusterSound?.isPlaying) {
                 this._thrusterSound?.play({seek:0.3, volume: 0.2});
-                setTimeout(() => {
-                    this._thrusterSound?.stop();
-                }, 250);
             }
             // visual effects
             this._displayThrusterFire();
+        } else {
+            if (this._thrusterSound?.isPlaying) {
+                this._thrusterSound?.stop();
+            }
         }
     }
 
     private _displayThrusterFire(): void {
         // make thruster fire
         this._flareParticles.createEmitter({
-            frame: SpaceSimClient.Constants.UI.SpriteMaps.Flares.yellow,
+            frame: SpaceSimClient.Constants.UI.SpriteMaps.Flares.red,
             lifespan: {min: 50, max: 100},
             speedX: 500,
             speedY: 0,
