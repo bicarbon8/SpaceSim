@@ -1,8 +1,8 @@
 import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
-import { Constants } from "../utilities/constants";
 import { InputController } from "./input-controller";
 import { Helpers } from "../utilities/helpers";
+import { SpaceSim } from "../space-sim";
 
 export type AiState = 'patrolling' | 'attacking' | 'chasing';
 
@@ -13,9 +13,9 @@ export class AiController extends InputController {
     private _nextThrusterFireAt: number;
     private _canCheckView: boolean;
     
-    private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
-    private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
-    private _ultraLowPriUpdateAt: number = Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
+    private _medPriUpdateAt: number = SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ;
+    private _lowPriUpdateAt: number = SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ;
+    private _ultraLowPriUpdateAt: number = SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
     
     private _previousState: AiState;
     private _state: AiState;
@@ -95,14 +95,14 @@ export class AiController extends InputController {
             }
         }
 
-        if (this._medPriUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
+        if (this._medPriUpdateAt >= SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ) {
             this._medPriUpdateAt = 0;
         }
-        if (this._lowPriUpdateAt >= Constants.Timing.LOW_PRI_UPDATE_FREQ) {
+        if (this._lowPriUpdateAt >= SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ) {
             this._lowPriUpdateAt = 0;
             this._canCheckView = true;
         }
-        if (this._ultraLowPriUpdateAt >= Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
+        if (this._ultraLowPriUpdateAt >= SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
             this._ultraLowPriUpdateAt = 0;
         }
     }

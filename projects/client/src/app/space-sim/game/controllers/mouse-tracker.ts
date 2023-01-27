@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { HasLocation, Helpers, Ship, Updatable, Constants } from "space-sim-shared";
+import { HasLocation, Helpers, Ship, Updatable, SpaceSim } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 
 export class MouseTracker implements HasLocation, Updatable {
@@ -83,7 +83,7 @@ export class MouseTracker implements HasLocation, Updatable {
             const radians: number = Phaser.Math.Angle.Between(loc.x, loc.y, shipPos.x, shipPos.y);
             const degrees: number = +Phaser.Math.RadToDeg(radians).toFixed(0);
             // only update if angle changed more than minimum allowed degrees
-            if (!Phaser.Math.Fuzzy.Equal(this._ship.rotationContainer.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
+            if (!Phaser.Math.Fuzzy.Equal(this._ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ship.MIN_ROTATION_ANGLE)) {
                 SpaceSimClient.socket?.sendSetShipAngleRequest(degrees, SpaceSimClient.playerData);
                 this._ship.rotationContainer.setAngle(degrees);
             }

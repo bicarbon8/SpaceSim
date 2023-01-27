@@ -1,5 +1,5 @@
 import { LayoutContainer } from "phaser-ui-components";
-import { BaseScene, Constants, DamageMetadata, Helpers, Ship, ShipOptions, SpaceSim } from "space-sim-shared";
+import { BaseScene, DamageMetadata, Ship, ShipOptions, SpaceSim } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
 import { Animations } from "../ui-components/animations";
 
@@ -71,7 +71,7 @@ export class PlayerShip extends Ship {
     }
 
     private _addVisualsToGameObject(options: ShipOptions): void {
-        this.setDepth(Constants.UI.Layers.PLAYER);
+        this.setDepth(SpaceSim.Constants.UI.Layers.PLAYER);
 
         // create ship sprite and set container bounds based on sprite size
         const weaponsSprite = this.scene.make.sprite({
@@ -187,7 +187,7 @@ export class PlayerShip extends Ship {
      */
     private _updateOverheatingSpriteAndText(): void {
         if (this.active) {
-            const alpha = this.temperature / Constants.Ship.MAX_SAFE_TEMPERATURE;
+            const alpha = this.temperature / SpaceSim.Constants.Ship.MAX_SAFE_TEMPERATURE;
             this._shipHeatIndicator.setAlpha(Math.min(alpha, 1));
             
             if (this.isOverheating) {

@@ -1,4 +1,4 @@
-import { Constants, GameScoreTracker, GameStats, SpaceSim, BaseScene, Ship, Helpers, InputController } from "space-sim-shared";
+import { GameScoreTracker, GameStats, SpaceSim, BaseScene, Ship, Helpers, InputController } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
@@ -138,7 +138,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             alignment: {vertical: 'top'}
         }).addContentAt(0, 0, this._hudText)
         .addContentAt(0, cols-1, this._quitContainer) // quit button
-        .setDepth(Constants.UI.Layers.HUD);
+        .setDepth(SpaceSim.Constants.UI.Layers.HUD);
         this.add.existing(this._hudLayout);
     }
 

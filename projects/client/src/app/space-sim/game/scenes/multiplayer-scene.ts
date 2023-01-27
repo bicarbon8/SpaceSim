@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, Constants, Helpers, GameLevelOptions, SpaceSim, Ship, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig } from "space-sim-shared";
+import { GameLevel, Helpers, GameLevelOptions, SpaceSim, Ship, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -213,7 +213,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     private async _getPlayerFromServer(): Promise<void> {
         // handle case of client self destruct by notifying server of our destruction
-        this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
             if (cfg.id === SpaceSimClient.playerShipId) {
                 SpaceSimClient.socket?.sendPlayerDeathNotice(SpaceSimClient.playerData);
             }
@@ -266,7 +266,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             this._backgroundStars.destroy();
         }
         this._backgroundStars = this.add.tileSprite(this._width/2, this._height/2, this._width*3, this._height*3, 'far-stars');
-        this._backgroundStars.setDepth(Constants.UI.Layers.BACKGROUND);
+        this._backgroundStars.setDepth(SpaceSim.Constants.UI.Layers.BACKGROUND);
         this._backgroundStars.setScrollFactor(0.01); // slight movement to appear very far away
     }
 

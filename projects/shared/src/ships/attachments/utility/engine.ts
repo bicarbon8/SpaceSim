@@ -1,5 +1,5 @@
+import { SpaceSim } from "../../../space-sim";
 import { BaseScene } from "../../../scenes/base-scene";
-import { Constants } from "../../../utilities/constants";
 import { ShipAttachment } from "../ship-attachment";
 
 type ThrustOptions = {
@@ -14,16 +14,16 @@ export class Engine extends ShipAttachment {
     
     constructor(scene: BaseScene) {
         super(scene);
-        this._lastUsedAt = Constants.Ship.Engine.USAGE_DELAY_MS;
+        this._lastUsedAt = SpaceSim.Constants.Ship.Engine.USAGE_DELAY_MS;
     }
 
     override setEnabled(enabled: boolean): void {
         super.setEnabled(enabled);
         let event: any;
         if (enabled) {
-            event = Constants.Events.ENGINE_ENABLED;
+            event = SpaceSim.Constants.Events.ENGINE_ENABLED;
         } else {
-            event = Constants.Events.ENGINE_DISABLED;
+            event = SpaceSim.Constants.Events.ENGINE_DISABLED;
         }
         this.scene.events.emit(event, this.ship.id);
     }
@@ -31,9 +31,9 @@ export class Engine extends ShipAttachment {
     update(time: number, delta: number): void {
         if (this._canThrust(time)) {
             this._applyThrust({
-                force: Constants.Ship.Engine.FORCE,
-                fuel: Constants.Ship.Engine.FUEL_PER_USE,
-                heat: Constants.Ship.Engine.HEAT_PER_USE,
+                force: SpaceSim.Constants.Ship.Engine.FORCE,
+                fuel: SpaceSim.Constants.Ship.Engine.FUEL_PER_USE,
+                heat: SpaceSim.Constants.Ship.Engine.HEAT_PER_USE,
                 heading: this.ship?.heading
             });
             this._lastUsedAt = time;
@@ -52,7 +52,7 @@ export class Engine extends ShipAttachment {
     private _canThrust(time: number): boolean {
         return this.enabled
             && this.ship?.remainingFuel > 0 
-            && time >= this._lastUsedAt + Constants.Ship.Engine.USAGE_DELAY_MS
+            && time >= this._lastUsedAt + SpaceSim.Constants.Ship.Engine.USAGE_DELAY_MS
             && !this.ship.isOverheating;
     }
 }

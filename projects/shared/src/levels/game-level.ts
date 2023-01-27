@@ -1,10 +1,10 @@
 import * as Phaser from "phaser";
 import Dungeon, { Room } from "@mikewesthad/dungeon";
-import { Constants } from "../utilities/constants";
 import { Helpers } from "../utilities/helpers";
 import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
 import { NumberOrRange } from "../interfaces/number-range";
+import { SpaceSim } from "../space-sim";
 
 export type RoomPlus = Room & {
     visible?: boolean;
@@ -287,13 +287,13 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
             const { x, y, width, height, left, right, top, bottom } = room;
 
             // top wall
-            this._wallsLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, top, width, 1);
+            this._wallsLayer.weightedRandomize(SpaceSim.Constants.UI.SpriteMaps.Tiles.Map.WALL, left, top, width, 1);
             // left wall
-            this._wallsLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, top, 1, height);
+            this._wallsLayer.weightedRandomize(SpaceSim.Constants.UI.SpriteMaps.Tiles.Map.WALL, left, top, 1, height);
             // bottom wall
-            this._wallsLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, left, bottom, width, 1);
+            this._wallsLayer.weightedRandomize(SpaceSim.Constants.UI.SpriteMaps.Tiles.Map.WALL, left, bottom, width, 1);
             // right wall
-            this._wallsLayer.weightedRandomize(Constants.UI.SpriteMaps.Tiles.Map.WALL, right, top, 1, height);
+            this._wallsLayer.weightedRandomize(SpaceSim.Constants.UI.SpriteMaps.Tiles.Map.WALL, right, top, 1, height);
 
             this._radarLayer.fill(0, left+1, top+1, width-2, height-2);
 

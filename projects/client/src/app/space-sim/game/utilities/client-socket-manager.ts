@@ -1,7 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
-import { BaseScene, Constants, GameLevelOptions, GameScoreTracker, GameStats, Helpers, ShipConfig, ShipOptions, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
-import { GameOverSceneConfig } from "../scenes/game-over-scene";
+import { BaseScene, GameLevelOptions, GameScoreTracker, GameStats, Helpers, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
 import { MultiplayerSceneConfig } from "../scenes/multiplayer-scene";
 import { SetNameSceneConfig } from "../scenes/set-name-scene";
 import { SpaceSimClient } from "../space-sim-client";
@@ -46,58 +45,58 @@ export class ClientSocketManager {
     }
 
     sendSetPlayerDataRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.SET_PLAYER_DATA, data);
+        this._emit(SpaceSim.Constants.Socket.SET_PLAYER_DATA, data);
         return this;
     }
 
     sendRequestMapRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.REQUEST_MAP, data);
+        this._emit(SpaceSim.Constants.Socket.REQUEST_MAP, data);
         return this;
     }
 
     sendJoinRoomRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.JOIN_ROOM, data);
+        this._emit(SpaceSim.Constants.Socket.JOIN_ROOM, data);
         return this;
     }
 
     sendPlayerDeathNotice(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.SHIP_DESTROYED, data);
+        this._emit(SpaceSim.Constants.Socket.SHIP_DESTROYED, data);
         return this;
     }
 
     sendRequestShipRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.REQUEST_SHIP, data);
+        this._emit(SpaceSim.Constants.Socket.REQUEST_SHIP, data);
         return this;
     }
 
     sendSetShipAngleRequest(degrees: number, data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.SET_PLAYER_ANGLE, degrees, data);
+        this._emit(SpaceSim.Constants.Socket.SET_PLAYER_ANGLE, degrees, data);
         return this;
     }
 
     sendEnableEngineRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.ENGINE_ENABLED, data);
+        this._emit(SpaceSim.Constants.Socket.ENGINE_ENABLED, data);
         return this;
     }
 
     sendDisableEngineRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.ENGINE_DISABLED, data);
+        this._emit(SpaceSim.Constants.Socket.ENGINE_DISABLED, data);
         return this;
     }
 
     sendEnableWeaponRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.WEAPON_ENABLED, data);
+        this._emit(SpaceSim.Constants.Socket.WEAPON_ENABLED, data);
         return this;
     }
 
     sendDisableWeaponRequest(data: SpaceSimUserData): this {
-        this._emit(Constants.Socket.WEAPON_DISABLED, data);
+        this._emit(SpaceSim.Constants.Socket.WEAPON_DISABLED, data);
         return this;
     }
 
     private _handleAllEvents(event: string, ...args: Array<any>): void {
         if (SpaceSimClient.mode === 'multiplayer') {
-            if (![Constants.Socket.UPDATE_PLAYERS, Constants.Socket.UPDATE_STATS, Constants.Socket.UPDATE_SUPPLIES].includes(event)) {
+            if (![SpaceSim.Constants.Socket.UPDATE_PLAYERS, SpaceSim.Constants.Socket.UPDATE_STATS, SpaceSim.Constants.Socket.UPDATE_SUPPLIES].includes(event)) {
                 Helpers.log('debug', `received '${event}' event from server...`);
             }
             Helpers.trycatch(() => {
@@ -108,52 +107,52 @@ export class ClientSocketManager {
                     case 'disconnect':
                         this._handleDisconnectEvent(args[0], args[1]);
                         break;
-                    case Constants.Socket.INVALID_USER_DATA:
+                    case SpaceSim.Constants.Socket.INVALID_USER_DATA:
                         this._handleInvalidUserDataEvent(args[0]);
                         break;
-                    case Constants.Socket.USER_ACCEPTED:
+                    case SpaceSim.Constants.Socket.USER_ACCEPTED:
                         this._handleUserAcceptedEvent(args[0]);
                         break;
-                    case Constants.Socket.JOIN_ROOM: 
+                    case SpaceSim.Constants.Socket.JOIN_ROOM: 
                         this._handleJoinRoomEvent();
                         break;
-                    case Constants.Socket.UPDATE_SUPPLIES:
+                    case SpaceSim.Constants.Socket.UPDATE_SUPPLIES:
                         this._handleUpdateSuppliesEvent(args[0]);
                         break;
-                    case Constants.Socket.REMOVE_SUPPLIES:
+                    case SpaceSim.Constants.Socket.REMOVE_SUPPLIES:
                         this._handleRemoveSuppliesEvent(...args);
                         break;
-                    case Constants.Socket.FLICKER_SUPPLIES:
+                    case SpaceSim.Constants.Socket.FLICKER_SUPPLIES:
                         this._handleFlickerSuppliesEvent(...args);
                         break;
-                    case Constants.Socket.UPDATE_PLAYERS:
+                    case SpaceSim.Constants.Socket.UPDATE_PLAYERS:
                         this._handleUpdatePlayersEvent(args[0]);
                         break;
-                    case Constants.Socket.SHIP_DESTROYED:
+                    case SpaceSim.Constants.Socket.SHIP_DESTROYED:
                         this._handlePlayerDeathEvent(args[0]);
                         break;
-                    case Constants.Socket.UPDATE_STATS:
+                    case SpaceSim.Constants.Socket.UPDATE_STATS:
                         this._handleUpdateStatsEvent(args[0]);
                         break;
-                    case Constants.Socket.UPDATE_MAP:
+                    case SpaceSim.Constants.Socket.UPDATE_MAP:
                         this._handleUpdateMapEvent(args[0]);
                         break;
-                    case Constants.Socket.SET_PLAYER_ID:
+                    case SpaceSim.Constants.Socket.SET_PLAYER_ID:
                         this._handleSetPlayerIdEvent(args[0]);
                         break;
-                    case Constants.Socket.ENGINE_ENABLED:
+                    case SpaceSim.Constants.Socket.ENGINE_ENABLED:
                         this._handleEnableEngineEvent(args[0]);
                         break;
-                    case Constants.Socket.ENGINE_DISABLED:
+                    case SpaceSim.Constants.Socket.ENGINE_DISABLED:
                         this._handleDisableEngineEvent(args[0]);
                         break;
-                    case Constants.Socket.WEAPON_ENABLED:
+                    case SpaceSim.Constants.Socket.WEAPON_ENABLED:
                         this._handleEnableWeaponEvent(args[0]);
                         break;
-                    case Constants.Socket.WEAPON_DISABLED:
+                    case SpaceSim.Constants.Socket.WEAPON_DISABLED:
                         this._handleDisableWeaponEvent(args[0]);
                         break;
-                    case Constants.Socket.INVALID_REQUEST:
+                    case SpaceSim.Constants.Socket.INVALID_REQUEST:
                         this._handleInvalidRequestEvent(args[0]);
                         break;
                     default:

@@ -1,4 +1,4 @@
-import { AiController, Constants, SpaceSim } from "space-sim-shared";
+import { AiController, SpaceSim } from "space-sim-shared";
 
 export class ClientAiController extends AiController {
     override get view(): Phaser.Geom.Polygon {
@@ -7,7 +7,7 @@ export class ClientAiController extends AiController {
             const graphics = this.scene.add.graphics({ 
                 lineStyle: { width: 2, color: 0x00ff00 }, 
                 fillStyle: { color: 0xffff00, alpha: 0.25 } 
-            }).setDepth(Constants.UI.Layers.PLAYER);
+            }).setDepth(SpaceSim.Constants.UI.Layers.PLAYER);
             const viewPoints = view.points;
             graphics.beginPath();
             graphics.moveTo(viewPoints[0].x, viewPoints[0].y);
@@ -20,7 +20,7 @@ export class ClientAiController extends AiController {
             this.scene.tweens.add({
                 targets: graphics,
                 alpha: 0,
-                duration: Constants.Timing.LOW_PRI_UPDATE_FREQ,
+                duration: SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ,
                 onComplete: () => {
                     graphics.destroy();
                 }

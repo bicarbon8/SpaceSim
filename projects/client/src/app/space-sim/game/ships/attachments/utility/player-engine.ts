@@ -1,4 +1,4 @@
-import { Constants, Engine, Helpers, Ship } from "space-sim-shared";
+import { Engine, Helpers, Ship, SpaceSim } from "space-sim-shared";
 import { environment } from "../../../../../../environments/environment";
 
 export class PlayerEngine extends Engine {
@@ -36,7 +36,7 @@ export class PlayerEngine extends Engine {
     private _displayThrusterFire(): void {
         // make thruster fire
         this._flareParticles.createEmitter({
-            frame: Constants.UI.SpriteMaps.Flares.yellow,
+            frame: SpaceSim.Constants.UI.SpriteMaps.Flares.yellow,
             lifespan: {min: 50, max: 100},
             speedX: 500,
             speedY: 0,

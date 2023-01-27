@@ -1,4 +1,3 @@
-import { Constants } from "../../utilities/constants";
 import { IsConfigurable } from "../../interfaces/is-configurable";
 import { PhysicsObject } from "../../interfaces/physics-object";
 import { HasId } from "../../interfaces/has-id";
@@ -6,6 +5,7 @@ import { SupplyType } from "./supply-type";
 import { Helpers } from "../../utilities/helpers";
 import { BaseScene } from "../../scenes/base-scene";
 import { Ship } from "../ship";
+import { SpaceSim } from "../../space-sim";
 
 export type ShipSupplyOptions = Partial<PhysicsObject> & {
     readonly id?: string;
@@ -25,13 +25,13 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
     constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options.location.x, options.location.y);
         this.scene.add.existing(this);
-        this.setDepth(Constants.UI.Layers.PLAYER);
-        const radius = Constants.Ship.Supplies.RADIUS;
+        this.setDepth(SpaceSim.Constants.UI.Layers.PLAYER);
+        const radius = SpaceSim.Constants.Ship.Supplies.RADIUS;
         this.setSize(radius * 2, radius * 2);
         this.scene.physics.add.existing(this);
-        this.body.setMass(Constants.Ship.Supplies.MASS);
+        this.body.setMass(SpaceSim.Constants.Ship.Supplies.MASS);
         this.body.setCircle(radius);
-        this.body.setBounce(Constants.Ship.Supplies.BOUNCE, Constants.Ship.Supplies.BOUNCE);
+        this.body.setBounce(SpaceSim.Constants.Ship.Supplies.BOUNCE, SpaceSim.Constants.Ship.Supplies.BOUNCE);
 
         this.configure(options);
     }

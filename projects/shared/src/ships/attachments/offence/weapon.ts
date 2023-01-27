@@ -1,7 +1,7 @@
 import { ShipAttachment } from "../ship-attachment";
-import { Constants } from "../../../utilities/constants";
 import { Bullet, BulletOptions } from "./bullet";
 import { BaseScene } from "../../../scenes/base-scene";
+import { SpaceSim } from "../../../space-sim";
 
 export type WeaponOptions = {
     maxAmmo?: number;
@@ -30,7 +30,7 @@ export abstract class Weapon extends ShipAttachment {
         super(scene);
         this._lastFired = 0;
 
-        this._maxAmmo = options.maxAmmo ?? Constants.Ship.Weapons.MAX_AMMO;
+        this._maxAmmo = options.maxAmmo ?? SpaceSim.Constants.Ship.Weapons.MAX_AMMO;
         this._firingDelay = options.firingDelay ?? 500;
         this.remainingAmmo = options.remainingAmmo ?? this._maxAmmo;
         this._heatPerShot = options.heatPerShot ?? 0.5;
@@ -44,9 +44,9 @@ export abstract class Weapon extends ShipAttachment {
         super.setEnabled(enabled);
         let event: any;
         if (enabled) {
-            event = Constants.Events.WEAPON_ENABLED;
+            event = SpaceSim.Constants.Events.WEAPON_ENABLED;
         } else {
-            event = Constants.Events.WEAPON_DISABLED;
+            event = SpaceSim.Constants.Events.WEAPON_DISABLED;
         }
         this.scene.events.emit(event, this.ship.id);
     }

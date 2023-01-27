@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { DisconnectReason } from "socket.io/dist/socket";
-import { Constants, GameStats, Helpers, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { GameStats, Helpers, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
 import { BattleRoyaleScene } from "../scenes/battle-royale-scene";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -50,27 +50,27 @@ export class ServerSocketManager {
     }
 
     sendUserAcceptedResponse(socketId: string, data: SpaceSimUserData): this {
-        return this.socketEmit(socketId, Constants.Socket.USER_ACCEPTED, data);
+        return this.socketEmit(socketId, SpaceSim.Constants.Socket.USER_ACCEPTED, data);
     }
 
     sendInvalidUserDataResponse(socketId: string, message: string): this {
-        return this.socketEmit(socketId, Constants.Socket.INVALID_USER_DATA, message);
+        return this.socketEmit(socketId, SpaceSim.Constants.Socket.INVALID_USER_DATA, message);
     }
 
     sendInvalidRequestEvent(socketId: string, message: string): this {
-        return this.socketEmit(socketId, Constants.Socket.INVALID_REQUEST, message);
+        return this.socketEmit(socketId, SpaceSim.Constants.Socket.INVALID_REQUEST, message);
     }
 
     sendUpdateStatsToRoom(room, stats: Array<Partial<GameStats>>): this {
-        return this.roomEmit(room, Constants.Socket.UPDATE_STATS, stats);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_STATS, stats);
     }
 
     sendJoinRoomResponse(socketId: string): this {
-        return this.socketEmit(socketId, Constants.Socket.JOIN_ROOM);
+        return this.socketEmit(socketId, SpaceSim.Constants.Socket.JOIN_ROOM);
     }
 
     sendSetShipIdResponse(socketId: string, shipId: string): this {
-        return this.socketEmit(socketId, Constants.Socket.SET_PLAYER_ID, shipId);
+        return this.socketEmit(socketId, SpaceSim.Constants.Socket.SET_PLAYER_ID, shipId);
     }
 
     /**
@@ -82,7 +82,7 @@ export class ServerSocketManager {
      * @returns this
      */
     broadcastEnableEngineEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, Constants.Socket.ENGINE_ENABLED, shipId);
+        return this.socketRoomBroadcast(socketId, room, SpaceSim.Constants.Socket.ENGINE_ENABLED, shipId);
     }
 
     /**
@@ -92,35 +92,35 @@ export class ServerSocketManager {
      * @returns this
      */
     sendEnableEngineEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, Constants.Socket.ENGINE_ENABLED, shipId);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.ENGINE_ENABLED, shipId);
     }
 
     broadcastDisableEngineEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, Constants.Socket.ENGINE_DISABLED, shipId);
+        return this.socketRoomBroadcast(socketId, room, SpaceSim.Constants.Socket.ENGINE_DISABLED, shipId);
     }
 
     sendDisableEngineEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, Constants.Socket.ENGINE_DISABLED, shipId);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.ENGINE_DISABLED, shipId);
     }
 
     broadcastEnableWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_ENABLED, shipId);
+        return this.socketRoomBroadcast(socketId, room, SpaceSim.Constants.Socket.WEAPON_ENABLED, shipId);
     }
 
     sendEnableWeaponEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, Constants.Socket.WEAPON_ENABLED, shipId);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.WEAPON_ENABLED, shipId);
     }
 
     broadcastDisableWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, Constants.Socket.WEAPON_DISABLED, shipId);
+        return this.socketRoomBroadcast(socketId, room, SpaceSim.Constants.Socket.WEAPON_DISABLED, shipId);
     }
 
     sendDisableWeaponEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, Constants.Socket.WEAPON_DISABLED, shipId);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.WEAPON_DISABLED, shipId);
     }
 
     sendShipDestroyedEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, Constants.Socket.SHIP_DESTROYED, shipId);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.SHIP_DESTROYED, shipId);
     }
 
     /**
@@ -128,23 +128,23 @@ export class ServerSocketManager {
      * exists to let them know they should go to game over
      */
     sendShipDestroyedEventToSocket(socketId: string): this {
-        return this.socketEmit(socketId, Constants.Socket.SHIP_DESTROYED);
+        return this.socketEmit(socketId, SpaceSim.Constants.Socket.SHIP_DESTROYED);
     }
 
     sendUpdatePlayersEvent(room: string, configs: Array<ShipConfig>): this {
-        return this.roomEmit(room, Constants.Socket.UPDATE_PLAYERS, configs);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_PLAYERS, configs);
     }
 
     sendUpdateSuppliesEvent(room: string, configs: Array<ShipSupplyOptions>): this {
-        return this.roomEmit(room, Constants.Socket.UPDATE_SUPPLIES, configs);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_SUPPLIES, configs);
     }
 
     sendFlickerSuppliesEvent(room: string, ...ids: Array<string>): this {
-        return this.roomEmit(room, Constants.Socket.FLICKER_SUPPLIES, ...ids);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.FLICKER_SUPPLIES, ...ids);
     }
 
     sendRemoveSuppliesEvent(room: string, ...ids: Array<string>): this {
-        return this.roomEmit(room, Constants.Socket.REMOVE_SUPPLIES, ...ids);
+        return this.roomEmit(room, SpaceSim.Constants.Socket.REMOVE_SUPPLIES, ...ids);
     }
 
     private socketEmit(socketId: string, event: string, ...args: Array<any>): this {
@@ -198,43 +198,43 @@ export class ServerSocketManager {
                 case 'disconnect':
                     Helpers.log('debug', `disconnect event received in 'onAny' handler`);
                     break;
-                case Constants.Socket.SET_PLAYER_DATA:
+                case SpaceSim.Constants.Socket.SET_PLAYER_DATA:
                     Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleSetPlayerDataEvent(socketId, args[0]);
                     break;
-                case Constants.Socket.JOIN_ROOM:
+                case SpaceSim.Constants.Socket.JOIN_ROOM:
                     Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleJoinRoomEvent(socketId, args[0]);
                     break;
-                case Constants.Socket.REQUEST_MAP:
+                case SpaceSim.Constants.Socket.REQUEST_MAP:
                     Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleRequestMapResponse(socketId, args[0]);
                     break;
-                case Constants.Socket.REQUEST_SHIP:
+                case SpaceSim.Constants.Socket.REQUEST_SHIP:
                     Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleRequestShipResponse(socketId, args[0]);
                     break;
-                case Constants.Socket.ENGINE_ENABLED:
+                case SpaceSim.Constants.Socket.ENGINE_ENABLED:
                     Helpers.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleEnableEngineResponse(socketId, args[0]);
                     break;
-                case Constants.Socket.ENGINE_DISABLED:
+                case SpaceSim.Constants.Socket.ENGINE_DISABLED:
                     Helpers.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleDisableEngineResponse(socketId, args[0]);
                     break;
-                case Constants.Socket.WEAPON_ENABLED:
+                case SpaceSim.Constants.Socket.WEAPON_ENABLED:
                     Helpers.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleEnableWeaponResponse(socketId, args[0]);
                     break;
-                case Constants.Socket.WEAPON_DISABLED:
+                case SpaceSim.Constants.Socket.WEAPON_DISABLED:
                     Helpers.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleDisableWeaponResponse(socketId, args[0]);
                     break;
-                case Constants.Socket.SHIP_DESTROYED:
+                case SpaceSim.Constants.Socket.SHIP_DESTROYED:
                     Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleShipDestroyedEvent(socketId, args[0]);
                     break;
-                case Constants.Socket.SET_PLAYER_ANGLE:
+                case SpaceSim.Constants.Socket.SET_PLAYER_ANGLE:
                     Helpers.log('trace', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleSetPlayerAngleEvent(socketId, args[0], args[1]);
                     break;
@@ -250,14 +250,14 @@ export class ServerSocketManager {
         Helpers.log('info', `socket: ${socketId} disconnected (#${this._disconnects}) due to:`, reason);
         const user = SpaceSimServer.users.selectFirst({socketId: socketId});
         if (user?.room) {
-            Helpers.log('info', `creating timeout to remove user`, user, `in ${Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
+            Helpers.log('info', `creating timeout to remove user`, user, `in ${SpaceSim.Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
             this._disconnectTimers.set(SpaceSimServer.users.getKey(user), window.setTimeout(() => {
                 const scene = SpaceSim.game.scene.getScene(user.room) as BattleRoyaleScene;
                 if (scene) {
                     scene.removePlayerFromScene(user);
                 }
                 SpaceSimServer.users.delete(user);
-            }, Constants.Timing.DISCONNECT_TIMEOUT_MS));
+            }, SpaceSim.Constants.Timing.DISCONNECT_TIMEOUT_MS));
         }
     }
 
@@ -320,7 +320,7 @@ export class ServerSocketManager {
             Helpers.log('debug', `attempting to add user ${JSON.stringify(user)} to a room...`);
             // iterate over rooms and see if any have less than max allowed players
             for (let scene of SpaceSimServer.rooms()) {
-                if (scene.getShips().length < Constants.Socket.MAX_USERS_PER_ROOM) {
+                if (scene.getShips().length < SpaceSim.Constants.Socket.MAX_USERS_PER_ROOM) {
                     scene.addPlayerToScene(user);
                     added = true;
                 }
@@ -345,7 +345,7 @@ export class ServerSocketManager {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
                 // TODO: add `GameLevel.config` method and use that data instead
-                this.socketEmit(socketId, Constants.Socket.UPDATE_MAP, SpaceSimServer.Constants.Map.MAP_OPTIONS);
+                this.socketEmit(socketId, SpaceSim.Constants.Socket.UPDATE_MAP, SpaceSimServer.Constants.Map.MAP_OPTIONS);
             } else {
                 Helpers.log('warn', `no scene could be found matching room '${user.room}' so map data will not be sent`);
                 this.sendInvalidRequestEvent(socketId, 'supplied user is not in a room so is not allowed to request a GameLevel');

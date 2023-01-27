@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, Constants, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -44,9 +44,9 @@ export class BattleRoyaleScene extends BaseScene {
     
     private _gameLevel: GameLevel;
     private _exploder: Exploder;
-    private _medPriUpdateAt: number = Constants.Timing.MED_PRI_UPDATE_FREQ;
-    private _lowPriUpdateAt: number = Constants.Timing.LOW_PRI_UPDATE_FREQ;
-    private _ultraLowPriUpdateAt: number = Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
+    private _medPriUpdateAt: number = SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ;
+    private _lowPriUpdateAt: number = SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ;
+    private _ultraLowPriUpdateAt: number = SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
 
     constructor(options?: Phaser.Types.Scenes.SettingsConfig) {
         const room = options?.key ?? Phaser.Math.RND.uuid();
@@ -107,7 +107,7 @@ export class BattleRoyaleScene extends BaseScene {
         });
         
         // 30 fps
-        if (this._medPriUpdateAt >= Constants.Timing.MED_PRI_UPDATE_FREQ) {
+        if (this._medPriUpdateAt >= SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ) {
             this._medPriUpdateAt = 0;
             Helpers.trycatch(() => {
                 const ships = this.getShips()
@@ -120,7 +120,7 @@ export class BattleRoyaleScene extends BaseScene {
         }
 
         // 15 fps
-        if (this._lowPriUpdateAt >= Constants.Timing.LOW_PRI_UPDATE_FREQ) {
+        if (this._lowPriUpdateAt >= SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ) {
             this._lowPriUpdateAt = 0;
             Helpers.trycatch(() => {
                 const supplies = this.getSupplies()
@@ -133,7 +133,7 @@ export class BattleRoyaleScene extends BaseScene {
         }
 
         // 1 fps
-        if (this._ultraLowPriUpdateAt >= Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
+        if (this._ultraLowPriUpdateAt >= SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
             this._ultraLowPriUpdateAt = 0;
             Helpers.trycatch(() => {
                 // TODO: filter out stats from other rooms
@@ -225,13 +225,13 @@ export class BattleRoyaleScene extends BaseScene {
 
     private _setupSceneEventHandling(): void {
         // setup listeners for scene events
-        this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
-            Helpers.log('debug', `received '${Constants.Events.SHIP_DEATH}' event in scene`);
+        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+            Helpers.log('debug', `received '${SpaceSim.Constants.Events.SHIP_DEATH}' event in scene`);
             this.queueShipRemoval(cfg.id);
-        }).on(Constants.Events.WEAPON_ENABLED, (id: string) => SpaceSimServer.io.sendEnableWeaponEventToRoom(this.ROOM_NAME, id))
-        .on(Constants.Events.WEAPON_DISABLED, (id: string) => SpaceSimServer.io.sendDisableWeaponEventToRoom(this.ROOM_NAME, id))
-        .on(Constants.Events.ENGINE_ENABLED, (id: string) => SpaceSimServer.io.sendEnableEngineEventToRoom(this.ROOM_NAME, id))
-        .on(Constants.Events.ENGINE_DISABLED, (id: string) => SpaceSimServer.io.sendDisableEngineEventToRoom(this.ROOM_NAME, id));
+        }).on(SpaceSim.Constants.Events.WEAPON_ENABLED, (id: string) => SpaceSimServer.io.sendEnableWeaponEventToRoom(this.ROOM_NAME, id))
+        .on(SpaceSim.Constants.Events.WEAPON_DISABLED, (id: string) => SpaceSimServer.io.sendDisableWeaponEventToRoom(this.ROOM_NAME, id))
+        .on(SpaceSim.Constants.Events.ENGINE_ENABLED, (id: string) => SpaceSimServer.io.sendEnableEngineEventToRoom(this.ROOM_NAME, id))
+        .on(SpaceSim.Constants.Events.ENGINE_DISABLED, (id: string) => SpaceSimServer.io.sendDisableEngineEventToRoom(this.ROOM_NAME, id));
     }
 
     private _createGameLevel(): void {

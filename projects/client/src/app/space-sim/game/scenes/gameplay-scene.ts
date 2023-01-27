@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { Constants, Helpers, RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, AiController } from "space-sim-shared";
+import { Helpers, RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -255,7 +255,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         this.physics.add.collider(this.playerShip, this.getLevel().wallsLayer);
 
         // setup listener for player death event
-        this.events.on(Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
             this._exploder.explode({location: cfg?.location});
             if (SpaceSimClient.playerShipId == cfg?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
@@ -305,7 +305,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             this._backgroundStars.destroy();
         }
         this._backgroundStars = this.add.tileSprite(this._width/2, this._height/2, this._width*3, this._height*3, 'far-stars');
-        this._backgroundStars.setDepth(Constants.UI.Layers.BACKGROUND);
+        this._backgroundStars.setDepth(SpaceSim.Constants.UI.Layers.BACKGROUND);
         this._backgroundStars.setScrollFactor(0.01); // slight movement to appear very far away
     }
 
@@ -390,7 +390,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 this.physics.add.collider(o, this.playerShip, () => {
                     if (o?.active && this.playerShip?.active) {
                         const collisionSpeed = o.body.velocity.clone().subtract(this.playerShip.body.velocity).length();
-                        const damage = collisionSpeed / Constants.Ship.MAX_SPEED; // maximum damage of 1
+                        const damage = collisionSpeed / SpaceSim.Constants.Ship.MAX_SPEED; // maximum damage of 1
                         o.subtractIntegrity(damage, {
                             timestamp: this.time.now,
                             attackerId: this.playerShip.id,

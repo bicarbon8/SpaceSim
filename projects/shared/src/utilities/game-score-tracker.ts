@@ -1,6 +1,5 @@
-import { ShipConfig, ShipOptions } from "../ships/ship";
+import { ShipConfig } from "../ships/ship";
 import { SpaceSim } from "../space-sim";
-import { Constants } from "./constants";
 import { Helpers } from "./helpers";
 
 export type Destroyed = {

@@ -1,4 +1,4 @@
-import { Constants, Exploder, ExploderOptions, Helpers } from "space-sim-shared";
+import { Exploder, ExploderOptions, Helpers, SpaceSim } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
 
 export class UiExploder extends Exploder {
@@ -30,9 +30,9 @@ export class UiExploder extends Exploder {
     override explode(options: ExploderOptions): this {
         // create particle systems for destruction
         this._flareParticleEmitter.setPosition(options.location.x, options.location.y);
-        this._flareParticleEmitter.setDepth(Constants.UI.Layers.PLAYER);
+        this._flareParticleEmitter.setDepth(SpaceSim.Constants.UI.Layers.PLAYER);
         this._explosionParticleEmitter.setPosition(options.location.x, options.location.y);
-        this._explosionParticleEmitter.setDepth(Constants.UI.Layers.PLAYER);
+        this._explosionParticleEmitter.setDepth(SpaceSim.Constants.UI.Layers.PLAYER);
 
         Helpers.trycatch(() => this._destroyedSound.play(), 'none');
 
@@ -48,7 +48,7 @@ export class UiExploder extends Exploder {
             maxParticles: 3
         });
         this._flareParticleEmitter.createEmitter({
-            frame: Constants.UI.SpriteMaps.Flares.red as number,
+            frame: SpaceSim.Constants.UI.SpriteMaps.Flares.red as number,
             lifespan: { min: 100, max: 500 },
             speedX: { min: -600, max: 600 },
             speedY: { min: -600, max: 600 },
