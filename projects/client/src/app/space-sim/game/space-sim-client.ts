@@ -123,7 +123,7 @@ export module SpaceSimClient {
             /* ignore */
         }
         if (!size) {
-            const parent = document.getElementById(parentId || 'space-sim');
+            const parent = document.getElementById(parentId || SpaceSim.Constants.GAME_NAME);
             const s = parent.getBoundingClientRect();
             size = {width: s.width, height: s.height};
         }

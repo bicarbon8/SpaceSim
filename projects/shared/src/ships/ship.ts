@@ -38,9 +38,9 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
     
     private readonly _lastDamagedBy: Array<DamageMetadata>;
     
-    private _temperature: number; // in Celcius
-    private _integrity: number;
-    private _remainingFuel: number;
+    private _temperature: number = 0; // in Celcius
+    private _integrity: number = 0;
+    private _remainingFuel: number = 0;
     private _weaponsKey: number;
     private _wingsKey: number;
     private _cockpitKey: number;
@@ -368,8 +368,8 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
 
         this.scene.physics.add.existing(this);
         this.body.setCircle(radius);
-        this.body.setMass(options.mass ?? 100);
-        this.body.setBounce(0.2, 0.2);
+        this.body.setMass(options.mass ?? SpaceSim.Constants.Ships.MASS);
+        this.body.setBounce(SpaceSim.Constants.Ships.BOUNCE, SpaceSim.Constants.Ships.BOUNCE);
         this.body.setMaxSpeed(SpaceSim.Constants.Ships.MAX_SPEED);
 
         this._weaponsKey = options.weaponsKey ?? 1;
@@ -377,7 +377,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
         this._cockpitKey = options.cockpitKey ?? 1;
         this._engineKey = options.engineKey ?? 1;
 
-        this._rotationContainer = this.scene.add.container(0, 0);
+        this._rotationContainer = this.scene.make.container({x: 0, y: 0});
         this.add(this._rotationContainer);
     }
 
