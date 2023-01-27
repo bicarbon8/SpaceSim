@@ -97,19 +97,19 @@ export class StartupScene extends Phaser.Scene {
 
     private _createBackground(): void {
         this._stars = this.add.tileSprite(0, 0, this._width, this._height, 'far-stars');
-        this._stars.setDepth(SpaceSim.Constants.UI.Layers.BACKGROUND);
+        this._stars.setDepth(SpaceSimClient.Constants.UI.Layers.BACKGROUND);
     }
 
     private _createStellarBodies(): void {
         const smallestDimension: number = (this._width <= this._height) ? this._width : this._height;
         this._sun = this.add.sprite(-this._width/2, -this._height/2, 'sun'); // top left
-        this._sun.setDepth(SpaceSim.Constants.UI.Layers.STELLAR);
+        this._sun.setDepth(SpaceSimClient.Constants.UI.Layers.STELLAR);
         const sunRadius: number = this._sun.width/2;
         const sunScaleFactor: number = smallestDimension / sunRadius; // ex: sunRadius * x = canvasSize
         this._sun.setScale(sunScaleFactor);
 
         const mercury = this.add.sprite(this._width/2, this._height/2, 'mercury'); // bottom right
-        mercury.setDepth(SpaceSim.Constants.UI.Layers.STELLAR);
+        mercury.setDepth(SpaceSimClient.Constants.UI.Layers.STELLAR);
         const mercuryRadius: number = mercury.width/2;
         const mercuryScaleFactor: number = (smallestDimension / 3) / mercuryRadius; // ex: mercuryRadius * x = canvasSize / 3
         mercury.setScale(mercuryScaleFactor);
@@ -123,7 +123,7 @@ export class StartupScene extends Phaser.Scene {
             y: 0,
             padding: 10
         });
-        layout.setDepth(SpaceSim.Constants.UI.Layers.HUD);
+        layout.setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this.add.existing(layout);
 
         const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Spaceship Game', {font: '40px Courier', color: '#6d6dff', stroke: '#ffffff', strokeThickness: 4});
@@ -262,7 +262,7 @@ export class StartupScene extends Phaser.Scene {
             }
         });
         this._controlsMenu.cardbody.refreshLayout();
-        this._controlsMenu.setDepth(SpaceSim.Constants.UI.Layers.HUD);
+        this._controlsMenu.setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this._controlsMenu.setVisible(false);
         this._controlsMenu.setActive(false);
         this.add.existing(this._controlsMenu);

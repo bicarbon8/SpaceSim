@@ -305,7 +305,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             this._backgroundStars.destroy();
         }
         this._backgroundStars = this.add.tileSprite(this._width/2, this._height/2, this._width*3, this._height*3, 'far-stars');
-        this._backgroundStars.setDepth(SpaceSim.Constants.UI.Layers.BACKGROUND);
+        this._backgroundStars.setDepth(SpaceSimClient.Constants.UI.Layers.BACKGROUND);
         this._backgroundStars.setScrollFactor(0.01); // slight movement to appear very far away
     }
 
@@ -390,7 +390,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 this.physics.add.collider(o, this.playerShip, () => {
                     if (o?.active && this.playerShip?.active) {
                         const collisionSpeed = o.body.velocity.clone().subtract(this.playerShip.body.velocity).length();
-                        const damage = collisionSpeed / SpaceSim.Constants.Ship.MAX_SPEED; // maximum damage of 1
+                        const damage = collisionSpeed / SpaceSim.Constants.Ships.MAX_SPEED; // maximum damage of 1
                         o.subtractIntegrity(damage, {
                             timestamp: this.time.now,
                             attackerId: this.playerShip.id,

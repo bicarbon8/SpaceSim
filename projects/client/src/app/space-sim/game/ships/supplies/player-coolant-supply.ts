@@ -1,5 +1,6 @@
 import { BaseScene, CoolantSupply, ShipSupplyOptions } from "space-sim-shared"
 import { environment } from "../../../../../environments/environment";
+import { SpaceSimClient } from "../../space-sim-client";
 
 export class PlayerCoolantSupply extends CoolantSupply {
     static preload(scene: Phaser.Scene): void {
@@ -15,6 +16,7 @@ export class PlayerCoolantSupply extends CoolantSupply {
             key: 'coolant-canister',
             origin: 0.5
         }, false);
-        this.add(sprite);
+        this.add(sprite)
+            .setDepth(SpaceSimClient.Constants.UI.Layers.PLAYER);
     }
 }

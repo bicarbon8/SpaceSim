@@ -1,4 +1,5 @@
-import { Helpers, SpaceSim } from "space-sim-shared";
+import { Helpers } from "space-sim-shared";
+import { SpaceSimClient } from "../space-sim-client";
 import { Camera, CameraOptions } from "./camera";
 
 export type RadarOptions = Omit<CameraOptions, 'name' | 'zoom'> & {
@@ -44,7 +45,7 @@ export class Radar extends Camera {
                 .lineStyle(3, 0x57e30b, 1)
                 .setScrollFactor(0)
                 .strokeCircle(opts.x, opts.y, radius)
-                .setDepth(SpaceSim.Constants.UI.Layers.HUD);
+                .setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         }
 
         return cam;

@@ -83,10 +83,18 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
             this.body.setVelocity(v.x, v.y);
             const angle = options.angle ?? 0;
             this.rotationContainer.setAngle(angle);
-            this._integrity = options.integrity ?? SpaceSim.Constants.Ship.MAX_INTEGRITY;
-            this._remainingFuel = options.remainingFuel ?? SpaceSim.Constants.Ship.MAX_FUEL;
-            this.weapon.remainingAmmo = options.remainingAmmo ?? SpaceSim.Constants.Ship.Weapons.MAX_AMMO;
-            this._temperature = options.temperature ?? 0;
+            const newIntegrity = options.integrity ?? SpaceSim.Constants.Ships.MAX_INTEGRITY;
+            const oldIntegrity = this.integrity ?? 0;
+            (oldIntegrity > newIntegrity) ? this.subtractIntegrity(oldIntegrity - newIntegrity) : this.addIntegrity(newIntegrity - oldIntegrity);
+            const newFuel = options.remainingFuel ?? SpaceSim.Constants.Ships.MAX_FUEL;
+            const oldFuel = this.remainingFuel ?? 0;
+            (oldFuel > newFuel) ? this.subtractFuel(oldFuel - newFuel) : this.addFuel(newFuel - oldFuel);
+            const newAmmo = options.remainingAmmo ?? SpaceSim.Constants.Ships.Weapons.MAX_AMMO;
+            const oldAmmo = this.weapon.remainingAmmo;
+            (oldAmmo > newAmmo) ? this.weapon.remainingAmmo = oldAmmo - newAmmo : this.weapon.addAmmo(newAmmo - oldAmmo);
+            const newTemp = options.temperature ?? 0;
+            const oldTemp = this.temperature;
+            (oldTemp > newTemp) ? this.subtractHeat(oldTemp - newTemp) : this.addHeat(newTemp - oldTemp);
         }
         return this;
     }
@@ -259,7 +267,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
      * @returns `true` if the current `temperature` is over the maximum safe value; otherwise `false`
      */
     get isOverheating(): boolean {
-        return this._temperature > SpaceSim.Constants.Ship.MAX_SAFE_TEMPERATURE;
+        return this._temperature > SpaceSim.Constants.Ships.MAX_SAFE_TEMPERATURE;
     }
 
     subtractFuel(amount: number): void {
@@ -271,8 +279,8 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
 
     addFuel(amount: number): void {
         this._remainingFuel += amount;
-        if (this._remainingFuel > SpaceSim.Constants.Ship.MAX_FUEL) {
-            this._remainingFuel = SpaceSim.Constants.Ship.MAX_FUEL;
+        if (this._remainingFuel > SpaceSim.Constants.Ships.MAX_FUEL) {
+            this._remainingFuel = SpaceSim.Constants.Ships.MAX_FUEL;
         }
     }
 
@@ -287,8 +295,8 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
 
     addIntegrity(amount: number): void {
         this._integrity += amount;
-        if (this.integrity > SpaceSim.Constants.Ship.MAX_INTEGRITY) {
-            this._integrity = SpaceSim.Constants.Ship.MAX_INTEGRITY;
+        if (this.integrity > SpaceSim.Constants.Ships.MAX_INTEGRITY) {
+            this._integrity = SpaceSim.Constants.Ships.MAX_INTEGRITY;
         }
     }
 
@@ -335,7 +343,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
     private _checkOverheatCondition(delta: number): void {
         if (this.active) {
             if (this.isOverheating) {
-                if (this._temperature > SpaceSim.Constants.Ship.MAX_TEMPERATURE) {
+                if (this._temperature > SpaceSim.Constants.Ships.MAX_TEMPERATURE) {
                     this.death(); // we are dead
                     return;
                 } else {
@@ -348,21 +356,21 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
                 }
             }
 
-            let amountCooled: number = SpaceSim.Constants.Ship.COOLING_RATE_PER_SECOND * (delta / 1000);
+            let amountCooled: number = SpaceSim.Constants.Ships.COOLING_RATE_PER_SECOND * (delta / 1000);
             this.subtractHeat(amountCooled);
         }
     }
 
     private _createGameObj(options: ShipOptions): void {
         this.scene.add.existing(this);
-        const radius = SpaceSim.Constants.Ship.RADIUS;
+        const radius = SpaceSim.Constants.Ships.RADIUS;
         this.setSize(radius * 2, radius * 2);
 
         this.scene.physics.add.existing(this);
         this.body.setCircle(radius);
         this.body.setMass(options.mass ?? 100);
         this.body.setBounce(0.2, 0.2);
-        this.body.setMaxSpeed(SpaceSim.Constants.Ship.MAX_SPEED);
+        this.body.setMaxSpeed(SpaceSim.Constants.Ships.MAX_SPEED);
 
         this._weaponsKey = options.weaponsKey ?? 1;
         this._wingsKey = options.wingsKey ?? 1;

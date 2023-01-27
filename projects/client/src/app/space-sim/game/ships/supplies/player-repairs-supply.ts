@@ -1,6 +1,7 @@
 import { RepairsSupply, ShipSupplyOptions } from "space-sim-shared";
 import { BaseScene } from "space-sim-shared";
 import { environment } from "../../../../../environments/environment";
+import { SpaceSimClient } from "../../space-sim-client";
 
 export class PlayerRepairsSupply extends RepairsSupply {
     static preload(scene: Phaser.Scene): void {
@@ -16,6 +17,7 @@ export class PlayerRepairsSupply extends RepairsSupply {
             key: 'repairs-canister',
             origin: 0.5
         }, false);
-        this.add(sprite);
+        this.add(sprite)
+            .setDepth(SpaceSimClient.Constants.UI.Layers.PLAYER);
     }
 }

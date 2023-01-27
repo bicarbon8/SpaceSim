@@ -14,7 +14,7 @@ export class Engine extends ShipAttachment {
     
     constructor(scene: BaseScene) {
         super(scene);
-        this._lastUsedAt = SpaceSim.Constants.Ship.Engine.USAGE_DELAY_MS;
+        this._lastUsedAt = SpaceSim.Constants.Ships.Engines.USAGE_DELAY_MS;
     }
 
     override setEnabled(enabled: boolean): void {
@@ -31,9 +31,9 @@ export class Engine extends ShipAttachment {
     update(time: number, delta: number): void {
         if (this._canThrust(time)) {
             this._applyThrust({
-                force: SpaceSim.Constants.Ship.Engine.FORCE,
-                fuel: SpaceSim.Constants.Ship.Engine.FUEL_PER_USE,
-                heat: SpaceSim.Constants.Ship.Engine.HEAT_PER_USE,
+                force: SpaceSim.Constants.Ships.Engines.FORCE,
+                fuel: SpaceSim.Constants.Ships.Engines.FUEL_PER_USE,
+                heat: SpaceSim.Constants.Ships.Engines.HEAT_PER_USE,
                 heading: this.ship?.heading
             });
             this._lastUsedAt = time;
@@ -52,7 +52,7 @@ export class Engine extends ShipAttachment {
     private _canThrust(time: number): boolean {
         return this.enabled
             && this.ship?.remainingFuel > 0 
-            && time >= this._lastUsedAt + SpaceSim.Constants.Ship.Engine.USAGE_DELAY_MS
+            && time >= this._lastUsedAt + SpaceSim.Constants.Ships.Engines.USAGE_DELAY_MS
             && !this.ship.isOverheating;
     }
 }

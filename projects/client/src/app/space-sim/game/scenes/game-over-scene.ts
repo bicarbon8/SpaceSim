@@ -1,7 +1,7 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { GameScoreTracker, GameStats, Helpers, SpaceSim } from "space-sim-shared";
+import { GameScoreTracker, GameStats, Helpers } from "space-sim-shared";
 import { GameplaySceneConfig } from "./gameplay-scene";
 import { StartupSceneConfig } from "./startup-scene";
 import { SetNameSceneConfig } from "./set-name-scene";
@@ -58,13 +58,13 @@ export class GameOverScene extends Phaser.Scene {
 
     private _createBackground(): void {
         this._stars = this.add.tileSprite(0, 0, this._width, this._height, 'far-stars');
-        this._stars.setDepth(SpaceSim.Constants.UI.Layers.BACKGROUND);
+        this._stars.setDepth(SpaceSimClient.Constants.UI.Layers.BACKGROUND);
     }
 
     private _createStellarBodies(): void {
         this._sun = this.add.sprite(0, 0, 'sun');
         this._sun.setOrigin(0.5);
-        this._sun.setDepth(SpaceSim.Constants.UI.Layers.STELLAR);
+        this._sun.setDepth(SpaceSimClient.Constants.UI.Layers.STELLAR);
         const smallestDimension: number = (this._width <= this._height) ? this._width : this._height;
         const sunRadius: number = this._sun.width/2;
         const sunScaleFactor: number = smallestDimension / sunRadius;
@@ -78,7 +78,7 @@ export class GameOverScene extends Phaser.Scene {
             desiredWidth: this._width,
             desiredHeight: this._height
         });
-        this._layout.setDepth(SpaceSim.Constants.UI.Layers.HUD);
+        this._layout.setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this.add.existing(this._layout);
     }
 
@@ -179,7 +179,7 @@ export class GameOverScene extends Phaser.Scene {
                 returnToMenuButton
             ]
         });
-        flex.setDepth(SpaceSim.Constants.UI.Layers.HUD);
+        flex.setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this._layout.addContents(flex);
     }
 

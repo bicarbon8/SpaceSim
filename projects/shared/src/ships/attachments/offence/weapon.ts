@@ -30,7 +30,7 @@ export abstract class Weapon extends ShipAttachment {
         super(scene);
         this._lastFired = 0;
 
-        this._maxAmmo = options.maxAmmo ?? SpaceSim.Constants.Ship.Weapons.MAX_AMMO;
+        this._maxAmmo = options.maxAmmo ?? SpaceSim.Constants.Ships.Weapons.MAX_AMMO;
         this._firingDelay = options.firingDelay ?? 500;
         this.remainingAmmo = options.remainingAmmo ?? this._maxAmmo;
         this._heatPerShot = options.heatPerShot ?? 0.5;

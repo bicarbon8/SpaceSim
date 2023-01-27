@@ -134,4 +134,23 @@ export module SpaceSimClient {
     export var playerData: SpaceSimUserData;
     export const opponents = new Array<AiController>();
     export var mode: GameMode = 'singleplayer';
+    export module Constants {
+        export module UI {
+            export module Layers {
+                export const BACKGROUND = 0;
+                export const STELLAR = 1;
+                export const PLAYER = 2;
+                export const HUD = 3;
+            }
+            export module SpriteMaps {
+                export module Flares {
+                    export const blue = 0;
+                    export const green = 1;
+                    export const red = 2;
+                    export const white = 3;
+                    export const yellow = 4;
+                }
+            }
+        }
+    }
 }

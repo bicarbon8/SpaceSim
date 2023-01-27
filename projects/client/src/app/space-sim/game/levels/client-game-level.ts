@@ -1,5 +1,6 @@
 import { BaseScene, GameLevel, GameLevelOptions, SpaceSim } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
+import { SpaceSimClient } from "../space-sim-client";
 
 export class ClientGameLevel extends GameLevel {
     private _pathGraphics: Phaser.GameObjects.Graphics;
@@ -12,7 +13,7 @@ export class ClientGameLevel extends GameLevel {
     constructor(scene: BaseScene, options: GameLevelOptions) {
         super(scene, options);
 
-        this.wallsLayer.setDepth(SpaceSim.Constants.UI.Layers.PLAYER);
+        this.wallsLayer.setDepth(SpaceSimClient.Constants.UI.Layers.PLAYER);
         if (SpaceSim.debug) {
             const graphics = this.scene.add.graphics({ lineStyle: { width: 2, color: 0x00ff00 }, fillStyle: { color: 0xffff00, alpha: 0.25 } });
             this.wallsLayer.renderDebug(graphics);

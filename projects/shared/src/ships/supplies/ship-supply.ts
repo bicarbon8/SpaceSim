@@ -25,13 +25,12 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
     constructor(scene: BaseScene, options: ShipSupplyOptions) {
         super(scene, options.location.x, options.location.y);
         this.scene.add.existing(this);
-        this.setDepth(SpaceSim.Constants.UI.Layers.PLAYER);
-        const radius = SpaceSim.Constants.Ship.Supplies.RADIUS;
+        const radius = SpaceSim.Constants.Ships.Supplies.RADIUS;
         this.setSize(radius * 2, radius * 2);
         this.scene.physics.add.existing(this);
-        this.body.setMass(SpaceSim.Constants.Ship.Supplies.MASS);
+        this.body.setMass(SpaceSim.Constants.Ships.Supplies.MASS);
         this.body.setCircle(radius);
-        this.body.setBounce(SpaceSim.Constants.Ship.Supplies.BOUNCE, SpaceSim.Constants.Ship.Supplies.BOUNCE);
+        this.body.setBounce(SpaceSim.Constants.Ships.Supplies.BOUNCE, SpaceSim.Constants.Ships.Supplies.BOUNCE);
 
         this.configure(options);
     }

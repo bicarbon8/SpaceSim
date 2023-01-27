@@ -22,10 +22,10 @@ export class Exploder {
         const supplies = new Array<ShipSupplyOptions>();
         const loc = shipOpts.location;
         let remainingFuel = shipOpts.remainingFuel / 2;
-        const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / SpaceSim.Constants.Ship.MAX_FUEL_PER_CONTAINER);
+        const fuelContainersCount = Phaser.Math.RND.between(1, remainingFuel / SpaceSim.Constants.Ships.MAX_FUEL_PER_CONTAINER);
         for (var i=0; i<fuelContainersCount; i++) {
-            const amount = (remainingFuel > SpaceSim.Constants.Ship.MAX_FUEL_PER_CONTAINER) 
-                ? SpaceSim.Constants.Ship.MAX_FUEL_PER_CONTAINER 
+            const amount = (remainingFuel > SpaceSim.Constants.Ships.MAX_FUEL_PER_CONTAINER) 
+                ? SpaceSim.Constants.Ships.MAX_FUEL_PER_CONTAINER 
                 : remainingFuel;
             remainingFuel -= amount;
             const supply: ShipSupplyOptions = {
@@ -36,10 +36,10 @@ export class Exploder {
             supplies.push(supply);
         }
         let remainingAmmo = shipOpts.remainingAmmo / 2;
-        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / SpaceSim.Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER);
+        const ammoContainersCount = Phaser.Math.RND.between(1, remainingAmmo / SpaceSim.Constants.Ships.Weapons.MAX_AMMO_PER_CONTAINER);
         for (var i=0; i<ammoContainersCount; i++) {
-            const amount = (remainingAmmo > SpaceSim.Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER) 
-                ? SpaceSim.Constants.Ship.Weapons.MAX_AMMO_PER_CONTAINER 
+            const amount = (remainingAmmo > SpaceSim.Constants.Ships.Weapons.MAX_AMMO_PER_CONTAINER) 
+                ? SpaceSim.Constants.Ships.Weapons.MAX_AMMO_PER_CONTAINER 
                 : remainingAmmo;
             remainingAmmo -= amount;
             const supply: ShipSupplyOptions = {

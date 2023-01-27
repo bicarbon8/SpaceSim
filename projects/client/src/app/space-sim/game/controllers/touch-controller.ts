@@ -35,7 +35,7 @@ export class TouchController extends InputController {
         const degrees: number = +Helpers.rad2deg(radians).toFixed(0);
         // Helpers.log('info', `handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
         // only update if angle changed more than minimum allowed degrees
-        if (!Phaser.Math.Fuzzy.Equal(this.ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ship.MIN_ROTATION_ANGLE)) {
+        if (!Phaser.Math.Fuzzy.Equal(this.ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ships.MIN_ROTATION_ANGLE)) {
             SpaceSimClient.socket?.sendSetShipAngleRequest(degrees, SpaceSimClient.playerData);
             this.ship.rotationContainer.setAngle(degrees);
         }
@@ -127,7 +127,7 @@ export class TouchController extends InputController {
                 [this._createFireButton(),,this._createBoostButton()],
                 [,this._createThrusterButton(),]
             ]
-        })).setDepth(SpaceSim.Constants.UI.Layers.HUD);
+        })).setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this.scene.input.addPointer(9); // maximum input handling (10 total)
     }
 

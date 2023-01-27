@@ -1,5 +1,6 @@
-import { Engine, Helpers, Ship, SpaceSim } from "space-sim-shared";
+import { Engine, Helpers, Ship } from "space-sim-shared";
 import { environment } from "../../../../../../environments/environment";
+import { SpaceSimClient } from "../../../space-sim-client";
 
 export class PlayerEngine extends Engine {
     private _thrusterSound: Phaser.Sound.BaseSound;
@@ -36,7 +37,7 @@ export class PlayerEngine extends Engine {
     private _displayThrusterFire(): void {
         // make thruster fire
         this._flareParticles.createEmitter({
-            frame: SpaceSim.Constants.UI.SpriteMaps.Flares.yellow,
+            frame: SpaceSimClient.Constants.UI.SpriteMaps.Flares.yellow,
             lifespan: {min: 50, max: 100},
             speedX: 500,
             speedY: 0,

@@ -1,5 +1,6 @@
 import { HasGameObject, Updatable, Helpers, NumberOrRange, SpaceSim } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
+import { SpaceSimClient } from "../space-sim-client";
 
 export type StellarBodyOptions = {
     spriteName: 'sun' | 'mercury' | 'venus' | 'asteroids';
@@ -107,7 +108,7 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
         }
         this._gameObj.setScale(this.scale, this.scale);
         this._gameObj.setScrollFactor(this.scrollFactor);
-        this._gameObj.setDepth(SpaceSim.Constants.UI.Layers.STELLAR);
+        this._gameObj.setDepth(SpaceSimClient.Constants.UI.Layers.STELLAR);
         if (this.spriteName === 'sun') {
             this._gameObj.setDepth(this._gameObj.depth - 0.3); // ensure Sun is behind planets always
         }
