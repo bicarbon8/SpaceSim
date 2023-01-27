@@ -320,7 +320,5 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         });
 
         this._wallsLayer.setCollisionBetween(1, 14);
-        // this.scene.physics.add.existing(this._primaryLayer);
-        // this._primaryLayer.body.mass = 1000000;
     }
 }
