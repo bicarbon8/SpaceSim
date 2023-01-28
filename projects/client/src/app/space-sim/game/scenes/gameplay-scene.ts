@@ -179,7 +179,7 @@ export class GameplayScene extends BaseScene implements Resizable {
                 wingsKey: Phaser.Math.RND.between(1, 3),
                 cockpitKey: Phaser.Math.RND.between(1, 3),
                 engineKey: Phaser.Math.RND.between(1, 3),
-                engine: StandardEngine,
+                engine: PlayerStandardEngine,
                 weapon: PlayerMachineGun
             });
             p.setAlpha(0); // hidden until player enters room
