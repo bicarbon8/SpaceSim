@@ -101,4 +101,46 @@ describe('DataTable', () => {
         expect(updated.length).to.eq(2);
         expect(updated.every(c => c.boolKey === true)).to.be.true;
     })
+
+    it('can remove records by query data', () => {
+        const dt = new DataTable<TestObj>({
+            records: [
+                {strKey: 'foo', boolKey: true, numKey: 1},
+                {strKey: 'foo', boolKey: false, numKey: 2},
+                {strKey: 'foo', boolKey: false, numKey: 1},
+                {strKey: 'foo', boolKey: true, numKey: 2},
+                {strKey: 'bar', boolKey: true, numKey: 1},
+                {strKey: 'bar', boolKey: false, numKey: 2},
+                {strKey: 'bar', boolKey: false, numKey: 1},
+                {strKey: 'bar', boolKey: true, numKey: 2}
+            ]
+        });
+
+        const deleted = dt.delete({strKey: 'foo', boolKey: true});
+        expect(deleted.length).to.eq(2, 'expected two records removed based on criteria');
+        expect(deleted.filter(d => d.numKey === 1).length).to.eq(1);
+
+        const remaining = dt.delete({strKey: 'foo'}, {strKey: 'bar'});
+        expect(remaining.length).to.eq(6);
+        expect(dt.count()).to.eq(0);
+    })
+
+    it('can clear all records', () => {
+        const dt = new DataTable<TestObj>({
+            records: [
+                {strKey: 'foo', boolKey: true, numKey: 1},
+                {strKey: 'foo', boolKey: false, numKey: 2},
+                {strKey: 'foo', boolKey: false, numKey: 1},
+                {strKey: 'foo', boolKey: true, numKey: 2},
+                {strKey: 'bar', boolKey: true, numKey: 1},
+                {strKey: 'bar', boolKey: false, numKey: 2},
+                {strKey: 'bar', boolKey: false, numKey: 1},
+                {strKey: 'bar', boolKey: true, numKey: 2}
+            ]
+        });
+
+        expect(dt.count()).to.eq(8);
+        dt.clear();
+        expect(dt.count()).to.eq(0);
+    })
 })
