@@ -158,22 +158,20 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     }
     
     getLeaderboard(): Array<GameScoreTracker.UserScore> {
-        const userScoresArr = new Array<GameScoreTracker.UserScore>();
-        for (const shipId of this.select().map(s => s.shipId)) {
-            const stats = this.getStats({shipId});
+        const highScores = new Array<GameScoreTracker.UserScore>();
+        for (const stats of this.select()) {
             if (stats && stats.name) {
-                const score = this.getScore(shipId);
-
-                userScoresArr.push({name: stats.name, score: score});
+                // get all scores for same named user and filter out highest
+                const userStats = this.select({name: stats.name});
+                const lowToHighScores = userStats.map(s => this.getScore(s.shipId))
+                    .sort((a, b) => a - b);
+                const highestScore = lowToHighScores.pop();
+                highScores.push({name: stats.name, score: highestScore});
             }
         }
-        const lowToHigh = userScoresArr.sort((a, b) => a.score - b.score);
-        const deduped = new Map<string, GameScoreTracker.UserScore>();
-        for (let score of lowToHigh) {
-            deduped.set(score.name, score);
-        }
-        const dedupedHighToLow = Array.from(deduped.values()).reverse();
-        return dedupedHighToLow;
+        const lowToHigh = highScores.sort((a, b) => a.score - b.score);
+        const highToLow = lowToHigh.reverse();
+        return highToLow;
     }
 
     getStats(query: Partial<GameScoreTracker.GameStats>): GameScoreTracker.GameStats {

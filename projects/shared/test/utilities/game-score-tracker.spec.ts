@@ -82,5 +82,28 @@ describe('GameScoreTracker', () => {
         expect(updated.ammoRemaining).to.eq(0);
     })
 
-    
+    it('calculates accuracy when getting stats', () => {
+        const gst = new GameScoreTracker();
+        gst.start({
+            id: 'fake-id',
+            name: 'fake-name',
+            integrity: 100,
+            remainingAmmo: 100,
+            remainingFuel: 100
+        });
+
+        const actualBefore = gst.getStats({shipId: 'fake-id'});
+        expect(actualBefore.accuracy).to.eq(0);
+
+        // fire and land one shot
+        gst.shotFired('fake-id');
+        gst.shotLanded('fake-id', 'fake-id-2', 40);
+        const actual100 = gst.getStats({shipId: 'fake-id'});
+        expect(actual100.accuracy).to.eq(100, 'expect 100% accuracy');
+
+        // fire and miss
+        gst.shotFired('fake-id');
+        const actual50 = gst.getStats({shipId: 'fake-id'});
+        expect(actual50.accuracy).to.eq(50, 'expect 50% accuracy');
+    })
 })

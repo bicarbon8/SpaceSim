@@ -1,4 +1,4 @@
-import GameScoreTracker from "./utilities/game-score-tracker";
+import { GameScoreTracker } from "./utilities/game-score-tracker";
 
 export module SpaceSim {
     export var game: Phaser.Game;
@@ -31,7 +31,7 @@ export module SpaceSim {
                 export const FORCE = 50;
                 export const FUEL_PER_USE = 0.1; // units
                 export const HEAT_PER_USE = 0.2; // degree
-                export const USAGE_DELAY_MS = 100; 
+                export const USAGE_DELAY_MS = 100;
             }
             export module Weapons {
                 export const MAX_AMMO = 100;
@@ -46,7 +46,7 @@ export module SpaceSim {
         export module GameLevels {
             export module Tiles {
                 // frame 0 is empty so don't use it for walls
-                export const WALL = [{ index: [1,2,3,4,5,6,7,8,9,10,11,12,13,14], weight: 1 }];
+                export const WALL = [{ index: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], weight: 1 }];
             }
         }
         export module Events {
@@ -82,9 +82,9 @@ export module SpaceSim {
             export const INVALID_REQUEST = 'invalid-request';
         }
         export module Timing {
-            export const HIGH_PRI_UPDATE_FREQ = 1000/60; // 60 fps
-            export const MED_PRI_UPDATE_FREQ = 1000/30; // 30 fps
-            export const LOW_PRI_UPDATE_FREQ = 1000/15; // 15 fps
+            export const HIGH_PRI_UPDATE_FREQ = 1000 / 60; // 60 fps
+            export const MED_PRI_UPDATE_FREQ = 1000 / 30; // 30 fps
+            export const LOW_PRI_UPDATE_FREQ = 1000 / 15; // 15 fps
             export const ULTRALOW_PRI_UPDATE_FREQ = 1000; // 1 fps
             export const DISCONNECT_TIMEOUT_MS = 30000; // 30 sec
         }
