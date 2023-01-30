@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { DisconnectReason } from "socket.io/dist/socket";
-import { GameStats, Helpers, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { GameScoreTracker, Logging, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData, TryCatch } from "space-sim-shared";
 import { BattleRoyaleScene } from "../scenes/battle-royale-scene";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -61,7 +61,7 @@ export class ServerSocketManager {
         return this.socketEmit(socketId, SpaceSim.Constants.Socket.INVALID_REQUEST, message);
     }
 
-    sendUpdateStatsToRoom(room, stats: Array<Partial<GameStats>>): this {
+    sendUpdateStatsToRoom(room, stats: Array<Partial<GameScoreTracker.GameStats>>): this {
         return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_STATS, stats);
     }
 
@@ -154,7 +154,7 @@ export class ServerSocketManager {
                 Logging.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
                 socket.emit(event, ...args);
             }
-        }, 'warn', `[${Helpers.dts()}]: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Logging.dts()}]: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
@@ -165,7 +165,7 @@ export class ServerSocketManager {
                 Logging.log('trace', `broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
                 socket.broadcast.in(room).emit(event, ...args);
             }
-        }, 'warn', `[${Helpers.dts()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Logging.dts()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
@@ -173,7 +173,7 @@ export class ServerSocketManager {
         TryCatch.run(() => {
             Logging.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
             this.io.in(room).emit(event, ...args);
-        }, 'warn', `[${Helpers.dts()}]: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
+        }, 'warn', `[${Logging.dts()}]: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 

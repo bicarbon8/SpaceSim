@@ -1,8 +1,8 @@
-import { Helpers } from "space-sim-shared";
+import { Logging } from "space-sim-shared";
 
 export type SpaceSimClientOptions = {
     debug?: boolean;
-    loglevel?: Helpers.LogLevel;
+    loglevel?: Logging.LogLevel;
     width?: number;
     height?: number;
     parentElementId?: string;

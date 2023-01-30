@@ -1,4 +1,4 @@
-import { GameScoreTracker, GameStats, Helpers, SpaceSim, BaseScene, Ship, InputController } from "space-sim-shared";
+import { SpaceSim, BaseScene, Ship, InputController, Logging, TryCatch } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
@@ -155,15 +155,15 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _displayHUDInfo(): void {
         TryCatch.run(() => {
             const id = this.playerShip.id;
-            const stats: GameStats = SpaceSim.stats.getStats(id);
+            const stats = SpaceSim.stats.getStats({shipId: id});
             const info: string[] = [
-                `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
+                `Elapsed: ${((this.time.now - stats.startedAt)/1000).toFixed(1)}`,
                 `Enemies: ${SpaceSim.stats.destroyedCount(id)}/${SpaceSimClient.opponents.length}`,
                 `Fuel: ${this.playerShip.remainingFuel.toFixed(1)}`,
                 `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
                 `Score: ${SpaceSim.stats.getScore(id).toFixed(0)}`
             ];
-            if (Helpers.shouldLog('debug')) {
+            if (Logging.shouldLog('debug')) {
                 const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
                 info.push(`Angle: ${this.playerShip.rotationContainer.angle.toFixed(1)}`);

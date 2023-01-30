@@ -1,4 +1,4 @@
-import { GameScoreTracker, GameStats, SpaceSim, BaseScene, Ship, Helpers, InputController } from "space-sim-shared";
+import { SpaceSim, BaseScene, Ship, InputController, Logging } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
@@ -157,7 +157,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            const stats: GameStats = SpaceSim.stats.getStats(this.playerShip.id);
+            const stats = SpaceSim.stats.getStats({shipId: this.playerShip.id});
             const info: string[] = [
                 `Kills: ${stats.opponentsDestroyed.length}`,
                 `Active Players: ${this._parentScene.getShips()?.length}`,
@@ -166,7 +166,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                 `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
                 `Score: ${SpaceSim.stats.getScore(this.playerShip.id).toFixed(0)}`
             ];
-            if (Helpers.shouldLog('debug')) {
+            if (Logging.shouldLog('debug')) {
                 const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }

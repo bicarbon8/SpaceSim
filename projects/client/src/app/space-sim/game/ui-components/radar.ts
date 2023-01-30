@@ -1,4 +1,4 @@
-import { Helpers } from "space-sim-shared";
+import { TryCatch } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 import { Camera, CameraOptions } from "./camera";
 

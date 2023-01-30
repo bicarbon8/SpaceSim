@@ -1,4 +1,4 @@
-import { HasGameObject, Updatable, Helpers, NumberOrRange, SpaceSim } from "space-sim-shared";
+import { HasGameObject, Updatable, NumberOrRange, PhaserHelpers } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 
@@ -43,10 +43,10 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
         this._scene = scene;
 
         this.spriteName = options.spriteName;
-        this.location = options.location || Helpers.vector2();
-        this.rotationSpeed = Helpers.getRealNumber(options.rotationSpeed) ?? Phaser.Math.RND.realInRange(0.1, 1);
-        this.scale = Helpers.getRealNumber(options.scale) ?? Phaser.Math.RND.realInRange(0.1, 3);
-        this.scrollFactor = Helpers.getRealNumber(options.scrollFactor) ?? Phaser.Math.RND.realInRange(0.05, 0.5);
+        this.location = options.location || PhaserHelpers.vector2();
+        this.rotationSpeed = NumberOrRange.getRealNumber(options.rotationSpeed) ?? Phaser.Math.RND.realInRange(0.1, 1);
+        this.scale = NumberOrRange.getRealNumber(options.scale) ?? Phaser.Math.RND.realInRange(0.1, 3);
+        this.scrollFactor = NumberOrRange.getRealNumber(options.scrollFactor) ?? Phaser.Math.RND.realInRange(0.05, 0.5);
         
         this._createGameObj();
     }
@@ -72,13 +72,13 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
     }
     
     getLocationInView(): Phaser.Math.Vector2 {
-        return Helpers.convertLocToLocInView(this.getLocation(), this._scene);
+        return PhaserHelpers.convertLocToLocInView(this.getLocation(), this._scene);
     }
     
     getLocation(): Phaser.Math.Vector2 {
         let go: Phaser.GameObjects.Sprite = this.getGameObject();
         if (go) {
-            return Helpers.vector2(go.x, go.y);
+            return PhaserHelpers.vector2(go.x, go.y);
         }
         return Phaser.Math.Vector2.ZERO;
     }

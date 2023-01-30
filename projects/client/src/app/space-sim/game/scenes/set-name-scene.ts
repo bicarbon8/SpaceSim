@@ -1,6 +1,6 @@
 import { GridLayout, LayoutContainer, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
-import { Helpers } from "space-sim-shared";
+import { Sanitiser, TryCatch } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimUserData } from "space-sim-shared";
 import getBrowserFingerprint from "get-browser-fingerprint";

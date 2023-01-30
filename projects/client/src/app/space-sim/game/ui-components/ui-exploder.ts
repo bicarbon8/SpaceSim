@@ -1,4 +1,4 @@
-import { Exploder, ExploderOptions, Helpers } from "space-sim-shared";
+import { Exploder, ExploderOptions, TryCatch } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 

@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
-import { BaseScene, GameLevelOptions, GameScoreTracker, GameStats, Helpers, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData } from "space-sim-shared";
+import { BaseScene, GameLevelOptions, GameScoreTracker, Logging, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData, TryCatch } from "space-sim-shared";
 import { MultiplayerSceneConfig } from "../scenes/multiplayer-scene";
 import { SetNameSceneConfig } from "../scenes/set-name-scene";
 import { SpaceSimClient } from "../space-sim-client";
@@ -159,7 +159,7 @@ export class ClientSocketManager {
                         Logging.log('warn', `unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
                         break;
                 }
-            }, 'warn', `[${Helpers.dts()}]: error handling event '${event}' with arguments: ${JSON.stringify(args)}`, 'none');
+            }, 'warn', `[${Logging.dts()}]: error handling event '${event}' with arguments: ${JSON.stringify(args)}`, 'none');
         }
     }
 
@@ -274,7 +274,7 @@ export class ClientSocketManager {
         }
     }
 
-    private _handleUpdateStatsEvent(stats: Array<GameStats>): void {
+    private _handleUpdateStatsEvent(stats: Array<GameScoreTracker.GameStats>): void {
         if (SpaceSimClient.mode === 'multiplayer') {
             SpaceSim.stats.updateAllStats(...stats);
         }

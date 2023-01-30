@@ -1,7 +1,7 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Helpers, SpaceSim } from "space-sim-shared";
+import { Helpers, SpaceSim, TryCatch } from "space-sim-shared";
 import { GameplaySceneConfig } from "./gameplay-scene";
 import { StartupSceneConfig } from "./startup-scene";
 import { SetNameSceneConfig } from "./set-name-scene";

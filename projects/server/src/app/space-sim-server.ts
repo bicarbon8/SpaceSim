@@ -1,5 +1,5 @@
 import { GameServerEngine } from "phaser-game-server-engine";
-import { DataTable, GameLevelOptions, SpaceSim } from "space-sim-shared";
+import { DataTable, GameLevelOptions, Logging, SpaceSim } from "space-sim-shared";
 import { BattleRoyaleScene } from "./scenes/battle-royale-scene";
 import { SpaceSimServerUserData } from "./space-sim-server-user-data";
 import { ServerSocketManager } from "./utilities/server-socket-manager";
@@ -40,6 +40,6 @@ export module SpaceSimServer {
 }
 
 SpaceSim.debug = false;
-SpaceSim.loglevel = 'info';
+Logging.loglevel = 'debug';
 const server = new SpaceSimServer();
 SpaceSim.game = server.game;

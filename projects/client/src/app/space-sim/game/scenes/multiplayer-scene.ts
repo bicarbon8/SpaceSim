@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, Helpers, GameLevelOptions, SpaceSim, Ship, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig, Engine, Weapon } from "space-sim-shared";
+import { GameLevel, GameLevelOptions, SpaceSim, Ship, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig, Engine, Weapon, TryCatch, Logging, PhaserHelpers } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -252,7 +252,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         let y: number = topleft.y;
         for (var i=0; i<divisionsX; i++) {
             for (var j=0; j<divisionsY; j++) {
-                let location: Phaser.Math.Vector2 = Helpers.vector2(
+                let location: Phaser.Math.Vector2 = PhaserHelpers.vector2(
                     Phaser.Math.RND.realInRange(x, x + offsetX), 
                     Phaser.Math.RND.realInRange(y, y + offsetY)
                 );

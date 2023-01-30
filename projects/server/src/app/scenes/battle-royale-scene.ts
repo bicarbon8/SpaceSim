@@ -1,22 +1,22 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, GameScoreTracker, Helpers, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun, Logging, PhaserHelpers, TryCatch } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
 
 export class BattleRoyaleScene extends BaseScene {
     readonly ROOM_NAME: string;
-    
+
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
     private readonly _bots = new Map<string, AiController>();
     private readonly _removeShipQueue = new Array<string>();
     private readonly _removeSuppliesQueue = new Array<string>();
     private readonly _flickerSuppliesQueue = new Array<string>();
-    
+
     private _gameLevel: GameLevel;
     private _exploder: Exploder;
-    
+
     constructor(options?: Phaser.Types.Scenes.SettingsConfig) {
         const room = options?.key ?? Phaser.Math.RND.uuid();
         super({
@@ -77,7 +77,7 @@ export class BattleRoyaleScene extends BaseScene {
         this._exploder = new Exploder(this);
         this._createGameLevel();
         this._setupSceneEventHandling();
-        for (let i=0; i<SpaceSimServer.Constants.Rooms.MAX_BOTS; i++) {
+        for (let i = 0; i < SpaceSimServer.Constants.Rooms.MAX_BOTS; i++) {
             this.createBot();
         }
 
@@ -118,13 +118,13 @@ export class BattleRoyaleScene extends BaseScene {
 
     createShip(data: SpaceSimUserData, config?: Partial<ShipConfig>): Ship {
         const room = this.getLevel().rooms[0];
-        const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+1, room.top+1);
-        const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right-1, room.bottom-1);
+        const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left + 1, room.top + 1);
+        const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right - 1, room.bottom - 1);
         let loc: Phaser.Math.Vector2;
         do {
             let x = Phaser.Math.RND.realInRange(topleft.x, botright.x);
             let y = Phaser.Math.RND.realInRange(topleft.y, botright.y);
-            loc = Helpers.vector2(x, y);
+            loc = PhaserHelpers.vector2(x, y);
         } while (this._isMapLocationOccupied(loc, 100));
         let engine: (new (scene: BaseScene) => Engine);
         switch (config?.engineModel) {
@@ -156,12 +156,12 @@ export class BattleRoyaleScene extends BaseScene {
             location: loc,
             fingerprint: data.fingerprint,
             name: data.name,
-            weaponsKey: Phaser.Math.RND.between(1, 3),
-            wingsKey: Phaser.Math.RND.between(1, 3),
-            cockpitKey: Phaser.Math.RND.between(1, 3),
-            engineKey: Phaser.Math.RND.between(1, 3),
+            weaponsKey: config?.weaponsKey ?? Phaser.Math.RND.between(1, 3),
+            wingsKey: config?.wingsKey ?? Phaser.Math.RND.between(1, 3),
+            cockpitKey: config?.cockpitKey ?? Phaser.Math.RND.between(1, 3),
+            engineKey: config?.engineKey ?? Phaser.Math.RND.between(1, 3),
             engine: engine,
-            weapon: MachineGun
+            weapon: weapon
         });
         this.physics.add.collider(ship, this.getLevel().wallsLayer);
         this._addPlayerCollisionPhysicsWithPlayers(ship);
@@ -169,12 +169,12 @@ export class BattleRoyaleScene extends BaseScene {
         Logging.log('info', 'adding ship', ship.config);
         this._ships.set(ship.id, ship);
         SpaceSim.stats.start(ship.config);
-        
+
         Logging.log('debug', 'updating user', data, 'record to include shipId:', ship.id);
-        SpaceSimServer.users.update({...data, shipId: ship.id});
+        SpaceSimServer.users.update({ shipId: ship.id }, data);
 
         this._updateBotEnemyIds();
-        
+
         return ship;
     }
 
@@ -185,7 +185,7 @@ export class BattleRoyaleScene extends BaseScene {
         let index = 1;
         const botNames = Array.from(this._bots.values()).map(ai => ai.ship.name);
         let name = `bot-${index}`;
-        while (SpaceSimServer.users.count({name: name}) > 0 || botNames.includes(name)) {
+        while (SpaceSimServer.users.count({ name: name }) > 0 || botNames.includes(name)) {
             index++;
             name = `bot-${index}`;
         }
@@ -228,9 +228,9 @@ export class BattleRoyaleScene extends BaseScene {
             Logging.log('debug', `received '${SpaceSim.Constants.Events.SHIP_DEATH}' event in scene`);
             this.queueShipRemoval(cfg.id);
         }).on(SpaceSim.Constants.Events.WEAPON_ENABLED, (id: string) => SpaceSimServer.io.sendEnableWeaponEventToRoom(this.ROOM_NAME, id))
-        .on(SpaceSim.Constants.Events.WEAPON_DISABLED, (id: string) => SpaceSimServer.io.sendDisableWeaponEventToRoom(this.ROOM_NAME, id))
-        .on(SpaceSim.Constants.Events.ENGINE_ENABLED, (id: string) => SpaceSimServer.io.sendEnableEngineEventToRoom(this.ROOM_NAME, id))
-        .on(SpaceSim.Constants.Events.ENGINE_DISABLED, (id: string) => SpaceSimServer.io.sendDisableEngineEventToRoom(this.ROOM_NAME, id));
+            .on(SpaceSim.Constants.Events.WEAPON_DISABLED, (id: string) => SpaceSimServer.io.sendDisableWeaponEventToRoom(this.ROOM_NAME, id))
+            .on(SpaceSim.Constants.Events.ENGINE_ENABLED, (id: string) => SpaceSimServer.io.sendEnableEngineEventToRoom(this.ROOM_NAME, id))
+            .on(SpaceSim.Constants.Events.ENGINE_DISABLED, (id: string) => SpaceSimServer.io.sendDisableEngineEventToRoom(this.ROOM_NAME, id));
     }
 
     private _createGameLevel(): void {
@@ -245,7 +245,7 @@ export class BattleRoyaleScene extends BaseScene {
 
         if (this._ships.has(opts.id)) {
             // remove association of ship to user
-            const user = SpaceSimServer.users.selectFirst({shipId: opts.id});
+            const user = SpaceSimServer.users.selectFirst({ shipId: opts.id });
             if (user) {
                 this.removePlayerFromScene(user);
             }
@@ -255,7 +255,7 @@ export class BattleRoyaleScene extends BaseScene {
             // prevent further updates to ship
             const player = this.getShip<ServerShip>(opts.id);
             this._ships.delete(opts.id);
-            
+
             this._expelSupplies(opts);
 
             Logging.log('debug', `calling ship.destroy() for ship: ${opts.id}, with name: ${opts.name}`);
@@ -278,7 +278,7 @@ export class BattleRoyaleScene extends BaseScene {
 
         // ensure space not occupied by other player(s)
         const players = Array.from(this._ships.values());
-        for (var i=0; i<players.length; i++) {
+        for (var i = 0; i < players.length; i++) {
             const p = players[i];
             const loc = p.location;
             const circleB = new Phaser.Geom.Circle(loc.x, loc.y, p.width / 2);
@@ -306,7 +306,7 @@ export class BattleRoyaleScene extends BaseScene {
         const supplies = new Array<ShipSupply>();
         for (let opts of options) {
             let supply: ShipSupply;
-            switch(opts.supplyType) {
+            switch (opts.supplyType) {
                 case 'ammo':
                     supply = new AmmoSupply(this, opts);
                     break;
@@ -327,19 +327,19 @@ export class BattleRoyaleScene extends BaseScene {
             const activeShips = this.getShips().filter(p => p?.active);
             for (let activeShip of activeShips) {
                 this.physics.add.collider(supply, activeShip, () => {
-                        this.queueSupplyRemoval(supply.id);
-                        supply.apply(activeShip);
-                    }
+                    this.queueSupplyRemoval(supply.id);
+                    supply.apply(activeShip);
+                }
                 );
             }
             supplies.push(supply);
         }
-        
+
         return supplies;
     }
 
     private _addPlayerCollisionPhysicsWithSupplies(ship: Ship): void {
-        this.physics.add.collider(ship, this.getSupplies().filter(p => p?.active), 
+        this.physics.add.collider(ship, this.getSupplies().filter(p => p?.active),
             (shipGameObj, supplyGameObj) => {
                 const s: ShipSupply = supplyGameObj as ShipSupply;
                 SpaceSimServer.io.sendRemoveSuppliesEvent(s.id);

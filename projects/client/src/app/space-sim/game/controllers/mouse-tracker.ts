@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { HasLocation, Helpers, Ship, Updatable, SpaceSim } from "space-sim-shared";
+import { HasLocation, Ship, Updatable, SpaceSim, PhaserHelpers } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 
 export class MouseTracker implements HasLocation, Updatable {
@@ -43,7 +43,7 @@ export class MouseTracker implements HasLocation, Updatable {
     }
 
     getVelocity(): Phaser.Math.Vector2 {
-        return this._pointer()?.velocity?.clone() || Helpers.vector2();
+        return this._pointer()?.velocity?.clone() || PhaserHelpers.vector2();
     }
 
     /**
@@ -53,7 +53,7 @@ export class MouseTracker implements HasLocation, Updatable {
      */
     get locationInView(): Phaser.Types.Math.Vector2Like {
         // console.log(`mouse location: ${JSON.stringify(this.location)}`);
-        return this._pointer()?.position?.clone() || Helpers.vector2();
+        return this._pointer()?.position?.clone() || PhaserHelpers.vector2();
     }
 
     setLocationInView(location: Phaser.Types.Math.Vector2Like): void {

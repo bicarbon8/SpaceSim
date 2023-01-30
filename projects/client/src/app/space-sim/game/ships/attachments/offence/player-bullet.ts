@@ -1,4 +1,4 @@
-import { BaseScene, Bullet, BulletOptions, Helpers, Ship } from "space-sim-shared";
+import { BaseScene, Bullet, BulletOptions, Ship, TryCatch } from "space-sim-shared";
 import { environment } from "../../../../../../environments/environment";
 import { SpaceSimClient } from "../../../space-sim-client";
 import { UiExploder } from "../../../ui-components/ui-exploder";

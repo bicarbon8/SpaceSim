@@ -1,5 +1,5 @@
 import "phaser";
-import { SpaceSim, Size, SpaceSimUserData, AiController } from "space-sim-shared";
+import { SpaceSim, Size, SpaceSimUserData, AiController, Logging } from "space-sim-shared";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
@@ -80,7 +80,7 @@ export module SpaceSimClient {
     var _inst: SpaceSimClient;
     export function start(options?: SpaceSimClientOptions): SpaceSimClient {
         SpaceSim.debug = options?.debug ?? false;
-        SpaceSim.loglevel = options?.loglevel ?? 'warn';
+        Logging.loglevel = options?.loglevel ?? 'warn';
         if (!_inst) {
             _inst = new SpaceSimClient(options);
         }

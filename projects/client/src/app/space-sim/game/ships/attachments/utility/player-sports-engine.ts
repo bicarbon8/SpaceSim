@@ -1,4 +1,4 @@
-import { Helpers, Ship, SportsEngine } from "space-sim-shared";
+import { Ship, SportsEngine, TryCatch } from "space-sim-shared";
 import { environment } from "../../../../../../environments/environment";
 import { SpaceSimClient } from "../../../space-sim-client";
 
