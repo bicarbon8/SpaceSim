@@ -45,7 +45,7 @@ export module GameScoreTracker {
     };
 };
 
-export default class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
+export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     constructor() {
         super({
             indexKeys: ['shipId']
@@ -190,10 +190,15 @@ export default class GameScoreTracker extends DataTable<GameScoreTracker.GameSta
 
     updateStats(stats: Partial<GameScoreTracker.GameStats>): void {
         const prev = this.get(stats);
-        this.update({
+        const updated = {
             ...stats,
             lastUpdatedAt: Date.now()
-        });
+        } as GameScoreTracker.GameStats;
+        if (prev) {
+            this.update(updated);
+        } else {
+            this.add(updated);
+        }
     }
 
     updateAllStats(...stats: Array<Partial<GameScoreTracker.GameStats>>): void {
