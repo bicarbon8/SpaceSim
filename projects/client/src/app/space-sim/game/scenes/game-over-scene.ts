@@ -1,7 +1,7 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Helpers, SpaceSim, TryCatch } from "space-sim-shared";
+import { SpaceSim, TryCatch } from "space-sim-shared";
 import { GameplaySceneConfig } from "./gameplay-scene";
 import { StartupSceneConfig } from "./startup-scene";
 import { SetNameSceneConfig } from "./set-name-scene";
@@ -115,7 +115,7 @@ export class GameOverScene extends Phaser.Scene {
         const stats = SpaceSim.stats.getStats({shipId: id});
         this._scoreText.setText([
             `Score: ${SpaceSim.stats.getScore(id).toFixed(0)}`,
-            `Time: ${(stats.lastUpdatedAt - stats.startedAt / 1000).toFixed(0)} sec.`,
+            `Time: ${((Date.now() - stats.startedAt) / 1000).toFixed(0)} sec.`,
             `Accuracy: ${stats.accuracy.toFixed(0)}%`,
             `Kills: ${SpaceSim.stats.destroyedCount(id)}`
         ]);
