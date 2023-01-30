@@ -32,7 +32,7 @@ export class SpaceSimClient {
                 default: 'arcade',
                 arcade: {
                     debug: SpaceSim.debug,
-                    gravity: { x: 0, y: 0 },
+                    gravity: { x: 0, y: 0 }
                 }
             },
             roundPixels: true,

@@ -97,11 +97,9 @@ export abstract class Weapon extends ShipAttachment {
         const shipLoc = {x: this.ship.x, y: this.ship.y};
         const shipAngle = this.ship.rotationContainer.angle;
         const shipVel = this.ship.body.velocity.clone();
-        const bulletOffset: Phaser.Math.Vector2 = new Phaser.Math.Vector2(-20, 0).add(shipLoc);
-        const adjustedLocation: Phaser.Math.Vector2 = Phaser.Math.RotateAround(bulletOffset, shipLoc.x, shipLoc.y, Phaser.Math.DegToRad(shipAngle));
         const opts: BulletOptions = {
             weapon: this,
-            startingLoc: adjustedLocation,
+            startingLoc: shipLoc,
             force: this.force,
             damage: this.damagePerHit,
             heat: this.heatPerHit,
