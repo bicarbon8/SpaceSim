@@ -63,19 +63,42 @@ describe('DataTable', () => {
         expect(actual.numKey).to.eq(222);
     })
 
-    it('can update records using the update function', () => {
+    it('can update record using the update function', () => {
         const dt = new DataTable<TestObj>({
             indexKeys: ['strKey', 'numKey'],
             records: [
                 {strKey: 'foo', boolKey: true, numKey: 1},
                 {strKey: 'foo', boolKey: true, numKey: 2},
+                {strKey: 'foo', boolKey: true, numKey: 3},
+                {strKey: 'foo', boolKey: true, numKey: 4}
+            ]
+        });
+        const count = dt.update({strKey: 'foo', boolKey: false, numKey: 2});
+
+        expect(count).to.eq(1, 'only one record updated');
+        const updated = dt.selectFirst({strKey: 'foo', numKey: 2});
+        expect(updated.boolKey).to.be.false;
+        const unchanged = dt.select({boolKey: true});
+        expect(unchanged.length).to.eq(3);
+    })
+
+    it('can update multiple records using the update function', () => {
+        const dt = new DataTable<TestObj>({
+            indexKeys: ['strKey', 'numKey'],
+            records: [
+                {strKey: 'foo', boolKey: true, numKey: 1},
+                {strKey: 'foo', boolKey: false, numKey: 2},
                 {strKey: 'foo', boolKey: false, numKey: 3},
                 {strKey: 'foo', boolKey: false, numKey: 4}
             ]
         });
-        dt.update({strKey: 'foo', boolKey: false, numKey: 2});
+        const count = dt.update({boolKey: true}, {numKey: 2}, {numKey: 3});
 
-        const actual = dt.selectFirst({strKey: 'foo', numKey: 2});
-        expect(actual.boolKey).to.be.false;
+        expect(count).to.eq(2, 'only two records updated');
+        const unchanged = dt.selectFirst({strKey: 'foo', numKey: 4});
+        expect(unchanged.boolKey).to.be.false;
+        const updated = dt.select({numKey: 2}, {numKey: 3});
+        expect(updated.length).to.eq(2);
+        expect(updated.every(c => c.boolKey === true)).to.be.true;
     })
 })

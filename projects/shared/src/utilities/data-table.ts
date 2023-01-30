@@ -59,22 +59,33 @@ export class DataTable<T extends {}> {
      * updates an existing object in the table with new values for
      * all fields that have changed, preserving any unchanged fields
      * and the fields used as index keys
-     * @param partial an existing object containing updated values
-     * @returns `true` if the object was updated or `false` if no
-     * existing objects were found with matching index key(s)
+     * @param updates an existing object containing updated values
+     * @param queries optional objects containing one or more fields in type `T`
+     * used to filter the results. returned results must match all values specified.
+     * if not supplied then the `updates` object will be used to `get` a matching
+     * record from the table
+     * @returns the number of records updated
      */
-    update(partial: Partial<T>): boolean {
-        if (partial) {
-            const oldRecord = this.get(partial);
-            if (oldRecord) {
-                this._tableMap.set(this.getKey(oldRecord), {
-                    ...oldRecord,
-                    ...partial
-                });
-                return true;
+    update(updates: Partial<T>, ...queries: Array<Partial<T>>): number {
+        let count = 0;
+        if (updates) {
+            let oldRecords: Array<T>;
+            if (queries?.length) {
+                oldRecords = this.select(...queries);
+            } else {
+                oldRecords = [this.get(updates)];
+            }
+            if (oldRecords?.length) {
+                for (const oldRecord of oldRecords) {
+                    this._tableMap.set(this.getKey(oldRecord), {
+                        ...oldRecord,
+                        ...updates
+                    });
+                    count++;
+                }
             }
         }
-        return false;
+        return count;
     }
 
     /**
