@@ -1,4 +1,4 @@
-import { Helpers } from "./utilities/helpers";
+import { Sanitiser } from "./utilities/sanitiser";
 
 export type SpaceSimUserData = {
     name?: string;
@@ -8,8 +8,8 @@ export type SpaceSimUserData = {
 export module SpaceSimUserData {
     export function sanitise(data: SpaceSimUserData): SpaceSimUserData {
         return {
-            fingerprint: Helpers.sanitise(data.fingerprint),
-            name: Helpers.sanitise(data.name)
+            fingerprint: Sanitiser.sanitise(data.fingerprint),
+            name: Sanitiser.sanitise(data.name)
         } as const;
     }
     export function isValid(data: SpaceSimUserData): boolean {

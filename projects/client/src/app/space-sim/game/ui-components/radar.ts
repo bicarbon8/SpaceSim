@@ -53,7 +53,7 @@ export class Radar extends Camera {
 
     override destroy(): void {
         super.destroy();
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             this.scene.cameras.remove(this.cam, true);
             this._mask?.destroy();
             this._border?.destroy();

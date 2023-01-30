@@ -148,10 +148,10 @@ export class ServerSocketManager {
     }
 
     private socketEmit(socketId: string, event: string, ...args: Array<any>): this {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             const socket = this.getSocket(socketId);
             if (socket) {
-                Helpers.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
+                Logging.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
                 socket.emit(event, ...args);
             }
         }, 'warn', `[${Helpers.dts()}]: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
@@ -159,10 +159,10 @@ export class ServerSocketManager {
     }
 
     private socketRoomBroadcast(socketId: string, room: string, event: string, ...args: Array<any>): this {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             const socket = this.getSocket(socketId);
             if (socket) {
-                Helpers.log('trace', `broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
+                Logging.log('trace', `broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
                 socket.broadcast.in(room).emit(event, ...args);
             }
         }, 'warn', `[${Helpers.dts()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
@@ -170,18 +170,18 @@ export class ServerSocketManager {
     }
 
     private roomEmit(room: string, event: string, ...args: Array<any>): this {
-        Helpers.trycatch(() => {
-            Helpers.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
+        TryCatch.run(() => {
+            Logging.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
             this.io.in(room).emit(event, ...args);
         }, 'warn', `[${Helpers.dts()}]: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
     private _setupIo(): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             this.io.on('connection', (socket: Socket) => {
                 this._connections++;
-                Helpers.log('info', `new socket connection (#${this._connections}): '${socket.id}' from '${socket.request.connection.remoteAddress}'`);
+                Logging.log('info', `new socket connection (#${this._connections}): '${socket.id}' from '${socket.request.connection.remoteAddress}'`);
                 // TODO: add measures to prevent abuse
                 socket.once('disconnect', (reason: DisconnectReason) => {
                     this._handleDisconnectEvent(socket.id, reason)
@@ -193,53 +193,53 @@ export class ServerSocketManager {
     }
 
     private _handleSocketEvents(socketId: string, event: string, ...args: Array<any>): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             switch(event) {
                 case 'disconnect':
-                    Helpers.log('debug', `disconnect event received in 'onAny' handler`);
+                    Logging.log('debug', `disconnect event received in 'onAny' handler`);
                     break;
                 case SpaceSim.Constants.Socket.SET_PLAYER_DATA:
-                    Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleSetPlayerDataEvent(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.JOIN_ROOM:
-                    Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleJoinRoomEvent(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.REQUEST_MAP:
-                    Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleRequestMapResponse(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.REQUEST_SHIP:
-                    Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleRequestShipResponse(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.ENGINE_ENABLED:
-                    Helpers.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleEnableEngineResponse(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.ENGINE_DISABLED:
-                    Helpers.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleDisableEngineResponse(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.WEAPON_ENABLED:
-                    Helpers.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleEnableWeaponResponse(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.WEAPON_DISABLED:
-                    Helpers.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleDisableWeaponResponse(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.SHIP_DESTROYED:
-                    Helpers.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleShipDestroyedEvent(socketId, args[0]);
                     break;
                 case SpaceSim.Constants.Socket.SET_PLAYER_ANGLE:
-                    Helpers.log('trace', `received '${event}' event from socket '${socketId}' with data:`, args);
+                    Logging.log('trace', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleSetPlayerAngleEvent(socketId, args[0], args[1]);
                     break;
                 default:
-                    Helpers.log('warn', `unknown socket event received from socket '${socketId}': event '${event}' with data:`, args);
+                    Logging.log('warn', `unknown socket event received from socket '${socketId}': event '${event}' with data:`, args);
                     break;
             }
         }, 'warn', `error handling event '${event}' from socket '${socketId}' with data: ${JSON.stringify(args)}`, 'all');
@@ -247,10 +247,10 @@ export class ServerSocketManager {
 
     private _handleDisconnectEvent(socketId: string, reason: DisconnectReason): void {
         this._disconnects++;
-        Helpers.log('info', `socket: ${socketId} disconnected (#${this._disconnects}) due to:`, reason);
+        Logging.log('info', `socket: ${socketId} disconnected (#${this._disconnects}) due to:`, reason);
         const user = SpaceSimServer.users.selectFirst({socketId: socketId});
         if (user?.room) {
-            Helpers.log('info', `creating timeout to remove user`, user, `in ${SpaceSim.Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
+            Logging.log('info', `creating timeout to remove user`, user, `in ${SpaceSim.Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
             this._disconnectTimers.set(SpaceSimServer.users.getKey(user), window.setTimeout(() => {
                 const scene = SpaceSim.game.scene.getScene(user.room) as BattleRoyaleScene;
                 if (scene) {
@@ -275,7 +275,7 @@ export class ServerSocketManager {
     private _tryReconnectUser(socketId: string, data: SpaceSimUserData): boolean {
         const previousConnection = SpaceSimServer.users.selectFirst(data);
         if (previousConnection) {
-            Helpers.log('info', `known users list updated with user '${JSON.stringify(data)}' who is reconnecting over socket '${socketId}'`);
+            Logging.log('info', `known users list updated with user '${JSON.stringify(data)}' who is reconnecting over socket '${socketId}'`);
             // user is reconnecting...
             const updated: SpaceSimServerUserData = {
                 ...previousConnection,
@@ -297,7 +297,7 @@ export class ServerSocketManager {
 
     private _tryAddNewUser(socketId: string, data: SpaceSimUserData): boolean {
         if (SpaceSimServer.users.count({name: data.name}) > 0) {
-            Helpers.log('debug', `name already in use so user cannot be added:`, data);
+            Logging.log('debug', `name already in use so user cannot be added:`, data);
             return false;
         } else {
             const added = SpaceSimServer.users.add({
@@ -305,9 +305,9 @@ export class ServerSocketManager {
                 socketId: socketId
             });
             if (added) {
-                Helpers.log('info', `user '${JSON.stringify(data)}' added to known users over socket '${socketId}'`);
+                Logging.log('info', `user '${JSON.stringify(data)}' added to known users over socket '${socketId}'`);
             } else {
-                Helpers.log('warn', 'user with same fingerprint and name already exist:', data);
+                Logging.log('warn', 'user with same fingerprint and name already exist:', data);
             }
             return added;
         }
@@ -317,7 +317,7 @@ export class ServerSocketManager {
         let added: boolean = false;
         const user = SpaceSimServer.users.get(data);
         if (user) {
-            Helpers.log('debug', `attempting to add user ${JSON.stringify(user)} to a room...`);
+            Logging.log('debug', `attempting to add user ${JSON.stringify(user)} to a room...`);
             // iterate over rooms and see if any have less than max allowed players
             for (let scene of SpaceSimServer.rooms()) {
                 if (scene.getShips().length < SpaceSim.Constants.Socket.MAX_USERS_PER_ROOM) {
@@ -329,7 +329,7 @@ export class ServerSocketManager {
             if (!added) {
                 // create new scene + room and add
                 const scene = new BattleRoyaleScene();
-                Helpers.log('info', `starting new scene '${scene.ROOM_NAME}'`)
+                Logging.log('info', `starting new scene '${scene.ROOM_NAME}'`)
                 SpaceSim.game.scene.add(scene.ROOM_NAME, scene, true);
                 scene.events.on(Phaser.Core.Events.READY, () => scene.addPlayerToScene(user));
             }
@@ -347,11 +347,11 @@ export class ServerSocketManager {
                 // TODO: add `GameLevel.config` method and use that data instead
                 this.socketEmit(socketId, SpaceSim.Constants.Socket.UPDATE_MAP, SpaceSimServer.Constants.Map.MAP_OPTIONS);
             } else {
-                Helpers.log('warn', `no scene could be found matching room '${user.room}' so map data will not be sent`);
+                Logging.log('warn', `no scene could be found matching room '${user.room}' so map data will not be sent`);
                 this.sendInvalidRequestEvent(socketId, 'supplied user is not in a room so is not allowed to request a GameLevel');
             }
         } else {
-            Helpers.log('warn', `no user could be found using socket '${socketId}' so map data will not be sent`);
+            Logging.log('warn', `no user could be found using socket '${socketId}' so map data will not be sent`);
             this.sendInvalidRequestEvent(socketId, 'supplied user could not be found; please resend user data and try again');
         }
     }
@@ -369,14 +369,14 @@ export class ServerSocketManager {
                     }
                 }
                 const ship = scene.getShip(user.shipId) ?? scene.createShip(user);
-                Helpers.log('debug', `sending ship id ${ship.id} to client ${socketId}`);
+                Logging.log('debug', `sending ship id ${ship.id} to client ${socketId}`);
                 this.sendSetShipIdResponse(socketId, ship.id);
             } else {
-                Helpers.log('warn', `no scene could be found matching room '${user.room}' so new ship not created`);
+                Logging.log('warn', `no scene could be found matching room '${user.room}' so new ship not created`);
                 this.sendInvalidRequestEvent(socketId, 'supplied user is not in a room so is not allowed to request a Ship');
             }
         } else {
-            Helpers.log('warn', `no user could be found using socket '${socketId}' so new ship not created`);
+            Logging.log('warn', `no user could be found using socket '${socketId}' so new ship not created`);
             this.sendInvalidRequestEvent(socketId, 'supplied user could not be found; please resend user data and try again');
         }
     }
@@ -435,10 +435,10 @@ export class ServerSocketManager {
                     scene.queueShipRemoval(ship.id);
                 }
             } else {
-                Helpers.log('warn', `no scene could be found matching room '${user.room}' so player death not registered`);
+                Logging.log('warn', `no scene could be found matching room '${user.room}' so player death not registered`);
             }
         } else {
-            Helpers.log('warn', `no user could be found using socket '${socketId}' so player death not registered`);
+            Logging.log('warn', `no user could be found using socket '${socketId}' so player death not registered`);
         }
     }
 
@@ -460,10 +460,10 @@ export class ServerSocketManager {
             if (scene) {
                 ship = scene.getShip(user.shipId);
             } else {
-                Helpers.log('warn', `no scene containing user could be found from data:`, data);
+                Logging.log('warn', `no scene containing user could be found from data:`, data);
             }
         } else {
-            Helpers.log('warn', `no user could be found from data:`, data);
+            Logging.log('warn', `no user could be found from data:`, data);
         }
         return ship;
     }

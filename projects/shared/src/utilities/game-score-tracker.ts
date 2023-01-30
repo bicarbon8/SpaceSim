@@ -1,53 +1,68 @@
-import { ShipConfig } from "../ships/ship";
-import { SpaceSim } from "../space-sim";
-import { Helpers } from "./helpers";
-
-export type Destroyed = {
-    targetId: string;
-    time: number;
-};
-
-export type Hit = {
-    damage: number;
-    time: number;
-}
-
-export type HitsOnTarget = {
-    targetId: string;
-    hits: Array<Hit>;
-}
-
-export type GameStats = {
-    shipId: string;
-    playerName: string;
-    elapsed: number;
-    opponentsDestroyed: Array<Destroyed>;
-    shotsFired: number;
-    shotsLanded: Array<HitsOnTarget>;
-    accuracy: number;
-    ammoRemaining: number;
-    integrityRemaining: number;
-    fuelRemaining: number;
-};
-
-export type UserScore = {
-    name: string;
-    score: number;
-};
+import { DataTable } from "./data-table";
+import { Logging } from "./logging";
 
 export module GameScoreTracker {
-    const _stats = new Map<string, Partial<GameStats>>();
+    export type Destroyed = {
+        targetId: string;
+        time: number;
+    };
 
-    export function start(opts: ShipConfig): void {
+    export type Hit = {
+        damage: number;
+        time: number;
+    };
+
+    export type HitsOnTarget = {
+        targetId: string;
+        hits: Array<Hit>;
+    };
+
+    export type GameStats = {
+        shipId: string;
+        name: string;
+        startedAt: number;
+        lastUpdatedAt: number;
+        opponentsDestroyed: Array<Destroyed>;
+        shotsFired: number;
+        shotsLanded: Array<HitsOnTarget>;
+        accuracy: number;
+        ammoRemaining: number;
+        integrityRemaining: number;
+        fuelRemaining: number;
+    };
+
+    export type UserScore = {
+        name: string;
+        score: number;
+    };
+
+    export type TrackedItem = {
+        id: string,
+        name: string,
+        integrity: number,
+        remainingAmmo: number,
+        remainingFuel: number
+    };
+};
+
+export default class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
+    constructor() {
+        super({
+            indexKeys: ['shipId']
+        });
+    }
+
+    start(opts: GameScoreTracker.TrackedItem): void {
         if (opts) {
-            GameScoreTracker.stop(opts.id);
-            GameScoreTracker.updateStats(opts.id, {
+            const now = Date.now();
+            this.add({
                 shipId: opts.id,
-                playerName: opts.name,
-                elapsed: 0,
-                opponentsDestroyed: new Array<Destroyed>(),
+                name: opts.name,
+                startedAt: now,
+                lastUpdatedAt: now,
+                opponentsDestroyed: new Array<GameScoreTracker.Destroyed>(),
                 shotsFired: 0,
-                shotsLanded: new Array<HitsOnTarget>(),
+                shotsLanded: new Array<GameScoreTracker.HitsOnTarget>(),
                 ammoRemaining: opts.remainingAmmo ?? 0,
                 integrityRemaining: opts.integrity ?? 0,
                 fuelRemaining: opts.remainingFuel ?? 0,
@@ -55,138 +70,145 @@ export module GameScoreTracker {
             });
         }
     }
-    export function stop(id: string): Partial<GameStats> {
-        const stats = _stats.get(id);
-        _stats.delete(id);
-        return stats;
-    }
-    export function reset(): void {
-        _stats.clear();
-    }
 
-    export function shotFired(id: string): void {
-        if (_stats.has(id)) {
-            Helpers.log('trace', 'ship', id, 'fired a shot');
-            const stats = _stats.get(id);
-            GameScoreTracker.updateStats(id, {shotsFired: stats.shotsFired + 1});
+    shotFired(shipId: string): void {
+        const stats = this.get({shipId});
+        if (stats) {
+            Logging.log('trace', {shipId}, 'fired a shot');
+            this.updateStats({shipId, shotsFired: stats.shotsFired + 1});
         }
     }
-    export function shotLanded(shotFiredBy: string, targetId: string, damage: number): void {
-        if (_stats.has(shotFiredBy)) {
-            const shotsLanded: Array<HitsOnTarget> = _stats.get(shotFiredBy).shotsLanded || [];
+
+    shotLanded(shotFiredBy: string, targetId: string, damage: number): void {
+        const stats = this.get({shipId: shotFiredBy});
+        if (stats) {
+            const shotsLanded: Array<GameScoreTracker.HitsOnTarget> = stats.shotsLanded;
             let index = shotsLanded.findIndex(h => h.targetId === targetId);
             // if target not already registered then add it
             if (index < 0) {
                 shotsLanded.push({
                     targetId: targetId,
-                    hits: new Array<Hit>()
+                    hits: new Array<GameScoreTracker.Hit>()
                 });
                 index = shotsLanded.length - 1;
             }
-            Helpers.log('debug', 'ship', shotFiredBy, 'hit ship', targetId, 'for', damage, 'damage');
+            Logging.log('debug', {shotFiredBy}, 'hit', {targetId}, 'for', {damage});
             // add hit on target
             shotsLanded[index].hits.push({
                 damage: damage,
-                time: SpaceSim.game.loop.time
+                time: Date.now()
             });
-            GameScoreTracker.updateStats(shotFiredBy, {shotsLanded: shotsLanded});
+            this.updateStats({shipId: shotFiredBy, shotsLanded: shotsLanded});
         }
     }
-    export function opponentDestroyed(destroyedBy: string, targetId: string): void {
-        if (_stats.has(destroyedBy)) {
-            const destroyed: Array<Destroyed> = _stats.get(destroyedBy).opponentsDestroyed || [];
-            const index = destroyed.findIndex(d => d.targetId === targetId);
+
+    opponentDestroyed(destroyerShipId: string, destroyedShipId: string): void {
+        const stats = this.get({shipId: destroyerShipId});
+        if (stats) {
+            const destroyed: Array<GameScoreTracker.Destroyed> = stats.opponentsDestroyed;
+            const index = destroyed.findIndex(d => d.targetId === destroyedShipId);
             // if target not already listed then add it to list of destroyed
             if (index < 0) {
-                Helpers.log('info', 'ship', destroyedBy, 'destroyed ship', targetId);
+                Logging.log('info', {destroyerShipId}, 'destroyed', {destroyedShipId});
                 destroyed.push({
-                    targetId: targetId,
-                    time: SpaceSim.game.loop.time
+                    targetId: destroyedShipId,
+                    time: Date.now()
                 });
-                GameScoreTracker.updateStats(destroyedBy, {opponentsDestroyed: destroyed});
+                this.updateStats({shipId: destroyerShipId, opponentsDestroyed: destroyed});
             }
         }
     }
-    export function damageTaken(id: string, integrity: number): void {
-        if (_stats.has(id)) {
-            GameScoreTracker.updateStats(id, {integrityRemaining: integrity});
+
+    damageTaken(shipId: string, integrity: number): void {
+        const stats = this.get({shipId});
+        if (stats) {
+            this.updateStats({shipId, integrityRemaining: integrity});
         }
     }
-    export function destroyedCount(id: string): number {
+
+    destroyedCount(shipId: string): number {
         let count = 0;
-        if (_stats.has(id)) {
-            const destroyed = _stats.get(id).opponentsDestroyed || [];
+        const stats = this.get({shipId});
+        if (stats) {
+            const destroyed = stats.opponentsDestroyed;
             count = destroyed.length;
         }
         return count;
     }
-    export function shotsLandedCount(id: string): number {
+
+    shotsLandedCount(shipId: string): number {
         let count = 0;
-        if (_stats.has(id)) {
-            const landed = _stats.get(id).shotsLanded || [];
+        const stats = this.get({shipId});
+        if (stats) {
+            const landed = stats.shotsLanded;
             count = landed.map(l => l.hits.length)
                 .reduce((acc, current) => acc + current, 0);
         }
         return count;
     }
-    export function getScore(id: string): number {
+
+    getScore(shipId: string): number {
         let score: number = 0;
         
-        const stats = GameScoreTracker.getStats(id);
+        const stats = this.getStats({shipId});
         score = (stats.opponentsDestroyed || []).length * 1000;
         score += stats.accuracy;
 
         return Number.parseFloat(score.toFixed(1));
     }
-    export function getLeaderboard(): Array<UserScore> {
-        const userScoresArr = new Array<UserScore>();
-        for (var id of _stats.keys()) {
-            const stats = GameScoreTracker.getStats(id);
-            if (stats && stats.playerName) {
-                const score = GameScoreTracker.getScore(id);
+    
+    getLeaderboard(): Array<GameScoreTracker.UserScore> {
+        const userScoresArr = new Array<GameScoreTracker.UserScore>();
+        for (const shipId of this.select().map(s => s.shipId)) {
+            const stats = this.getStats({shipId});
+            if (stats && stats.name) {
+                const score = this.getScore(shipId);
 
-                userScoresArr.push({name: stats.playerName, score: score});
+                userScoresArr.push({name: stats.name, score: score});
             }
         }
         const lowToHigh = userScoresArr.sort((a, b) => a.score - b.score);
-        const deduped = new Map<string, UserScore>();
+        const deduped = new Map<string, GameScoreTracker.UserScore>();
         for (let score of lowToHigh) {
             deduped.set(score.name, score);
         }
         const dedupedHighToLow = Array.from(deduped.values()).reverse();
         return dedupedHighToLow;
     }
-    export function getStats(id: string): GameStats {
-        const stats = _stats.get(id);
+
+    getStats(query: Partial<GameScoreTracker.GameStats>): GameScoreTracker.GameStats {
+        const stats = this.selectFirst(query);
         return {
-            shipId: id,
-            playerName: stats.playerName,
-            elapsed: SpaceSim.game.getTime() ?? 0,
-            ammoRemaining: stats.ammoRemaining ?? 0,
-            integrityRemaining: stats.integrityRemaining ?? 0,
-            fuelRemaining: stats.fuelRemaining ?? 0,
-            opponentsDestroyed: stats.opponentsDestroyed || [],
-            shotsFired: stats.shotsFired ?? 0,
-            shotsLanded: stats.shotsLanded || [],
-            accuracy: Helpers.getAccuracy(stats.shotsFired ?? 0, GameScoreTracker.shotsLandedCount(id))
+            ...stats,
+            accuracy: this.getAccuracy(stats.shotsFired ?? 0, stats.shotsLanded?.length ?? 0)
         };
     }
-    export function getAllStats(): Array<Partial<GameStats>> {
-        const stats = new Array<Partial<GameStats>>();
-        _stats.forEach(stat => stats.push(stat));
-        return stats;
+
+    getAllStats(): Array<GameScoreTracker.GameStats> {
+        return this.select();
     }
-    export function updateStats(id: string, stats: Partial<GameStats>): void {
-        const prev = _stats.get(id);
-        _stats.set(id, {
-            ...prev,
-            ...stats
+
+    updateStats(stats: Partial<GameScoreTracker.GameStats>): void {
+        const prev = this.get(stats);
+        this.update({
+            ...stats,
+            lastUpdatedAt: Date.now()
         });
     }
-    export function updateAllStats(...stats: Array<Partial<GameStats>>): void {
-        for (var i=0; i<stats.length; i++) {
-            let stat = stats[i];
-            GameScoreTracker.updateStats(stat.shipId, stat);
+
+    updateAllStats(...stats: Array<Partial<GameScoreTracker.GameStats>>): void {
+        for (const stat of stats) {
+            if (stat) {
+                this.updateStats(stat);
+            }
         }
+    }
+
+    getAccuracy(shotsFired: number, shotsLanded: number): number {
+        let accuracy = 0;
+        if (+shotsFired > 0) {
+            accuracy = (+shotsLanded / shotsFired) * 100;
+        }
+        return accuracy;
     }
 }

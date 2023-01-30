@@ -2,7 +2,7 @@ import { SpaceSim } from "../space-sim";
 import { GameLevel, GameLevelOptions } from "../levels/game-level";
 import { Ship, ShipConfig } from "../ships/ship";
 import { ShipSupply, ShipSupplyOptions } from "../ships/supplies/ship-supply";
-import { Helpers } from "../utilities/helpers";
+import { TryCatch } from "../utilities/try-catch";
 
 export type Priority = 'high' | 'medium' | 'low' | 'ultralow';
 export type UpdateAction = (time?: number, delta?: number) => void;
@@ -36,24 +36,24 @@ export abstract class BaseScene extends Phaser.Scene {
         this._ultraLowPriElapsed += delta;
 
         // as fast as possible
-        Array.from(this._highPriorityActions.values()).forEach(a => Helpers.trycatch(() => a(time, delta), 'warn'));
+        Array.from(this._highPriorityActions.values()).forEach(a => TryCatch.run(() => a(time, delta), 'warn'));
         
         // 30 fps
         if (this._medPriElapsed >= SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ) {
             this._medPriElapsed = 0;
-            Array.from(this._mediumPriorityActions.values()).forEach(a => Helpers.trycatch(() => a(time, delta), 'warn'));
+            Array.from(this._mediumPriorityActions.values()).forEach(a => TryCatch.run(() => a(time, delta), 'warn'));
         }
 
         // 15 fps
         if (this._lowPriElapsed >= SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ) {
             this._lowPriElapsed = 0;
-            Array.from(this._lowPriorityActions.values()).forEach(a => Helpers.trycatch(() => a(time, delta), 'warn'));
+            Array.from(this._lowPriorityActions.values()).forEach(a => TryCatch.run(() => a(time, delta), 'warn'));
         }
 
         // 1 fps
         if (this._ultraLowPriElapsed >= SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
             this._ultraLowPriElapsed = 0;
-            Array.from(this._ultraLowPriorityActions.values()).forEach(a => Helpers.trycatch(() => a(time, delta), 'warn'));
+            Array.from(this._ultraLowPriorityActions.values()).forEach(a => TryCatch.run(() => a(time, delta), 'warn'));
         }
     }
 

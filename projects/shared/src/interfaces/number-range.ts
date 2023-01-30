@@ -20,4 +20,9 @@ export module NumberOrRange {
             return input ?? 0;
         }
     }
+    export function getRealNumber(input: NumberOrRange): number {
+        return (typeof input === 'object') 
+            ? Phaser.Math.RND.realInRange(input.min, input.max)
+            : input;
+    }
 }

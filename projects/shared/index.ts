@@ -53,6 +53,11 @@ export * from "./src/utilities/data-table";
 export * from "./src/utilities/exploder";
 export * from "./src/utilities/game-score-tracker";
 export * from "./src/utilities/helpers";
+export * from "./src/utilities/logging";
+export * from "./src/utilities/phaser-helpers";
+export * from "./src/utilities/runner";
+export * from "./src/utilities/sanitiser";
+export * from "./src/utilities/try-catch";
 /** game */
 export * from "./src/space-sim-user-data";
 export * from "./src/space-sim";

@@ -323,7 +323,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     }
 
     private _playMusic(): void {
-        Helpers.trycatch(() => this._music = this.sound.add('background-music', {loop: true, volume: 0.1}));
+        TryCatch.run(() => this._music = this.sound.add('background-music', {loop: true, volume: 0.1}));
         this._music?.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());

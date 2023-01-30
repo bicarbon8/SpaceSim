@@ -44,7 +44,7 @@ export class PlayerPlasmaBullet extends Bullet {
         });
         this.setDepth(SpaceSimClient.Constants.UI.Layers.PLAYER)
             .add(glow);
-        Helpers.trycatch(() => this._fireSound = this.scene.sound.add('cannon-fire'), 'warn');
-        Helpers.trycatch(() => this._hitSound = this.scene.sound.add('bullet-hit'), 'warn');
+        TryCatch.run(() => this._fireSound = this.scene.sound.add('cannon-fire'), 'warn');
+        TryCatch.run(() => this._hitSound = this.scene.sound.add('bullet-hit'), 'warn');
     }
 }

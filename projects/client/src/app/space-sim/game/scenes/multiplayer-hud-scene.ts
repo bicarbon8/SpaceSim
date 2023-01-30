@@ -35,7 +35,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     create(): void {
         this._parentScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
         this.resize();
-        GameScoreTracker.start(this.playerShip.config);
+        SpaceSim.stats.start(this.playerShip.config);
     }
 
     resize(): void {
@@ -157,14 +157,14 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     private _displayHUDInfo(): void {
         try {
-            const stats: GameStats = GameScoreTracker.getStats(this.playerShip.id);
+            const stats: GameStats = SpaceSim.stats.getStats(this.playerShip.id);
             const info: string[] = [
                 `Kills: ${stats.opponentsDestroyed.length}`,
                 `Active Players: ${this._parentScene.getShips()?.length}`,
                 `Accuracy: ${stats.accuracy.toFixed(0)}%`,
                 `Fuel: ${this.playerShip.remainingFuel.toFixed(1)}`,
                 `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
-                `Score: ${GameScoreTracker.getScore(this.playerShip.id).toFixed(0)}`
+                `Score: ${SpaceSim.stats.getScore(this.playerShip.id).toFixed(0)}`
             ];
             if (Helpers.shouldLog('debug')) {
                 const loc = this.playerShip.location;

@@ -1,10 +1,10 @@
-import { Helpers } from "../../../utilities/helpers";
 import { Ship } from "../../ship";
 import { Weapon } from "./weapon";
-import { GameScoreTracker } from "../../../utilities/game-score-tracker";
 import { BaseScene } from "../../../scenes/base-scene";
 import { HasId } from "../../../interfaces/has-id";
 import { HasLocation } from "../../../interfaces/has-location";
+import { SpaceSim } from "../../../space-sim";
+import { PhaserHelpers } from "../../../utilities/phaser-helpers";
 
 export type BulletOptions = {
     readonly startingLoc: Phaser.Types.Math.Vector2Like;
@@ -66,13 +66,13 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
         this.radius = options.radius ?? 0;
         this.timeout = options.timeout ?? 0;
         this.mass = options.mass ?? 0;
-        this.startingLoc = options.startingLoc || Helpers.vector2();
+        this.startingLoc = options.startingLoc || PhaserHelpers.vector2();
         this.startingA = options.startingA ?? 0;
         this.startingV = options.startingV || Phaser.Math.Vector2.ZERO;
         
         this._createGameObj();
 
-        GameScoreTracker.shotFired(this.weapon.ship.id);
+        SpaceSim.stats.shotFired(this.weapon.ship.id);
 
         this._setInMotion();
     }
@@ -87,14 +87,14 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
      */
     onShipCollision(ship: Ship): void {
         if (ship.active) {
-            GameScoreTracker.shotLanded(this.weapon.ship.id, ship.id, this.damage);
+            SpaceSim.stats.shotLanded(this.weapon.ship.id, ship.id, this.damage);
             let remainingIntegrity = ship.integrity - this.damage;
             if (remainingIntegrity < 0) {
                 remainingIntegrity = 0;
             }
-            GameScoreTracker.damageTaken(ship.id, remainingIntegrity);
+            SpaceSim.stats.damageTaken(ship.id, remainingIntegrity);
             if (remainingIntegrity <= 0) {
-                GameScoreTracker.opponentDestroyed(this.weapon.ship.id, ship.id);
+                SpaceSim.stats.opponentDestroyed(this.weapon.ship.id, ship.id);
             }
             ship.subtractIntegrity(this.damage, {
                 timestamp: this.scene.time.now,
@@ -111,7 +111,7 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
     }
 
     get locationInView(): Phaser.Math.Vector2 {
-        return Helpers.convertLocToLocInView({x: this.x, y: this.y}, this.scene);
+        return PhaserHelpers.convertLocToLocInView({x: this.x, y: this.y}, this.scene);
     }
 
     get range(): number {
@@ -121,7 +121,7 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
     private _setInMotion(): void {
         let heading: Phaser.Math.Vector2 = this.heading;
         // add force to heading
-        let deltaV: Phaser.Math.Vector2 = heading.multiply(Helpers.vector2(this.force));
+        let deltaV: Phaser.Math.Vector2 = heading.multiply(PhaserHelpers.vector2(this.force));
         // add deltaV to current Velocity
         this.body.velocity.add(deltaV);
 

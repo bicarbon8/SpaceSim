@@ -1,7 +1,7 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { GameScoreTracker, GameStats, Helpers } from "space-sim-shared";
+import { Helpers, SpaceSim } from "space-sim-shared";
 import { GameplaySceneConfig } from "./gameplay-scene";
 import { StartupSceneConfig } from "./startup-scene";
 import { SetNameSceneConfig } from "./set-name-scene";
@@ -61,7 +61,7 @@ export class GameOverScene extends Phaser.Scene {
 
     private _updateScore(): void {
         if (SpaceSimClient.mode === 'multiplayer') {
-            const leaderboard = GameScoreTracker.getLeaderboard();
+            const leaderboard = SpaceSim.stats.getLeaderboard();
             this._scoreText.setText([
                 'Leaderboard:',
                 ...leaderboard.map((s, i) => `${i+1}. ${s.name} - ${s.score.toFixed(0)}`)
@@ -112,12 +112,12 @@ export class GameOverScene extends Phaser.Scene {
         }, false);
 
         const id = SpaceSimClient.playerShipId;
-        const stats: GameStats = GameScoreTracker.getStats(id);
+        const stats = SpaceSim.stats.getStats({shipId: id});
         this._scoreText.setText([
-            `Score: ${GameScoreTracker.getScore(id).toFixed(0)}`,
-            `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
+            `Score: ${SpaceSim.stats.getScore(id).toFixed(0)}`,
+            `Time: ${(stats.lastUpdatedAt - stats.startedAt / 1000).toFixed(0)} sec.`,
             `Accuracy: ${stats.accuracy.toFixed(0)}%`,
-            `Kills: ${GameScoreTracker.destroyedCount(id)}`
+            `Kills: ${SpaceSim.stats.destroyedCount(id)}`
         ]);
 
         this._layout.addContents(this._scoreText);
@@ -190,7 +190,7 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _createMusic(): void {
-        Helpers.trycatch(() => this._music = this.sound.add('game-over-song', {loop: true, volume: 0.1}));
+        TryCatch.run(() => this._music = this.sound.add('game-over-song', {loop: true, volume: 0.1}));
         this._music?.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());

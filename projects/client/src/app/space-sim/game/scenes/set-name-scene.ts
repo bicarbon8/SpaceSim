@@ -57,7 +57,7 @@ export class SetNameScene extends Phaser.Scene {
     }
 
     private _createMusic(): void {
-        Helpers.trycatch(() => this._music = this.sound.add('startup-theme', {loop: true, volume: 0.1}), 'warn');
+        TryCatch.run(() => this._music = this.sound.add('startup-theme', {loop: true, volume: 0.1}), 'warn');
         this._music?.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());
@@ -138,7 +138,7 @@ export class SetNameScene extends Phaser.Scene {
     }
 
     private _validateAndStartGame(text: string): void {
-        const pname = Helpers.sanitise(text);
+        const pname = Sanitiser.sanitise(text);
         if (pname.length > 2) {
             SpaceSimClient.socket.sendSetPlayerDataRequest({
                 fingerprint: getBrowserFingerprint(),

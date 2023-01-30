@@ -52,7 +52,7 @@ export class PlayerEconomyEngine extends EconomyEngine {
     }
     
     private _addUiComponents(): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             this._thrusterSound = this.scene.sound.add('thruster-fire');
         }, 'none');
         this._flareParticles = this.scene.add.particles('flares');

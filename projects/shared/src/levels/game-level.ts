@@ -5,6 +5,7 @@ import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
 import { NumberOrRange } from "../interfaces/number-range";
 import { SpaceSim } from "../space-sim";
+import { PhaserHelpers } from "../utilities/phaser-helpers";
 
 export type RoomPlus = Room & {
     visible?: boolean;
@@ -95,7 +96,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
     }
 
     getRoomClosestToOrigin(): RoomPlus {
-        const zero = Helpers.vector2();
+        const zero = PhaserHelpers.vector2();
         let closest: RoomPlus;
         this._dungeon.rooms.forEach(room => {
             if (closest) {
@@ -112,7 +113,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
     }
 
     getRoomFurthestFromOrigin(): RoomPlus {
-        const zero = Helpers.vector2();
+        const zero = PhaserHelpers.vector2();
         let furthest: RoomPlus;
         this._dungeon.rooms.forEach(room => {
             if (furthest) {

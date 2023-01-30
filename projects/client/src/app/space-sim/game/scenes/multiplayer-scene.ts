@@ -189,7 +189,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     resize(): void {
-        Helpers.log('debug', `resize called; resetting width, height, background, camera and radar`);
+        Logging.log('debug', `resize called; resetting width, height, background, camera and radar`);
         this._width = this.game.scale.displaySize.width;
         this._height = this.game.scale.displaySize.height;
         this._createBackground();
@@ -234,7 +234,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _createStellarBodiesLayer(): void {
-        Helpers.log('debug', `creating StellarBodies...`);
+        Logging.log('debug', `creating StellarBodies...`);
         const room: RoomPlus = this.getLevel().rooms[0];
         const bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
@@ -329,7 +329,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _playMusic(): void {
-        Helpers.trycatch(() => this._music = this.sound.add('background-music', {loop: true, volume: 0.1}));
+        TryCatch.run(() => this._music = this.sound.add('background-music', {loop: true, volume: 0.1}));
         this._music?.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());
@@ -365,7 +365,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _processUpdateShipsQueue(): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             const opts = this._updateShipsQueue.splice(0, this._updateShipsQueue.length);
             opts.forEach(o => {
                 let ship = this._ships.get(o.id) as PlayerShip;
@@ -374,7 +374,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     ship.configure(o);
                 } else {
                     // or create new ship if doesn't already exist
-                    Helpers.log('debug', `creating new PlayerShip ${JSON.stringify(o)}`);
+                    Logging.log('debug', `creating new PlayerShip ${JSON.stringify(o)}`);
                     let engine: (new (scene: BaseScene) => Engine);
                     switch (o.engineModel) {
                         case 'economy':
@@ -409,7 +409,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     this._ships.set(o.id, ship);
                     this.physics.add.collider(ship, this.getLevel().wallsLayer);
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
-                    Helpers.trycatch(() => this._camera?.ignore(ship.radarSprite), 'none');
+                    TryCatch.run(() => this._camera?.ignore(ship.radarSprite), 'none');
                 }
 
                 if (this._needsResize && ship?.id === SpaceSimClient.playerShipId) {
@@ -422,17 +422,17 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _processRemoveShipsQueue(): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             const ids = this._removeShipsQueue.splice(0, this._removeShipsQueue.length);
             for (let id of ids) {
                 const ship = this._ships.get(id);
                 if (ship) {
-                    Helpers.log('debug', `removing ship '${id}'`);
+                    Logging.log('debug', `removing ship '${id}'`);
                     this._exploder.explode({location: ship.location});
                     this._ships.delete(id);
                     
                     if (SpaceSimClient.playerShipId === id) {
-                        Helpers.log('info', `player ship removed; queuing game over...`);
+                        Logging.log('info', `player ship removed; queuing game over...`);
                         this.queueEndScene();
                     } else {
                         ship.destroy();
@@ -443,7 +443,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _processUpdateSuppliesQueue(): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             const opts = this._updateSuppliesQueue.splice(0, this._updateSuppliesQueue.length);
             opts.forEach(o => {
                 let supply = this._supplies.get(o.id);
@@ -452,7 +452,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     supply?.configure(o);
                 } else {
                     // or create new supply if doesn't already exist
-                    Helpers.log('debug', `creating new ShipSupply ${JSON.stringify(o)}`);
+                    Logging.log('debug', `creating new ShipSupply ${JSON.stringify(o)}`);
                     switch (o.supplyType) {
                         case 'ammo':
                             supply = new PlayerAmmoSupply(this, o);
@@ -471,19 +471,19 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                             break;
                     }
                     this._supplies.set(o.id, supply);
-                    Helpers.trycatch(() => this._radar?.ignore(supply), 'none');
+                    TryCatch.run(() => this._radar?.ignore(supply), 'none');
                 }
             });
         }, 'debug', `error in processing ShipSupplyOptions array from server`, 'message');
     }
 
     private _processRemoveSuppliesQueue(): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             const ids = this._removeSuppliesQueue.splice(0, this._removeSuppliesQueue.length);
             for (let id of ids) {
                 const supply = this.getSupply(id);
                 if (supply) {
-                    Helpers.log('debug', `removing supply '${supply.id}'`);
+                    Logging.log('debug', `removing supply '${supply.id}'`);
                     supply.destroy();
                     this._supplies.delete(id);
                 }
@@ -492,7 +492,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     private _processFlickerSuppliesQueue(): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             const ids = this._flickerSuppliesQueue.splice(0, this._flickerSuppliesQueue.length);
             for (let id of ids) {
                 const supply = this.getSupply(id);

@@ -69,7 +69,7 @@ export class Camera implements HasLocation {
     unignore(...entries: Array<Phaser.GameObjects.GameObject>): this {
         if (entries?.length) {
             for (var i=0; i<entries.length; i++) {
-                Helpers.trycatch(() => this._ignored.remove(entries[i]));
+                TryCatch.run(() => this._ignored.remove(entries[i]));
             }
             this._cam.ignore(this._ignored.getChildren());
         }
@@ -106,7 +106,7 @@ export class Camera implements HasLocation {
     }
 
     destroy(): void {
-        Helpers.trycatch(() => {
+        TryCatch.run(() => {
             this.unignore(...this._ignored.getChildren())
             this._ignored.destroy();
         }, 'warn');

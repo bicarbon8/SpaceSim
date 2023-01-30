@@ -1,8 +1,10 @@
 import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
 import { InputController } from "./input-controller";
-import { Helpers } from "../utilities/helpers";
 import { SpaceSim } from "../space-sim";
+import { Logging } from "../utilities/logging";
+import { PhaserHelpers } from "../utilities/phaser-helpers";
+import { DamageMetadata } from "../interfaces/damage-metadata";
 
 export type AiState = 'patrolling' | 'attacking' | 'chasing';
 
@@ -37,7 +39,7 @@ export class AiController extends InputController {
 
     get view(): Phaser.Geom.Polygon {
         const viewDistance = (this.isAggro()) ? 500 : 500 - (this.scene.getShips().length * 2); // less ships = longer view distance
-        return Helpers.getView(this.ship.location, this.ship.rotationContainer.angle, viewDistance);
+        return PhaserHelpers.getView(this.ship.location, this.ship.rotationContainer.angle, viewDistance);
     }
     
     update(time: number, delta: number): void {
@@ -132,7 +134,7 @@ export class AiController extends InputController {
     }
 
     hasAttacker(): Ship {
-        const attackerId = Helpers.getLastAttackerId(this.ship);
+        const attackerId = DamageMetadata.getLastAttackerId(this.ship);
         if (attackerId) {
             return this.scene.getShip(attackerId);
         }
@@ -182,7 +184,7 @@ export class AiController extends InputController {
         this._previousState = this._state;
         this._state = state;
         if (this._previousState != this._state) {
-            Helpers.log('debug', `ship: '${this.ship.name}' state changed from '${this._previousState}' to '${this._state}'`);
+            Logging.log('debug', `ship: '${this.ship.name}' state changed from '${this._previousState}' to '${this._state}'`);
         }
     }
 

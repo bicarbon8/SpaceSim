@@ -1,4 +1,4 @@
-import { Helpers } from "./utilities/helpers";
+import GameScoreTracker from "./utilities/game-score-tracker";
 
 export module SpaceSim {
     export var game: Phaser.Game;
@@ -7,9 +7,9 @@ export module SpaceSim {
      */
     export var debug: boolean = false;
     /**
-     * the minimum level of logs that should be output @default 'warn'
+     * tracks all gameplay stats
      */
-    export var loglevel: Helpers.LogLevel = 'warn';
+    export const stats = new GameScoreTracker();
     /**
      * Constant values used in the SpaceSim game
      */

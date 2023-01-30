@@ -38,7 +38,7 @@ export class ClientSocketManager {
 
     private _emit(event: string, ...args: Array<any>): this {
         if (SpaceSimClient.mode === 'multiplayer') {
-            Helpers.log('debug', `sending '${event}' event to server...`);
+            Logging.log('debug', `sending '${event}' event to server...`);
             this.socket.emit(event, ...args);
         }
         return this;
@@ -97,9 +97,9 @@ export class ClientSocketManager {
     private _handleAllEvents(event: string, ...args: Array<any>): void {
         if (SpaceSimClient.mode === 'multiplayer') {
             if (![SpaceSim.Constants.Socket.UPDATE_PLAYERS, SpaceSim.Constants.Socket.UPDATE_STATS, SpaceSim.Constants.Socket.UPDATE_SUPPLIES].includes(event)) {
-                Helpers.log('debug', `received '${event}' event from server...`);
+                Logging.log('debug', `received '${event}' event from server...`);
             }
-            Helpers.trycatch(() => {
+            TryCatch.run(() => {
                 switch(event) {
                     case 'connect':
                         this._handleConnectEvent();
@@ -156,7 +156,7 @@ export class ClientSocketManager {
                         this._handleInvalidRequestEvent(args[0]);
                         break;
                     default:
-                        Helpers.log('warn', `unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
+                        Logging.log('warn', `unknown socket event received from server: event '${event}', args ${JSON.stringify(args)}`);
                         break;
                 }
             }, 'warn', `[${Helpers.dts()}]: error handling event '${event}' with arguments: ${JSON.stringify(args)}`, 'none');
@@ -165,7 +165,7 @@ export class ClientSocketManager {
 
     private _handleConnectEvent(): void {
         this._connects++;
-        Helpers.log('debug', `connected to server at: ${this.url}`);
+        Logging.log('debug', `connected to server at: ${this.url}`);
         if (this.isReconnect() && SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             // handle reconnect scenario
             this.sendSetPlayerDataRequest(SpaceSimClient.playerData);
@@ -177,7 +177,7 @@ export class ClientSocketManager {
         console.warn(`socket disconnected`, reason, description);
         if (reason === "io server disconnect") {
             // the disconnection was initiated by the server, you need to reconnect manually
-            Helpers.log('info', `attempting to reconnect to server...`);
+            Logging.log('info', `attempting to reconnect to server...`);
             this.socket.connect();
         }
     }
@@ -276,7 +276,7 @@ export class ClientSocketManager {
 
     private _handleUpdateStatsEvent(stats: Array<GameStats>): void {
         if (SpaceSimClient.mode === 'multiplayer') {
-            GameScoreTracker.updateAllStats(...stats);
+            SpaceSim.stats.updateAllStats(...stats);
         }
     }
 

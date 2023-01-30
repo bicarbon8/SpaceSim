@@ -2,10 +2,10 @@ import { IsConfigurable } from "../../interfaces/is-configurable";
 import { PhysicsObject } from "../../interfaces/physics-object";
 import { HasId } from "../../interfaces/has-id";
 import { SupplyType } from "./supply-type";
-import { Helpers } from "../../utilities/helpers";
 import { BaseScene } from "../../scenes/base-scene";
 import { Ship } from "../ship";
 import { SpaceSim } from "../../space-sim";
+import { PhaserHelpers } from "../../utilities/phaser-helpers";
 
 export type ShipSupplyOptions = Partial<PhysicsObject> & {
     readonly id?: string;
@@ -67,11 +67,11 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         this._id = config.id ?? Phaser.Math.RND.uuid();
         this._amount = config.amount ?? 1;
         this._type = config.supplyType;
-        const loc = config.location ?? Helpers.vector2();
+        const loc = config.location ?? PhaserHelpers.vector2();
         this.setPosition(loc.x, loc.y);
         this.setAngle(config.angle ?? 0);
         const speed = Phaser.Math.RND.realInRange(50, 200);
-        const heading = Helpers.vector2(Phaser.Math.RND.realInRange(-1, 1), Phaser.Math.RND.realInRange(-1, 1));
+        const heading = PhaserHelpers.vector2(Phaser.Math.RND.realInRange(-1, 1), Phaser.Math.RND.realInRange(-1, 1));
         const velocity = config.velocity || heading.multiply({x: speed, y: speed});
         this.body.setVelocity(velocity.x, velocity.y);
         this.body.setAngularVelocity(config.angularVelocity ?? 0);

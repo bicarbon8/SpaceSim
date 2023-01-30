@@ -20,11 +20,11 @@ export class UiExploder extends Exploder {
     
     constructor(scene: Phaser.Scene) {
         super(scene);
-        Helpers.trycatch(() => this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1}),
+        TryCatch.run(() => this._destroyedSound = this.scene.sound.add('explosion', {volume: 0.1}),
             'warn', 'unable to load explosion sound', 'none');
-        Helpers.trycatch(() => this._flareParticleEmitter = this.scene.add.particles('flares'),
+        TryCatch.run(() => this._flareParticleEmitter = this.scene.add.particles('flares'),
             'warn', 'unable to load flares sprite as particles', 'none');
-        Helpers.trycatch(() => this._explosionParticleEmitter = this.scene.add.particles('explosion'),
+        TryCatch.run(() => this._explosionParticleEmitter = this.scene.add.particles('explosion'),
             'warn', 'unable to load explosion sprite as particles', 'none');
     }
 
@@ -35,7 +35,7 @@ export class UiExploder extends Exploder {
         this._explosionParticleEmitter.setPosition(options.location.x, options.location.y);
         this._explosionParticleEmitter.setDepth(SpaceSimClient.Constants.UI.Layers.PLAYER);
 
-        Helpers.trycatch(() => this._destroyedSound.play(), 'none');
+        TryCatch.run(() => this._destroyedSound.play(), 'none');
 
         this._explosionParticleEmitter.createEmitter({
             lifespan: { min: 500, max: 1000 },
