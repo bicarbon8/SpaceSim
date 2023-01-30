@@ -80,26 +80,31 @@ export class DataTable<T extends {}> {
     /**
      * finds all objects containing matching values for the supplied
      * fields in `partial`
-     * @param partial an optional object containing one or more fields in type `T`
+     * @param queries optional objects containing one or more fields in type `T`
+     * used to filter the results. returned results must match all values specified
      * @returns an array of objects containing matching values for all
      * fields supplied in `partial` or all objects if `partial` is not supplied
      */
-    select(partial?: Partial<T>): Array<T> {
-        let results: Array<T>;
-        if (partial) {
-            const findByKeys = Object.keys(partial);
-            const uArr = Array.from(this._tableMap.values());
-            results = uArr.filter(u => {
-                for (let key of findByKeys) {
-                    if (partial[key] !== u[key]) {
-                        return false;
-                    }
+    select(...queries: Array<Partial<T>>): Array<T> {
+        const results = new Array<T>();
+        if (queries?.length && queries[0]) {
+            for (const query of queries) {
+                if (query) {
+                    const findByKeys = Object.keys(query);
+                    const uArr = Array.from(this._tableMap.values());
+                    results.splice(results.length, 0, ...uArr.filter(u => {
+                        for (let key of findByKeys) {
+                            if (query[key] !== u[key]) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    }));
                 }
-                return true;
-            });
+            }
         } else {
             // return all records in the table
-            results = Array.from(this._tableMap.values());
+            results.splice(0, 0, ...this._tableMap.values());
         }
         return JSON.parse(JSON.stringify(results));
     }
@@ -153,8 +158,8 @@ export class DataTable<T extends {}> {
      * @returns and array of records that were deleted or empty array
      * if no matches found
      */
-    delete(partial: Partial<T>): Array<T> {
-        const found = this.select(partial);
+    delete(...partial: Array<Partial<T>>): Array<T> {
+        const found = this.select(...partial);
         for (let f of found) {
             let key = this.getKey(f);
             this._tableMap.delete(key);

@@ -19,5 +19,11 @@
     ],
     "allowSyntheticDefaultImports": true,
     "strictNullChecks": false,
+    "types": [
+      "mocha",
+      "chai",
+      "sinon",
+      "node"
+    ]
   }
 }
