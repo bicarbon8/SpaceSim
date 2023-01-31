@@ -147,14 +147,23 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
         return count;
     }
 
+    /**
+     * calculates the overall score based on:
+     * - opponents destroyed * 100
+     * - accuracy * 10
+     * so, if 3 oppnents had been destroyed and the accuracy is 25 the resulting
+     * score would be 300 + 250 = 550
+     * @param shipId the identifier used to lookup the stats and calculate the score
+     * @returns a numerical value representing the score
+     */
     getScore(shipId: string): number {
         let score: number = 0;
         
         const stats = this.getStats({shipId});
-        score = (stats.opponentsDestroyed || []).length * 1000;
-        score += stats.accuracy;
+        score = (stats.opponentsDestroyed || []).length * 100;
+        score += (stats.accuracy ?? 0) * 10;
 
-        return Number.parseFloat(score.toFixed(1));
+        return Number.parseInt(score.toFixed(0));
     }
     
     getLeaderboard(): Array<GameScoreTracker.UserScore> {
@@ -209,8 +218,10 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
 
     getAccuracy(shotsFired: number, shotsLanded: number): number {
         let accuracy = 0;
-        if (+shotsFired > 0) {
-            accuracy = (+shotsLanded / shotsFired) * 100;
+        const fired = (Number.isNaN(Number(shotsFired))) ? 0 : Number(shotsFired);
+        const landed = (Number.isNaN(Number(shotsLanded))) ? 0 : Number(shotsLanded);
+        if (fired > 0) {
+            accuracy = (landed / fired) * 100;
         }
         return accuracy;
     }
