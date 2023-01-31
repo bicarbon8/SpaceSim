@@ -8,13 +8,9 @@ export module GameScoreTracker {
     };
 
     export type Hit = {
+        targetId: string;
         damage: number;
         time: number;
-    };
-
-    export type HitsOnTarget = {
-        targetId: string;
-        hits: Array<Hit>;
     };
 
     export type GameStats = {
@@ -23,12 +19,9 @@ export module GameScoreTracker {
         startedAt: number;
         lastUpdatedAt: number;
         opponentsDestroyed: Array<Destroyed>;
-        shotsFired: number;
-        shotsLanded: Array<HitsOnTarget>;
+        shotsFired: Array<number>;
+        shotsLanded: Array<Hit>;
         accuracy: number;
-        ammoRemaining: number;
-        integrityRemaining: number;
-        fuelRemaining: number;
     };
 
     export type UserScore = {
@@ -38,10 +31,7 @@ export module GameScoreTracker {
 
     export type TrackedItem = {
         id: string,
-        name: string,
-        integrity: number,
-        remainingAmmo: number,
-        remainingFuel: number
+        name: string
     };
 };
 
@@ -61,11 +51,8 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
                 startedAt: now,
                 lastUpdatedAt: now,
                 opponentsDestroyed: new Array<GameScoreTracker.Destroyed>(),
-                shotsFired: 0,
-                shotsLanded: new Array<GameScoreTracker.HitsOnTarget>(),
-                ammoRemaining: opts.remainingAmmo ?? 0,
-                integrityRemaining: opts.integrity ?? 0,
-                fuelRemaining: opts.remainingFuel ?? 0,
+                shotsFired: new Array<number>(),
+                shotsLanded: new Array<GameScoreTracker.Hit>(),
                 accuracy: 0
             });
         }
@@ -74,31 +61,22 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     shotFired(shipId: string): void {
         const stats = this.get({shipId});
         if (stats) {
+            stats.shotsFired.push(Date.now());
             Logging.log('trace', {shipId}, 'fired a shot');
-            this.updateStats({shipId, shotsFired: stats.shotsFired + 1});
+            this.updateStats({shipId, shotsFired: stats.shotsFired});
         }
     }
 
     shotLanded(shotFiredBy: string, targetId: string, damage: number): void {
         const stats = this.get({shipId: shotFiredBy});
         if (stats) {
-            const shotsLanded: Array<GameScoreTracker.HitsOnTarget> = stats.shotsLanded;
-            let index = shotsLanded.findIndex(h => h.targetId === targetId);
-            // if target not already registered then add it
-            if (index < 0) {
-                shotsLanded.push({
-                    targetId: targetId,
-                    hits: new Array<GameScoreTracker.Hit>()
-                });
-                index = shotsLanded.length - 1;
-            }
-            Logging.log('debug', {shotFiredBy}, 'hit', {targetId}, 'for', {damage});
-            // add hit on target
-            shotsLanded[index].hits.push({
+            stats.shotsLanded.push({
+                targetId: targetId,
                 damage: damage,
                 time: Date.now()
             });
-            this.updateStats({shipId: shotFiredBy, shotsLanded: shotsLanded});
+            Logging.log('debug', {shotFiredBy}, 'hit', {targetId}, 'for', {damage});
+            this.updateStats({shipId: shotFiredBy, shotsLanded: stats.shotsLanded});
         }
     }
 
@@ -117,34 +95,6 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
                 this.updateStats({shipId: destroyerShipId, opponentsDestroyed: destroyed});
             }
         }
-    }
-
-    damageTaken(shipId: string, integrity: number): void {
-        const stats = this.get({shipId});
-        if (stats) {
-            this.updateStats({shipId, integrityRemaining: integrity});
-        }
-    }
-
-    destroyedCount(shipId: string): number {
-        let count = 0;
-        const stats = this.get({shipId});
-        if (stats) {
-            const destroyed = stats.opponentsDestroyed;
-            count = destroyed.length;
-        }
-        return count;
-    }
-
-    shotsLandedCount(shipId: string): number {
-        let count = 0;
-        const stats = this.get({shipId});
-        if (stats) {
-            const landed = stats.shotsLanded;
-            count = landed.map(l => l.hits.length)
-                .reduce((acc, current) => acc + current, 0);
-        }
-        return count;
     }
 
     /**
@@ -187,7 +137,7 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
         const stats = this.selectFirst(query);
         return {
             ...stats,
-            accuracy: this.getAccuracy(stats.shotsFired ?? 0, stats.shotsLanded?.length ?? 0)
+            accuracy: this.getAccuracy(stats.shotsFired?.length ?? 0, stats.shotsLanded?.length ?? 0)
         };
     }
 

@@ -7,19 +7,16 @@ describe('GameScoreTracker', () => {
         const gst = new GameScoreTracker();
         gst.start({
             id: 'fake-id',
-            name: 'fake-name',
-            integrity: 100,
-            remainingAmmo: 100,
-            remainingFuel: 100
+            name: 'fake-name'
         });
 
         const actualScore = gst.getScore('fake-id');
         expect(actualScore).to.eq(0);
         const actualStats = gst.getStats({ shipId: 'fake-id' });
         expect(actualStats.name).to.eq('fake-name');
-        expect(actualStats.integrityRemaining).to.eq(100);
-        expect(actualStats.ammoRemaining).to.eq(100);
-        expect(actualStats.fuelRemaining).to.eq(100);
+        expect(actualStats.accuracy).to.eq(0);
+        expect(actualStats.shotsFired.length).to.eq(0);
+        expect(actualStats.shotsLanded.length).to.eq(0);
     })
 
     it('can export all stats', () => {
@@ -27,20 +24,24 @@ describe('GameScoreTracker', () => {
         for (let i = 0; i < 10; i++) {
             gst.start({
                 id: `fake-${i}`,
-                name: `fake-name-${i}`,
-                integrity: i * 10,
-                remainingAmmo: i * 10,
-                remainingFuel: i * 10
-            })
+                name: `fake-name-${i}`
+            });
+            for (let j=0; j<i; j++) {
+                gst.shotFired(`fake-${i}`);
+                if (j%2 === 0) {
+                    gst.shotLanded(`fake-${i}`, `fake-${i}-${j}`, 1);
+                }
+            }
         }
 
         const all = gst.getAllStats();
         expect(all.length).to.eq(10);
         for (const stat of all) {
             const [fake, i] = stat.shipId.split('-');
-            expect(stat.integrityRemaining).to.eq(+i * 10);
-            expect(stat.ammoRemaining).to.eq(+i * 10);
-            expect(stat.fuelRemaining).to.eq(+i * 10);
+            expect(stat.shotsFired.length).to.eq(+i);
+            if (+i > 2) {
+                expect(stat.shotsLanded.length).to.be.greaterThan(0);
+            }
         }
     })
 
@@ -52,15 +53,19 @@ describe('GameScoreTracker', () => {
             stats.push({
                 shipId: `fake-${i}`,
                 name: `fake-name-${i}`,
-                integrityRemaining: i * 10,
-                ammoRemaining: i * 10,
-                fuelRemaining: i * 10,
                 accuracy: i,
                 lastUpdatedAt: Date.now(),
                 startedAt: Date.now(),
-                opponentsDestroyed: new Array<GameScoreTracker.Destroyed>(),
-                shotsFired: i * 10,
-                shotsLanded: new Array<GameScoreTracker.HitsOnTarget>()
+                opponentsDestroyed: new Array<GameScoreTracker.Destroyed>({
+                    targetId: 'fake-target-id', 
+                    time: Date.now()
+                }),
+                shotsFired: new Array<number>(...[Date.now(), Date.now()]),
+                shotsLanded: new Array<GameScoreTracker.Hit>({
+                    targetId: 'fake-target-id',
+                    damage: 1,
+                    time: Date.now()
+                })
             });
         }
         gst.updateAllStats(...stats);
@@ -70,26 +75,25 @@ describe('GameScoreTracker', () => {
         for (let i = 0; i < 10; i++) {
             let stat = gst.getStats({ shipId: `fake-${i}` });
 
-            expect(stat.integrityRemaining).to.eq(+i * 10);
-            expect(stat.ammoRemaining).to.eq(+i * 10);
-            expect(stat.fuelRemaining).to.eq(+i * 10);
+            expect(stat.shotsFired.length).to.eq(2);
+            expect(stat.shotsLanded.length).to.eq(1);
+            expect(stat.accuracy).to.eq(50);
         }
 
-        gst.updateAllStats({ shipId: 'fake-0', integrityRemaining: 100 });
+        const stat = gst.getStats({shipId: 'fake-0'})
+        stat.shotsLanded.push({targetId: 'fake-target-id', damage: 1, time: Date.now()});
+        gst.updateAllStats({ shipId: 'fake-0', shotsLanded: stat.shotsLanded });
         const updated = gst.getStats({ shipId: 'fake-0' });
 
-        expect(updated.integrityRemaining).to.eq(100);
-        expect(updated.ammoRemaining).to.eq(0);
+        expect(updated.shotsLanded.length).to.eq(2);
+        expect(updated.accuracy).to.eq(100);
     })
 
     it('calculates accuracy when getting stats', () => {
         const gst = new GameScoreTracker();
         gst.start({
             id: 'fake-id',
-            name: 'fake-name',
-            integrity: 100,
-            remainingAmmo: 100,
-            remainingFuel: 100
+            name: 'fake-name'
         });
 
         const actualBefore = gst.getStats({ shipId: 'fake-id' });
@@ -111,20 +115,84 @@ describe('GameScoreTracker', () => {
         const gst = new GameScoreTracker();
         gst.start({
             id: 'fake-id',
-            name: 'fake-name',
-            integrity: 100,
-            remainingAmmo: 100,
-            remainingFuel: 100
+            name: 'fake-name'
         });
         expect(gst.getScore('fake-id'), 'starting score').to.eq(0);
 
         gst.shotFired('fake-id');
         gst.shotFired('fake-id');
         gst.shotFired('fake-id');
+        gst.shotLanded('fake-id', 'fake-id-2', 1);
         gst.shotFired('fake-id');
-        gst.shotLanded('fake-id', 'fake-id-2', 1); // 25% accuracy (250 points)
+        gst.shotLanded('fake-id', 'fake-id-2', 1); // 50% accuracy (500 points)
         gst.opponentDestroyed('fake-id', 'fake-id-2'); // 1 opponent destroyed (100 points)
 
-        expect(gst.getScore('fake-id'), 'final score').to.eq(350);
+        expect(gst.getScore('fake-id'), 'final score').to.eq(600);
+    })
+
+    it('generates a correct leaderboard from high to low', () => {
+        const gst = new GameScoreTracker();
+        gst.updateAllStats({
+            shipId: `high-score-id`,
+            name: `high-score-name`,
+            accuracy: 0,
+            lastUpdatedAt: Date.now(),
+            startedAt: Date.now(),
+            opponentsDestroyed: new Array<GameScoreTracker.Destroyed>({
+                targetId: 'fake-target-id', 
+                time: Date.now()
+            }, {
+                targetId: 'fake-target-id-2',
+                time: Date.now()
+            }, {
+                targetId: 'fake-target-id-3',
+                time: Date.now()
+            }),
+            shotsFired: new Array<number>(...[Date.now(), Date.now(), Date.now()]),
+            shotsLanded: new Array<GameScoreTracker.Hit>({
+                targetId: 'fake-target-id',
+                damage: 1,
+                time: Date.now()
+            }, {
+                targetId: 'fake-target-id-2',
+                damage: 1,
+                time: Date.now()
+            }, {
+                targetId: 'fake-target-id-3',
+                damage: 1,
+                time: Date.now()
+            })
+        }, {
+            shipId: `low-score-id`,
+            name: `low-score-name`,
+            accuracy: 0,
+            lastUpdatedAt: Date.now(),
+            startedAt: Date.now(),
+            opponentsDestroyed: new Array<GameScoreTracker.Destroyed>(),
+            shotsFired: new Array<number>(...[Date.now(), Date.now(), Date.now()]),
+            shotsLanded: new Array<GameScoreTracker.Hit>()
+        }, {
+            shipId: `medium-score-id`,
+            name: `medium-score-name`,
+            accuracy: 0,
+            lastUpdatedAt: Date.now(),
+            startedAt: Date.now(),
+            opponentsDestroyed: new Array<GameScoreTracker.Destroyed>({
+                targetId: 'fake-target-id', 
+                time: Date.now()
+            }),
+            shotsFired: new Array<number>(...[Date.now(), Date.now(), Date.now()]),
+            shotsLanded: new Array<GameScoreTracker.Hit>({
+                targetId: 'fake-target-id',
+                damage: 1,
+                time: Date.now()
+            })
+        });
+        const leaderboard = gst.getLeaderboard();
+
+        expect(leaderboard.length).to.eq(3);
+        expect(leaderboard[0].name).to.eq('high-score-name');
+        expect(leaderboard[1].name).to.eq('medium-score-name');
+        expect(leaderboard[2].name).to.eq('low-score-name');
     })
 })

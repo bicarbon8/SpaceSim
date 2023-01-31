@@ -60,7 +60,7 @@ export module Logging {
      * @returns `true` if the message should be output, otherwise `false`
      */
     export function shouldLog(level: LogLevel): boolean {
-        switch (loglevel) {
+        switch (Logging.loglevel) {
             case 'error':
                 if (['error'].includes(level)) {
                     return true;
@@ -88,7 +88,8 @@ export module Logging {
                 break;
             case 'none':
             default:
-                return false;
+                break;
         }
+        return false;
     }
 }
