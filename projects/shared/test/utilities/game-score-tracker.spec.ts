@@ -130,7 +130,7 @@ describe('GameScoreTracker', () => {
         expect(gst.getScore('fake-id'), 'final score').to.eq(600);
     })
 
-    it('generates a correct leaderboard from high to low', () => {
+    it('generates a correct leaderboard from high to low grouping by name', () => {
         const gst = new GameScoreTracker();
         gst.updateAllStats({
             shipId: `high-score-id`,
@@ -165,6 +165,15 @@ describe('GameScoreTracker', () => {
         }, {
             shipId: `low-score-id`,
             name: `low-score-name`,
+            accuracy: 0,
+            lastUpdatedAt: Date.now(),
+            startedAt: Date.now(),
+            opponentsDestroyed: new Array<GameScoreTracker.Destroyed>(),
+            shotsFired: new Array<number>(...[Date.now(), Date.now(), Date.now()]),
+            shotsLanded: new Array<GameScoreTracker.Hit>()
+        }, {
+            shipId: `low-score-id-2`,
+            name: `high-score-name`,
             accuracy: 0,
             lastUpdatedAt: Date.now(),
             startedAt: Date.now(),

@@ -117,18 +117,18 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     }
     
     getLeaderboard(): Array<GameScoreTracker.UserScore> {
-        const highScores = new Array<GameScoreTracker.UserScore>();
+        const highScores = new Map<string, GameScoreTracker.UserScore>();
         for (const stats of this.select()) {
-            if (stats && stats.name) {
+            if (stats && stats.name && !highScores.has(stats.name)) {
                 // get all scores for same named user and filter out highest
                 const userStats = this.select({name: stats.name});
                 const lowToHighScores = userStats.map(s => this.getScore(s.shipId))
                     .sort((a, b) => a - b);
                 const highestScore = lowToHighScores.pop();
-                highScores.push({name: stats.name, score: highestScore});
+                highScores.set(stats.name, {name: stats.name, score: highestScore});
             }
         }
-        const lowToHigh = highScores.sort((a, b) => a.score - b.score);
+        const lowToHigh = Array.from(highScores.values()).sort((a, b) => a.score - b.score);
         const highToLow = lowToHigh.reverse();
         return highToLow;
     }
