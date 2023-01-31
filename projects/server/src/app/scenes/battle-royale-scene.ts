@@ -163,7 +163,10 @@ export class BattleRoyaleScene extends BaseScene {
             engine: engine,
             weapon: weapon
         });
-        this.physics.add.collider(ship, this.getLevel().wallsLayer);
+        this.physics.add.collider(ship, this.getLevel().wallsLayer, () => {
+            const factor = SpaceSim.Constants.Ships.WALL_BOUNCE_FACTOR;
+            ship.body.velocity.multiply({x: factor, y: factor});
+        });
         this._addPlayerCollisionPhysicsWithPlayers(ship);
         this._addPlayerCollisionPhysicsWithSupplies(ship);
         Logging.log('info', 'adding ship', ship.config);
@@ -323,7 +326,10 @@ export class BattleRoyaleScene extends BaseScene {
                     Logging.log('warn', 'unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:', opts.supplyType);
                     break;
             }
-            this.physics.add.collider(supply, this.getLevel().wallsLayer);
+            this.physics.add.collider(supply, this.getLevel().wallsLayer, () => {
+                const factor = SpaceSim.Constants.Ships.Supplies.WALL_BOUNCE_FACTOR;
+                supply.body.velocity.multiply({x: factor, y: factor});
+            });
             const activeShips = this.getShips().filter(p => p?.active);
             for (let activeShip of activeShips) {
                 this.physics.add.collider(supply, activeShip, () => {

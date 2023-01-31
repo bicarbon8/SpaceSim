@@ -139,7 +139,7 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
         this.body.setMass(this.mass);
         this.body.setCircle(this.radius);
         this.body.setVelocity(this.startingV.x, this.startingV.y);
-        this.body.setBounce(0, 0);
+        this.body.setBounce(1, 1);
 
         this._addCollisionDetection();
     }

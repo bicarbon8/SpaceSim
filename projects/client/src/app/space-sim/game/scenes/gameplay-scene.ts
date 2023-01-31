@@ -185,7 +185,10 @@ export class GameplayScene extends BaseScene implements Resizable {
             p.setAlpha(0); // hidden until player enters room
             p.setActive(false);
             // setup collision with map walls
-            this.physics.add.collider(p, this.getLevel().wallsLayer);
+            this.physics.add.collider(p, this.getLevel().wallsLayer, () => {
+                const factor = SpaceSim.Constants.Ships.WALL_BOUNCE_FACTOR;
+                p.body.velocity.multiply({x: factor, y: factor});
+            });
             let controller = new ClientAiController(this, p)
                 .setEnemyIds(SpaceSimClient.playerShipId);
             SpaceSimClient.opponents.push(controller);
@@ -219,7 +222,10 @@ export class GameplayScene extends BaseScene implements Resizable {
         this._ships.set(ship.id, ship);
         
         // setup collision with map walls
-        this.physics.add.collider(this.playerShip, this.getLevel().wallsLayer);
+        this.physics.add.collider(this.playerShip, this.getLevel().wallsLayer, () => {
+            const factor = SpaceSim.Constants.Ships.WALL_BOUNCE_FACTOR;
+            this.playerShip.body.velocity.multiply({x: factor, y: factor});
+        });
 
         // setup listener for player death event
         this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
@@ -403,7 +409,10 @@ export class GameplayScene extends BaseScene implements Resizable {
                 console.warn(`unknown supplyType sent to _addSupplyCollisionPhysicsWithPlayers:`, options.supplyType);
                 break;
         }
-        this.physics.add.collider(supply, this.getLevel().wallsLayer);
+        this.physics.add.collider(supply, this.getLevel().wallsLayer, () => {
+            const factor = SpaceSim.Constants.Ships.Supplies.WALL_BOUNCE_FACTOR;
+            supply.body.velocity.multiply({x: factor, y: factor});
+        });
         this.physics.add.collider(supply, this.playerShip, () => {
                 this._supplies.delete(supply.id);
                 supply.apply(this.playerShip);

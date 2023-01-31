@@ -12,7 +12,7 @@ export class PlasmaGun extends Weapon {
             damagePerHit: 0.01,
             heatPerHit: 0.5,
             bulletRadius: 5,
-            bulletMass: 0.001,
+            bulletMass: 0,
             bulletTimeout: 1000
         });
     }

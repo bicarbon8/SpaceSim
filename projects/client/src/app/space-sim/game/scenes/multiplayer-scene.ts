@@ -407,7 +407,10 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                         weapon: weapon
                     });
                     this._ships.set(o.id, ship);
-                    this.physics.add.collider(ship, this.getLevel().wallsLayer);
+                    this.physics.add.collider(ship, this.getLevel().wallsLayer, () => {
+                        const factor = SpaceSim.Constants.Ships.WALL_BOUNCE_FACTOR;
+                        ship.body.velocity.multiply({x: factor, y: factor});
+                    });
                     this._addPlayerCollisionPhysicsWithPlayers(ship);
                     TryCatch.run(() => this._camera?.ignore(ship.radarSprite), 'none');
                 }

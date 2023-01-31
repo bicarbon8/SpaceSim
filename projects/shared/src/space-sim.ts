@@ -24,8 +24,9 @@ export module SpaceSim {
             export const MAX_TEMPERATURE = 100;
             export const MAX_SPEED = 500;
             export const COOLING_RATE_PER_SECOND = 2; // degrees per second
-            export const BOUNCE = 0.2;
-            export const MASS = 100;
+            export const BOUNCE = 1;
+            export const WALL_BOUNCE_FACTOR = 0.2;
+            export const MASS = 10;
             export const MIN_ROTATION_ANGLE = 1; // degrees
             export module Engines {
                 export const FORCE = 50;
@@ -39,8 +40,9 @@ export module SpaceSim {
             }
             export module Supplies {
                 export const RADIUS = 16;
-                export const BOUNCE = 0.5;
-                export const MASS = 1;
+                export const BOUNCE = 1;
+                export const WALL_BOUNCE_FACTOR = 0.5;
+                export const MASS = 0;
             }
         }
         export module GameLevels {
