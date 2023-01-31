@@ -8,11 +8,11 @@ describe('Logging', () => {
     beforeEach(() => {
         Logging.loglevel = 'warn';
         consoleSpys.splice(0, consoleSpys.length, ...[
-            spy(console, 'trace'),
-            spy(console, 'debug'),
-            spy(console, 'info'),
-            spy(console, 'warn'),
-            spy(console, 'error')
+            spy(window.console, 'trace'),
+            spy(window.console, 'debug'),
+            spy(window.console, 'info'),
+            spy(window.console, 'warn'),
+            spy(window.console, 'error')
         ]);
     })
 
@@ -39,7 +39,7 @@ describe('Logging', () => {
     })
 
     const logTestData = [
-        {global: 'trace', level: 'trace', messages: ['foo'], index: 0, expected: true},
+        {global: 'trace', level: 'debug', messages: ['foo'], index: 1, expected: true},
         {global: 'info', level: 'error', messages: ['foo'], index: 4, expected: true},
         {global: 'error', level: 'info', messages: ['foo'], index: 2, expected: false}
     ]

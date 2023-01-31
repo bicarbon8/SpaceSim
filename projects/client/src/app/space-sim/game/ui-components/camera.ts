@@ -1,4 +1,4 @@
-import { HasLocation, PhaserHelpers, TryCatch } from "space-sim-shared";
+import { HasLocation, Helpers, TryCatch } from "space-sim-shared";
 
 export type CameraOptions = Phaser.Types.Math.Vector2Like & {
     camera?: Phaser.Cameras.Scene2D.Camera;
@@ -40,12 +40,12 @@ export class Camera implements HasLocation {
     }
 
     get locationInView(): Phaser.Types.Math.Vector2Like {
-        return PhaserHelpers.vector2(this._cam.x, this._cam.y);
+        return Helpers.vector2(this._cam.x, this._cam.y);
     }
 
     setLocationInView(location: Phaser.Types.Math.Vector2Like): void {
         this._cam.stopFollow();
-        const loc = PhaserHelpers.convertLocInViewToLoc(location, this.scene);
+        const loc = Helpers.convertLocInViewToLoc(location, this.scene);
         this._cam.setPosition(loc.x, loc.y);
     }
 

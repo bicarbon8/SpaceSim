@@ -157,8 +157,8 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             const id = this.playerShip.id;
             const stats = SpaceSim.stats.getStats({shipId: id});
             const info: string[] = [
-                `Elapsed: ${((Date.now() - stats.startedAt)/1000).toFixed(1)}`,
-                `Enemies: ${SpaceSim.stats.destroyedCount(id)}/${SpaceSimClient.opponents.length}`,
+                `Elapsed: ${((Date.now() - stats?.startedAt)/1000).toFixed(1)}`,
+                `Enemies: ${stats?.opponentsDestroyed?.length ?? 0}/${SpaceSimClient.opponents.length}`,
                 `Fuel: ${this.playerShip.remainingFuel.toFixed(1)}`,
                 `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
                 `Score: ${SpaceSim.stats.getScore(id).toFixed(0)}`

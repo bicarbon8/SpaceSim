@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, TryCatch, PhaserHelpers } from "space-sim-shared";
+import { RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, TryCatch, Helpers } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -169,7 +169,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         for (var room of this.getLevel().rooms) {
             let tl: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left + 1, room.top + 1);
             let br: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right - 1, room.bottom - 1);
-            let pos: Phaser.Math.Vector2 = PhaserHelpers.vector2(
+            let pos: Phaser.Math.Vector2 = Helpers.vector2(
                 Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
             );
@@ -205,7 +205,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         const startingRoom = this.getLevel().getRoomClosestToOrigin();
         const startTopLeft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
         const startBottomRight: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
-        const playerStartingPosition: Phaser.Math.Vector2 = PhaserHelpers.vector2(
+        const playerStartingPosition: Phaser.Math.Vector2 = Helpers.vector2(
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
         );
@@ -257,7 +257,7 @@ export class GameplayScene extends BaseScene implements Resizable {
             let room = rooms[i];
             let startTopLeft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left, room.top);
             let startBottomRight: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right, room.bottom);
-            let location: Phaser.Math.Vector2 = PhaserHelpers.vector2(
+            let location: Phaser.Math.Vector2 = Helpers.vector2(
                 Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
                 Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
             );

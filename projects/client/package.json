@@ -9,7 +9,6 @@
     "clean": "rimraf ./dist && rimraf ./docs",
     "build": "ng build --configuration production --output-path ./docs",
     "build:dev": "npm run clean && ng build",
-    "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },

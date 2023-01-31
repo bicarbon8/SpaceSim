@@ -3,7 +3,7 @@ import { BaseScene } from "../scenes/base-scene";
 import { InputController } from "./input-controller";
 import { SpaceSim } from "../space-sim";
 import { Logging } from "../utilities/logging";
-import { PhaserHelpers } from "../utilities/phaser-helpers";
+import { Helpers } from "../utilities/helpers";
 import { DamageMetadata } from "../interfaces/damage-metadata";
 
 export type AiState = 'patrolling' | 'attacking' | 'chasing';
@@ -39,7 +39,7 @@ export class AiController extends InputController {
 
     get view(): Phaser.Geom.Polygon {
         const viewDistance = (this.isAggro()) ? 500 : 500 - (this.scene.getShips().length * 2); // less ships = longer view distance
-        return PhaserHelpers.getView(this.ship.location, this.ship.rotationContainer.angle, viewDistance);
+        return Helpers.getView(this.ship.location, this.ship.rotationContainer.angle, viewDistance);
     }
     
     update(time: number, delta: number): void {

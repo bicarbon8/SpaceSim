@@ -4,7 +4,7 @@ import { BaseScene } from "../../../scenes/base-scene";
 import { HasId } from "../../../interfaces/has-id";
 import { HasLocation } from "../../../interfaces/has-location";
 import { SpaceSim } from "../../../space-sim";
-import { PhaserHelpers } from "../../../utilities/phaser-helpers";
+import { Helpers } from "../../../utilities/helpers";
 
 export type BulletOptions = {
     readonly startingLoc: Phaser.Types.Math.Vector2Like;
@@ -66,7 +66,7 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
         this.radius = options.radius ?? 0;
         this.timeout = options.timeout ?? 0;
         this.mass = options.mass ?? 0;
-        this.startingLoc = options.startingLoc || PhaserHelpers.vector2();
+        this.startingLoc = options.startingLoc || Helpers.vector2();
         this.startingA = options.startingA ?? 0;
         this.startingV = options.startingV || Phaser.Math.Vector2.ZERO;
         
@@ -92,7 +92,6 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
             if (remainingIntegrity < 0) {
                 remainingIntegrity = 0;
             }
-            SpaceSim.stats.damageTaken(ship.id, remainingIntegrity);
             if (remainingIntegrity <= 0) {
                 SpaceSim.stats.opponentDestroyed(this.weapon.ship.id, ship.id);
             }
@@ -111,7 +110,7 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
     }
 
     get locationInView(): Phaser.Math.Vector2 {
-        return PhaserHelpers.convertLocToLocInView({x: this.x, y: this.y}, this.scene);
+        return Helpers.convertLocToLocInView({x: this.x, y: this.y}, this.scene);
     }
 
     get range(): number {
@@ -121,7 +120,7 @@ export class Bullet extends Phaser.GameObjects.Container implements BulletOption
     private _setInMotion(): void {
         let heading: Phaser.Math.Vector2 = this.heading;
         // add force to heading
-        let deltaV: Phaser.Math.Vector2 = heading.multiply(PhaserHelpers.vector2(this.force));
+        let deltaV: Phaser.Math.Vector2 = heading.multiply(Helpers.vector2(this.force));
         // add deltaV to current Velocity
         this.body.velocity.add(deltaV);
 

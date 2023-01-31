@@ -12,7 +12,6 @@ import { SpaceSim } from "../space-sim";
 import { WeaponModel } from "./attachments/offence/weapon-model";
 import { EngineModel } from "./attachments/utility/engine-model";
 import { TryCatch } from "../utilities/try-catch";
-import { PhaserHelpers } from "../utilities/phaser-helpers";
 
 export type ShipConfig = PhysicsObject & {
     id: string;
@@ -83,9 +82,9 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
 
     configure(options: Partial<ShipConfig>): this {
         if (this.active) {
-            const loc = options.location ?? PhaserHelpers.vector2();
+            const loc = options.location ?? Helpers.vector2();
             this.setPosition(loc.x, loc.y);
-            const v = options.velocity ?? PhaserHelpers.vector2();
+            const v = options.velocity ?? Helpers.vector2();
             this.body.setVelocity(v.x, v.y);
             const angle = options.angle ?? 0;
             this.rotationContainer.setAngle(angle);
@@ -244,11 +243,11 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
      * camera follows the Player
      */
     get locationInView(): Phaser.Types.Math.Vector2Like {
-        return PhaserHelpers.convertLocToLocInView(this.location, this.scene);
+        return Helpers.convertLocToLocInView(this.location, this.scene);
     }
 
     get heading(): Phaser.Math.Vector2 {
-        return PhaserHelpers.getHeading(this.rotationContainer.angle);
+        return Helpers.getHeading(this.rotationContainer.angle);
     }
 
     lookAt(target: Phaser.Types.Math.Vector2Like): void {

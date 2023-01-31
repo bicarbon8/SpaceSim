@@ -117,7 +117,7 @@ export class GameOverScene extends Phaser.Scene {
             `Score: ${SpaceSim.stats.getScore(id).toFixed(0)}`,
             `Time: ${((Date.now() - stats.startedAt) / 1000).toFixed(0)} sec.`,
             `Accuracy: ${stats.accuracy.toFixed(0)}%`,
-            `Kills: ${SpaceSim.stats.destroyedCount(id)}`
+            `Kills: ${stats?.opponentsDestroyed?.length ?? 0}`
         ]);
 
         this._layout.addContents(this._scoreText);

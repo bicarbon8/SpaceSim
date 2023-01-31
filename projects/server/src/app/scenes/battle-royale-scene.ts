@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun, Logging, PhaserHelpers, TryCatch } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun, Logging, Helpers, TryCatch } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -124,7 +124,7 @@ export class BattleRoyaleScene extends BaseScene {
         do {
             let x = Phaser.Math.RND.realInRange(topleft.x, botright.x);
             let y = Phaser.Math.RND.realInRange(topleft.y, botright.y);
-            loc = PhaserHelpers.vector2(x, y);
+            loc = Helpers.vector2(x, y);
         } while (this._isMapLocationOccupied(loc, 100));
         let engine: (new (scene: BaseScene) => Engine);
         switch (config?.engineModel) {
