@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
-import { BaseScene, GameLevelOptions, GameScoreTracker, Logging, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData, TryCatch } from "space-sim-shared";
+import { BaseScene, GameLevelConfig, GameScoreTracker, Logging, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData, TryCatch } from "space-sim-shared";
 import { MultiplayerSceneConfig } from "../scenes/multiplayer-scene";
 import { SetNameSceneConfig } from "../scenes/set-name-scene";
 import { SpaceSimClient } from "../space-sim-client";
@@ -224,7 +224,7 @@ export class ClientSocketManager {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.queueSupplyUpdates(opts);
+                scene.queueSupplyUpdates(...opts);
                 const updatedIds = Array.from(new Set(opts.map(o => o.id)));
                 const zombieIds = scene.getSupplies().map(s => s.id).filter(id => !updatedIds.includes(id));
                 scene.queueSupplyRemoval(...zombieIds);
@@ -254,7 +254,7 @@ export class ClientSocketManager {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.queueShipUpdates(opts);
+                scene.queueShipUpdates(...opts);
                 const updatedIds = Array.from(new Set(opts.map(o => o.id)));
                 const zombieIds = scene.getShips().map(s => s.id).filter(id => !updatedIds.includes(id));
                 scene.queueShipRemoval(...zombieIds);
@@ -280,11 +280,11 @@ export class ClientSocketManager {
         }
     }
 
-    private _handleUpdateMapEvent(opts: GameLevelOptions): void {
+    private _handleUpdateMapEvent(config: GameLevelConfig): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.queueGameLevelUpdate(opts);
+                scene.queueGameLevelUpdate(config);
             }
         }
     }

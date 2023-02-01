@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { DisconnectReason } from "socket.io/dist/socket";
-import { GameScoreTracker, Logging, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData, TryCatch } from "space-sim-shared";
+import { GameLevelConfig, GameScoreTracker, Logging, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData, TryCatch } from "space-sim-shared";
 import { BattleRoyaleScene } from "../scenes/battle-royale-scene";
 import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
@@ -121,6 +121,10 @@ export class ServerSocketManager {
 
     sendShipDestroyedEventToRoom(room: string, shipId: string): this {
         return this.roomEmit(room, SpaceSim.Constants.Socket.SHIP_DESTROYED, shipId);
+    }
+
+    sendUpdateGameLevelToRoom(room: string, config: GameLevelConfig): this {
+        return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_MAP, config);
     }
 
     /**

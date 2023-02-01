@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, GameLevelOptions, SpaceSim, Ship, GameRoom, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig, Engine, Weapon, TryCatch, Logging, Helpers } from "space-sim-shared";
+import { GameLevel, GameLevelOptions, SpaceSim, Ship, GameRoom, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig, Engine, Weapon, TryCatch, Logging, Helpers, ShipOptions, GameLevelConfig } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -47,7 +47,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     debug: boolean;
 
-    private _shouldGetMap = false;
     private _shouldCreateStellarBodies = false;
     private _shouldGetPlayer = false;
     private _needsResize = false;
@@ -55,6 +54,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _shouldShowHud = false;
     private _shouldEndScene = false;
 
+    private readonly _updateGameLevelQueue = new Array<GameLevelConfig>();
     private readonly _updateShipsQueue = new Array<ShipConfig>();
     private readonly _removeShipsQueue = new Array<string>();
     private readonly _updateSuppliesQueue = new Array<ShipSupplyOptions>();
@@ -71,12 +71,8 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         return this._gameLevel as T;
     }
 
-    override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
-        if (!this._gameLevel) {
-            this._gameLevel = new ClientGameLevel(this, opts);
-            this._shouldCreateStellarBodies = true;
-            this._shouldGetPlayer = true;
-        }
+    override queueGameLevelUpdate(config: GameLevelConfig): BaseScene {
+        this._updateGameLevelQueue.splice(0, this._updateGameLevelQueue.length, config);
         return this;
     }
 
@@ -94,6 +90,31 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     override getSupplies<T extends ShipSupply>(): Array<T> {
         return Array.from(this._supplies.values()) as Array<T>;
+    }
+
+    override queueSupplyUpdates(...opts: Array<ShipSupplyOptions>): BaseScene {
+        this._updateSuppliesQueue.splice(this._updateSuppliesQueue.length, 0, ...opts);
+        return this;
+    }
+
+    override queueSupplyRemoval(...ids: Array<string>): BaseScene {
+        this._removeSuppliesQueue.splice(this._removeSuppliesQueue.length, 0, ...ids);
+        return this;
+    }
+
+    override queueSupplyFlicker(...ids: Array<string>): BaseScene {
+        this._flickerSuppliesQueue.splice(this._flickerSuppliesQueue.length, 0, ...ids);
+        return this;
+    }
+
+    override queueShipUpdates(...opts: Array<ShipConfig>): BaseScene {
+        this._updateShipsQueue.splice(this._updateShipsQueue.length, 0, ...opts);
+        return this;
+    }
+
+    override queueShipRemoval(...ids: Array<string>): BaseScene {
+        this._removeShipsQueue.splice(this._removeShipsQueue.length, 0, ...ids);
+        return this;
     }
 
     preload(): void {
@@ -126,17 +147,9 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this.cameras.main.fadeOut(0, 0, 0, 0);
 
         this._playMusic();
-
-        this._shouldGetMap = true;
         this._needsResize = true;
 
-        this.addRepeatingAction('high', 'get-game-level', () => {
-            if (this._shouldGetMap) {
-                this._shouldGetMap = false;
-                SpaceSimClient.socket.sendRequestMapRequest(SpaceSimClient.playerData);
-                this.removeRepeatingAction('high', 'get-game-level');
-            }
-        }).addRepeatingAction('high', 'create-stellar-bodies', () => {
+        this.addRepeatingAction('high', 'create-stellar-bodies', () => {
             if (this._shouldCreateStellarBodies) {
                 this._shouldCreateStellarBodies = false;
                 this._createStellarBodiesLayer();
@@ -164,6 +177,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             }
         }).addRepeatingAction('high', 'main-update-loop', (time: number, delta: number) => {
             this._processEndScene();
+            this._processGameLevelQueue();
             this._processUpdateShipsQueue();
             this._processRemoveShipsQueue();
             this.getShips().forEach(s => s?.update(time, delta));
@@ -195,31 +209,6 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         this._createBackground();
         this._setupCamera();
         this._createMiniMap();
-    }
-
-    public override queueSupplyUpdates<T extends ShipSupplyOptions>(opts: Array<T>): BaseScene {
-        this._updateSuppliesQueue.splice(this._updateSuppliesQueue.length, 0, ...opts);
-        return this;
-    }
-
-    public override queueSupplyRemoval(...ids: Array<string>): BaseScene {
-        this._removeSuppliesQueue.splice(this._removeSuppliesQueue.length, 0, ...ids);
-        return this;
-    }
-
-    public override queueSupplyFlicker(...ids: Array<string>): BaseScene {
-        this._flickerSuppliesQueue.splice(this._flickerSuppliesQueue.length, 0, ...ids);
-        return this;
-    }
-
-    public override queueShipUpdates<T extends ShipConfig>(opts: T[]): BaseScene {
-        this._updateShipsQueue.splice(this._updateShipsQueue.length, 0, ...opts);
-        return this;
-    }
-
-    public override queueShipRemoval(...ids: Array<string>): BaseScene {
-        this._removeShipsQueue.splice(this._removeShipsQueue.length, 0, ...ids);
-        return this;
     }
 
     private async _getPlayerFromServer(): Promise<void> {
@@ -361,6 +350,20 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                     this.game.scene.stop(this);
                 }
             });
+        }
+    }
+
+    private _processGameLevelQueue(): void {
+        const configs = this._updateGameLevelQueue.splice(0, this._updateGameLevelQueue.length);
+        const config = configs.pop(); // use latest update and discard the rest
+        if (config) {
+            if (!this._gameLevel) {
+                this._gameLevel = new ClientGameLevel(this, config);
+                this._shouldCreateStellarBodies = true;
+                this._shouldGetPlayer = true;
+            } else {
+                this._gameLevel.configure(config);
+            }
         }
     }
 

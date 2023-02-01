@@ -29,7 +29,7 @@ export class BattleRoyaleScene extends BaseScene {
     override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    override queueShipUpdates<T extends ShipConfig>(opts: T[]): BaseScene {
+    override queueShipUpdates(...opts: Array<ShipConfig>): BaseScene {
         throw new Error("Method not implemented.");
     }
     override queueShipRemoval(...ids: string[]): BaseScene {
@@ -37,7 +37,7 @@ export class BattleRoyaleScene extends BaseScene {
         this._removeShipQueue.splice(this._removeShipQueue.length, 0, ...ids);
         return this;
     }
-    override queueSupplyUpdates<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
+    override queueSupplyUpdates(...opts: Array<ShipSupplyOptions>): BaseScene {
         throw new Error("Method not implemented.");
     }
     override queueSupplyRemoval(...ids: string[]): BaseScene {
@@ -110,16 +110,17 @@ export class BattleRoyaleScene extends BaseScene {
         this.addRepeatingAction('ultralow', 'send-stats-update', () => {
             // TODO: filter out stats from other rooms
             SpaceSimServer.io.sendUpdateStatsToRoom(this.ROOM_NAME, SpaceSim.stats.getAllStats());
-        });
-        this.addRepeatingAction('ultralow', 'send-supply-flicker', () => {
+        }).addRepeatingAction('ultralow', 'send-supply-flicker', () => {
             this._processFlickerSupplyQueue();
+        }).addRepeatingAction('ultralow', 'send-game-level-update', () => {
+            SpaceSimServer.io.sendUpdateGameLevelToRoom(this.ROOM_NAME, this.getLevel().config);
         });
     }
 
     createShip(data: SpaceSimUserData, config?: Partial<ShipConfig>): Ship {
         const room = this.getLevel().rooms[0];
         const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left + 1, room.top + 1);
-        const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right - 1, room.bottom - 1);
+        const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+room.width - 1, room.top+room.height - 1);
         let loc: Phaser.Math.Vector2;
         do {
             let x = Phaser.Math.RND.realInRange(topleft.x, botright.x);
@@ -154,7 +155,6 @@ export class BattleRoyaleScene extends BaseScene {
         }
         const ship = new ServerShip(this, {
             location: loc,
-            fingerprint: data.fingerprint,
             name: data.name,
             weaponsKey: config?.weaponsKey ?? Phaser.Math.RND.between(1, 3),
             wingsKey: config?.wingsKey ?? Phaser.Math.RND.between(1, 3),

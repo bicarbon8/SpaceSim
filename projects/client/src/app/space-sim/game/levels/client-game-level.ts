@@ -10,7 +10,7 @@ export class ClientGameLevel extends GameLevel {
         scene.load.image('minimaptile', `${environment.baseUrl}/assets/tiles/minimap-tile.png`);
     }
 
-    constructor(scene: BaseScene, options: GameLevelOptions) {
+    constructor(scene: BaseScene, options: Partial<GameLevelOptions>) {
         super(scene, options);
 
         this.wallsLayer.setDepth(SpaceSimClient.Constants.UI.Layers.PLAYER);

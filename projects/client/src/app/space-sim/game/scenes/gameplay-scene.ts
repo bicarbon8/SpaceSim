@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameRoom, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, TryCatch, Helpers } from "space-sim-shared";
+import { GameRoom, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, TryCatch, Helpers, ShipOptions } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -35,13 +35,13 @@ export class GameplayScene extends BaseScene implements Resizable {
     queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    queueShipUpdates<T extends ShipConfig>(opts: T[]): BaseScene {
+    queueShipUpdates(...opts: Array<ShipConfig>): BaseScene {
         throw new Error("Method not implemented.");
     }
     queueShipRemoval(...ids: string[]): BaseScene {
         throw new Error("Method not implemented.");
     }
-    queueSupplyUpdates<T extends ShipSupplyOptions>(opts: T[]): BaseScene {
+    queueSupplyUpdates(...opts: Array<ShipSupplyOptions>): BaseScene {
         throw new Error("Method not implemented.");
     }
     queueSupplyRemoval(...ids: string[]): BaseScene {

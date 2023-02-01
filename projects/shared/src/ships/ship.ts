@@ -30,7 +30,6 @@ export type ShipConfig = PhysicsObject & {
 };
 
 export type ShipOptions = Partial<ShipConfig> & {
-    fingerprint?: string;
     engine: Engine | (new (scene: BaseScene) => Engine);
     weapon: Weapon | (new (scene: BaseScene) => Weapon);
 };
@@ -38,7 +37,6 @@ export type ShipOptions = Partial<ShipConfig> & {
 export class Ship extends Phaser.GameObjects.Container implements HasId, HasLocation, IsConfigurable<ShipConfig> {
     /** ShipOptions */
     readonly id: string; // UUID
-    readonly fingerprint: string;
     readonly name: string;
     
     private readonly _lastDamagedBy: Array<DamageMetadata>;
@@ -67,7 +65,6 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
         super(scene, options.location?.x, options.location?.y);
         this.id = options.id ?? Phaser.Math.RND.uuid();
         this.name = options.name;
-        this.fingerprint = options.fingerprint;
 
         this._lastDamagedBy = new Array<DamageMetadata>();
 

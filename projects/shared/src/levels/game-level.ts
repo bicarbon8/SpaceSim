@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import Dungeon, { DungeonConfig } from "@mikewesthad/dungeon";
+import Dungeon from "@mikewesthad/dungeon";
 import { Helpers } from "../utilities/helpers";
 import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
@@ -49,7 +49,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap implements IsConfigurable
     private _radarLayer: Phaser.Tilemaps.TilemapLayer;
 
     constructor(scene: BaseScene, options?: GameLevelOptions) {
-        options = {
+        const opts: GameLevelOptions = {
             rooms: new Array<GameRoom>(),
             seed: 'bicarbon8',
             width: 200, // in tiles, not pixels
@@ -63,17 +63,17 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap implements IsConfigurable
             ...options
         };
         super(scene, new Phaser.Tilemaps.MapData({
-            tileWidth: options.tileWidth,
-            tileHeight: options.tileHeight,
-            width: options.width,
-            height: options.height
+            tileWidth: opts.tileWidth,
+            tileHeight: opts.tileHeight,
+            width: opts.width,
+            height: opts.height
         }));
 
-        if (!options?.rooms?.length) {
-            options.rooms = this._createRooms(options);
+        if (!opts.rooms.length) {
+            opts.rooms = this._createRooms(opts);
         }
 
-        this.configure(options);
+        this.configure(opts);
     }
 
     get config(): GameLevelConfig {
@@ -386,22 +386,25 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap implements IsConfigurable
     }
 
     private _createLayers(...rooms: Array<GameRoom>): void {
-        if (this._wallsLayer) {
-            this._wallsLayer.destroy();
+        if (!this._wallsLayer) {
+            const wallsTileSet = this.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
+            this._wallsLayer = this.createBlankLayer('walls', wallsTileSet);
+            this._wallsLayer.setCollisionBetween(1, 14);
         }
-        if (this._radarLayer) {
-            this._radarLayer.destroy();
+        if (!this._radarLayer) {
+            const radarTileSet = this.addTilesetImage('minimaptile', 'minimaptile', 96, 96, 0, 0);
+            this._radarLayer = this.createBlankLayer('radar', radarTileSet);
         }
-        const wallsTileSet = this.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
-        this._wallsLayer = this.createBlankLayer('walls', wallsTileSet);
-        const radarTileSet = this.addTilesetImage('minimaptile', 'minimaptile', 96, 96, 0, 0);
-        this._radarLayer = this.createBlankLayer('radar', radarTileSet);
         
         rooms.forEach(room => {
-            room.collisionTiles.forEach(t => this._wallsLayer.putTileAt(t.index, t.x, t.y));
-            room.nonCollisionTiles.forEach(t => this._radarLayer.putTileAt(t.index, t.x, t.y));
+            room.collisionTiles.forEach(t => {
+                this._wallsLayer.putTileAt(t.index, t.x, t.y);
+                this._radarLayer.removeTileAt(t.x, t.y);
+            });
+            room.nonCollisionTiles.forEach(t => {
+                this._radarLayer.putTileAt(t.index, t.x, t.y);
+                this._wallsLayer.removeTileAt(t.x, t.y);
+            });
         });
-
-        this._wallsLayer.setCollisionBetween(1, 14);
     }
 }
