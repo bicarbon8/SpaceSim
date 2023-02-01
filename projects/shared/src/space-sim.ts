@@ -1,4 +1,5 @@
 import { GameScoreTracker } from "./utilities/game-score-tracker";
+import { Sanitiser } from "./utilities/sanitiser";
 
 export module SpaceSim {
     export var game: Phaser.Game;
@@ -10,6 +11,44 @@ export module SpaceSim {
      * tracks all gameplay stats
      */
     export const stats = new GameScoreTracker();
+    /**
+     * a way of uniquely identifying a user
+     */
+    export type UserData = {
+        name?: string;
+        fingerprint: string;
+    };
+    export module UserData {
+        /**
+         * removes any disallowed characters from the passed in `UserData`
+         * fields
+         * @param data the `UserData` to be sanitised
+         * @returns a `UserData` object with any disallowed characters removed
+         * from the `name` and `fingerprint`
+         */
+        export function sanitise(data: UserData): UserData {
+            return {
+                fingerprint: Sanitiser.sanitise(data.fingerprint),
+                name: Sanitiser.sanitise(data.name)
+            } as const;
+        }
+        /**
+         * verifies the passed in `UserData` object meets the requirements
+         * after being sanitised
+         * @param data the `UserData` object to be validated
+         * @returns `true` if valid, otherwise `false`
+         */
+        export function isValid(data: UserData): boolean {
+            if (data) {
+                const sanitised = UserData.sanitise(data);
+                if (!sanitised) return false;
+                if (!sanitised.name || sanitised.name.length < 3) return false;
+                if (!sanitised.fingerprint || sanitised.fingerprint.length < 5) return false;
+                return true;
+            }
+            return false;
+        }
+    }
     /**
      * Constant values used in the SpaceSim game
      */

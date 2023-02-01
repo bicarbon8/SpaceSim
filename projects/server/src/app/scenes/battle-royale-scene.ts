@@ -1,8 +1,7 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipSupply, SpaceSimUserData, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun, Logging, Helpers, TryCatch } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipSupply, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun, Logging, Helpers, TryCatch } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
-import { SpaceSimServerUserData } from "../space-sim-server-user-data";
 
 export class BattleRoyaleScene extends BaseScene {
     private readonly _supplies = new Map<string, ShipSupply>();
@@ -120,7 +119,7 @@ export class BattleRoyaleScene extends BaseScene {
         });
     }
 
-    createShip(data: SpaceSimUserData, config?: Partial<ShipConfig>): Ship {
+    createShip(data: SpaceSim.UserData, config?: Partial<ShipConfig>): Ship {
         const room = this.getLevel().rooms[0];
         const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left + 1, room.top + 1);
         const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+room.width - 1, room.top+room.height - 1);
@@ -185,7 +184,7 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     createBot(): void {
-        const botData: SpaceSimUserData = {
+        const botData: SpaceSim.UserData = {
             fingerprint: Phaser.Math.RND.uuid()
         };
         let index = 1;
@@ -202,7 +201,7 @@ export class BattleRoyaleScene extends BaseScene {
         this._updateBotEnemyIds(botController);
     }
 
-    addPlayerToScene(player: SpaceSimServerUserData): void {
+    addPlayerToScene(player: SpaceSimServer.UserData): void {
         const user = SpaceSimServer.users.selectFirst(player);
         if (user) {
             Logging.log('info', 'adding player:', user, 'to scene:', this.ROOM_NAME);
@@ -213,7 +212,7 @@ export class BattleRoyaleScene extends BaseScene {
         }
     }
 
-    removePlayerFromScene(player: SpaceSimServerUserData): void {
+    removePlayerFromScene(player: SpaceSimServer.UserData): void {
         const user = SpaceSimServer.users.selectFirst(player);
         if (user) {
             Logging.log('info', 'removing player:', user, 'from scene:', this.ROOM_NAME);

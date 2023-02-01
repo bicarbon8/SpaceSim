@@ -1,9 +1,8 @@
 import { Server, Socket } from "socket.io";
 import { DisconnectReason } from "socket.io/dist/socket";
-import { GameLevelConfig, GameScoreTracker, Logging, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData, TryCatch } from "space-sim-shared";
+import { GameLevelConfig, GameScoreTracker, Logging, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, TryCatch } from "space-sim-shared";
 import { BattleRoyaleScene } from "../scenes/battle-royale-scene";
 import { SpaceSimServer } from "../space-sim-server";
-import { SpaceSimServerUserData } from "../space-sim-server-user-data";
 
 export type ServerSocketManagerOptions = {
     io: Server;
@@ -49,7 +48,7 @@ export class ServerSocketManager {
         return this;
     }
 
-    sendUserAcceptedResponse(socketId: string, data: SpaceSimUserData): this {
+    sendUserAcceptedResponse(socketId: string, data: SpaceSim.UserData): this {
         return this.socketEmit(socketId, SpaceSim.Constants.Socket.USER_ACCEPTED, data);
     }
 
@@ -265,8 +264,8 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleSetPlayerDataEvent(socketId: string, data: SpaceSimUserData): void {
-        if (SpaceSimUserData.isValid(data)) {
+    private _handleSetPlayerDataEvent(socketId: string, data: SpaceSim.UserData): void {
+        if (SpaceSim.UserData.isValid(data)) {
             if (this._tryReconnectUser(socketId, data) || this._tryAddNewUser(socketId, data)) {
                 this.sendUserAcceptedResponse(socketId, data);
                 return;
@@ -276,12 +275,12 @@ export class ServerSocketManager {
         this.sendInvalidUserDataResponse(socketId, 'unable to reconnect or add new user using supplied data; please choose a different name and try again.');
     }
 
-    private _tryReconnectUser(socketId: string, data: SpaceSimUserData): boolean {
+    private _tryReconnectUser(socketId: string, data: SpaceSim.UserData): boolean {
         const previousConnection = SpaceSimServer.users.selectFirst(data);
         if (previousConnection) {
             Logging.log('info', `known users list updated with user '${JSON.stringify(data)}' who is reconnecting over socket '${socketId}'`);
             // user is reconnecting...
-            const updated: SpaceSimServerUserData = {
+            const updated: SpaceSimServer.UserData = {
                 ...previousConnection,
                 socketId: socketId
             };
@@ -299,7 +298,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _tryAddNewUser(socketId: string, data: SpaceSimUserData): boolean {
+    private _tryAddNewUser(socketId: string, data: SpaceSim.UserData): boolean {
         if (SpaceSimServer.users.count({name: data.name}) > 0) {
             Logging.log('debug', `name already in use so user cannot be added:`, data);
             return false;
@@ -317,7 +316,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleJoinRoomEvent(socketId: string, data: SpaceSimUserData): void {
+    private _handleJoinRoomEvent(socketId: string, data: SpaceSim.UserData): void {
         let added: boolean = false;
         const user = SpaceSimServer.users.get(data);
         if (user) {
@@ -343,7 +342,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleRequestMapResponse(socketId: string, data: SpaceSimUserData): void {
+    private _handleRequestMapResponse(socketId: string, data: SpaceSim.UserData): void {
         const user = SpaceSimServer.users.selectFirst(data);
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
@@ -360,7 +359,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleRequestShipResponse(socketId: string, data: SpaceSimUserData): void {
+    private _handleRequestShipResponse(socketId: string, data: SpaceSim.UserData): void {
         const user = SpaceSimServer.users.selectFirst(data);
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
@@ -385,7 +384,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleEnableEngineResponse(socketId: string, data: SpaceSimUserData): void {
+    private _handleEnableEngineResponse(socketId: string, data: SpaceSim.UserData): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const room = SpaceSimServer.users.selectFirst(data).room;
@@ -396,7 +395,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleDisableEngineResponse(socketId: string, data: SpaceSimUserData): void {
+    private _handleDisableEngineResponse(socketId: string, data: SpaceSim.UserData): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const room = SpaceSimServer.users.selectFirst(data).room;
@@ -407,7 +406,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleEnableWeaponResponse(socketId: string, data: SpaceSimUserData): void {
+    private _handleEnableWeaponResponse(socketId: string, data: SpaceSim.UserData): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const room = SpaceSimServer.users.selectFirst(data).room;
@@ -418,7 +417,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleDisableWeaponResponse(socketId: string, data: SpaceSimUserData): void {
+    private _handleDisableWeaponResponse(socketId: string, data: SpaceSim.UserData): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const room = SpaceSimServer.users.selectFirst(data).room;
@@ -429,7 +428,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleShipDestroyedEvent(socketId: string, data: SpaceSimUserData): void {
+    private _handleShipDestroyedEvent(socketId: string, data: SpaceSim.UserData): void {
         const user = SpaceSimServer.users.selectFirst(data);
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
@@ -446,7 +445,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleSetPlayerAngleEvent(socketId: string, degrees: number, data: SpaceSimUserData): void {
+    private _handleSetPlayerAngleEvent(socketId: string, degrees: number, data: SpaceSim.UserData): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
             const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
@@ -456,7 +455,7 @@ export class ServerSocketManager {
         }
     }
 
-    private _getShipFromUserData(data: SpaceSimUserData): Ship {
+    private _getShipFromUserData(data: SpaceSim.UserData): Ship {
         let ship: Ship;
         const user = SpaceSimServer.users.selectFirst(data);
         if (user) {

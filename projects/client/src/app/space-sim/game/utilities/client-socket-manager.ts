@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
-import { BaseScene, GameLevelConfig, GameScoreTracker, Logging, ShipConfig, ShipSupplyOptions, SpaceSim, SpaceSimUserData, TryCatch } from "space-sim-shared";
+import { BaseScene, GameLevelConfig, GameScoreTracker, Logging, ShipConfig, ShipSupplyOptions, SpaceSim, TryCatch } from "space-sim-shared";
 import { MultiplayerSceneConfig } from "../scenes/multiplayer-scene";
 import { SetNameSceneConfig } from "../scenes/set-name-scene";
 import { SpaceSimClient } from "../space-sim-client";
@@ -44,52 +44,52 @@ export class ClientSocketManager {
         return this;
     }
 
-    sendSetPlayerDataRequest(data: SpaceSimUserData): this {
+    sendSetPlayerDataRequest(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.SET_PLAYER_DATA, data);
         return this;
     }
 
-    sendRequestMapRequest(data: SpaceSimUserData): this {
+    sendRequestMapRequest(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.REQUEST_MAP, data);
         return this;
     }
 
-    sendJoinRoomRequest(data: SpaceSimUserData): this {
+    sendJoinRoomRequest(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.JOIN_ROOM, data);
         return this;
     }
 
-    sendPlayerDeathNotice(data: SpaceSimUserData): this {
+    sendPlayerDeathNotice(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.SHIP_DESTROYED, data);
         return this;
     }
 
-    sendRequestShipRequest(data: SpaceSimUserData): this {
+    sendRequestShipRequest(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.REQUEST_SHIP, data);
         return this;
     }
 
-    sendSetShipAngleRequest(degrees: number, data: SpaceSimUserData): this {
+    sendSetShipAngleRequest(degrees: number, data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.SET_PLAYER_ANGLE, degrees, data);
         return this;
     }
 
-    sendEnableEngineRequest(data: SpaceSimUserData): this {
+    sendEnableEngineRequest(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.ENGINE_ENABLED, data);
         return this;
     }
 
-    sendDisableEngineRequest(data: SpaceSimUserData): this {
+    sendDisableEngineRequest(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.ENGINE_DISABLED, data);
         return this;
     }
 
-    sendEnableWeaponRequest(data: SpaceSimUserData): this {
+    sendEnableWeaponRequest(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.WEAPON_ENABLED, data);
         return this;
     }
 
-    sendDisableWeaponRequest(data: SpaceSimUserData): this {
+    sendDisableWeaponRequest(data: SpaceSim.UserData): this {
         this._emit(SpaceSim.Constants.Socket.WEAPON_DISABLED, data);
         return this;
     }
@@ -204,7 +204,7 @@ export class ClientSocketManager {
         }
     }
 
-    private _handleUserAcceptedEvent(data: SpaceSimUserData): void {
+    private _handleUserAcceptedEvent(data: SpaceSim.UserData): void {
         SpaceSimClient.playerData = data;
         if (SpaceSim.game.scene.isActive(SetNameSceneConfig.key)) {
             this.sendJoinRoomRequest(data);

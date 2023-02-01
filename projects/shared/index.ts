@@ -58,5 +58,4 @@ export * from "./src/utilities/runner";
 export * from "./src/utilities/sanitiser";
 export * from "./src/utilities/try-catch";
 /** game */
-export * from "./src/space-sim-user-data";
 export * from "./src/space-sim";

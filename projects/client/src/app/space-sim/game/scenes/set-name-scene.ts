@@ -1,8 +1,7 @@
 import { GridLayout, LayoutContainer, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
-import { Sanitiser, TryCatch } from "space-sim-shared";
+import { Sanitiser, SpaceSim, TryCatch } from "space-sim-shared";
 import { environment } from "../../../../environments/environment";
-import { SpaceSimUserData } from "space-sim-shared";
 import getBrowserFingerprint from "get-browser-fingerprint";
 
 export const SetNameSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
@@ -46,7 +45,7 @@ export class SetNameScene extends Phaser.Scene {
             this._getMobileTextInput();
         }
 
-        if (SpaceSimUserData.isValid(SpaceSimClient.playerData)) {
+        if (SpaceSim.UserData.isValid(SpaceSimClient.playerData)) {
             this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
             this._updateContinueButton();
         }
