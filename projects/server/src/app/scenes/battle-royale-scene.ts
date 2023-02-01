@@ -5,8 +5,6 @@ import { SpaceSimServer } from "../space-sim-server";
 import { SpaceSimServerUserData } from "../space-sim-server-user-data";
 
 export class BattleRoyaleScene extends BaseScene {
-    readonly ROOM_NAME: string;
-
     private readonly _supplies = new Map<string, ShipSupply>();
     private readonly _ships = new Map<string, Ship>();
     private readonly _bots = new Map<string, AiController>();
@@ -16,6 +14,12 @@ export class BattleRoyaleScene extends BaseScene {
 
     private _gameLevel: GameLevel;
     private _exploder: Exploder;
+
+    /**
+     * the communication "room" that all players in this scene must be within to 
+     * receive socket events
+     */
+    readonly ROOM_NAME: string;
 
     constructor(options?: Phaser.Types.Scenes.SettingsConfig) {
         const room = options?.key ?? Phaser.Math.RND.uuid();
@@ -87,8 +91,7 @@ export class BattleRoyaleScene extends BaseScene {
             this.getShips()
                 .filter(s => s.active)
                 .forEach(ship => ship?.update(time, delta));
-        });
-        this.addRepeatingAction('high', 'update-bot-controllers', (time: number, delta: number) => {
+        }).addRepeatingAction('high', 'update-bot-controllers', (time: number, delta: number) => {
             this._bots.forEach((bot: AiController) => bot.update(time, delta));
         });
         this.addRepeatingAction('medium', 'send-ships-update', () => {
