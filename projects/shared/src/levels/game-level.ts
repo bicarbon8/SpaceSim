@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import Dungeon from "@mikewesthad/dungeon";
+import Dungeon, { DungeonConfig } from "@mikewesthad/dungeon";
 import { Helpers } from "../utilities/helpers";
 import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
@@ -324,10 +324,25 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap implements IsConfigurable
             const wallTiles = new Array<GameTile>();
             const floorTiles = new Array<GameTile>();
             const doors = r.getDoorLocations(); // door locations are relative to room, not dungeon
+            // widen doorways
+            const widerDoors = new Array<Phaser.Types.Math.Vector2Like>();
+            doors.forEach(d => {
+                widerDoors.push(d);
+                // left or right wall
+                if (d.x === 0 || d.x === r.width-1) {
+                    widerDoors.push({x: d.x, y: d.y-1});
+                    widerDoors.push({x: d.x, y: d.y+1});
+                }
+                // top or bottom wall
+                if (d.y === 0 || d.y === r.height-1) {
+                    widerDoors.push({x: d.x-1, y: d.y});
+                    widerDoors.push({x: d.x+1, y: d.y});
+                }
+            });
             for (let i=0; i<r.width; i++) {
                 for (let j=0; j<r.height; j++) {
                     const p = {x: i+r.x, y: j+r.y};
-                    if (doors.find(d => Helpers.vector2(d).equals({x: i, y: j}))) {
+                    if (widerDoors.find(d => Helpers.vector2(d).equals({x: i, y: j}))) {
                         // ensure floor tile at door locations
                         floorTiles.push({
                             x: p.x,
