@@ -1,16 +1,34 @@
 import * as Phaser from "phaser";
-import Dungeon, { Room } from "@mikewesthad/dungeon";
+import Dungeon from "@mikewesthad/dungeon";
 import { Helpers } from "../utilities/helpers";
 import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
 import { NumberOrRange } from "../interfaces/number-range";
 import { SpaceSim } from "../space-sim";
+import { IsConfigurable } from "../interfaces/is-configurable";
 
-export type RoomPlus = Room & {
+export type GameTile = {
+    name: string;
+    index?: number;
+    x: number;
+    y: number;
+};
+
+export type GameRoom = {
+    width: number;
+    height: number;
+    left: number;
+    top: number;
+    collisionTiles: Array<GameTile>;
+    nonCollisionTiles: Array<GameTile>;
     visible?: boolean;
 };
 
-export type GameLevelOptions = {
+export type GameLevelConfig = {
+    rooms: Array<GameRoom>
+};
+
+export type GameLevelOptions = Partial<GameLevelConfig> & {
     width?: number;
     height?: number;
     seed?: string;
@@ -22,16 +40,17 @@ export type GameLevelOptions = {
     tileHeight?: number;
 };
 
-export class GameLevel extends Phaser.Tilemaps.Tilemap {
+export class GameLevel extends Phaser.Tilemaps.Tilemap implements IsConfigurable<GameLevelConfig> {
     public scene: BaseScene;
 
-    private readonly _dungeon: Dungeon;
+    private readonly _rooms = new Array<GameRoom>();
 
     private _wallsLayer: Phaser.Tilemaps.TilemapLayer;
     private _radarLayer: Phaser.Tilemaps.TilemapLayer;
 
     constructor(scene: BaseScene, options?: GameLevelOptions) {
         options = {
+            rooms: new Array<GameRoom>(),
             seed: 'bicarbon8',
             width: 200, // in tiles, not pixels
             height: 200,
@@ -39,18 +58,36 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
             roomHeight: {min: 25, max: 25},
             doorPadding: 2,
             maxRooms: 100,
-            tileWidth: 96,
+            tileWidth: 96, // pixels
             tileHeight: 96,
             ...options
         };
         super(scene, new Phaser.Tilemaps.MapData({
-            tileWidth: 96,
-            tileHeight: 96,
+            tileWidth: options.tileWidth,
+            tileHeight: options.tileHeight,
             width: options.width,
             height: options.height
         }));
-        this._dungeon = this._createDungeon(options);
-        this._createLayers();
+
+        if (!options?.rooms?.length) {
+            options.rooms = this._createRooms(options);
+        }
+
+        this.configure(options);
+    }
+
+    get config(): GameLevelConfig {
+        return {
+            rooms: this.rooms
+        };
+    }
+
+    configure(config: Partial<GameLevelConfig>): this {
+        if (config?.rooms?.length) {
+            this._rooms.splice(0, this._rooms.length, ...config.rooms);
+            this._createLayers(...config.rooms);
+        }
+        return this;
     }
 
     setAlpha(alpha: number): this {
@@ -67,8 +104,8 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         return this._radarLayer;
     }
 
-    get rooms(): RoomPlus[] {
-        return this._dungeon.rooms;
+    get rooms(): GameRoom[] {
+        return this._rooms;
     }
 
     getMapTileWorldLocation(tilePositionX: number, tilePositionY: number): Phaser.Math.Vector2 {
@@ -85,22 +122,26 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         return false;
     }
 
-    getRoomAt(tileX: number, tileY: number): RoomPlus {
-        return this._dungeon.getRoomAt(tileX, tileY);
+    getRoomAt(tileX: number, tileY: number): GameRoom {
+        return this._rooms.find(r => r.left <= tileX && tileX < r.left+r.width && r.top <= tileY && tileY < r.top+r.height);
     }
 
-    getRoomAtWorldXY(x: number, y: number): RoomPlus {
+    getRoomAtWorldXY(x: number, y: number): GameRoom {
         const tile = this._wallsLayer?.worldToTileXY(x, y);
         return this.getRoomAt(tile.x, tile.y);
     }
 
-    getRoomClosestToOrigin(): RoomPlus {
+    getRoomClosestToOrigin(): GameRoom {
         const zero = Helpers.vector2();
-        let closest: RoomPlus;
-        this._dungeon.rooms.forEach(room => {
+        let closest: GameRoom;
+        this._rooms.forEach(room => {
+            const centerX = room.left + Math.floor(room.width / 2);
+            const centerY = room.top + Math.floor(room.height / 2);
             if (closest) {
-                const pos = this.tileToWorldXY(closest.centerX, closest.centerY);
-                const newPos = this.tileToWorldXY(room.centerX, room.centerY);
+                const closestCenterX = room.left + Math.floor(room.width / 2);
+                const closestCenterY = room.top + Math.floor(room.height / 2);
+                const pos = this.tileToWorldXY(closestCenterX, closestCenterY);
+                const newPos = this.tileToWorldXY(centerX, centerY);
                 if (Phaser.Math.Distance.BetweenPoints(zero, newPos) < Phaser.Math.Distance.BetweenPoints(zero, pos)) {
                     closest = room;
                 }
@@ -111,13 +152,17 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         return closest;
     }
 
-    getRoomFurthestFromOrigin(): RoomPlus {
+    getRoomFurthestFromOrigin(): GameRoom {
         const zero = Helpers.vector2();
-        let furthest: RoomPlus;
-        this._dungeon.rooms.forEach(room => {
+        let furthest: GameRoom;
+        this._rooms.forEach(room => {
+            const centerX = room.left + Math.floor(room.width / 2);
+            const centerY = room.top + Math.floor(room.height / 2);
             if (furthest) {
-                const pos = this.tileToWorldXY(furthest.centerX, furthest.centerY);
-                const newPos = this.tileToWorldXY(room.centerX, room.centerY);
+                const closestCenterX = room.left + Math.floor(room.width / 2);
+                const closestCenterY = room.top + Math.floor(room.height / 2);
+                const pos = this.tileToWorldXY(closestCenterX, closestCenterY);
+                const newPos = this.tileToWorldXY(centerX, centerY);
                 if (Phaser.Math.Distance.BetweenPoints(zero, newPos) > Phaser.Math.Distance.BetweenPoints(zero, pos)) {
                     furthest = room;
                 }
@@ -255,7 +300,7 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
         return false;
     }
 
-    private _createDungeon(options: GameLevelOptions): Dungeon {
+    private _createRooms(options: GameLevelOptions): Array<GameRoom> {
         const doorPadding = options.doorPadding;
         const dungeon = new Dungeon({
             randomSeed: options.seed,
@@ -274,49 +319,72 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap {
             },
             doorPadding: doorPadding
         });
-        return dungeon;
+
+        const rooms = dungeon.rooms.map(r => {
+            const wallTiles = new Array<GameTile>();
+            const floorTiles = new Array<GameTile>();
+            const doors = r.getDoorLocations(); // door locations are relative to room, not dungeon
+            for (let i=0; i<r.width; i++) {
+                for (let j=0; j<r.height; j++) {
+                    const p = {x: i+r.x, y: j+r.y};
+                    if (doors.find(d => Helpers.vector2(d).equals({x: i, y: j}))) {
+                        // ensure floor tile at door locations
+                        floorTiles.push({
+                            x: p.x,
+                            y: p.y,
+                            index: 0,
+                            name: 'minimaptile'
+                        });
+                        continue; // move to next location
+                    }
+
+                    const index = Phaser.Math.RND.pick(SpaceSim.Constants.GameLevels.Tiles.WALL);
+                    // if along the left, right, top or bottom side
+                    if ((j === 0 || j === r.height-1) || (i === 0 || i === r.width-1)) {
+                        wallTiles.push({
+                            x: p.x,
+                            y: p.y,
+                            index: index,
+                            name: 'metaltiles'
+                        });
+                    } else {
+                        floorTiles.push({
+                            x: p.x,
+                            y: p.y,
+                            index: 0,
+                            name: 'minimaptile'
+                        });
+                    }
+                }
+            }
+            return {
+                top: r.top,
+                left: r.left,
+                width: r.width,
+                height: r.height,
+                collisionTiles: wallTiles,
+                nonCollisionTiles: floorTiles
+            };
+        });
+
+        return rooms;
     }
 
-    private _createLayers(): void {
+    private _createLayers(...rooms: Array<GameRoom>): void {
+        if (this._wallsLayer) {
+            this._wallsLayer.destroy();
+        }
+        if (this._radarLayer) {
+            this._radarLayer.destroy();
+        }
         const wallsTileSet = this.addTilesetImage('tiles', 'metaltiles', 96, 96, 0, 0);
         this._wallsLayer = this.createBlankLayer('walls', wallsTileSet);
         const radarTileSet = this.addTilesetImage('minimaptile', 'minimaptile', 96, 96, 0, 0);
         this._radarLayer = this.createBlankLayer('radar', radarTileSet);
         
-        this._dungeon.rooms.forEach(room => {
-            const { x, y, width, height, left, right, top, bottom } = room;
-
-            // top wall
-            this._wallsLayer.weightedRandomize(SpaceSim.Constants.GameLevels.Tiles.WALL, left, top, width, 1);
-            // left wall
-            this._wallsLayer.weightedRandomize(SpaceSim.Constants.GameLevels.Tiles.WALL, left, top, 1, height);
-            // bottom wall
-            this._wallsLayer.weightedRandomize(SpaceSim.Constants.GameLevels.Tiles.WALL, left, bottom, width, 1);
-            // right wall
-            this._wallsLayer.weightedRandomize(SpaceSim.Constants.GameLevels.Tiles.WALL, right, top, 1, height);
-
-            this._radarLayer.fill(0, left+1, top+1, width-2, height-2);
-
-            // Dungeons have rooms that are connected with doors. Each door has an x & y relative to the
-            // room's location
-            const doors = room.getDoorLocations();
-            for (let i = 0; i < doors.length; i++) {
-                let door = doors[i];
-
-                if (door.y === 0) {
-                    this._wallsLayer.removeTileAt(x + door.x - 1, y + door.y);
-                    this._radarLayer.putTileAt(0, x + door.x - 1, y + door.y);
-                } else if (door.y === room.height - 1) {
-                    this._wallsLayer.removeTileAt(x + door.x - 1, y + door.y);
-                    this._radarLayer.putTileAt(0, x + door.x - 1, y + door.y);
-                } else if (door.x === 0) {
-                    this._wallsLayer.removeTileAt(x + door.x, y + door.y - 1);
-                    this._radarLayer.putTileAt(0, x + door.x, y + door.y - 1);
-                } else if (door.x === room.width - 1) {
-                    this._wallsLayer.removeTileAt(x + door.x, y + door.y - 1);
-                    this._radarLayer.putTileAt(0, x + door.x, y + door.y - 1);
-                }
-            }
+        rooms.forEach(room => {
+            room.collisionTiles.forEach(t => this._wallsLayer.putTileAt(t.index, t.x, t.y));
+            room.nonCollisionTiles.forEach(t => this._radarLayer.putTileAt(t.index, t.x, t.y));
         });
 
         this._wallsLayer.setCollisionBetween(1, 14);

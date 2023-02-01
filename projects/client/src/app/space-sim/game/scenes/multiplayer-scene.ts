@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, GameLevelOptions, SpaceSim, Ship, RoomPlus, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig, Engine, Weapon, TryCatch, Logging, Helpers } from "space-sim-shared";
+import { GameLevel, GameLevelOptions, SpaceSim, Ship, GameRoom, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig, Engine, Weapon, TryCatch, Logging, Helpers } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -235,7 +235,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     private _createStellarBodiesLayer(): void {
         Logging.log('debug', `creating StellarBodies...`);
-        const room: RoomPlus = this.getLevel().rooms[0];
+        const room: GameRoom = this.getLevel().rooms[0];
         const bodies: StellarBodyOptions[] = [
             {spriteName: 'sun'}, 
             {spriteName: 'venus', rotationSpeed: 0}, 
@@ -243,7 +243,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
             {spriteName: 'asteroids', scale: {min: 4, max: 10}}
         ];
         const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left, room.top);
-        const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right, room.bottom);
+        const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+room.width, room.top+room.height);
         const offsetX = 300;
         const offsetY = 300;
         const divisionsX = Math.floor(Phaser.Math.Distance.BetweenPoints({x: topleft.x, y: 0}, {x: botright.x, y: 0}) / offsetX);

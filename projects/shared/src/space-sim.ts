@@ -48,7 +48,7 @@ export module SpaceSim {
         export module GameLevels {
             export module Tiles {
                 // frame 0 is empty so don't use it for walls
-                export const WALL = [{ index: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], weight: 1 }];
+                export const WALL = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
             }
         }
         export module Events {

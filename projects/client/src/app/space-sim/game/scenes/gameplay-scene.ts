@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { RoomPlus, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, TryCatch, Helpers } from "space-sim-shared";
+import { GameRoom, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, TryCatch, Helpers } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -168,7 +168,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         // add opponent in each room
         for (var room of this.getLevel().rooms) {
             let tl: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left + 1, room.top + 1);
-            let br: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right - 1, room.bottom - 1);
+            let br: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+room.width - 1, room.top+room.height - 1);
             let pos: Phaser.Math.Vector2 = Helpers.vector2(
                 Phaser.Math.RND.realInRange(tl.x + 50, br.x - 50), 
                 Phaser.Math.RND.realInRange(tl.y + 50, br.y - 50)
@@ -204,7 +204,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         // Place the player in random empty tile in the first room
         const startingRoom = this.getLevel().getRoomClosestToOrigin();
         const startTopLeft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(startingRoom.left + 1, startingRoom.top + 1);
-        const startBottomRight: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(startingRoom.right - 1, startingRoom.bottom - 1);
+        const startBottomRight: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(startingRoom.left+startingRoom.width - 1, startingRoom.top+startingRoom.height - 1);
         const playerStartingPosition: Phaser.Math.Vector2 = Helpers.vector2(
             Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
             Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
@@ -256,7 +256,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         for (var i=0; i<rooms.length; i++) {
             let room = rooms[i];
             let startTopLeft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left, room.top);
-            let startBottomRight: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.right, room.bottom);
+            let startBottomRight: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+room.width, room.top+room.height);
             let location: Phaser.Math.Vector2 = Helpers.vector2(
                 Phaser.Math.RND.realInRange(startTopLeft.x, startBottomRight.x), 
                 Phaser.Math.RND.realInRange(startTopLeft.y, startBottomRight.y)
@@ -337,7 +337,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music?.destroy());
     }
 
-    private _showRoom(room: RoomPlus): void {
+    private _showRoom(room: GameRoom): void {
         if (!room.visible) {
             room.visible = true;
             const opponentsInRoom = SpaceSimClient.opponents
@@ -349,8 +349,8 @@ export class GameplayScene extends BaseScene implements Resizable {
                 });
             this.add.tween({
                 targets: [
-                    ...this.getLevel().wallsLayer.getTilesWithin(room.x, room.y, room.width, room.height),
-                    ...this.getLevel().radarLayer.getTilesWithin(room.x, room.y, room.width, room.height),
+                    ...this.getLevel().wallsLayer.getTilesWithin(room.left, room.top, room.width, room.height),
+                    ...this.getLevel().radarLayer.getTilesWithin(room.left, room.top, room.width, room.height),
                     ...opponentsInRoom
                 ],
                 alpha: 1,
