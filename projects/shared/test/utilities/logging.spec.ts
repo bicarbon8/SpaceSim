@@ -1,23 +1,10 @@
 import { expect } from "chai";
-import { spy, SinonSpy } from "sinon";
+import { mock } from "sinon";
 import { Logging } from "../../src/utilities/logging"
-
-const consoleSpys = new Array<SinonSpy>();
 
 describe('Logging', () => {
     beforeEach(() => {
         Logging.loglevel = 'warn';
-        consoleSpys.splice(0, consoleSpys.length, ...[
-            spy(window.console, 'trace'),
-            spy(window.console, 'debug'),
-            spy(window.console, 'info'),
-            spy(window.console, 'warn'),
-            spy(window.console, 'error')
-        ]);
-    })
-
-    afterEach(() => {
-        consoleSpys.forEach(spy => spy.restore());
     })
 
     it('correctly determines if messages should be logged', () => {
@@ -39,18 +26,23 @@ describe('Logging', () => {
     })
 
     const logTestData = [
-        {global: 'trace', level: 'debug', messages: ['foo'], index: 1, expected: true},
-        {global: 'info', level: 'error', messages: ['foo'], index: 4, expected: true},
-        {global: 'error', level: 'info', messages: ['foo'], index: 2, expected: false}
+        {global: 'trace', level: 'debug', messages: ['foo'], expected: true},
+        {global: 'info', level: 'error', messages: ['foo'], expected: true},
+        {global: 'error', level: 'info', messages: ['foo'], expected: false}
     ]
 
     for (const data of logTestData) {
-        it('outputs to the expected console function', () => {
+        it(`${data.expected}: outputs '${JSON.stringify(data.messages)}' to the expected console function: '${data.level}'`, () => {
+            const consoleMock = mock(window.console);
+            if (data.expected) {
+                consoleMock.expects(data.level).calledOnce;
+            } 
+            
             Logging.loglevel = data.global as Logging.LogLevel;
 
             Logging.log(data.level as Logging.LogLevel, ...data.messages);
 
-            expect(consoleSpys[data.index].called).to.eq(data.expected);
+            consoleMock.verify();
         })
     }
 })
