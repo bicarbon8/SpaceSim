@@ -7,6 +7,8 @@
     "clean": "rimraf ./dist",
     "build": "tsc -b",
     "build:dev": "npm run clean && npm run build",
+    "start": "npm run build",
+    "start:dev": "npm run build:dev",
     "test": "cross-env TS_NODE_PROJECT='./tsconfig.test.json' npx nyc mocha"
   },
   "repository": {
