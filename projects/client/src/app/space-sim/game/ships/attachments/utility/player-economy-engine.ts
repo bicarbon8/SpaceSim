@@ -20,7 +20,7 @@ export class PlayerEconomyEngine extends EconomyEngine {
 
     override update(time: number, delta: number): void {
         super.update(time, delta);
-        if (this.enabled) {
+        if (this.enabled && this.ship.remainingFuel > 0) {
             // sound effects
             if (!this._thrusterSound?.isPlaying) {
                 this._thrusterSound?.play({seek:0.3, volume: 0.2});

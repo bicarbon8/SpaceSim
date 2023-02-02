@@ -29,7 +29,7 @@
     "bootstrap": "^5.2.2",
     "get-browser-fingerprint": "^2.1.1",
     "phaser": "^3.54.0",
-    "phaser-ui-components": "^3.0.0",
+    "phaser-ui-components": "^3.1.3",
     "rxjs": "~6.6.0",
     "socket.io-client": "^4.5.4",
     "space-sim-shared": "^1.0.0",

@@ -1,4 +1,4 @@
-import { Card, Colors, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
+import { Card, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
 import { SpaceSim, TryCatch } from "space-sim-shared";
@@ -155,6 +155,9 @@ export class StartupScene extends Phaser.Scene {
             padding: 5,
             cornerRadius: 14,
             onClick: () => {
+                this._startSingleplayerButton.setEnabled(false);
+                this._startMultiplayerButton.setEnabled(false);
+                this._showMenuButton.setEnabled(false);
                 this._controlsMenu.setActive(true);
                 this._controlsMenu.setVisible(true);
             },
@@ -185,6 +188,9 @@ export class StartupScene extends Phaser.Scene {
             width: 300,
             padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
             onClick: () => {
+                this._startSingleplayerButton.setEnabled(true);
+                this._startMultiplayerButton.setEnabled(true);
+                this._showMenuButton.setEnabled(true);
                 this._controlsMenu.setVisible(false);
                 this._controlsMenu.setActive(false);
             },
