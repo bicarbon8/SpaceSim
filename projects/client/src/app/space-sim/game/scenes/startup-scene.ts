@@ -18,32 +18,19 @@ export class StartupScene extends Phaser.Scene {
     private _stars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _controlsMenu: Card;
+    private _startSingleplayerButton: TextButton;
     private _startMultiplayerButton: TextButton;
+    private _showMenuButton: TextButton;
     private _serverConnectionText: LayoutContainer;
     private _medPriUpdateAt: number = SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ;
     private _lowPriUpdateAt: number = SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ;
     private _ultraLowPriUpdateAt: number = SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
 
-    readonly buttonTextStyle = { 
-        font: '20px Courier', 
-        color: '#ddffdd',
-        align: 'center'
-    } as const;
-    readonly buttonDisabledTextStyle = {
-        ...this.buttonTextStyle, 
-        color: Colors.toHexString(Colors.secondary),
-        alpha: 0.2
-    } as const;
-    readonly buttonBackgroundStyle = {
-        fillStyle: {color: 0x808080, alpha: 0.2}
-    } as const;
-    readonly buttonHoverBackgroundStyle = {
-        fillStyle: {color: 0x80ff80, alpha: 0.5}
-    } as const;
-    readonly buttonDisabledBackgroundStyle = {
-        ...this.buttonBackgroundStyle,
-        alpha: 0.1
-    } as const;
+    readonly buttonTextStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.TEXT;
+    readonly buttonDisabledTextStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.TEXT_DISABLED;
+    readonly buttonBackgroundStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.BACKGROUND;
+    readonly buttonHoverBackgroundStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.BACKGROUND_HOVER;
+    readonly buttonDisabledBackgroundStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.BACKGROUND_DISABLED;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
         super(settingsConfig || StartupSceneConfig);
@@ -129,7 +116,7 @@ export class StartupScene extends Phaser.Scene {
         const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Spaceship Game', {font: '40px Courier', color: '#6d6dff', stroke: '#ffffff', strokeThickness: 4});
         layout.addContents(titleText);
 
-        const startSingleplayerTextButton: TextButton = new TextButton(this, {
+        this._startSingleplayerButton = new TextButton(this, {
             width: 250,
             textConfig: {
                 text: 'Single-Player',
@@ -143,10 +130,10 @@ export class StartupScene extends Phaser.Scene {
                 this.game.scene.stop(this);
             },
             onHover: () => {
-                startSingleplayerTextButton.setBackground(this.buttonHoverBackgroundStyle);
+                this._startSingleplayerButton.setBackground(this.buttonHoverBackgroundStyle);
             }
         });
-        layout.addContents(startSingleplayerTextButton);
+        layout.addContents(this._startSingleplayerButton);
 
         this._startMultiplayerButton = new TextButton(this, {
             width: 250,
@@ -161,7 +148,7 @@ export class StartupScene extends Phaser.Scene {
         
         layout.addContents(this._startMultiplayerButton);
 
-        const controlsTextButton: TextButton = new TextButton(this, {
+        this._showMenuButton = new TextButton(this, {
             width: 250,
             textConfig: {text: 'Controls', style: this.buttonTextStyle},
             backgroundStyles: this.buttonBackgroundStyle,
@@ -172,10 +159,10 @@ export class StartupScene extends Phaser.Scene {
                 this._controlsMenu.setVisible(true);
             },
             onHover: () => {
-                controlsTextButton.setBackground(this.buttonHoverBackgroundStyle);
+                this._showMenuButton.setBackground(this.buttonHoverBackgroundStyle);
             }
         });
-        layout.addContents(controlsTextButton);
+        layout.addContents(this._showMenuButton);
 
         this._serverConnectionText = new LayoutContainer(this, {
             width: layout.width - (layout.padding * 2),
@@ -189,32 +176,38 @@ export class StartupScene extends Phaser.Scene {
 
     private _createControlsMenu(): void {
         const closeButton = new TextButton(this, {
-            textConfig: {text: 'Close', style: Styles.Outline.success().text},
-            backgroundStyles: Styles.Outline.success().graphics,
-            cornerRadius: 20,
+            textConfig: {
+                text: 'Close',
+                style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Button.TEXT
+            },
+            backgroundStyles: SpaceSimClient.Constants.UI.ElementStyles.Menu.Button.BACKGROUND,
+            cornerRadius: SpaceSimClient.Constants.UI.ElementStyles.Menu.CORNER_RADIUS,
             width: 300,
-            padding: 10,
+            padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
             onClick: () => {
                 this._controlsMenu.setVisible(false);
                 this._controlsMenu.setActive(false);
             },
             onHover: () => {
-                closeButton.setText({style: Styles.success().text})
-                    .setBackground(Styles.success().graphics);
+                closeButton.setText({style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Button.TEXT_HOVER})
+                    .setBackground(SpaceSimClient.Constants.UI.ElementStyles.Menu.Button.BACKGROUND_HOVER);
             }
         });
 
         this._controlsMenu = new Card(this, {
             desiredWidth: this._width * 0.98,
             desiredHeight: this._height * 0.98,
-            cornerRadius: 20,
-            padding: 10,
+            cornerRadius: SpaceSimClient.Constants.UI.ElementStyles.Menu.CORNER_RADIUS,
+            padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
             header: {
-                textConfig: {text: 'Game Controls:', style: Styles.info().text},
-                backgroundStyles: Styles.info().graphics
+                textConfig: {
+                    text: 'Game Controls:',
+                    style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.TEXT
+                },
+                backgroundStyles: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.BACKGROUND
             },
             body: {
-                background: Styles.light().graphics,
+                background: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.BACKGROUND,
                 contents: [
                     new FlexLayout(this, {
                         padding: 5,
@@ -222,38 +215,44 @@ export class StartupScene extends Phaser.Scene {
                             new Card(this, {
                                 desiredWidth: 300,
                                 header: {
-                                    textConfig: {text: 'Keyboard & Mouse:', style: Styles.warning().text },
-                                    backgroundStyles: Styles.warning().graphics
+                                    textConfig: {
+                                        text: 'Keyboard & Mouse:',
+                                        style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.TEXT
+                                    },
+                                    backgroundStyles: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.BACKGROUND
                                 },
                                 body: {
-                                    background: Styles.Outline.dark().graphics,
+                                    background: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.BACKGROUND,
                                     contents: [
                                         this.make.text({
                                             text: `Thruster: SPACE\nFire: LEFT MOUSE\nAim: MOVE MOUSE`,
-                                            style: Styles.light().text
+                                            style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.TEXT
                                         }, false),
                                     ]
                                 },
-                                padding: 5,
-                                cornerRadius: 10
+                                padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
+                                cornerRadius: SpaceSimClient.Constants.UI.ElementStyles.Menu.CORNER_RADIUS
                             }),
                             new Card(this, {
                                 desiredWidth: 300,
                                 header: {
-                                    textConfig: {text: 'Touch / Mobile:', style: Styles.warning().text },
-                                    backgroundStyles: Styles.warning().graphics
+                                    textConfig: {
+                                        text: 'Touch / Mobile:',
+                                        style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.TEXT 
+                                    },
+                                    backgroundStyles: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.BACKGROUND
                                 },
                                 body: {
-                                    background: Styles.Outline.dark().graphics,
+                                    background: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.BACKGROUND,
                                     contents: [
                                         this.make.text({
                                             text: `Thruster: GREEN (A)\nFire: BLUE (X)\nAim: LEFT STICK`,
-                                            style: Styles.light().text
+                                            style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.TEXT
                                         }, false)
                                     ]
                                 },
-                                padding: 5,
-                                cornerRadius: 10
+                                padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
+                                cornerRadius: SpaceSimClient.Constants.UI.ElementStyles.Menu.CORNER_RADIUS
                             })
                         ]
                     }),

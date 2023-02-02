@@ -11,6 +11,7 @@ import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
 import { environment } from "../../../environments/environment";
 import { ClientSocketManager } from "./utilities/client-socket-manager";
+import { Colors, Styles } from "phaser-ui-components";
 
 
 export class SpaceSimClient {
@@ -149,6 +150,82 @@ export module SpaceSimClient {
                     export const red = 2;
                     export const white = 3;
                     export const yellow = 4;
+                }
+            }
+            export module ElementStyles {
+                export module Button {
+                    export const TEXT = { 
+                        font: '20px Courier', 
+                        color: '#ddffdd',
+                        align: 'center',
+                        alpha: 1
+                    } as const;
+                    export const TEXT_DISABLED = {
+                        ...TEXT,
+                        color: Colors.toHexString(Colors.secondary),
+                        alpha: 0.2
+                    } as const;
+                    export const BACKGROUND = {
+                        fillStyle: {
+                            color: 0x808080,
+                            alpha: 0.2
+                        }
+                    } as const;
+                    export const BACKGROUND_HOVER = {
+                        ...BACKGROUND,
+                        fillStyle: {
+                            color: 0x80ff80,
+                            alpha: 0.5
+                        }
+                    } as const;
+                    export const BACKGROUND_DISABLED = {
+                        ...BACKGROUND,
+                        fillStyle: {
+                            ...BACKGROUND.fillStyle,
+                            alpha: 0.1
+                        }
+                    } as const;
+                }
+                export module Menu {
+                    export const PADDING = 10;
+                    export const CORNER_RADIUS = 20;
+                    export module Header {
+                        export const TEXT = Styles.warning().text;
+                        export const BACKGROUND = Styles.warning().graphics;
+                    }
+                    export module Body {
+                        export const TEXT = Styles.Outline.warning().text;
+                        export const BACKGROUND = {
+                            ...Styles.Outline.warning().graphics,
+                            fillStyle: {
+                                color: Colors.dark,
+                                alpha: 0.75
+                            }
+                        } as const;
+                    }
+                    export module Button {
+                        export const TEXT = Body.TEXT;
+                        export const TEXT_HOVER = {
+                            ...TEXT,
+                            color: Colors.toHexString(Colors.dark)
+                        } as const;
+                        export const BACKGROUND = Body.BACKGROUND;
+                        export const BACKGROUND_DISABLED = {
+                            ...BACKGROUND,
+                            fillStyle: {
+                                ...BACKGROUND.fillStyle,
+                                alpha: 0.1
+                            }
+                        } as const;
+                        export const BACKGROUND_HOVER = {
+                            ...BACKGROUND,
+                            fillStyle: {
+                                ...BACKGROUND.fillStyle,
+                                color: Colors.warning,
+                                alpha: 1
+                            }
+                        } as const;
+                    }
                 }
             }
         }
