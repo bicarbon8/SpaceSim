@@ -1,4 +1,4 @@
-import { GameObjectPlus, HasLocation, Helpers } from "space-sim-server";
+import { HasLocation, Helpers, TryCatch } from "space-sim-shared";
 
 export type CameraOptions = Phaser.Types.Math.Vector2Like & {
     camera?: Phaser.Cameras.Scene2D.Camera;
@@ -8,7 +8,7 @@ export type CameraOptions = Phaser.Types.Math.Vector2Like & {
     zoom?: number;
     backgroundColor?: string | number | Phaser.Types.Display.InputColorObject;
     alpha?: number;
-    followObject?: GameObjectPlus;
+    followObject?: Phaser.GameObjects.GameObject;
     ignore?: Array<Phaser.GameObjects.GameObject>;
 };
 
@@ -26,9 +26,8 @@ export class Camera implements HasLocation {
             ...options
         };
         
-        this._ignored = this.scene.add.group([], {
-            name: `${opts.name ?? 'camera'}-ignore-group`
-        });
+        this._ignored = this.scene.add.group()
+            .setName(`${opts.name ?? 'camera'}-ignore-group`);
         
         this._cam = this._getCamera(opts);
 
@@ -40,7 +39,7 @@ export class Camera implements HasLocation {
         return this._cam;
     }
 
-    getLocationInView(): Phaser.Math.Vector2 {
+    get locationInView(): Phaser.Types.Math.Vector2Like {
         return Helpers.vector2(this._cam.x, this._cam.y);
     }
 
@@ -50,7 +49,7 @@ export class Camera implements HasLocation {
         this._cam.setPosition(loc.x, loc.y);
     }
 
-    getLocation(): Phaser.Math.Vector2 {
+    get location(): Phaser.Types.Math.Vector2Like {
         return this._cam.getWorldPoint(0, 0);
     }
 
@@ -61,10 +60,8 @@ export class Camera implements HasLocation {
 
     ignore(...entries: Array<Phaser.GameObjects.GameObject>): this {
         if (entries?.length) {
-            for (var i=0; i<entries.length; i++) {
-                this._ignored.add(entries[i]);
-            }
-            this._cam.ignore(this._ignored);
+            this._ignored.addMultiple(entries);
+            this._cam.ignore(this._ignored.getChildren());
         }
         return this;
     }
@@ -72,16 +69,21 @@ export class Camera implements HasLocation {
     unignore(...entries: Array<Phaser.GameObjects.GameObject>): this {
         if (entries?.length) {
             for (var i=0; i<entries.length; i++) {
-                Helpers.trycatch(() => this._ignored.remove(entries[i]));
+                TryCatch.run(() => this._ignored.remove(entries[i]));
             }
-            this._cam.ignore(this._ignored);
+            this._cam.ignore(this._ignored.getChildren());
         }
         return this;
     }
 
-    follow(obj: GameObjectPlus): this {
+    clearAllIgnored(): this {
+        this.unignore(...this._ignored.getChildren());
+        return this;
+    }
+
+    follow(obj: Phaser.GameObjects.GameObject): this {
         if (obj) {
-            this._cam.centerOn(obj.x, obj.y)
+            this._cam.centerOn(obj['x'], obj['y'])
                 .startFollow(obj, true, 1, 1);
         }
         return this;
@@ -99,13 +101,15 @@ export class Camera implements HasLocation {
             .setPosition(opts.x, opts.y)
             .setSize(opts.width, opts.height)
             .setBackgroundColor(opts.backgroundColor)
-            .setAlpha(opts.alpha)
-            .ignore(this._ignored);
+            .setAlpha(opts.alpha);
         return cam;
     }
 
     destroy(): void {
-        Helpers.trycatch(() => this._ignored.destroy(), 'warn');
+        TryCatch.run(() => {
+            this.unignore(...this._ignored.getChildren())
+            this._ignored.destroy();
+        }, 'warn');
     }
 
     private _defaultOptions(scene: Phaser.Scene): CameraOptions {

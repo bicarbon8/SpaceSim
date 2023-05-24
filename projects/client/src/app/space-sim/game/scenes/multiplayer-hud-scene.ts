@@ -1,16 +1,16 @@
-import { Constants, GameScoreTracker, GameStats, SpaceSim } from "space-sim-server";
+import { SpaceSim, BaseScene, Ship, InputController, Logging } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
-import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { Resizable } from "../interfaces/resizable";
 import { GridLayout, LayoutContainer, Styles, TextButton, TextButtonOptions } from "phaser-ui-components";
+import { MultiplayerSceneConfig } from "./multiplayer-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const MultiplayerHudSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'multiplayer-hud-scene'
-};
+} as const;
 
 export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     private _width: number;
@@ -22,18 +22,20 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     private _hudLayout: GridLayout;
     private _controller: InputController;
     private _connectedToServer: boolean;
+    private _parentScene: BaseScene;
 
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || MultiplayerHudSceneConfig);
 
         this.debug = SpaceSim.debug;
     }
 
     create(): void {
+        this._parentScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
         this.resize();
-        GameScoreTracker.start(SpaceSimClient.player.id);
+        SpaceSim.stats.start(this.playerShip.config);
     }
 
     resize(): void {
@@ -49,9 +51,13 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
     update(time: number, delta: number): void {
         this._connectedToServer = SpaceSimClient.socket?.connected ?? false;
         this._displayHUDInfo();
-        if (SpaceSimClient.player?.active) {
+        if (this.playerShip?.active) {
             this._controller?.update(time, delta);
         }
+    }
+
+    get playerShip(): Ship {
+        return this._parentScene.getShip(SpaceSimClient.playerShipId);
     }
 
     private _createHUD(): void {
@@ -84,7 +90,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.warning().graphics);
             },
             onClick: () => {
-                SpaceSimClient.player.selfDestruct();
+                this.playerShip.selfDestruct();
                 this._quitContainer.removeContent(false);
                 this._cancelDestructButton.setActive(true)
                     .setVisible(true);
@@ -106,7 +112,7 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.danger().graphics);
             },
             onClick: () => {
-                SpaceSimClient.player.cancelSelfDestruct();
+                this.playerShip.cancelSelfDestruct();
                 this._quitContainer.removeContent(false);
                 this._destructButton.setActive(true)
                     .setVisible(true);
@@ -132,38 +138,36 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             alignment: {vertical: 'top'}
         }).addContentAt(0, 0, this._hudText)
         .addContentAt(0, cols-1, this._quitContainer) // quit button
-        .setDepth(Constants.UI.Layers.HUD);
+        .setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this.add.existing(this._hudLayout);
     }
 
     private _createController(): void {
-        if (this._controller) {
-            this._controller.getGameObject()?.destroy();
-        }
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, SpaceSimClient.player);
+            this._controller = new KbmController(this, this.playerShip);
         } else {
-            this._controller = new TouchController(this, SpaceSimClient.player);
-        }
-        const obj = this._controller.getGameObject();
-        if (obj) {
-            this.add.existing(obj);
+            if (this._controller) {
+                (this._controller as TouchController).getGameObject()?.destroy();
+            }
+            const controller = new TouchController(this, this.playerShip);
+            this.add.existing(controller.getGameObject());
+            this._controller = controller;
         }
     }
 
     private _displayHUDInfo(): void {
         try {
-            const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
-            const accuracy: string = (stats.shotsFired) ? ((stats.shotsLanded / stats.shotsFired) * 100).toFixed(1) : 'n/a';
+            const stats = SpaceSim.stats.getStats({shipId: this.playerShip.id});
             const info: string[] = [
-                `Kills: ${stats.opponentsDestroyed}`,
-                `Active Players: ${SpaceSim.players()?.length}`,
-                `Accuracy: ${accuracy} %`,
-                `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`
+                `Kills: ${stats.opponentsDestroyed.length}`,
+                `Active Players: ${this._parentScene.getShips()?.length}`,
+                `Accuracy: ${stats.accuracy.toFixed(0)}%`,
+                `Fuel: ${this.playerShip.remainingFuel.toFixed(1)}`,
+                `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
+                `Score: ${SpaceSim.stats.getScore(this.playerShip.id).toFixed(0)}`
             ];
-            if (SpaceSim.debug) {
-                const loc: Phaser.Math.Vector2 = SpaceSimClient.player.getLocation();
+            if (Logging.shouldLog('debug')) {
+                const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
             }
             if (!this._connectedToServer) {

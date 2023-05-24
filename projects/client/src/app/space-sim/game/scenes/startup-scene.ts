@@ -1,16 +1,15 @@
 import { Card, FlexLayout, LayoutContainer, LinearLayout, Styles, TextButton } from "phaser-ui-components";
-import { environment } from "src/environments/environment";
+import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants, Helpers, SpaceSimPlayerData } from "space-sim-server";
-import { io, Socket } from "socket.io-client";
-import { DisconnectDescription } from "socket.io-client/build/esm/socket";
-import getBrowserFingerprint from "get-browser-fingerprint";
+import { SpaceSim, TryCatch } from "space-sim-shared";
+import { GameplaySceneConfig } from "./gameplay-scene";
+import { SetNameSceneConfig } from "./set-name-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const StartupSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: true,
     visible: true,
     key: 'startup-scene'
-};
+} as const;
 
 export class StartupScene extends Phaser.Scene {
     private _width: number;
@@ -19,11 +18,22 @@ export class StartupScene extends Phaser.Scene {
     private _stars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _controlsMenu: Card;
+    private _startSingleplayerButton: TextButton;
     private _startMultiplayerButton: TextButton;
+    private _showMenuButton: TextButton;
     private _serverConnectionText: LayoutContainer;
+    private _medPriUpdateAt: number = SpaceSim.Constants.Timing.MED_PRI_UPDATE_FREQ;
+    private _lowPriUpdateAt: number = SpaceSim.Constants.Timing.LOW_PRI_UPDATE_FREQ;
+    private _ultraLowPriUpdateAt: number = SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ;
+
+    readonly buttonTextStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.TEXT;
+    readonly buttonDisabledTextStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.TEXT_DISABLED;
+    readonly buttonBackgroundStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.BACKGROUND;
+    readonly buttonHoverBackgroundStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.BACKGROUND_HOVER;
+    readonly buttonDisabledBackgroundStyle = SpaceSimClient.Constants.UI.ElementStyles.Button.BACKGROUND_DISABLED;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || StartupSceneConfig);
     }
 
     preload(): void {
@@ -37,21 +47,7 @@ export class StartupScene extends Phaser.Scene {
     }
 
     create(): void {
-        const fingerprint = getBrowserFingerprint();
-        const dataStr = localStorage.getItem('space-sim');
-        let playerData: SpaceSimPlayerData;
-        if (dataStr) {
-            try {
-                playerData = JSON.parse(dataStr) as SpaceSimPlayerData;
-            } catch (e) {
-                playerData = {name: '', fingerprint: ''};
-            }
-        }
-        SpaceSimClient.playerData = {
-            ...playerData,
-            fingerprint: fingerprint
-        };
-        
+        SpaceSimClient.mode = 'singleplayer';
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
@@ -62,33 +58,45 @@ export class StartupScene extends Phaser.Scene {
         this._createMenuItems();
         this._createControlsMenu();
         this._createMusic();
-        this._createSocket();
     }
 
     update(time: number, delta: number): void {
+        this._medPriUpdateAt += delta;
+        this._lowPriUpdateAt += delta;
+        this._ultraLowPriUpdateAt += delta;
+
         this._sun.angle += 0.5 / delta;
         if (this._sun.angle >= 360) {
             this._sun.angle = 0;
         }
         this._stars.tilePositionX += 0.01;
         this._stars.tilePositionY += 0.02;
+        
+        if (this._ultraLowPriUpdateAt >= SpaceSim.Constants.Timing.ULTRALOW_PRI_UPDATE_FREQ) {
+            this._ultraLowPriUpdateAt = 0;
+            if (SpaceSimClient.socket?.connected) {
+                this._enableMultiplayer();
+            } else {
+                this._disableMultiplayer();
+            }
+        }
     }
 
     private _createBackground(): void {
         this._stars = this.add.tileSprite(0, 0, this._width, this._height, 'far-stars');
-        this._stars.setDepth(Constants.UI.Layers.BACKGROUND);
+        this._stars.setDepth(SpaceSimClient.Constants.UI.Layers.BACKGROUND);
     }
 
     private _createStellarBodies(): void {
         const smallestDimension: number = (this._width <= this._height) ? this._width : this._height;
         this._sun = this.add.sprite(-this._width/2, -this._height/2, 'sun'); // top left
-        this._sun.setDepth(Constants.UI.Layers.STELLAR);
+        this._sun.setDepth(SpaceSimClient.Constants.UI.Layers.STELLAR);
         const sunRadius: number = this._sun.width/2;
         const sunScaleFactor: number = smallestDimension / sunRadius; // ex: sunRadius * x = canvasSize
         this._sun.setScale(sunScaleFactor);
 
         const mercury = this.add.sprite(this._width/2, this._height/2, 'mercury'); // bottom right
-        mercury.setDepth(Constants.UI.Layers.STELLAR);
+        mercury.setDepth(SpaceSimClient.Constants.UI.Layers.STELLAR);
         const mercuryRadius: number = mercury.width/2;
         const mercuryScaleFactor: number = (smallestDimension / 3) / mercuryRadius; // ex: mercuryRadius * x = canvasSize / 3
         mercury.setScale(mercuryScaleFactor);
@@ -102,83 +110,67 @@ export class StartupScene extends Phaser.Scene {
             y: 0,
             padding: 10
         });
-        layout.setDepth(Constants.UI.Layers.HUD);
+        layout.setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this.add.existing(layout);
 
         const titleText: Phaser.GameObjects.Text = this.add.text(0, 0, 'Spaceship Game', {font: '40px Courier', color: '#6d6dff', stroke: '#ffffff', strokeThickness: 4});
         layout.addContents(titleText);
 
-        const buttonTextStyle = { 
-            font: '20px Courier', 
-            color: '#ddffdd',
-            align: 'center'
-        };
-
-        const startSingleplayerTextButton: TextButton = new TextButton(this, {
+        this._startSingleplayerButton = new TextButton(this, {
             width: 250,
             textConfig: {
                 text: 'Single-Player',
-                style: buttonTextStyle,
+                style: this.buttonTextStyle,
             },
-            backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
+            backgroundStyles: this.buttonBackgroundStyle,
             padding: 5,
             cornerRadius: 14,
             onClick: () => {
-                this.game.scene.start('gameplay-scene');
+                this.game.scene.start(GameplaySceneConfig.key);
                 this.game.scene.stop(this);
             },
             onHover: () => {
-                startSingleplayerTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
+                this._startSingleplayerButton.setBackground(this.buttonHoverBackgroundStyle);
             }
         });
-        layout.addContents(startSingleplayerTextButton);
+        layout.addContents(this._startSingleplayerButton);
 
         this._startMultiplayerButton = new TextButton(this, {
             width: 250,
             textConfig: {
                 text: 'Multi-Player',
-                style: buttonTextStyle,
+                style: this.buttonDisabledTextStyle,
             },
-            backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
+            backgroundStyles: this.buttonDisabledBackgroundStyle,
             padding: 5,
-            cornerRadius: 14,
-            onClick: () => {
-                this.game.scene.start('set-name-scene');
-                this.game.scene.stop(this);
-            },
-            onHover: () => {
-                this._startMultiplayerButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
-            }
+            cornerRadius: 14
         });
-        if (!SpaceSimClient.socket || !SpaceSimClient.socket?.connected) {
-            this._startMultiplayerButton.setActive(false)
-                .setVisible(false);
-        }
+        
         layout.addContents(this._startMultiplayerButton);
 
-        const controlsTextButton: TextButton = new TextButton(this, {
+        this._showMenuButton = new TextButton(this, {
             width: 250,
-            textConfig: {text: 'Controls', style: buttonTextStyle},
-            backgroundStyles: {fillStyle: {color: 0x808080, alpha: 0.2}},
+            textConfig: {text: 'Controls', style: this.buttonTextStyle},
+            backgroundStyles: this.buttonBackgroundStyle,
             padding: 5,
             cornerRadius: 14,
             onClick: () => {
+                this._startSingleplayerButton.setEnabled(false);
+                this._startMultiplayerButton.setEnabled(false);
+                this._showMenuButton.setEnabled(false);
                 this._controlsMenu.setActive(true);
                 this._controlsMenu.setVisible(true);
             },
             onHover: () => {
-                controlsTextButton.setBackground({fillStyle: {color: 0x80ff80, alpha: 0.5}});
+                this._showMenuButton.setBackground(this.buttonHoverBackgroundStyle);
             }
         });
-        layout.addContents(controlsTextButton);
+        layout.addContents(this._showMenuButton);
 
-        const txt = (SpaceSimClient.socket && SpaceSimClient.socket?.connected) 
-            ? 'Server connection established' 
-            : 'Connecting to server...'
         this._serverConnectionText = new LayoutContainer(this, {
             width: layout.width - (layout.padding * 2),
             content: this.make.text({
-                text: txt,
+                text: 'Connecting to server...',
                 style: Styles.Outline.light().text
             })
         });
@@ -187,32 +179,41 @@ export class StartupScene extends Phaser.Scene {
 
     private _createControlsMenu(): void {
         const closeButton = new TextButton(this, {
-            textConfig: {text: 'Close', style: Styles.Outline.success().text},
-            backgroundStyles: Styles.Outline.success().graphics,
-            cornerRadius: 20,
+            textConfig: {
+                text: 'Close',
+                style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Button.TEXT
+            },
+            backgroundStyles: SpaceSimClient.Constants.UI.ElementStyles.Menu.Button.BACKGROUND,
+            cornerRadius: SpaceSimClient.Constants.UI.ElementStyles.Menu.CORNER_RADIUS,
             width: 300,
-            padding: 10,
+            padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
             onClick: () => {
+                this._startSingleplayerButton.setEnabled(true);
+                this._startMultiplayerButton.setEnabled(true);
+                this._showMenuButton.setEnabled(true);
                 this._controlsMenu.setVisible(false);
                 this._controlsMenu.setActive(false);
             },
             onHover: () => {
-                closeButton.setText({style: Styles.success().text})
-                    .setBackground(Styles.success().graphics);
+                closeButton.setText({style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Button.TEXT_HOVER})
+                    .setBackground(SpaceSimClient.Constants.UI.ElementStyles.Menu.Button.BACKGROUND_HOVER);
             }
         });
 
         this._controlsMenu = new Card(this, {
             desiredWidth: this._width * 0.98,
             desiredHeight: this._height * 0.98,
-            cornerRadius: 20,
-            padding: 10,
+            cornerRadius: SpaceSimClient.Constants.UI.ElementStyles.Menu.CORNER_RADIUS,
+            padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
             header: {
-                textConfig: {text: 'Game Controls:', style: Styles.info().text},
-                backgroundStyles: Styles.info().graphics
+                textConfig: {
+                    text: 'Game Controls:',
+                    style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.TEXT
+                },
+                backgroundStyles: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.BACKGROUND
             },
             body: {
-                background: Styles.light().graphics,
+                background: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.BACKGROUND,
                 contents: [
                     new FlexLayout(this, {
                         padding: 5,
@@ -220,38 +221,44 @@ export class StartupScene extends Phaser.Scene {
                             new Card(this, {
                                 desiredWidth: 300,
                                 header: {
-                                    textConfig: {text: 'Keyboard & Mouse:', style: Styles.warning().text },
-                                    backgroundStyles: Styles.warning().graphics
+                                    textConfig: {
+                                        text: 'Keyboard & Mouse:',
+                                        style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.TEXT
+                                    },
+                                    backgroundStyles: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.BACKGROUND
                                 },
                                 body: {
-                                    background: Styles.Outline.dark().graphics,
+                                    background: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.BACKGROUND,
                                     contents: [
                                         this.make.text({
                                             text: `Thruster: SPACE\nFire: LEFT MOUSE\nAim: MOVE MOUSE`,
-                                            style: Styles.light().text
+                                            style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.TEXT
                                         }, false),
                                     ]
                                 },
-                                padding: 5,
-                                cornerRadius: 10
+                                padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
+                                cornerRadius: SpaceSimClient.Constants.UI.ElementStyles.Menu.CORNER_RADIUS
                             }),
                             new Card(this, {
                                 desiredWidth: 300,
                                 header: {
-                                    textConfig: {text: 'Touch / Mobile:', style: Styles.warning().text },
-                                    backgroundStyles: Styles.warning().graphics
+                                    textConfig: {
+                                        text: 'Touch / Mobile:',
+                                        style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.TEXT 
+                                    },
+                                    backgroundStyles: SpaceSimClient.Constants.UI.ElementStyles.Menu.Header.BACKGROUND
                                 },
                                 body: {
-                                    background: Styles.Outline.dark().graphics,
+                                    background: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.BACKGROUND,
                                     contents: [
                                         this.make.text({
                                             text: `Thruster: GREEN (A)\nFire: BLUE (X)\nAim: LEFT STICK`,
-                                            style: Styles.light().text
+                                            style: SpaceSimClient.Constants.UI.ElementStyles.Menu.Body.TEXT
                                         }, false)
                                     ]
                                 },
-                                padding: 5,
-                                cornerRadius: 10
+                                padding: SpaceSimClient.Constants.UI.ElementStyles.Menu.PADDING,
+                                cornerRadius: SpaceSimClient.Constants.UI.ElementStyles.Menu.CORNER_RADIUS
                             })
                         ]
                     }),
@@ -260,14 +267,14 @@ export class StartupScene extends Phaser.Scene {
             }
         });
         this._controlsMenu.cardbody.refreshLayout();
-        this._controlsMenu.setDepth(Constants.UI.Layers.HUD);
+        this._controlsMenu.setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this._controlsMenu.setVisible(false);
         this._controlsMenu.setActive(false);
         this.add.existing(this._controlsMenu);
     }
 
     private _createMusic(): void {
-        Helpers.trycatch(() => this._music = this.sound.add('startup-theme', {loop: true, volume: 0.1}), 'warn');
+        TryCatch.run(() => this._music = this.sound.add('startup-theme', {loop: true, volume: 0.1}), 'warn');
         this._music?.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());
@@ -275,45 +282,34 @@ export class StartupScene extends Phaser.Scene {
         this.events.on(Phaser.Scenes.Events.DESTROY, () => this._music?.destroy());
     }
 
-    private _createSocket(): void {
-        if (!SpaceSimClient.socket || SpaceSimClient.socket.disconnected) {
-            SpaceSimClient.socket = io(`${environment.websocket}`);
-            SpaceSimClient.socket.on('connect', () => {
-                console.debug(`connected to server at: ${environment.websocket}`);
-                Helpers.trycatch(() => {
-                    this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
-                        .setText(`Server connection established`);
-                    this._serverConnectionText?.updateSize();
-                    this._startMultiplayerButton
-                        .setActive(true)
-                        .setVisible(true);
-                }, 'warn', 'error updating startup scene connection text');
-                if (SpaceSimClient.playerData
-                    && SpaceSimClient.playerData.fingerprint
-                    && SpaceSimClient.playerData.name) {
-                    SpaceSimClient.socket.emit(Constants.Socket.SET_PLAYER_DATA, SpaceSimClient.playerData);
-                }
-            }).on('disconnect', (reason: Socket.DisconnectReason, description: DisconnectDescription) => {
-                console.warn(`socket disconnect`, reason, description);
-                Helpers.trycatch(() => {
-                    this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
-                        .setText(`Server disconnected...`);
-                    this._serverConnectionText.updateSize();
-                    this._startMultiplayerButton
-                        .setActive(false)
-                        .setVisible(false);
-                }, 'warn', 'error updating startup scene connection text');
-                if (reason === "io server disconnect") {
-                    // the disconnection was initiated by the server, you need to reconnect manually
-                    console.info(`attempting to reconnect to server...`);
-                    Helpers.trycatch(() => {
-                        this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
-                            .setText(`attempting to reconnect to server...`);
-                    }, 'warn', 'error updating startup scene connection text');
-                this._serverConnectionText.updateSize();
-                    SpaceSimClient.socket.connect();
-                }
-            });
+    private _enableMultiplayer(): void {
+        const connectedText = 'Server connection established';
+        if (this._serverConnectionText.contentAs<Phaser.GameObjects.Text>().text !== connectedText) {
+            this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
+                    .setText(connectedText);
+            this._serverConnectionText?.updateSize();
+            this._startMultiplayerButton
+                .setText({style: this.buttonTextStyle})
+                .setOnClick(() => {
+                    this.game.scene.start(SetNameSceneConfig.key);
+                    this.game.scene.stop(this);
+                })
+                .setOnHover(() => {
+                    this._startMultiplayerButton.setBackground(this.buttonHoverBackgroundStyle);
+                });
+        }
+    }
+
+    private _disableMultiplayer(): void {
+        const disconnectedText = 'Connecting to server...';
+        if (this._serverConnectionText.contentAs<Phaser.GameObjects.Text>().text !== disconnectedText) {
+            this._serverConnectionText.contentAs<Phaser.GameObjects.Text>()
+                    .setText(disconnectedText);
+            this._serverConnectionText?.updateSize();
+            this._startMultiplayerButton
+                .setText({style: this.buttonDisabledTextStyle})
+                .setOnClick(null)
+                .setOnHover(null);
         }
     }
 }

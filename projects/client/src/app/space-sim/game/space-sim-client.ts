@@ -1,18 +1,18 @@
 import "phaser";
-import { SpaceSim, Ship, Size, SpaceSimPlayerData } from "space-sim-server";
+import { SpaceSim, Size, AiController, Logging } from "space-sim-shared";
 import { GameOverScene } from "./scenes/game-over-scene";
 import { GameplayHudScene } from "./scenes/gameplay-hud-scene";
 import { GameplayScene } from "./scenes/gameplay-scene";
 import { StartupScene } from "./scenes/startup-scene";
 import { SpaceSimClientOptions } from "./space-sim-client-options";
-import { Socket } from "socket.io-client";
 import { MultiplayerScene } from "./scenes/multiplayer-scene";
 import { MultiplayerHudScene } from "./scenes/multiplayer-hud-scene";
-import { AiController } from "./controllers/ai-controller";
 import { GameMode } from "./interfaces/game-mode";
 import { SetNameScene } from "./scenes/set-name-scene";
-import { Camera } from "./ui-components/camera";
-import { Radar } from "./ui-components/radar";
+import { environment } from "../../../environments/environment";
+import { ClientSocketManager } from "./utilities/client-socket-manager";
+import { Colors, Styles } from "phaser-ui-components";
+
 
 export class SpaceSimClient {
     constructor(options?: SpaceSimClientOptions) {
@@ -33,7 +33,7 @@ export class SpaceSimClient {
                 default: 'arcade',
                 arcade: {
                     debug: SpaceSim.debug,
-                    gravity: { x: 0, y: 0 },
+                    gravity: { x: 0, y: 0 }
                 }
             },
             roundPixels: true,
@@ -48,7 +48,10 @@ export class SpaceSimClient {
             ]
         };
         SpaceSim.game = new Phaser.Game(conf);
-        SpaceSim.game.events.on(Phaser.Core.Events.READY, () => SpaceSimClient.resize());
+        SpaceSim.game.events.on(Phaser.Core.Events.READY, () => {
+            SpaceSimClient.resize();
+            this._createSocket();
+        });
         SpaceSim.game.events.on(Phaser.Core.Events.HIDDEN, () => {
             if (SpaceSimClient.mode !== 'multiplayer') {
                 SpaceSim.game.scene.getScenes(true).forEach(s => {
@@ -64,12 +67,21 @@ export class SpaceSimClient {
             });
         });
     }
+
+    private _createSocket(): void {
+        if (!SpaceSimClient.socket || SpaceSimClient.socket.disconnected) {
+            SpaceSimClient.socket = new ClientSocketManager({
+                serverUrl: environment.websocket
+            });
+        }
+    }
 }
 
 export module SpaceSimClient {
     var _inst: SpaceSimClient;
     export function start(options?: SpaceSimClientOptions): SpaceSimClient {
-        SpaceSim.debug = options?.debug || false;
+        SpaceSim.debug = options?.debug ?? false;
+        Logging.loglevel = options?.loglevel ?? 'warn';
         if (!_inst) {
             _inst = new SpaceSimClient(options);
         }
@@ -112,17 +124,110 @@ export module SpaceSimClient {
             /* ignore */
         }
         if (!size) {
-            const parent = document.getElementById(parentId || 'space-sim');
+            const parent = document.getElementById(parentId || SpaceSim.Constants.GAME_NAME);
             const s = parent.getBoundingClientRect();
             size = {width: s.width, height: s.height};
         }
         return size;
     }
-    export var socket: Socket;
-    export var player: Ship;
-    export var playerData: SpaceSimPlayerData;
+    export var socket: ClientSocketManager;
+    export var playerShipId: string;
+    export var playerData: SpaceSim.UserData;
     export const opponents = new Array<AiController>();
     export var mode: GameMode = 'singleplayer';
-    export var camera: Camera;
-    export var radar: Radar;
+    export module Constants {
+        export module UI {
+            export module Layers {
+                export const BACKGROUND = 0;
+                export const STELLAR = 1;
+                export const PLAYER = 2;
+                export const HUD = 3;
+            }
+            export module SpriteMaps {
+                export module Flares {
+                    export const blue = 0;
+                    export const green = 1;
+                    export const red = 2;
+                    export const white = 3;
+                    export const yellow = 4;
+                }
+            }
+            export module ElementStyles {
+                export module Button {
+                    export const TEXT = { 
+                        font: '20px Courier', 
+                        color: '#ddffdd',
+                        align: 'center',
+                        alpha: 1
+                    } as const;
+                    export const TEXT_DISABLED = {
+                        ...TEXT,
+                        color: Colors.toHexString(Colors.secondary),
+                        alpha: 0.2
+                    } as const;
+                    export const BACKGROUND = {
+                        fillStyle: {
+                            color: 0x808080,
+                            alpha: 0.2
+                        }
+                    } as const;
+                    export const BACKGROUND_HOVER = {
+                        ...BACKGROUND,
+                        fillStyle: {
+                            color: 0x80ff80,
+                            alpha: 0.5
+                        }
+                    } as const;
+                    export const BACKGROUND_DISABLED = {
+                        ...BACKGROUND,
+                        fillStyle: {
+                            ...BACKGROUND.fillStyle,
+                            alpha: 0.1
+                        }
+                    } as const;
+                }
+                export module Menu {
+                    export const PADDING = 10;
+                    export const CORNER_RADIUS = 20;
+                    export module Header {
+                        export const TEXT = Styles.warning().text;
+                        export const BACKGROUND = Styles.warning().graphics;
+                    }
+                    export module Body {
+                        export const TEXT = Styles.Outline.warning().text;
+                        export const BACKGROUND = {
+                            ...Styles.Outline.warning().graphics,
+                            fillStyle: {
+                                color: Colors.dark,
+                                alpha: 0.75
+                            }
+                        } as const;
+                    }
+                    export module Button {
+                        export const TEXT = Body.TEXT;
+                        export const TEXT_HOVER = {
+                            ...TEXT,
+                            color: Colors.toHexString(Colors.dark)
+                        } as const;
+                        export const BACKGROUND = Body.BACKGROUND;
+                        export const BACKGROUND_DISABLED = {
+                            ...BACKGROUND,
+                            fillStyle: {
+                                ...BACKGROUND.fillStyle,
+                                alpha: 0.1
+                            }
+                        } as const;
+                        export const BACKGROUND_HOVER = {
+                            ...BACKGROUND,
+                            fillStyle: {
+                                ...BACKGROUND.fillStyle,
+                                color: Colors.warning,
+                                alpha: 1
+                            }
+                        } as const;
+                    }
+                }
+            }
+        }
+    }
 }

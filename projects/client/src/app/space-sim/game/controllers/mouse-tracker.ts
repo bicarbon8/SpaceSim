@@ -1,5 +1,5 @@
 import { Scene } from "phaser";
-import { HasLocation, Helpers, Ship, Updatable, Constants } from "space-sim-server";
+import { HasLocation, Ship, Updatable, SpaceSim, Helpers } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 
 export class MouseTracker implements HasLocation, Updatable {
@@ -51,7 +51,7 @@ export class MouseTracker implements HasLocation, Updatable {
      * screen.
      * @returns a {Vector2} clone of the position
      */
-    getLocationInView(): Phaser.Math.Vector2 {
+    get locationInView(): Phaser.Types.Math.Vector2Like {
         // console.log(`mouse location: ${JSON.stringify(this.location)}`);
         return this._pointer()?.position?.clone() || Helpers.vector2();
     }
@@ -63,7 +63,7 @@ export class MouseTracker implements HasLocation, Updatable {
     /**
      * offsets the screen position based on camera position
      */
-    getLocation(): Phaser.Math.Vector2 {
+    get location(): Phaser.Types.Math.Vector2Like {
         // console.log(`mouse REAL location: ${JSON.stringify(world)}`);
         return this._pointer()?.positionToCamera(this._scene?.cameras?.main) as Phaser.Math.Vector2;
     }
@@ -78,14 +78,14 @@ export class MouseTracker implements HasLocation, Updatable {
 
     private _setShipAngle(): void {
         if (this._ship) {
-            const loc = this.getLocation();
-            const shipPos = this._ship.getLocation();
+            const loc = this.location;
+            const shipPos = this._ship.location;
             const radians: number = Phaser.Math.Angle.Between(loc.x, loc.y, shipPos.x, shipPos.y);
             const degrees: number = +Phaser.Math.RadToDeg(radians).toFixed(0);
             // only update if angle changed more than minimum allowed degrees
-            if (!Phaser.Math.Fuzzy.Equal(this._ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
-                SpaceSimClient.socket?.emit(Constants.Socket.SET_PLAYER_ANGLE, degrees);
-                this._ship.setRotation(degrees);
+            if (!Phaser.Math.Fuzzy.Equal(this._ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ships.MIN_ROTATION_ANGLE)) {
+                SpaceSimClient.socket?.sendSetShipAngleRequest(degrees, SpaceSimClient.playerData);
+                this._ship.rotationContainer.setAngle(degrees);
             }
         }
     }

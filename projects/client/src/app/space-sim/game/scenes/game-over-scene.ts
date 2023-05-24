@@ -1,13 +1,16 @@
 import { FlexLayout, LinearLayout, TextButton } from "phaser-ui-components";
-import { environment } from "src/environments/environment";
+import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
-import { Constants, GameScoreTracker, GameStats, Helpers } from "space-sim-server";
+import { SpaceSim, TryCatch } from "space-sim-shared";
+import { GameplaySceneConfig } from "./gameplay-scene";
+import { StartupSceneConfig } from "./startup-scene";
+import { SetNameSceneConfig } from "./set-name-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const GameOverSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'game-over-scene'
-};
+} as const;
 
 export class GameOverScene extends Phaser.Scene {
     private _width: number;
@@ -16,9 +19,10 @@ export class GameOverScene extends Phaser.Scene {
     private _stars: Phaser.GameObjects.TileSprite;
     private _music: Phaser.Sound.BaseSound;
     private _layout: LinearLayout;
+    private _scoreText: Phaser.GameObjects.Text;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || GameOverSceneConfig);
     }
 
     preload(): void {
@@ -30,9 +34,6 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     create(): void {
-        SpaceSimClient.socket.on(Constants.Socket.UPDATE_STATS, (id: string, stats: Partial<GameStats>) => {
-            GameScoreTracker.updateStats(id, stats);
-        });
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
 
@@ -54,17 +55,31 @@ export class GameOverScene extends Phaser.Scene {
         }
         this._stars.tilePositionX += 0.01;
         this._stars.tilePositionY += 0.02;
+
+        this._updateScore();
+    }
+
+    private _updateScore(): void {
+        if (SpaceSimClient.mode === 'multiplayer') {
+            const leaderboard = SpaceSim.stats.getLeaderboard();
+            this._scoreText.setText([
+                'Leaderboard:',
+                ...leaderboard.map((s, i) => `${i+1}. ${s.name} - ${s.score.toFixed(0)}`)
+                .splice(0, 5)
+            ]);
+        }
+        this._layout.refreshLayout();
     }
 
     private _createBackground(): void {
         this._stars = this.add.tileSprite(0, 0, this._width, this._height, 'far-stars');
-        this._stars.setDepth(Constants.UI.Layers.BACKGROUND);
+        this._stars.setDepth(SpaceSimClient.Constants.UI.Layers.BACKGROUND);
     }
 
     private _createStellarBodies(): void {
         this._sun = this.add.sprite(0, 0, 'sun');
         this._sun.setOrigin(0.5);
-        this._sun.setDepth(Constants.UI.Layers.STELLAR);
+        this._sun.setDepth(SpaceSimClient.Constants.UI.Layers.STELLAR);
         const smallestDimension: number = (this._width <= this._height) ? this._width : this._height;
         const sunRadius: number = this._sun.width/2;
         const sunScaleFactor: number = smallestDimension / sunRadius;
@@ -78,7 +93,7 @@ export class GameOverScene extends Phaser.Scene {
             desiredWidth: this._width,
             desiredHeight: this._height
         });
-        this._layout.setDepth(Constants.UI.Layers.HUD);
+        this._layout.setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this.add.existing(this._layout);
     }
 
@@ -91,22 +106,21 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     private _createScore(): void {
-        const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
-        let accuracy: number = (stats.shotsLanded / stats.shotsFired) * 100;
-        if (isNaN(accuracy)) {
-            accuracy = 0;
-        }
-        const scoreText: Phaser.GameObjects.Text = this.make.text({
+        this._scoreText = this.make.text({
             text: '', 
             style: {font: '30px Courier', color: '#ff8080', stroke: '#ff0000', strokeThickness: 4}
         }, false);
-        scoreText.setText([
-            `Score: ${GameScoreTracker.getScore(SpaceSimClient.player.id).toFixed(0)}`,
-            `Time: ${(stats.elapsed / 1000).toFixed(0)} sec.`,
-            `Accuracy: ${accuracy.toFixed(0)}%`,
-            `Kills: ${stats.opponentsDestroyed}`
+
+        const id = SpaceSimClient.playerShipId;
+        const stats = SpaceSim.stats.getStats({shipId: id});
+        this._scoreText.setText([
+            `Score: ${SpaceSim.stats.getScore(id).toFixed(0)}`,
+            `Time: ${((Date.now() - stats.startedAt) / 1000).toFixed(0)} sec.`,
+            `Accuracy: ${stats.accuracy.toFixed(0)}%`,
+            `Kills: ${stats?.opponentsDestroyed?.length ?? 0}`
         ]);
-        this._layout.addContents(scoreText);
+
+        this._layout.addContents(this._scoreText);
     }
 
     private _createMenuItems(): void {
@@ -129,13 +143,17 @@ export class GameOverScene extends Phaser.Scene {
             onClick: () => {
                 switch (SpaceSimClient.mode) {
                     case 'singleplayer':
-                        this.game.scene.start('gameplay-scene');
+                        this.game.scene.start(GameplaySceneConfig.key);
                         break;
                     case 'multiplayer':
-                        this.game.scene.start('multiplayer-scene');
+                        if (SpaceSimClient.socket?.connected) {
+                            this.game.scene.start(SetNameSceneConfig.key);
+                        } else {
+                            this.game.scene.start(StartupSceneConfig.key);
+                        }
                         break;
                     default:
-                        this.game.scene.start('startup-scene');
+                        this.game.scene.start(StartupSceneConfig.key);
                         break;
                 }
                 this._music.stop();
@@ -154,7 +172,7 @@ export class GameOverScene extends Phaser.Scene {
                     .setBackground({fillStyle: {color: 0x80ff80, alpha: 1}});
             },
             onClick: () => {
-                this.game.scene.start('startup-scene');
+                this.game.scene.start(StartupSceneConfig.key);
                 this.game.scene.stop(this);
             }
         });
@@ -167,12 +185,12 @@ export class GameOverScene extends Phaser.Scene {
                 returnToMenuButton
             ]
         });
-        flex.setDepth(Constants.UI.Layers.HUD);
+        flex.setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this._layout.addContents(flex);
     }
 
     private _createMusic(): void {
-        Helpers.trycatch(() => this._music = this.sound.add('game-over-song', {loop: true, volume: 0.1}));
+        TryCatch.run(() => this._music = this.sound.add('game-over-song', {loop: true, volume: 0.1}));
         this._music?.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());

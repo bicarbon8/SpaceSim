@@ -1,13 +1,14 @@
 import { GridLayout, LayoutContainer, Styles, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
-import { Helpers } from "space-sim-server";
-import { environment } from "src/environments/environment";
+import { Sanitiser, SpaceSim, TryCatch } from "space-sim-shared";
+import { environment } from "../../../../environments/environment";
+import getBrowserFingerprint from "get-browser-fingerprint";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const SetNameSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'set-name-scene'
-};
+} as const;
 
 export class SetNameScene extends Phaser.Scene {
     private _width: number;
@@ -16,9 +17,13 @@ export class SetNameScene extends Phaser.Scene {
     private _text: LayoutContainer;
     private _button: TextButton;
     private _music: Phaser.Sound.BaseSound;
+
+    private readonly _continueButtonStylesDisabled;
     
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || SetNameSceneConfig);
+
+        this._continueButtonStylesDisabled = Styles.Outline.secondary();
     }
 
     preload() {
@@ -26,6 +31,7 @@ export class SetNameScene extends Phaser.Scene {
     }
 
     create() {
+        SpaceSimClient.mode = 'multiplayer';
         this._width = this.game.canvas.width;
         this._height = this.game.canvas.height;
         
@@ -38,20 +44,19 @@ export class SetNameScene extends Phaser.Scene {
         } else {
             this._getMobileTextInput();
         }
-    }
 
-    update() {
-        if (this._text.contentAs<Phaser.GameObjects.Text>().text.length > 2) {
-            this._button.setText({style: Styles.success().text});
-            this._button.setBackground(Styles.success().graphics);
-        } else {
-            this._button.setText({style: Styles.secondary().text});
-            this._button.setBackground(Styles.secondary().graphics);
+        if (SpaceSim.UserData.isValid(SpaceSimClient.playerData)) {
+            this._text.contentAs<Phaser.GameObjects.Text>().setText(SpaceSimClient.playerData.name);
+            this._updateContinueButton();
         }
     }
 
+    update() {
+        
+    }
+
     private _createMusic(): void {
-        Helpers.trycatch(() => this._music = this.sound.add('startup-theme', {loop: true, volume: 0.1}), 'warn');
+        TryCatch.run(() => this._music = this.sound.add('startup-theme', {loop: true, volume: 0.1}), 'warn');
         this._music?.play();
         this.events.on(Phaser.Scenes.Events.PAUSE, () => this._music?.pause());
         this.events.on(Phaser.Scenes.Events.RESUME, () => this._music?.resume());
@@ -93,12 +98,9 @@ export class SetNameScene extends Phaser.Scene {
             cornerRadius: 10,
             textConfig: {
                 text: 'Continue',
-                style: Styles.secondary().text
+                style: this._continueButtonStylesDisabled.text
             },
-            backgroundStyles: Styles.secondary().graphics,
-            onClick: () => {
-                this._validateAndStartGame(this._text.contentAs<Phaser.GameObjects.Text>().text);
-            }
+            backgroundStyles: this._continueButtonStylesDisabled.graphics
         });
         this._layout.addContentAt(2, 0, this._button);
     }
@@ -116,6 +118,9 @@ export class SetNameScene extends Phaser.Scene {
                     txtGo.setText(txt + event.key);
                 }
             }
+
+            this._updateContinueButton();
+
             if (event.key === 'Enter') {
                 this._validateAndStartGame(txt);
             }
@@ -125,21 +130,36 @@ export class SetNameScene extends Phaser.Scene {
     private _getMobileTextInput(): void {
         this._text.setInteractive().on(Phaser.Input.Events.GAMEOBJECT_POINTER_DOWN, () => {
             const txt: string = window.prompt('Enter player name: (minimum 3 characters consisting of [a-zA-Z0-9])');
-            const pname: string = Helpers.sanitise(txt);
-            if (pname.length < 3) {
-                window.alert('invalid name!');
-            } else {
-                this._validateAndStartGame(pname);
-            }
+            this._button.contentAs<Phaser.GameObjects.Text>().setText(txt);
+            this._updateContinueButton();
+            this._validateAndStartGame(txt);
         });
     }
 
     private _validateAndStartGame(text: string): void {
-        const pname = Helpers.sanitise(text);
+        const pname = Sanitiser.sanitise(text);
         if (pname.length > 2) {
-            SpaceSimClient.playerData.name = pname;
-            this.scene.start('multiplayer-scene');
-            this.scene.stop(this);
+            SpaceSimClient.socket.sendSetPlayerDataRequest({
+                fingerprint: getBrowserFingerprint(),
+                name: pname
+            });
+        } else {
+            window.alert('invalid name!');
+        }
+    }
+
+    private _updateContinueButton(): void {
+        if (this._button.contentAs<Phaser.GameObjects.Text>().text.length > 2) {
+            const style = Styles.success();
+            this._button.setText({style: style.text})
+                .setBackground(style.graphics)
+                .setOnClick(() => {
+                    this._validateAndStartGame(this._text.contentAs<Phaser.GameObjects.Text>().text);
+                });
+        } else {
+            this._button.setText({style: this._continueButtonStylesDisabled.text})
+                .setBackground(this._continueButtonStylesDisabled.graphics)
+                .setOnClick(null);
         }
     }
 }

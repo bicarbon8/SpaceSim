@@ -1,5 +1,4 @@
-import { Helpers, Constants, Ship } from "space-sim-server";
-import { InputController } from "./input-controller";
+import { Ship, InputController, SpaceSim, Helpers } from "space-sim-shared";
 import { GridLayout, LayoutContent, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
 
@@ -9,6 +8,9 @@ export class TouchController extends InputController {
     private _thrusterButtonActive: boolean;
     private _throwButtonActive: boolean;
     private _boostButtonActive: boolean;
+
+    private _engineStateChanged: boolean = false;
+    private _weaponStateChanged: boolean = false;
     
     constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
@@ -31,25 +33,55 @@ export class TouchController extends InputController {
         const pos: Phaser.Math.Vector2 = Helpers.vector2(x, y).subtract(Helpers.vector2(60));
         const radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
         const degrees: number = +Helpers.rad2deg(radians).toFixed(0);
-        // console.info(`handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
+        // Logging.log('info', `handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
         // only update if angle changed more than minimum allowed degrees
-        if (!Phaser.Math.Fuzzy.Equal(this.ship.angle, degrees, Constants.Ship.MIN_ROTATION_ANGLE)) {
-            SpaceSimClient.socket?.emit(Constants.Socket.SET_PLAYER_ANGLE, degrees);
-            this.ship.setRotation(degrees);
+        if (!Phaser.Math.Fuzzy.Equal(this.ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ships.MIN_ROTATION_ANGLE)) {
+            SpaceSimClient.socket?.sendSetShipAngleRequest(degrees, SpaceSimClient.playerData);
+            this.ship.rotationContainer.setAngle(degrees);
         }
     }
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
-            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON);
-            this.ship.getWeapons()?.trigger();
+            if (!this.ship.weapon.enabled) {
+                this._weaponStateChanged = true;
+                this.ship.weapon?.setEnabled(true);
+            }
+        } else {
+            if (this.ship.weapon.enabled) {
+                this._weaponStateChanged = true;
+                this.ship.weapon?.setEnabled(false);
+            }
+        }
+        if (this._weaponStateChanged) {
+            this._weaponStateChanged = false;
+            if (this.ship?.weapon?.enabled) {
+                SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData);
+            } else {
+                SpaceSimClient.socket?.sendDisableWeaponRequest(SpaceSimClient.playerData);
+            }
         }
     }
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
-            SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE);
-            this.ship.getThruster()?.trigger();
+            if (!this.ship.engine.enabled) {
+                this._engineStateChanged = true;
+                this.ship.engine?.setEnabled(true);
+            }
+        } else {
+            if (this.ship.engine.enabled) {
+                this._engineStateChanged = true;
+                this.ship.engine?.setEnabled(false);
+            }
+        }
+        if (this._engineStateChanged) {
+            this._engineStateChanged = false;
+            if (this.ship?.engine?.enabled) {
+                SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData);
+            } else {
+                SpaceSimClient.socket?.sendDisableEngineRequest(SpaceSimClient.playerData);
+            }
         }
     }
 
@@ -95,7 +127,7 @@ export class TouchController extends InputController {
                 [this._createFireButton(),,this._createBoostButton()],
                 [,this._createThrusterButton(),]
             ]
-        })).setDepth(Constants.UI.Layers.HUD);
+        })).setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this.scene.input.addPointer(9); // maximum input handling (10 total)
     }
 

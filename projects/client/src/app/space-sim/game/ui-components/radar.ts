@@ -1,4 +1,5 @@
-import { Constants, Helpers } from "space-sim-server";
+import { TryCatch } from "space-sim-shared";
+import { SpaceSimClient } from "../space-sim-client";
 import { Camera, CameraOptions } from "./camera";
 
 export type RadarOptions = Omit<CameraOptions, 'name' | 'zoom'> & {
@@ -44,18 +45,18 @@ export class Radar extends Camera {
                 .lineStyle(3, 0x57e30b, 1)
                 .setScrollFactor(0)
                 .strokeCircle(opts.x, opts.y, radius)
-                .setDepth(Constants.UI.Layers.HUD);
+                .setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         }
 
         return cam;
     }
 
     override destroy(): void {
-        Helpers.trycatch(() => {
+        super.destroy();
+        TryCatch.run(() => {
             this.scene.cameras.remove(this.cam, true);
             this._mask?.destroy();
             this._border?.destroy();
-        }, 'warn', 'unable to cleanly remove MiniMap');
-        super.destroy();
+        }, 'warn', 'unable to cleanly remove Radar');
     }
 }

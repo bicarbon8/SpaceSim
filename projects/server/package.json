@@ -3,12 +3,10 @@
   "version": "1.0.0",
   "description": "game server for multiplayer version of Spaceship Game",
   "type": "module",
-  "main": "./dist/exports.js",
-  "types": "./dist/exports.d.ts",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && tsc -b && webpack",
-    "build:dev": "npm run build",
+    "build": "webpack",
+    "build:dev": "npm run clean && npm run build",
     "start": "npm run build && npm run open",
     "start:dev": "npm run build && npm run open:dev",
     "open": "npx phaser-game-server -s -c server.config.prod.json",
@@ -24,7 +22,6 @@
   "author": "Jason Holt Smith <bicarbon8@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@mikewesthad/dungeon": "^2.0.1",
     "canvas": "^2.10.2",
     "datauri": "^4.1.0",
     "express": "^4.18.2",
@@ -32,8 +29,8 @@
     "phaser": "^3.55.2",
     "phaser-game-server": "^1.1.0",
     "phaser-game-server-engine": "^1.1.0",
-    "phaser-ui-components": "^3.0.0",
-    "socket.io": "^4.5.4"
+    "socket.io": "^4.5.4",
+    "space-sim-shared": "^1.0.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.14",

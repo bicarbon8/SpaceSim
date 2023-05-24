@@ -1,5 +1,14 @@
-import { HasGameObject, Updatable, Constants, Helpers } from "space-sim-server";
-import { StellarBodyOptions } from "./stellar-body-options";
+import { HasGameObject, Updatable, NumberOrRange, Helpers } from "space-sim-shared";
+import { environment } from "../../../../environments/environment";
+import { SpaceSimClient } from "../space-sim-client";
+
+export type StellarBodyOptions = {
+    spriteName: 'sun' | 'mercury' | 'venus' | 'asteroids';
+    rotationSpeed?: NumberOrRange; // degrees per second
+    scale?: NumberOrRange;
+    location?: Phaser.Math.Vector2;
+    scrollFactor?: NumberOrRange; // 0 = moves with camera (far away), 1 = moves normally (close)
+};
 
 export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.Sprite> {
     readonly id: string;
@@ -13,6 +22,20 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
     readonly scale: number;
     readonly scrollFactor: number;
     readonly rotationSpeed: number; // in degrees per second
+
+    static preload(scene: Phaser.Scene): void {
+        scene.load.image('sun', `${environment.baseUrl}/assets/backgrounds/sun.png`);
+        scene.load.image('venus', `${environment.baseUrl}/assets/backgrounds/venus.png`);
+        scene.load.image('mercury', `${environment.baseUrl}/assets/backgrounds/mercury.png`);
+        scene.load.spritesheet('asteroids', `${environment.baseUrl}/assets/tiles/asteroids-tile.png`, {
+            frameWidth: 100,
+            frameHeight: 100,
+            startFrame: 0,
+            endFrame: 63,
+            margin: 14,
+            spacing: 28
+        });
+    }
     
     constructor(scene: Phaser.Scene, options: StellarBodyOptions) {
         this.id = Phaser.Math.RND.uuid();
@@ -21,9 +44,9 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
 
         this.spriteName = options.spriteName;
         this.location = options.location || Helpers.vector2();
-        this.rotationSpeed = Helpers.getRealNumber(options.rotationSpeed) ?? Phaser.Math.RND.realInRange(0.1, 1);
-        this.scale = Helpers.getRealNumber(options.scale) ?? Phaser.Math.RND.realInRange(0.1, 3);
-        this.scrollFactor = Helpers.getRealNumber(options.scrollFactor) ?? Phaser.Math.RND.realInRange(0.05, 0.5);
+        this.rotationSpeed = NumberOrRange.getRealNumber(options.rotationSpeed) ?? Phaser.Math.RND.realInRange(0.1, 1);
+        this.scale = NumberOrRange.getRealNumber(options.scale) ?? Phaser.Math.RND.realInRange(0.1, 3);
+        this.scrollFactor = NumberOrRange.getRealNumber(options.scrollFactor) ?? Phaser.Math.RND.realInRange(0.05, 0.5);
         
         this._createGameObj();
     }
@@ -85,7 +108,7 @@ export class StellarBody implements Updatable, HasGameObject<Phaser.GameObjects.
         }
         this._gameObj.setScale(this.scale, this.scale);
         this._gameObj.setScrollFactor(this.scrollFactor);
-        this._gameObj.setDepth(Constants.UI.Layers.STELLAR);
+        this._gameObj.setDepth(SpaceSimClient.Constants.UI.Layers.STELLAR);
         if (this.spriteName === 'sun') {
             this._gameObj.setDepth(this._gameObj.depth - 0.3); // ensure Sun is behind planets always
         }

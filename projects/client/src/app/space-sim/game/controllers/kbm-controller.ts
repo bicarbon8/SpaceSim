@@ -1,6 +1,5 @@
-import { Constants, Ship } from "space-sim-server";
+import { InputController, Ship } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
-import { InputController } from "./input-controller";
 import { MouseTracker } from "./mouse-tracker";
 
 export class KbmController extends InputController {
@@ -19,6 +18,8 @@ export class KbmController extends InputController {
     private _grabAttachmentKey: Phaser.Input.Keyboard.Key;
 
     private _container: Phaser.GameObjects.Container;
+    private _engineStateChanged: boolean = false;
+    private _weaponStateChanged: boolean = false;
     
     constructor(scene: Phaser.Scene, player?: Ship) {
         super(scene, player);
@@ -35,8 +36,15 @@ export class KbmController extends InputController {
         if (this.active) {
             // activate Thruster
             if (this._thrustForwardsKey.isDown) {
-                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_ENGINE);
-                this.ship.getThruster()?.trigger();
+                if (!this.ship.engine.enabled) {
+                    this._engineStateChanged = true;
+                    this.ship.engine.setEnabled(true);
+                }
+            } else {
+                if (this.ship.engine.enabled) {
+                    this._engineStateChanged = true;
+                    this.ship.engine.setEnabled(false);
+                }
             }
             // reverse Thruster
             if (this._thrustBackwardsKey.isDown) {
@@ -56,8 +64,15 @@ export class KbmController extends InputController {
             }
             // Left Click: fire any weapons
             if (this.scene.input.activePointer.leftButtonDown()) {
-                SpaceSimClient.socket?.emit(Constants.Socket.TRIGGER_WEAPON);
-                this.ship.getWeapons()?.trigger();
+                if (!this.ship.weapon.enabled) {
+                    this._weaponStateChanged = true;
+                    this.ship.weapon.setEnabled(true);
+                }
+            } else {
+                if (this.ship.weapon.enabled) {
+                    this._weaponStateChanged = true;
+                    this.ship.weapon.setEnabled(false);
+                }
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {
                 // this.player.attachments.rotateAttachmentsClockwise();
@@ -76,6 +91,22 @@ export class KbmController extends InputController {
             // grab nearby Attachments
             if (this._grabAttachmentKey.isDown) {
                 // TODO: grab nearby attachments and attach them to player
+            }
+            if (this._engineStateChanged) {
+                this._engineStateChanged = false;
+                if (this.ship?.engine?.enabled) {
+                    SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData);
+                } else {
+                    SpaceSimClient.socket?.sendDisableEngineRequest(SpaceSimClient.playerData);
+                }
+            }
+            if (this._weaponStateChanged) {
+                this._weaponStateChanged = false;
+                if (this.ship?.weapon?.enabled) {
+                    SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData);
+                } else {
+                    SpaceSimClient.socket?.sendDisableWeaponRequest(SpaceSimClient.playerData);
+                }
             }
         }
     }

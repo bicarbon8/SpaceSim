@@ -1,16 +1,16 @@
-import { Constants, GameScoreTracker, GameStats, SpaceSim } from "space-sim-server";
+import { SpaceSim, BaseScene, Ship, InputController, Logging, TryCatch } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
-import { InputController } from "../controllers/input-controller";
 import { TouchController } from "../controllers/touch-controller";
 import { KbmController } from "../controllers/kbm-controller";
 import { Resizable } from "../interfaces/resizable";
 import { GridLayout, LayoutContainer, Styles, TextButton, TextButtonOptions } from "phaser-ui-components";
+import { GameplaySceneConfig } from "./gameplay-scene";
 
-const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
+export const GameplayHudSceneConfig: Phaser.Types.Scenes.SettingsConfig = {
     active: false,
     visible: false,
     key: 'gameplay-hud-scene'
-};
+} as const;
 
 export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _width: number;
@@ -22,17 +22,20 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     private _hudLayout: GridLayout;
     private _controller: InputController;
 
+    private _parentScene: BaseScene;
+
     debug: boolean;
 
     constructor(settingsConfig?: Phaser.Types.Scenes.SettingsConfig) {
-        super(settingsConfig || sceneConfig);
+        super(settingsConfig || GameplayHudSceneConfig);
 
         this.debug = SpaceSim.debug;
     }
 
     create(): void {
+        this._parentScene = SpaceSim.game.scene.getScene(GameplaySceneConfig.key) as BaseScene;
         this.resize();
-        GameScoreTracker.start(SpaceSimClient.player.id);
+        SpaceSim.stats.start(this.playerShip.config);
     }
 
     resize(): void {
@@ -48,6 +51,10 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
     update(time: number, delta: number): void {
         this._displayHUDInfo();
         this._controller?.update(time, delta);
+    }
+
+    get playerShip(): Ship {
+        return this._parentScene.getShip(SpaceSimClient.playerShipId);
     }
 
     private _createHUD(): void {
@@ -80,7 +87,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.warning().graphics);
             },
             onClick: () => {
-                SpaceSimClient.player.selfDestruct();
+                this.playerShip.selfDestruct();
                 this._quitContainer.removeContent(false);
                 this._cancelDestructButton.setActive(true)
                     .setVisible(true);
@@ -102,7 +109,7 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
                     .setBackground(Styles.danger().graphics);
             },
             onClick: () => {
-                SpaceSimClient.player.cancelSelfDestruct();
+                this.playerShip.cancelSelfDestruct();
                 this._quitContainer.removeContent(false);
                 this._destructButton.setActive(true)
                     .setVisible(true);
@@ -128,43 +135,41 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             alignment: {vertical: 'top'}
         }).addContentAt(0, 0, this._hudText)
         .addContentAt(0, cols-1, this._quitContainer) // quit button
-        .setDepth(Constants.UI.Layers.HUD);
+        .setDepth(SpaceSimClient.Constants.UI.Layers.HUD);
         this.add.existing(this._hudLayout);
     }
 
     private _createController(): void {
-        if (this._controller) {
-            this._controller.getGameObject()?.destroy();
-        }
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, SpaceSimClient.player);
+            this._controller = new KbmController(this, this.playerShip);
         } else {
-            this._controller = new TouchController(this, SpaceSimClient.player);
-        }
-        const obj = this._controller.getGameObject();
-        if (obj) {
-            this.add.existing(obj);
+            if (this._controller) {
+                (this._controller as TouchController).getGameObject()?.destroy();
+            }
+            const controller = new TouchController(this, this.playerShip);
+            this.add.existing(controller.getGameObject());
+            this._controller = controller;
         }
     }
 
     private _displayHUDInfo(): void {
-        try {
-            const stats: GameStats = GameScoreTracker.getStats(SpaceSimClient.player);
+        TryCatch.run(() => {
+            const id = this.playerShip.id;
+            const stats = SpaceSim.stats.getStats({shipId: id});
             const info: string[] = [
-                `Elapsed: ${(stats.elapsed/1000).toFixed(1)}`,
-                `Enemies: ${stats.opponentsDestroyed}/${SpaceSimClient.opponents.length}`,
-                `Fuel: ${SpaceSimClient.player.getRemainingFuel().toFixed(1)}`,
-                `Ammo: ${SpaceSimClient.player.getWeapons()?.remainingAmmo || 0}`,
-                `Score: ${GameScoreTracker.getScore(SpaceSimClient.player.id).toFixed(0)}`
+                `Elapsed: ${((Date.now() - stats?.startedAt)/1000).toFixed(1)}`,
+                `Enemies: ${stats?.opponentsDestroyed?.length ?? 0}/${SpaceSimClient.opponents.length}`,
+                `Fuel: ${this.playerShip.remainingFuel.toFixed(1)}`,
+                `Ammo: ${this.playerShip.weapon.remainingAmmo || 0}`,
+                `Score: ${SpaceSim.stats.getScore(id).toFixed(0)}`
             ];
-            if (SpaceSim.debug) {
-                const loc: Phaser.Math.Vector2 = SpaceSimClient.player.getLocation();
+            if (Logging.shouldLog('debug')) {
+                const loc = this.playerShip.location;
                 info.push(`Location: ${loc.x.toFixed(1)},${loc.y.toFixed(1)}`);
+                info.push(`Angle: ${this.playerShip.rotationContainer.angle.toFixed(1)}`);
             }
             this._hudText.setText(info);
             this._hudLayout.updateSize(this._width, this._height);
-        } catch (e) {
-            // do nothing
-        }
+        }, 'warn');
     }
 }

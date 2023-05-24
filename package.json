@@ -1,18 +1,20 @@
 {
     "name": "space-sim",
     "workspaces": [
+        "projects/shared",
         "projects/server",
         "projects/client"
     ],
     "scripts": {
         "clean": "rimraf ./dist && rimraf ./docs",
-        "build": "npm run clean && npm run build --workspaces --if-present && npm run copy-dist-to-root && npm run copy-docs-to-root",
+        "build": "npm run build --workspaces --if-present && npm run copy-dist-to-root && npm run copy-docs-to-root",
         "build:dev": "npm run build:dev --workspaces --if-present",
         "copy-dist-to-root": "copyfiles -u 3 \"./projects/**/dist/**/*\" ./dist/",
         "copy-docs-to-root": "copyfiles -u 3 \"./projects/**/docs/**/*\" ./docs/",
         "test": "npm run test --workspaces --if-present",
         "start": "npm run start --workspaces --if-present",
-        "start:dev": "npm run start:dev --workspaces --if-present"
+        "start:dev": "npm run start:dev --workspaces --if-present",
+        "test:shared": "npm run test -w space-sim-shared"
     },
     "devDependencies": {
         "copyfiles": "^2.4.1",
@@ -21,5 +23,8 @@
         "rimraf": "^3.0.2",
         "typedoc": "^0.23.15"
     },
-    "private": true
+    "private": true,
+    "engines": {
+        "node": ">=16 <19"
+    }
 }
