@@ -290,6 +290,7 @@ export class StartupScene extends Phaser.Scene {
             this._serverConnectionText?.updateSize();
             this._startMultiplayerButton
                 .setText({style: this.buttonTextStyle})
+                .setBackground(this.buttonBackgroundStyle)
                 .setOnClick(() => {
                     this.game.scene.start(SetNameSceneConfig.key);
                     this.game.scene.stop(this);
@@ -308,6 +309,7 @@ export class StartupScene extends Phaser.Scene {
             this._serverConnectionText?.updateSize();
             this._startMultiplayerButton
                 .setText({style: this.buttonDisabledTextStyle})
+                .setBackground(this.buttonDisabledBackgroundStyle)
                 .setOnClick(null)
                 .setOnHover(null);
         }

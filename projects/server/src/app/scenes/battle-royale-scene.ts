@@ -2,6 +2,7 @@ import * as Phaser from "phaser";
 import { BaseScene, GameLevel, Ship, ShipSupply, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun, Logging, Helpers, TryCatch } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
+import { lessThan } from "dynamic-data-store";
 
 export class BattleRoyaleScene extends BaseScene {
     private readonly _supplies = new Map<string, ShipSupply>();
@@ -84,31 +85,34 @@ export class BattleRoyaleScene extends BaseScene {
             this.createBot();
         }
 
-        this.addRepeatingAction('high', 'remove-ships', () => this._processRemoveShipQueue());
-        this.addRepeatingAction('high', 'remove-supplies', () => this._processRemoveSupplyQueue());
-        this.addRepeatingAction('high', 'update-ships', (time: number, delta: number) => {
+        this.addRepeatingAction('high', 'remove-ships', () => this._processRemoveShipQueue())
+        .addRepeatingAction('high', 'remove-supplies', () => this._processRemoveSupplyQueue())
+        .addRepeatingAction('high', 'update-ships', (time: number, delta: number) => {
             this.getShips()
                 .filter(s => s.active)
                 .forEach(ship => ship?.update(time, delta));
         }).addRepeatingAction('high', 'update-bot-controllers', (time: number, delta: number) => {
             this._bots.forEach((bot: AiController) => bot.update(time, delta));
         });
+
         this.addRepeatingAction('medium', 'send-ships-update', () => {
-            const ships = this.getShips()
+            const shipConfigs = this.getShips()
                 .filter(s => s.active)
                 .map(s => s.config);
-            if (ships) {
-                SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, ships);
+            if (shipConfigs) {
+                SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, shipConfigs);
             }
         });
+
         this.addRepeatingAction('low', 'send-supplies-update', () => {
-            const supplies = this.getSupplies()
+            const supplyConfigs = this.getSupplies()
                 .filter(s => s.active)
                 .map(s => s.config);
-            if (supplies.length) {
-                SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, supplies);
+            if (supplyConfigs.length) {
+                SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, supplyConfigs);
             }
         });
+
         this.addRepeatingAction('ultralow', 'send-stats-update', () => {
             // TODO: filter out stats from other rooms
             SpaceSimServer.io.sendUpdateStatsToRoom(this.ROOM_NAME, SpaceSim.stats.getAllStats());
@@ -116,6 +120,11 @@ export class BattleRoyaleScene extends BaseScene {
             this._processFlickerSupplyQueue();
         }).addRepeatingAction('ultralow', 'send-game-level-update', () => {
             SpaceSimServer.io.sendUpdateGameLevelToRoom(this.ROOM_NAME, this.getLevel().config);
+        }).addRepeatingAction('ultralow', 'purge-disconnected-users', () => {
+            const users = SpaceSimServer.users.delete({deleteAt: lessThan(Date.now())});
+            for (let user of users) {
+                this.removePlayerFromScene(user);
+            }
         });
     }
 
@@ -190,7 +199,7 @@ export class BattleRoyaleScene extends BaseScene {
         let index = 1;
         const botNames = Array.from(this._bots.values()).map(ai => ai.ship.name);
         let name = `bot-${index}`;
-        while (SpaceSimServer.users.count({ name: name }) > 0 || botNames.includes(name)) {
+        while (SpaceSimServer.users.size({ name: name }) > 0 || botNames.includes(name)) {
             index++;
             name = `bot-${index}`;
         }
@@ -202,7 +211,7 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     addPlayerToScene(player: SpaceSimServer.UserData): void {
-        const user = SpaceSimServer.users.selectFirst(player);
+        const user = SpaceSimServer.users.select(player).first;
         if (user) {
             Logging.log('info', 'adding player:', user, 'to scene:', this.ROOM_NAME);
             user.room = this.ROOM_NAME;
@@ -213,7 +222,7 @@ export class BattleRoyaleScene extends BaseScene {
     }
 
     removePlayerFromScene(player: SpaceSimServer.UserData): void {
-        const user = SpaceSimServer.users.selectFirst(player);
+        const user = SpaceSimServer.users.select(player).first;
         if (user) {
             Logging.log('info', 'removing player:', user, 'from scene:', this.ROOM_NAME);
             const id = user.shipId;
@@ -250,7 +259,7 @@ export class BattleRoyaleScene extends BaseScene {
 
         if (this._ships.has(opts.id)) {
             // remove association of ship to user
-            const user = SpaceSimServer.users.selectFirst({ shipId: opts.id });
+            const user = SpaceSimServer.users.select({ shipId: opts.id }).first;
             if (user) {
                 this.removePlayerFromScene(user);
             }

@@ -18,6 +18,7 @@ export * from "./src/interfaces/is-configurable";
 export * from "./src/interfaces/number-range";
 export * from "./src/interfaces/physics-object";
 export * from "./src/interfaces/size";
+export * from "./src/interfaces/socket-data";
 export * from "./src/interfaces/updatable";
 /** levels */
 export * from "./src/levels/game-level";
@@ -49,7 +50,6 @@ export * from "./src/ships/supplies/supply-type";
 export * from "./src/interfaces/damage-metadata";
 export * from "./src/ships/ship";
 /** utilities */
-export * from "./src/utilities/data-table";
 export * from "./src/utilities/exploder";
 export * from "./src/utilities/game-score-tracker";
 export * from "./src/utilities/helpers";
