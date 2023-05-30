@@ -1,16 +1,14 @@
 import { Scene } from "phaser";
-import { HasLocation, Ship, Updatable, SpaceSim, Helpers } from "space-sim-shared";
+import { HasLocation, Updatable, SpaceSim, Helpers } from "space-sim-shared";
 import { SpaceSimClient } from "../space-sim-client";
 
 export class MouseTracker implements HasLocation, Updatable {
     private _scene: Scene;
-    private _ship: Ship;
     
     public active: boolean = true;
 
-    constructor(ship: Ship) {
-        this._ship = ship;
-        this._scene = ship.scene;
+    constructor(scene: Phaser.Scene) {
+        this._scene = scene;
     }
 
     update(time: number, delta: number): void {
@@ -77,7 +75,7 @@ export class MouseTracker implements HasLocation, Updatable {
     }
 
     private _setShipAngle(): void {
-        if (this._ship) {
+        if (this._scene) {
             const loc = this.location;
             const shipPos = this._ship.location;
             const radians: number = Phaser.Math.Angle.Between(loc.x, loc.y, shipPos.x, shipPos.y);

@@ -5,7 +5,7 @@ import { Ship } from "../ships/ship";
 import { BaseScene } from "../scenes/base-scene";
 import { NumberOrRange } from "../interfaces/number-range";
 import { SpaceSim } from "../space-sim";
-import { IsConfigurable } from "../interfaces/is-configurable";
+import { HasState } from "../interfaces/has-state";
 
 export type GameTile = {
     name: string;
@@ -40,7 +40,7 @@ export type GameLevelOptions = Partial<GameLevelConfig> & {
     tileHeight?: number;
 };
 
-export class GameLevel extends Phaser.Tilemaps.Tilemap implements IsConfigurable<GameLevelConfig> {
+export class GameLevel extends Phaser.Tilemaps.Tilemap implements HasState<GameLevelConfig> {
     public scene: BaseScene;
 
     private readonly _rooms = new Array<GameRoom>();
@@ -73,16 +73,16 @@ export class GameLevel extends Phaser.Tilemaps.Tilemap implements IsConfigurable
             opts.rooms = this._createRooms(opts);
         }
 
-        this.configure(opts);
+        this.setCurrentState(opts);
     }
 
-    get config(): GameLevelConfig {
+    get currentState(): GameLevelConfig {
         return {
             rooms: this.rooms
         };
     }
 
-    configure(config: Partial<GameLevelConfig>): this {
+    setCurrentState(config: Partial<GameLevelConfig>): this {
         if (config?.rooms?.length) {
             this._rooms.splice(0, this._rooms.length, ...config.rooms);
             this._createLayers(...config.rooms);

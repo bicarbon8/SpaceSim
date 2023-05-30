@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { DisconnectDescription } from "socket.io-client/build/esm/socket";
-import { BaseScene, GameLevelConfig, GameScoreTracker, Logging, ShipConfig, ShipSupplyOptions, SocketData, SpaceSim, TryCatch } from "space-sim-shared";
+import { BaseScene, GameLevelConfig, GameScoreTracker, Logging, ShipState, ShipSupplyOptions, SpaceSim, TryCatch } from "space-sim-shared";
 import { MultiplayerSceneConfig } from "../scenes/multiplayer-scene";
 import { SetNameSceneConfig } from "../scenes/set-name-scene";
 import { SpaceSimClient } from "../space-sim-client";
@@ -50,48 +50,38 @@ export class ClientSocketManager {
         return this;
     }
 
-    sendRequestMapRequest(data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.REQUEST_MAP, data);
+    sendRequestMapRequest(): this {
+        this._emit(SpaceSim.Constants.Socket.REQUEST_MAP, SpaceSimClient.playerData);
         return this;
     }
 
-    sendJoinRoomRequest(data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.JOIN_ROOM, data);
+    sendJoinRoomRequest(): this {
+        this._emit(SpaceSim.Constants.Socket.JOIN_ROOM, SpaceSimClient.playerData);
         return this;
     }
 
-    sendPlayerDeathNotice(data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.SHIP_DESTROYED, data);
+    sendPlayerDeathNotice(): this {
+        this._emit(SpaceSim.Constants.Socket.SHIP_DESTROYED, SpaceSimClient.playerData);
         return this;
     }
 
-    sendRequestShipRequest(data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.REQUEST_SHIP, data);
+    sendRequestShipRequest(): this {
+        this._emit(SpaceSim.Constants.Socket.REQUEST_SHIP, SpaceSimClient.playerData);
         return this;
     }
 
-    sendSetShipAngleRequest(degrees: number, data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.SET_PLAYER_ANGLE, degrees, data);
+    sendSetShipAngleRequest(degrees: number): this {
+        this._emit(SpaceSim.Constants.Socket.SET_PLAYER_ANGLE, SpaceSimClient.playerData, degrees);
         return this;
     }
 
-    sendEnableEngineRequest(data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.ENGINE_ENABLED, data);
+    sendEngineOnRequest(enabled: boolean): this {
+        this._emit(SpaceSim.Constants.Socket.ENGINE_ON, SpaceSimClient.playerData, enabled);
         return this;
     }
 
-    sendDisableEngineRequest(data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.ENGINE_DISABLED, data);
-        return this;
-    }
-
-    sendEnableWeaponRequest(data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.WEAPON_ENABLED, data);
-        return this;
-    }
-
-    sendDisableWeaponRequest(data: SpaceSim.UserData): this {
-        this._emit(SpaceSim.Constants.Socket.WEAPON_DISABLED, data);
+    sendWeaponFiringRequest(firing: boolean): this {
+        this._emit(SpaceSim.Constants.Socket.WEAPON_FIRING, SpaceSimClient.playerData, firing);
         return this;
     }
 
@@ -142,17 +132,11 @@ export class ClientSocketManager {
                         case SpaceSim.Constants.Socket.SET_PLAYER_ID:
                             this._handleSetPlayerIdEvent(args[0].data[0]);
                             break;
-                        case SpaceSim.Constants.Socket.ENGINE_ENABLED:
-                            this._handleEnableEngineEvent(args[0].data[0]);
+                        case SpaceSim.Constants.Socket.ENGINE_ON:
+                            this._handleEngineOnEvent(args[0].data[0], args[0].data[1]);
                             break;
-                        case SpaceSim.Constants.Socket.ENGINE_DISABLED:
-                            this._handleDisableEngineEvent(args[0].data[0]);
-                            break;
-                        case SpaceSim.Constants.Socket.WEAPON_ENABLED:
-                            this._handleEnableWeaponEvent(args[0].data[0]);
-                            break;
-                        case SpaceSim.Constants.Socket.WEAPON_DISABLED:
-                            this._handleDisableWeaponEvent(args[0].data[0]);
+                        case SpaceSim.Constants.Socket.WEAPON_FIRING:
+                            this._handleEnableWeaponEvent(args[0].data[0], args[0].data[1]);
                             break;
                         case SpaceSim.Constants.Socket.INVALID_REQUEST:
                             this._handleInvalidRequestEvent(args[0].data[0]);
@@ -231,7 +215,7 @@ export class ClientSocketManager {
     private _handleUserAcceptedEvent(data: SpaceSim.UserData): void {
         SpaceSimClient.playerData = data;
         if (SpaceSim.game.scene.isActive(SetNameSceneConfig.key)) {
-            this.sendJoinRoomRequest(data);
+            this.sendJoinRoomRequest();
         }
     }
 
@@ -274,14 +258,14 @@ export class ClientSocketManager {
         }
     }
 
-    private _handleUpdatePlayersEvent(opts: Array<ShipConfig>): void {
+    private _handleUpdatePlayersEvent(opts: Array<ShipState>): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.queueShipUpdates(...opts);
-                const updatedIds = Array.from(new Set(opts.map(o => o.id)));
-                const zombieIds = scene.getShips().map(s => s.id).filter(id => !updatedIds.includes(id));
-                scene.queueShipRemoval(...zombieIds);
+                scene.queueShipUpdates?.(...opts);
+                const updatedIds = Array.from(new Set(opts?.map(o => o.id)));
+                const zombieIds = scene.getShips?.().map(s => s.id).filter(id => !updatedIds.includes(id));
+                scene.queueShipRemoval?.(...zombieIds);
             }
         }
     }
@@ -308,7 +292,7 @@ export class ClientSocketManager {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
             if (scene) {
-                scene.queueGameLevelUpdate(config);
+                scene.queueGameLevelUpdate?.(config);
             }
         }
     }
@@ -319,43 +303,17 @@ export class ClientSocketManager {
         }
     }
 
-    private _handleEnableEngineEvent(id: string): void {
+    private _handleEngineOnEvent(id: string, enabled: boolean): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
-            const ship = scene?.getShip(id);
-            if (ship) {
-                ship.engine.setEnabled(true);
-            }
+            scene?.getShip?.(id)?.engine?.setEnabled(enabled);
         }
     }
 
-    private _handleDisableEngineEvent(id: string): void {
+    private _handleEnableWeaponEvent(id: string, firing: boolean): void {
         if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
             const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
-            const ship = scene?.getShip(id);
-            if (ship) {
-                ship.engine.setEnabled(false);
-            }
-        }
-    }
-
-    private _handleEnableWeaponEvent(id: string): void {
-        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
-            const ship = scene?.getShip(id);
-            if (ship) {
-                ship.weapon.setEnabled(true);
-            }
-        }
-    }
-
-    private _handleDisableWeaponEvent(id: string): void {
-        if (SpaceSim.game.scene.isActive(MultiplayerSceneConfig.key)) {
-            const scene: BaseScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
-            const ship = scene?.getShip(id);
-            if (ship) {
-                ship.weapon.setEnabled(false);
-            }
+            scene?.getShip?.(id)?.weapon?.setEnabled(firing);
         }
     }
 }

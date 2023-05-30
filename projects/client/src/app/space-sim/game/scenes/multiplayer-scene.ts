@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameLevel, GameLevelOptions, SpaceSim, Ship, GameRoom, ShipSupplyOptions, BaseScene, ShipSupply, ShipConfig, Engine, Weapon, TryCatch, Logging, Helpers, ShipOptions, GameLevelConfig } from "space-sim-shared";
+import { GameLevel, SpaceSim, Ship, GameRoom, ShipSupplyOptions, BaseScene, ShipSupply, ShipState, Engine, Weapon, TryCatch, Logging, Helpers, GameLevelConfig } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -55,7 +55,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     private _shouldEndScene = false;
 
     private readonly _updateGameLevelQueue = new Array<GameLevelConfig>();
-    private readonly _updateShipsQueue = new Array<ShipConfig>();
+    private readonly _updateShipsQueue = new Array<ShipState>();
     private readonly _removeShipsQueue = new Array<string>();
     private readonly _updateSuppliesQueue = new Array<ShipSupplyOptions>();
     private readonly _flickerSuppliesQueue = new Array<string>();
@@ -107,7 +107,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
         return this;
     }
 
-    override queueShipUpdates(...opts: Array<ShipConfig>): BaseScene {
+    override queueShipUpdates(...opts: Array<ShipState>): BaseScene {
         this._updateShipsQueue.splice(this._updateShipsQueue.length, 0, ...opts);
         return this;
     }
@@ -213,13 +213,13 @@ export class MultiplayerScene extends BaseScene implements Resizable {
 
     private async _getPlayerFromServer(): Promise<void> {
         // handle case of client self destruct by notifying server of our destruction
-        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipState) => {
             if (cfg.id === SpaceSimClient.playerShipId) {
-                SpaceSimClient.socket?.sendPlayerDeathNotice(SpaceSimClient.playerData);
+                SpaceSimClient.socket?.sendPlayerDeathNotice();
             }
         });
 
-        SpaceSimClient.socket.sendRequestShipRequest(SpaceSimClient.playerData);
+        SpaceSimClient.socket.sendRequestShipRequest();
     }
 
     private _createStellarBodiesLayer(): void {
@@ -362,7 +362,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 this._shouldCreateStellarBodies = true;
                 this._shouldGetPlayer = true;
             } else {
-                this._gameLevel.configure(config);
+                this._gameLevel.setCurrentState(config);
             }
         }
     }
@@ -374,7 +374,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 let ship = this._ships.get(o.id) as PlayerShip;
                 if (ship) {
                     // update existing ship
-                    ship.configure(o);
+                    ship.setCurrentState(o);
                 } else {
                     // or create new ship if doesn't already exist
                     Logging.log('debug', `creating new PlayerShip ${JSON.stringify(o)}`);
@@ -455,7 +455,7 @@ export class MultiplayerScene extends BaseScene implements Resizable {
                 let supply = this._supplies.get(o.id);
                 if (supply) {
                     // update existing supply
-                    supply?.configure(o);
+                    supply?.setCurrentState(o);
                 } else {
                     // or create new supply if doesn't already exist
                     Logging.log('debug', `creating new ShipSupply ${JSON.stringify(o)}`);

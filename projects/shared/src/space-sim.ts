@@ -92,10 +92,9 @@ export module SpaceSim {
         }
         export module Events {
             export const SHIP_DEATH = 'ship-death';
-            export const WEAPON_ENABLED = 'weapon-enabled';
-            export const WEAPON_DISABLED = 'weapon-disabled';
-            export const ENGINE_ENABLED = 'engine-enabled';
-            export const ENGINE_DISABLED = 'engine-disabled';
+            export const WEAPON_FIRING = 'weapon-firing';
+            export const ENGINE_ON = 'engine-on';
+            export const SHIP_ANGLE = 'ship-angle';
         }
         export module Socket {
             export const MAX_USERS_PER_ROOM = 100;
@@ -109,10 +108,8 @@ export module SpaceSim {
             export const UPDATE_PLAYERS = 'update-players';
             export const COMMAND_PLAYER = 'player-command';
             export const SHIP_DESTROYED = 'ship-destroyed';
-            export const ENGINE_ENABLED = 'engine-enabled';
-            export const ENGINE_DISABLED = 'engine-disabled';
-            export const WEAPON_ENABLED = 'weapon-enabled';
-            export const WEAPON_DISABLED = 'weapon-disabled';
+            export const ENGINE_ON = 'engine-on';
+            export const WEAPON_FIRING = 'weapon-firing';
             export const SET_PLAYER_ANGLE = 'set-player-angle';
             export const UPDATE_SUPPLIES = 'update-supplies';
             export const FLICKER_SUPPLIES = 'flicker-supplies';

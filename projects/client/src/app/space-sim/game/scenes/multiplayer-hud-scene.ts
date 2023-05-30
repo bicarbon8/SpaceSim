@@ -32,10 +32,14 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
         this.debug = SpaceSim.debug;
     }
 
+    get parentScene(): BaseScene {
+        return this._parentScene;
+    }
+
     create(): void {
         this._parentScene = SpaceSim.game.scene.getScene(MultiplayerSceneConfig.key) as BaseScene;
         this.resize();
-        SpaceSim.stats.start(this.playerShip.config);
+        SpaceSim.stats.start(this.playerShip.currentState);
     }
 
     resize(): void {
@@ -144,15 +148,23 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
 
     private _createController(): void {
         if (this.game.device.os.desktop) {
-            this._controller = new KbmController(this, this.playerShip);
+            this._controller = new KbmController(this);
         } else {
             if (this._controller) {
                 (this._controller as TouchController).getGameObject()?.destroy();
             }
-            const controller = new TouchController(this, this.playerShip);
+            const controller = new TouchController(this);
             this.add.existing(controller.getGameObject());
             this._controller = controller;
         }
+        // handle events sent by the controller
+        this.events.on(SpaceSim.Constants.Events.ENGINE_ON, (enabled: boolean) => {
+            SpaceSimClient.socket?.sendEngineOnRequest(enabled);
+        }).on(SpaceSim.Constants.Events.WEAPON_FIRING, (firing: boolean) => {
+            SpaceSimClient.socket?.sendWeaponFiringRequest(firing);
+        }).on(SpaceSim.Constants.Events.SHIP_ANGLE, (degrees: number) => {
+            SpaceSimClient.socket?.sendSetShipAngleRequest(degrees);
+        });
     }
 
     private _displayHUDInfo(): void {

@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { BaseScene, GameLevel, Ship, ShipSupply, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipConfig, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun, Logging, Helpers, TryCatch } from "space-sim-shared";
+import { BaseScene, GameLevel, Ship, ShipSupply, ShipSupplyOptions, AmmoSupply, CoolantSupply, FuelSupply, RepairsSupply, GameLevelOptions, SpaceSim, Engine, Weapon, MachineGun, ShipState, Exploder, AiController, StandardEngine, EconomyEngine, SportsEngine, Cannon, PlasmaGun, Logging, Helpers, TryCatch } from "space-sim-shared";
 import { ServerShip } from "../ships/server-ship";
 import { SpaceSimServer } from "../space-sim-server";
 import { lessThan } from "dynamic-data-store";
@@ -33,7 +33,7 @@ export class BattleRoyaleScene extends BaseScene {
     override queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    override queueShipUpdates(...opts: Array<ShipConfig>): BaseScene {
+    override queueShipUpdates(...opts: Array<ShipState>): BaseScene {
         throw new Error("Method not implemented.");
     }
     override queueShipRemoval(...ids: string[]): BaseScene {
@@ -96,20 +96,20 @@ export class BattleRoyaleScene extends BaseScene {
         });
 
         this.addRepeatingAction('medium', 'send-ships-update', () => {
-            const shipConfigs = this.getShips()
+            const shipsState = this.getShips()
                 .filter(s => s.active)
-                .map(s => s.config);
-            if (shipConfigs) {
-                SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, shipConfigs);
+                .map(s => s.currentState);
+            if (shipsState) {
+                SpaceSimServer.io.sendUpdatePlayersEvent(this.ROOM_NAME, shipsState);
             }
         });
 
         this.addRepeatingAction('low', 'send-supplies-update', () => {
-            const supplyConfigs = this.getSupplies()
+            const suppliesState = this.getSupplies()
                 .filter(s => s.active)
-                .map(s => s.config);
-            if (supplyConfigs.length) {
-                SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, supplyConfigs);
+                .map(s => s.currentState);
+            if (suppliesState.length) {
+                SpaceSimServer.io.sendUpdateSuppliesEvent(this.ROOM_NAME, suppliesState);
             }
         });
 
@@ -119,7 +119,7 @@ export class BattleRoyaleScene extends BaseScene {
         }).addRepeatingAction('ultralow', 'send-supply-flicker', () => {
             this._processFlickerSupplyQueue();
         }).addRepeatingAction('ultralow', 'send-game-level-update', () => {
-            SpaceSimServer.io.sendUpdateGameLevelToRoom(this.ROOM_NAME, this.getLevel().config);
+            SpaceSimServer.io.sendUpdateGameLevelToRoom(this.ROOM_NAME, this.getLevel().currentState);
         }).addRepeatingAction('ultralow', 'purge-disconnected-users', () => {
             const users = SpaceSimServer.users.delete({deleteAt: lessThan(Date.now())});
             for (let user of users) {
@@ -128,7 +128,7 @@ export class BattleRoyaleScene extends BaseScene {
         });
     }
 
-    createShip(data: SpaceSim.UserData, config?: Partial<ShipConfig>): Ship {
+    createShip(data: SpaceSim.UserData, config?: Partial<ShipState>): Ship {
         const room = this.getLevel().rooms[0];
         const topleft: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left + 1, room.top + 1);
         const botright: Phaser.Math.Vector2 = this.getLevel().getMapTileWorldLocation(room.left+room.width - 1, room.top+room.height - 1);
@@ -180,9 +180,9 @@ export class BattleRoyaleScene extends BaseScene {
         });
         this._addPlayerCollisionPhysicsWithPlayers(ship);
         this._addPlayerCollisionPhysicsWithSupplies(ship);
-        Logging.log('info', 'adding ship', ship.config);
+        Logging.log('info', 'adding ship', ship.currentState);
         this._ships.set(ship.id, ship);
-        SpaceSim.stats.start(ship.config);
+        SpaceSim.stats.start(ship.currentState);
 
         Logging.log('debug', 'updating user', data, 'record to include shipId:', ship.id);
         SpaceSimServer.users.update({ shipId: ship.id }, data);
@@ -238,13 +238,16 @@ export class BattleRoyaleScene extends BaseScene {
 
     private _setupSceneEventHandling(): void {
         // setup listeners for scene events
-        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipState) => {
             Logging.log('debug', `received '${SpaceSim.Constants.Events.SHIP_DEATH}' event in scene`);
             this.queueShipRemoval(cfg.id);
-        }).on(SpaceSim.Constants.Events.WEAPON_ENABLED, (id: string) => SpaceSimServer.io.sendEnableWeaponEventToRoom(this.ROOM_NAME, id))
-            .on(SpaceSim.Constants.Events.WEAPON_DISABLED, (id: string) => SpaceSimServer.io.sendDisableWeaponEventToRoom(this.ROOM_NAME, id))
-            .on(SpaceSim.Constants.Events.ENGINE_ENABLED, (id: string) => SpaceSimServer.io.sendEnableEngineEventToRoom(this.ROOM_NAME, id))
-            .on(SpaceSim.Constants.Events.ENGINE_DISABLED, (id: string) => SpaceSimServer.io.sendDisableEngineEventToRoom(this.ROOM_NAME, id));
+        }).on(SpaceSim.Constants.Events.WEAPON_FIRING, (id: string, firing: boolean) => {
+            this.getShip(id)?.weapon?.setEnabled(firing);
+            SpaceSimServer.io.sendWeaponFiringEventToRoom(this.ROOM_NAME, id, firing);
+        }).on(SpaceSim.Constants.Events.ENGINE_ON, (id: string, enabled: boolean) => {
+            this.getShip(id)?.engine?.setEnabled(enabled);
+            SpaceSimServer.io.sendEngineOnEventToRoom(this.ROOM_NAME, id, enabled);
+        });
     }
 
     private _createGameLevel(): void {
@@ -253,7 +256,7 @@ export class BattleRoyaleScene extends BaseScene {
         this._gameLevel = map;
     }
 
-    private _removeShip(opts: ShipConfig): void {
+    private _removeShip(opts: ShipState): void {
         Logging.log('debug', `emitting player death event to room '${this.ROOM_NAME}' for ship '${opts.id}' with name: '${opts.name}'...`);
         SpaceSimServer.io.sendShipDestroyedEventToRoom(this.ROOM_NAME, opts.id);
 
@@ -305,15 +308,15 @@ export class BattleRoyaleScene extends BaseScene {
         return false;
     }
 
-    private _expelSupplies(shipCfg: ShipConfig): void {
-        Logging.log('debug', `expelling supplies at:`, shipCfg.location);
-        const supplyOpts = this._exploder.emitSupplies(shipCfg);
+    private _expelSupplies(shipState: ShipState): void {
+        Logging.log('debug', `expelling supplies at:`, shipState.location);
+        const supplyOpts = this._exploder.emitSupplies(shipState);
         const supplies = this._addSupplyCollisionPhysics(...supplyOpts);
         for (let supply of supplies) {
             this._supplies.set(supply.id, supply);
         }
         this._cleanupSupplies(...supplies);
-        Logging.log('debug', supplyOpts.length, 'supplies expelled from ship', shipCfg.id);
+        Logging.log('debug', supplyOpts.length, 'supplies expelled from ship', shipState.id);
     }
 
     private _addSupplyCollisionPhysics(...options: Array<ShipSupplyOptions>): Array<ShipSupply> {
@@ -389,7 +392,7 @@ export class BattleRoyaleScene extends BaseScene {
         for (let id of removeShipIds) {
             let ship = this.getShip(id);
             if (ship) {
-                TryCatch.run(() => this._removeShip(ship.config));
+                TryCatch.run(() => this._removeShip(ship.currentState));
             }
         }
     }

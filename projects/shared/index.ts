@@ -14,7 +14,7 @@ export * from "./src/interfaces/has-location";
 export * from "./src/interfaces/has-physics-body";
 export * from "./src/interfaces/has-temperature";
 export * from "./src/interfaces/has-weapons";
-export * from "./src/interfaces/is-configurable";
+export * from "./src/interfaces/has-state";
 export * from "./src/interfaces/number-range";
 export * from "./src/interfaces/physics-object";
 export * from "./src/interfaces/size";

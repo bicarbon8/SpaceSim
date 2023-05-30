@@ -52,13 +52,6 @@ export abstract class Weapon extends ShipAttachment {
 
     override setEnabled(enabled: boolean): void {
         super.setEnabled(enabled);
-        let event: any;
-        if (enabled) {
-            event = SpaceSim.Constants.Events.WEAPON_ENABLED;
-        } else {
-            event = SpaceSim.Constants.Events.WEAPON_DISABLED;
-        }
-        this.scene.events.emit(event, this.ship.id);
     }
 
     addAmmo(amount: number): this {
