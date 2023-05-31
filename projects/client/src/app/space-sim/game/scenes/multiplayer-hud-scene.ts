@@ -158,11 +158,11 @@ export class MultiplayerHudScene extends Phaser.Scene implements Resizable {
             this._controller = controller;
         }
         // handle events sent by the controller
-        this.events.on(SpaceSim.Constants.Events.ENGINE_ON, (enabled: boolean) => {
+        this.parentScene.events.on(SpaceSim.Constants.Events.ENGINE_ON, (id: string, enabled: boolean) => {
             SpaceSimClient.socket?.sendEngineOnRequest(enabled);
-        }).on(SpaceSim.Constants.Events.WEAPON_FIRING, (firing: boolean) => {
+        }).on(SpaceSim.Constants.Events.WEAPON_FIRING, (id: string, firing: boolean) => {
             SpaceSimClient.socket?.sendWeaponFiringRequest(firing);
-        }).on(SpaceSim.Constants.Events.SHIP_ANGLE, (degrees: number) => {
+        }).on(SpaceSim.Constants.Events.SHIP_ANGLE, (id: string, degrees: number) => {
             SpaceSimClient.socket?.sendSetShipAngleRequest(degrees);
         });
     }

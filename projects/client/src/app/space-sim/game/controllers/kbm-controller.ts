@@ -46,14 +46,14 @@ export class KbmController extends InputController {
                 || !Phaser.Math.Fuzzy.Equal(ploc.x, this._pointerLocLast.x, 1) 
                 || !Phaser.Math.Fuzzy.Equal(ploc.y, this._pointerLocLast.y, 1)) {
                 this._pointerLocLast = ploc;
-                const ship = (this.scene['parentScene'] as BaseScene)?.getShip?.(SpaceSimClient.playerShipId);
+                const ship = this.parentScene?.getShip?.(SpaceSimClient.playerShipId);
                 if (ship) {
                     const shipPos = ship.location;
                     const radians: number = Phaser.Math.Angle.Between(ploc.x, ploc.y, shipPos.x, shipPos.y);
                     const degrees: number = Number(Helpers.rad2deg(radians).toFixed(0));
                     // only update if angle changed more than minimum allowed degrees
                     if (!Phaser.Math.Fuzzy.Equal(ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ships.MIN_ROTATION_ANGLE)) {
-                        this.scene.events.emit(SpaceSim.Constants.Events.SHIP_ANGLE, degrees);
+                        this.parentScene?.events.emit(SpaceSim.Constants.Events.SHIP_ANGLE, SpaceSimClient.playerShipId, degrees);
                     }
                 }
             }
@@ -61,12 +61,12 @@ export class KbmController extends InputController {
             if (this._thrustForwardsKey.isDown) {
                 if (!this._engineEnabled) {
                     this._engineEnabled = true;
-                    this.scene.events.emit(SpaceSim.Constants.Events.ENGINE_ON, true);
+                    this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, SpaceSimClient.playerShipId, true);
                 }
             } else {
                 if (this._engineEnabled) {
                     this._engineEnabled = false;
-                    this.scene.events.emit(SpaceSim.Constants.Events.ENGINE_ON, false);
+                    this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, SpaceSimClient.playerShipId, false);
                 }
             }
             // reverse Thruster
@@ -86,15 +86,15 @@ export class KbmController extends InputController {
                 // this.player.getThruster()?.boostForwards();
             }
             // Left Click: fire any weapons
-            if (this.scene.input.activePointer.leftButtonDown()) {
+            if (this.pointer.leftButtonDown()) {
                 if (!this._weaponEnabled) {
                     this._weaponEnabled = true;
-                    this.scene.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, true);
+                    this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, SpaceSimClient.playerShipId, true);
                 }
             } else {
                 if (this._weaponEnabled) {
                     this._weaponEnabled = false;
-                    this.scene.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, false);
+                    this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, SpaceSimClient.playerShipId, false);
                 }
             }
             if (this._rotateAttachmentsClockwiseKey.isDown) {

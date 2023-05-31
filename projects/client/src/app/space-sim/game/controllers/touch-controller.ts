@@ -18,6 +18,10 @@ export class TouchController extends InputController {
         this._createGameObj();
     }
 
+    get parentScene(): BaseScene {
+        return (this.scene?.['parentScene'] as BaseScene);
+    }
+
     update(time: number, delta: number): void {
         this._handleFireTouch();
         this._handleThrusterTouch();
@@ -33,12 +37,12 @@ export class TouchController extends InputController {
         const pos: Phaser.Math.Vector2 = Helpers.vector2(x, y).subtract(Helpers.vector2(60));
         const radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
         const degrees: number = Number(Helpers.rad2deg(radians).toFixed(0));
-        const ship = (this.scene['parentScene'] as BaseScene)?.getShip?.(SpaceSimClient.playerShipId);
+        const ship = this.parentScene?.getShip?.(SpaceSimClient.playerShipId);
         if (ship) {
             // Logging.log('info', `handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
             // only update if angle changed more than minimum allowed degrees
             if (!Phaser.Math.Fuzzy.Equal(ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ships.MIN_ROTATION_ANGLE)) {
-                this.scene.events.emit(SpaceSim.Constants.Events.SHIP_ANGLE, degrees);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.SHIP_ANGLE, degrees);
             }
         }
     }
@@ -47,12 +51,12 @@ export class TouchController extends InputController {
         if (this._fireButtonActive) {
             if (!this._weaponEnabled) {
                 this._weaponEnabled = true;
-                this.scene.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, true);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, true);
             }
         } else {
             if (this._weaponEnabled) {
                 this._weaponEnabled = false;
-                this.scene.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, false);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, false);
             }
         }
     }
@@ -61,12 +65,12 @@ export class TouchController extends InputController {
         if (this._thrusterButtonActive) {
             if (!this._engineEnabled) {
                 this._engineEnabled = true;
-                this.scene.events.emit(SpaceSim.Constants.Events.ENGINE_ON, true);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, true);
             }
         } else {
             if (this._engineEnabled) {
                 this._engineEnabled = false;
-                this.scene.events.emit(SpaceSim.Constants.Events.ENGINE_ON, false);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, false);
             }
         }
     }
