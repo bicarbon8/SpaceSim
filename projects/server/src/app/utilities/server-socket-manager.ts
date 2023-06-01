@@ -366,7 +366,7 @@ export class ServerSocketManager {
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
-                scene.removePlayerFromScene(data);
+                scene.events.emit(SpaceSim.Constants.Events.SHIP_DEATH, user);
             } else {
                 Logging.log('warn', `no scene could be found matching room '${user.room}' so player death not registered`);
             }
