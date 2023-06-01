@@ -129,7 +129,7 @@ export class ServerSocketManager {
         TryCatch.run(() => {
             const socket = this.getSocket(socketId);
             if (socket) {
-                Logging.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
+                Logging.log('debug', `sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
                 socket.emit(event, {
                     sent: Date.now(),
                     data: args
@@ -139,23 +139,9 @@ export class ServerSocketManager {
         return this;
     }
 
-    private socketRoomBroadcast(socketId: string, room: string, event: string, ...args: Array<any>): this {
-        TryCatch.run(() => {
-            const socket = this.getSocket(socketId);
-            if (socket) {
-                Logging.log('trace', `broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
-                socket.broadcast.in(room).emit(event, {
-                    sent: Date.now(),
-                    data: args
-                });
-            }
-        }, 'warn', `[${Logging.dts()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
-        return this;
-    }
-
     private roomEmit(room: string, event: string, ...args: Array<any>): this {
         TryCatch.run(() => {
-            Logging.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
+            Logging.log('debug', `sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
             this.io.in(room).emit(event, {
                 sent: Date.now(),
                 data: args
@@ -336,8 +322,13 @@ export class ServerSocketManager {
                     }
                 }
                 const ship = scene.getShip(user.shipId) ?? scene.createShip(user);
-                Logging.log('debug', `sending ship id ${ship.id} to client ${socketId}`);
-                this.sendSetShipIdResponse(socketId, ship.id);
+                if (ship) {
+                    Logging.log('debug', `sending ship id ${ship.id} to client ${socketId}`);
+                    this.sendSetShipIdResponse(socketId, ship.id);
+                } else {
+                    Logging.log('warn', 'unable to get existing or create new ship for user', {user});
+                    this.sendInvalidRequestEvent(socketId, 'some error occurred when getting existing or creating new ship; please try again');
+                }
             } else {
                 Logging.log('warn', `no scene could be found matching room '${user.room}' so new ship not created`);
                 this.sendInvalidRequestEvent(socketId, 'supplied user is not in a room so is not allowed to request a Ship');

@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "./dist",
+    "composite": true,
     "sourceMap": true,
     "declaration": true,
     "downlevelIteration": true,

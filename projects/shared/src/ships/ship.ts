@@ -36,11 +36,11 @@ export type ShipOptions = Partial<ShipState> & {
 
 export class Ship extends Phaser.GameObjects.Container implements HasId, HasLocation, HasState<ShipState> {
     /** ShipOptions */
-    readonly id: string; // UUID
     readonly name: string;
     
     private readonly _lastDamagedBy: Array<DamageMetadata>;
     
+    private _id: string; // UUID
     private _temperature: number = 0; // in Celcius
     private _integrity: number = 0;
     private _remainingFuel: number = 0;
@@ -54,8 +54,11 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
 
     private _rotationContainer: Phaser.GameObjects.Container; // used for rotation
     
-    
-    private _destroyAtTime: number;
+    /**
+     * gets or sets the time in milliseconds that we should
+     * destroy this ship
+     */
+    destroyAtTime: number;
 
     // override property types
     public scene: BaseScene
@@ -63,7 +66,6 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
     
     constructor(scene: BaseScene, options: ShipOptions) {
         super(scene, options.location?.x, options.location?.y);
-        this.id = options.id ?? Phaser.Math.RND.uuid();
         this.name = options.name;
 
         this._lastDamagedBy = new Array<DamageMetadata>();
@@ -77,8 +79,13 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
         this.setCurrentState(options);
     }
 
+    get id(): string {
+        return this._id;
+    }
+
     setCurrentState(state: Partial<ShipState>): this {
         if (this.active) {
+            this._id = state.id ?? Phaser.Math.RND.uuid();
             const loc = state.location ?? Helpers.vector2();
             this.setPosition(loc.x, loc.y);
             const v = state.velocity ?? Helpers.vector2();
@@ -175,14 +182,6 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
             });
     }
 
-    /**
-     * returns the time in milliseconds that we should
-     * destroy this ship
-     */
-    get destroyAt(): number {
-        return this._destroyAtTime;
-    }
-
     setEngine(engine: Engine | (new (scene: BaseScene) => Engine)): this {
         if (typeof engine === 'function') {
             this._engine = new engine(this.scene);
@@ -219,7 +218,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
      */
     update(time: number, delta: number): void {
         if (this.active) {
-            if (time >= this.destroyAt) {
+            if (time >= this.destroyAtTime) {
                 this.death();
             } else {
                 this._checkOverheatCondition(delta);
@@ -310,14 +309,14 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
      * NOTE: only runs when `update(time, delta)` function is called
      */
     selfDestruct(countdownSeconds: number = 3): void {
-        this._destroyAtTime = this.scene.game.getTime() + (countdownSeconds * 1000);
+        this.destroyAtTime = this.scene.game.getTime() + (countdownSeconds * 1000);
     }
 
     /**
      * cancels the self destruct timer
      */
     cancelSelfDestruct(): void {
-        this._destroyAtTime = undefined;
+        this.destroyAtTime = undefined;
     }
 
     /**

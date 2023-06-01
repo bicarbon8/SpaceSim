@@ -17,6 +17,7 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
     private _id: string;
     private _amount: number;
     private _type: SupplyType;
+    private readonly _createdAt: number;
 
     // override property types
     public scene: BaseScene
@@ -33,6 +34,7 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         this.body.setBounce(SpaceSim.Constants.Ships.Supplies.BOUNCE, SpaceSim.Constants.Ships.Supplies.BOUNCE);
 
         this.setCurrentState(options);
+        this._createdAt = Date.now();
     }
 
     get currentState(): ShipSupplyOptions {
@@ -49,6 +51,10 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
 
     get id(): string {
         return this._id;
+    }
+
+    get createdAt(): number {
+        return this._createdAt;
     }
 
     get amount(): number {

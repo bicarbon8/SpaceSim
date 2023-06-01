@@ -238,8 +238,8 @@ export class PlayerShip extends Ship {
 
     private _updateSelfDestructText(): void {
         if (this.active) {
-            if (this.destroyAt) {
-                const remainingTime = this.destroyAt - this.scene.game.getTime();
+            if (this.destroyAtTime) {
+                const remainingTime = this.destroyAtTime - this.scene.game.getTime();
                 const remainingSeconds = Math.ceil(remainingTime / 1000);
 
                 this._selfDestructText.setText(`${remainingSeconds}`)

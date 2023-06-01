@@ -28,7 +28,7 @@
   "homepage": "https://github.com/bicarbon8/SpaceSim#readme",
   "dependencies": {
     "@mikewesthad/dungeon": "^2.0.1",
-    "dynamic-data-store": "^2.0.1",
+    "dynamic-data-store": "^2.1.0",
     "phaser": "^3.55.2"
   },
   "devDependencies": {
