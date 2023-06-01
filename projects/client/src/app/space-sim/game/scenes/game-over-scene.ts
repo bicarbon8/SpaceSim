@@ -65,7 +65,7 @@ export class GameOverScene extends Phaser.Scene {
             this._scoreText.setText([
                 'Leaderboard:',
                 ...leaderboard.map((s, i) => `${i+1}. ${s.name} - ${s.score.toFixed(0)}`)
-                .splice(0, 5)
+                    .splice(0, 5) // just top 5
             ]);
         }
         this._layout.refreshLayout();

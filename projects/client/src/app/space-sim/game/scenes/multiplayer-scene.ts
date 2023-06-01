@@ -93,27 +93,27 @@ export class MultiplayerScene extends BaseScene implements Resizable {
     }
 
     override queueSupplyUpdates(...opts: Array<ShipSupplyOptions>): BaseScene {
-        this._updateSuppliesQueue.splice(this._updateSuppliesQueue.length, 0, ...opts);
+        this._updateSuppliesQueue.push(...opts);
         return this;
     }
 
     override queueSupplyRemoval(...ids: Array<string>): BaseScene {
-        this._removeSuppliesQueue.splice(this._removeSuppliesQueue.length, 0, ...ids);
+        this._removeSuppliesQueue.push(...ids);
         return this;
     }
 
     override queueSupplyFlicker(...ids: Array<string>): BaseScene {
-        this._flickerSuppliesQueue.splice(this._flickerSuppliesQueue.length, 0, ...ids);
+        this._flickerSuppliesQueue.push(...ids);
         return this;
     }
 
     override queueShipUpdates(...opts: Array<ShipState>): BaseScene {
-        this._updateShipsQueue.splice(this._updateShipsQueue.length, 0, ...opts);
+        this._updateShipsQueue.push(...opts);
         return this;
     }
 
     override queueShipRemoval(...ids: Array<string>): BaseScene {
-        this._removeShipsQueue.splice(this._removeShipsQueue.length, 0, ...ids);
+        this._removeShipsQueue.push(...ids);
         return this;
     }
 
