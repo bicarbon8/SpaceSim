@@ -32,13 +32,6 @@ export abstract class Engine extends ShipAttachment {
 
     override setEnabled(enabled: boolean): void {
         super.setEnabled(enabled);
-        let event: any;
-        if (enabled) {
-            event = SpaceSim.Constants.Events.ENGINE_ENABLED;
-        } else {
-            event = SpaceSim.Constants.Events.ENGINE_DISABLED;
-        }
-        this.scene.events.emit(event, this.ship.id);
     }
 
     update(time: number, delta: number): void {

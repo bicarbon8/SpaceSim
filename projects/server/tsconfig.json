@@ -19,5 +19,6 @@
     ],
     "allowSyntheticDefaultImports": true,
     "strictNullChecks": false,
-  }
+  },
+  "references": [{"path": "../shared"}]
 }

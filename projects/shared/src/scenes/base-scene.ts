@@ -1,6 +1,6 @@
 import { SpaceSim } from "../space-sim";
 import { GameLevel, GameLevelConfig } from "../levels/game-level";
-import { Ship, ShipConfig } from "../ships/ship";
+import { Ship, ShipState } from "../ships/ship";
 import { ShipSupply, ShipSupplyOptions } from "../ships/supplies/ship-supply";
 import { TryCatch } from "../utilities/try-catch";
 
@@ -23,7 +23,7 @@ export abstract class BaseScene extends Phaser.Scene {
     abstract getSupplies<T extends ShipSupply>(): Array<T>;
 
     abstract queueGameLevelUpdate(opts: GameLevelConfig): BaseScene;
-    abstract queueShipUpdates(...opts: Array<ShipConfig>): BaseScene;
+    abstract queueShipUpdates(...opts: Array<ShipState>): BaseScene;
     abstract queueShipRemoval(...ids: Array<string>): BaseScene;
     abstract queueSupplyUpdates(...opts: Array<ShipSupplyOptions>): BaseScene;
     abstract queueSupplyRemoval(...ids: Array<string>): BaseScene;

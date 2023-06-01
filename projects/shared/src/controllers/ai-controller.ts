@@ -24,13 +24,19 @@ export class AiController extends InputController {
 
     private readonly _enemyIds = new Array<string>();
     private readonly _patrolPath = new Array<Phaser.Types.Math.Vector2Like>();
+    private readonly _ship: Ship;
 
     constructor(scene: BaseScene, ship?: Ship) {
-        super(scene, ship);
+        super(scene);
+        this._ship = ship;
     }
 
     override get scene(): BaseScene {
         return super.scene as BaseScene;
+    }
+
+    get ship(): Ship {
+        return this._ship;
     }
 
     get state(): AiState {
@@ -48,10 +54,10 @@ export class AiController extends InputController {
         this._ultraLowPriUpdateAt += delta;
 
         if (this.ship.weapon.enabled) {
-            this.ship.weapon.setEnabled(false);
+            this.scene.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, this.ship.id, false);
         }
         if (this.ship.engine.enabled) {
-            this.ship.engine.setEnabled(false);
+            this.scene.events.emit(SpaceSim.Constants.Events.ENGINE_ON, this.ship.id, false);
         }
 
         if (this.ship.active) {
@@ -255,7 +261,7 @@ export class AiController extends InputController {
     private _useEngines(): boolean {
         const now = this.scene.time.now;
         if (this.canUseEngines()) {
-            this.ship.engine.setEnabled(true);
+            this.scene.events.emit(SpaceSim.Constants.Events.ENGINE_ON, this.ship.id, true);
             this._nextThrusterFireAt = now + (this.scene.getShips().length * 10) + Phaser.Math.RND.realInRange(0, 500);
             return true;
         }
@@ -265,7 +271,7 @@ export class AiController extends InputController {
     private _useWeapons(): boolean {
         const now = this.scene.time.now;
         if (this.canUseWeapons()) {
-            this.ship.weapon.setEnabled(true);
+            this.scene.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, this.ship.id, true);
             this._nextWeaponsFireAt = now + (this.scene.getShips().length * 50) + Phaser.Math.RND.realInRange(0, 1);
             return true;
         }

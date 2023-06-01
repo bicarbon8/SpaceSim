@@ -1,4 +1,4 @@
-import { Ship, InputController, SpaceSim, Helpers } from "space-sim-shared";
+import { InputController, SpaceSim, Helpers, BaseScene } from "space-sim-shared";
 import { GridLayout, LayoutContent, TextButton } from "phaser-ui-components";
 import { SpaceSimClient } from "../space-sim-client";
 
@@ -9,13 +9,17 @@ export class TouchController extends InputController {
     private _throwButtonActive: boolean;
     private _boostButtonActive: boolean;
 
-    private _engineStateChanged: boolean = false;
-    private _weaponStateChanged: boolean = false;
+    private _engineEnabled: boolean = false;
+    private _weaponEnabled: boolean = false;
     
-    constructor(scene: Phaser.Scene, player?: Ship) {
-        super(scene, player);
+    constructor(scene: Phaser.Scene) {
+        super(scene);
 
         this._createGameObj();
+    }
+
+    get parentScene(): BaseScene {
+        return (this.scene?.['parentScene'] as BaseScene);
     }
 
     update(time: number, delta: number): void {
@@ -32,55 +36,41 @@ export class TouchController extends InputController {
     private _handleAimTouch(x: number, y: number): void {
         const pos: Phaser.Math.Vector2 = Helpers.vector2(x, y).subtract(Helpers.vector2(60));
         const radians: number = Phaser.Math.Angle.BetweenPoints(pos, Helpers.vector2());
-        const degrees: number = +Helpers.rad2deg(radians).toFixed(0);
-        // Logging.log('info', `handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
-        // only update if angle changed more than minimum allowed degrees
-        if (!Phaser.Math.Fuzzy.Equal(this.ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ships.MIN_ROTATION_ANGLE)) {
-            SpaceSimClient.socket?.sendSetShipAngleRequest(degrees, SpaceSimClient.playerData);
-            this.ship.rotationContainer.setAngle(degrees);
+        const degrees: number = Number(Helpers.rad2deg(radians).toFixed(0));
+        const ship = this.parentScene?.getShip?.(SpaceSimClient.playerShipId);
+        if (ship) {
+            // Logging.log('info', `handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
+            // only update if angle changed more than minimum allowed degrees
+            if (!Phaser.Math.Fuzzy.Equal(ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ships.MIN_ROTATION_ANGLE)) {
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.SHIP_ANGLE, degrees);
+            }
         }
     }
 
     private _handleFireTouch(): void {
         if (this._fireButtonActive) {
-            if (!this.ship.weapon.enabled) {
-                this._weaponStateChanged = true;
-                this.ship.weapon?.setEnabled(true);
+            if (!this._weaponEnabled) {
+                this._weaponEnabled = true;
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, true);
             }
         } else {
-            if (this.ship.weapon.enabled) {
-                this._weaponStateChanged = true;
-                this.ship.weapon?.setEnabled(false);
-            }
-        }
-        if (this._weaponStateChanged) {
-            this._weaponStateChanged = false;
-            if (this.ship?.weapon?.enabled) {
-                SpaceSimClient.socket?.sendEnableWeaponRequest(SpaceSimClient.playerData);
-            } else {
-                SpaceSimClient.socket?.sendDisableWeaponRequest(SpaceSimClient.playerData);
+            if (this._weaponEnabled) {
+                this._weaponEnabled = false;
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, false);
             }
         }
     }
 
     private _handleThrusterTouch(): void {
         if (this._thrusterButtonActive) {
-            if (!this.ship.engine.enabled) {
-                this._engineStateChanged = true;
-                this.ship.engine?.setEnabled(true);
+            if (!this._engineEnabled) {
+                this._engineEnabled = true;
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, true);
             }
         } else {
-            if (this.ship.engine.enabled) {
-                this._engineStateChanged = true;
-                this.ship.engine?.setEnabled(false);
-            }
-        }
-        if (this._engineStateChanged) {
-            this._engineStateChanged = false;
-            if (this.ship?.engine?.enabled) {
-                SpaceSimClient.socket?.sendEnableEngineRequest(SpaceSimClient.playerData);
-            } else {
-                SpaceSimClient.socket?.sendDisableEngineRequest(SpaceSimClient.playerData);
+            if (this._engineEnabled) {
+                this._engineEnabled = false;
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, false);
             }
         }
     }

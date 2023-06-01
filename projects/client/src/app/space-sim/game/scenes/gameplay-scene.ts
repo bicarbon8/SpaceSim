@@ -1,5 +1,5 @@
 import * as Phaser from "phaser";
-import { GameRoom, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipConfig, GameLevel, TryCatch, Helpers, ShipOptions } from "space-sim-shared";
+import { GameRoom, Ship, ShipSupply, ShipSupplyOptions, SpaceSim, BaseScene, GameLevelOptions, ShipState, GameLevel, TryCatch, Helpers } from "space-sim-shared";
 import { StellarBody } from "../star-systems/stellar-body";
 import { environment } from "../../../../environments/environment";
 import { SpaceSimClient } from "../space-sim-client";
@@ -35,7 +35,7 @@ export class GameplayScene extends BaseScene implements Resizable {
     queueGameLevelUpdate<T extends GameLevelOptions>(opts: T): BaseScene {
         throw new Error("Method not implemented.");
     }
-    queueShipUpdates(...opts: Array<ShipConfig>): BaseScene {
+    queueShipUpdates(...opts: Array<ShipState>): BaseScene {
         throw new Error("Method not implemented.");
     }
     queueShipRemoval(...ids: string[]): BaseScene {
@@ -228,7 +228,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         });
 
         // setup listener for player death event
-        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipConfig) => {
+        this.events.on(SpaceSim.Constants.Events.SHIP_DEATH, (cfg: ShipState) => {
             this._exploder.explode({location: cfg?.location});
             if (SpaceSimClient.playerShipId == cfg?.id) {
                 this.cameras.main.fadeOut(2000, 0, 0, 0, (camera: Phaser.Cameras.Scene2D.Camera, progress: number) => {
@@ -380,7 +380,7 @@ export class GameplayScene extends BaseScene implements Resizable {
         }
     }
 
-    private _expelSupplies(shipCfg: ShipConfig): void {
+    private _expelSupplies(shipCfg: ShipState): void {
         const supplyOpts = this._exploder.emitSupplies(shipCfg);
         for (var i=0; i<supplyOpts.length; i++) {
             let options = supplyOpts[i];

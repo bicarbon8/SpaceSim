@@ -1,4 +1,4 @@
-import { DataTable } from "./data-table";
+import { DynamicDataStore } from "dynamic-data-store";
 import { Logging } from "./logging";
 
 export module GameScoreTracker {
@@ -35,10 +35,10 @@ export module GameScoreTracker {
     };
 };
 
-export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
+export class GameScoreTracker extends DynamicDataStore<GameScoreTracker.GameStats> {
     constructor() {
         super({
-            indexKeys: ['shipId']
+            indicies: ['shipId']
         });
     }
 
@@ -59,7 +59,7 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     }
 
     shotFired(shipId: string): void {
-        const stats = this.get({shipId});
+        const stats = this.select({shipId}).first;
         if (stats) {
             stats.shotsFired.push(Date.now());
             Logging.log('trace', {shipId}, 'fired a shot');
@@ -68,7 +68,7 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     }
 
     shotLanded(shotFiredBy: string, targetId: string, damage: number): void {
-        const stats = this.get({shipId: shotFiredBy});
+        const stats = this.select({shipId: shotFiredBy}).first;
         if (stats) {
             stats.shotsLanded.push({
                 targetId: targetId,
@@ -81,7 +81,7 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     }
 
     opponentDestroyed(destroyerShipId: string, destroyedShipId: string): void {
-        const stats = this.get({shipId: destroyerShipId});
+        const stats = this.select({shipId: destroyerShipId}).first;
         if (stats) {
             const destroyed: Array<GameScoreTracker.Destroyed> = stats.opponentsDestroyed;
             const index = destroyed.findIndex(d => d.targetId === destroyedShipId);
@@ -134,7 +134,7 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     }
 
     getStats(query: Partial<GameScoreTracker.GameStats>): GameScoreTracker.GameStats {
-        const stats = this.selectFirst(query);
+        const stats = this.select(query).first;
         return {
             ...stats,
             accuracy: this.getAccuracy(stats.shotsFired?.length ?? 0, stats.shotsLanded?.length ?? 0)
@@ -146,7 +146,7 @@ export class GameScoreTracker extends DataTable<GameScoreTracker.GameStats> {
     }
 
     updateStats(stats: Partial<GameScoreTracker.GameStats>): void {
-        const prev = this.get(stats);
+        const prev = this.select(stats).first;
         const updated = {
             ...stats,
             lastUpdatedAt: Date.now()

@@ -1,6 +1,6 @@
 import { Server, Socket } from "socket.io";
 import { DisconnectReason } from "socket.io/dist/socket";
-import { GameLevelConfig, GameScoreTracker, Logging, Ship, ShipConfig, ShipSupplyOptions, SpaceSim, TryCatch } from "space-sim-shared";
+import { GameLevelConfig, GameScoreTracker, Logging, Ship, ShipState, ShipSupplyOptions, SpaceSim, TryCatch } from "space-sim-shared";
 import { BattleRoyaleScene } from "../scenes/battle-royale-scene";
 import { SpaceSimServer } from "../space-sim-server";
 
@@ -11,7 +11,6 @@ export type ServerSocketManagerOptions = {
 export class ServerSocketManager {
     public readonly io: Server;
 
-    private readonly _disconnectTimers = new Map<string, number>();
     private _connections: number = 0;
     private _disconnects: number = 0;
 
@@ -73,49 +72,25 @@ export class ServerSocketManager {
     }
 
     /**
-     * used to tell all sockets except the one originating the event that engines are enabled
-     * for the specified ship id
-     * @param socketId socket to not get event
-     * @param room room to broadcast to
-     * @param shipId the id of the ship with engine enabled
+     * used to tell all sockets in a room the state of a ship's engines
+     * @param room the room to emit within
+     * @param shipId the id of the ship
+     * @param enabled a boolean indicating if the engines are on or off
      * @returns this
      */
-    broadcastEnableEngineEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, SpaceSim.Constants.Socket.ENGINE_ENABLED, shipId);
+    sendEngineOnEventToRoom(room: string, shipId: string, enabled: boolean): this {
+        return this.roomEmit(room, SpaceSim.Constants.Socket.ENGINE_ON, shipId, enabled);
     }
 
     /**
-     * used to tell all sockets in a room that a ship has engines enabled
+     * used to tell all sockets in a room the state of a ship's weapon
      * @param room the room to emit within
-     * @param shipId the id of the ship with engine enabled
+     * @param shipId the id of the ship
+     * @param firing a boolean indicating if the weapon is firing
      * @returns this
      */
-    sendEnableEngineEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, SpaceSim.Constants.Socket.ENGINE_ENABLED, shipId);
-    }
-
-    broadcastDisableEngineEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, SpaceSim.Constants.Socket.ENGINE_DISABLED, shipId);
-    }
-
-    sendDisableEngineEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, SpaceSim.Constants.Socket.ENGINE_DISABLED, shipId);
-    }
-
-    broadcastEnableWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, SpaceSim.Constants.Socket.WEAPON_ENABLED, shipId);
-    }
-
-    sendEnableWeaponEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, SpaceSim.Constants.Socket.WEAPON_ENABLED, shipId);
-    }
-
-    broadcastDisableWeaponEventToRoom(socketId: string, room: string, shipId: string): this {
-        return this.socketRoomBroadcast(socketId, room, SpaceSim.Constants.Socket.WEAPON_DISABLED, shipId);
-    }
-
-    sendDisableWeaponEventToRoom(room: string, shipId: string): this {
-        return this.roomEmit(room, SpaceSim.Constants.Socket.WEAPON_DISABLED, shipId);
+    sendWeaponFiringEventToRoom(room: string, shipId: string, firing: boolean): this {
+        return this.roomEmit(room, SpaceSim.Constants.Socket.WEAPON_FIRING, shipId, firing);
     }
 
     sendShipDestroyedEventToRoom(room: string, shipId: string): this {
@@ -134,12 +109,12 @@ export class ServerSocketManager {
         return this.socketEmit(socketId, SpaceSim.Constants.Socket.SHIP_DESTROYED);
     }
 
-    sendUpdatePlayersEvent(room: string, configs: Array<ShipConfig>): this {
-        return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_PLAYERS, configs);
+    sendUpdatePlayersEvent(room: string, shipsState: Array<ShipState>): this {
+        return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_PLAYERS, shipsState);
     }
 
-    sendUpdateSuppliesEvent(room: string, configs: Array<ShipSupplyOptions>): this {
-        return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_SUPPLIES, configs);
+    sendUpdateSuppliesEvent(room: string, suppliesState: Array<ShipSupplyOptions>): this {
+        return this.roomEmit(room, SpaceSim.Constants.Socket.UPDATE_SUPPLIES, suppliesState);
     }
 
     sendFlickerSuppliesEvent(room: string, ...ids: Array<string>): this {
@@ -154,28 +129,23 @@ export class ServerSocketManager {
         TryCatch.run(() => {
             const socket = this.getSocket(socketId);
             if (socket) {
-                Logging.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
-                socket.emit(event, ...args);
+                Logging.log('debug', `sending '${event}' event with args ${JSON.stringify(args)} to client '${socketId}'...`);
+                socket.emit(event, {
+                    sent: Date.now(),
+                    data: args
+                });
             }
         }, 'warn', `[${Logging.dts()}]: error sending event '${event}' to socket '${socketId}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
 
-    private socketRoomBroadcast(socketId: string, room: string, event: string, ...args: Array<any>): this {
-        TryCatch.run(() => {
-            const socket = this.getSocket(socketId);
-            if (socket) {
-                Logging.log('trace', `broadcasting event '${event}' with args ${JSON.stringify(args)} to room '${room}'...`);
-                socket.broadcast.in(room).emit(event, ...args);
-            }
-        }, 'warn', `[${Logging.dts()}]: error broadcasting event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
-        return this;
-    }
-
     private roomEmit(room: string, event: string, ...args: Array<any>): this {
         TryCatch.run(() => {
-            Logging.log('trace', `sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
-            this.io.in(room).emit(event, ...args);
+            Logging.log('debug', `sending '${event}' event with args ${JSON.stringify(args)} to room '${room}'...`);
+            this.io.in(room).emit(event, {
+                sent: Date.now(),
+                data: args
+            });
         }, 'warn', `[${Logging.dts()}]: error sending event '${event}' to room '${room}' with args: ${JSON.stringify(args)}`, 'all');
         return this;
     }
@@ -217,21 +187,13 @@ export class ServerSocketManager {
                     Logging.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
                     this._handleRequestShipResponse(socketId, args[0]);
                     break;
-                case SpaceSim.Constants.Socket.ENGINE_ENABLED:
+                case SpaceSim.Constants.Socket.ENGINE_ON:
                     Logging.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
-                    this._handleEnableEngineResponse(socketId, args[0]);
+                    this._handleEngineOnResponse(socketId, args[0], args[1]);
                     break;
-                case SpaceSim.Constants.Socket.ENGINE_DISABLED:
+                case SpaceSim.Constants.Socket.WEAPON_FIRING:
                     Logging.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
-                    this._handleDisableEngineResponse(socketId, args[0]);
-                    break;
-                case SpaceSim.Constants.Socket.WEAPON_ENABLED:
-                    Logging.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
-                    this._handleEnableWeaponResponse(socketId, args[0]);
-                    break;
-                case SpaceSim.Constants.Socket.WEAPON_DISABLED:
-                    Logging.log('debug', `received '${event}' event from socket '${socketId}' with data:`, args);
-                    this._handleDisableWeaponResponse(socketId, args[0]);
+                    this._handleWeaponFiringResponse(socketId, args[0], args[1]);
                     break;
                 case SpaceSim.Constants.Socket.SHIP_DESTROYED:
                     Logging.log('info', `received '${event}' event from socket '${socketId}' with data:`, args);
@@ -251,16 +213,11 @@ export class ServerSocketManager {
     private _handleDisconnectEvent(socketId: string, reason: DisconnectReason): void {
         this._disconnects++;
         Logging.log('info', `socket: ${socketId} disconnected (#${this._disconnects}) due to:`, reason);
-        const user = SpaceSimServer.users.selectFirst({socketId: socketId});
+        const user = SpaceSimServer.users.select({socketId: socketId}).first;
         if (user?.room) {
-            Logging.log('info', `creating timeout to remove user`, user, `in ${SpaceSim.Constants.Timing.DISCONNECT_TIMEOUT_MS} ms`);
-            this._disconnectTimers.set(SpaceSimServer.users.getKey(user), window.setTimeout(() => {
-                const scene = SpaceSim.game.scene.getScene(user.room) as BattleRoyaleScene;
-                if (scene) {
-                    scene.removePlayerFromScene(user);
-                }
-                SpaceSimServer.users.delete(user);
-            }, SpaceSim.Constants.Timing.DISCONNECT_TIMEOUT_MS));
+            user.deleteAt = Date.now() + SpaceSim.Constants.Timing.DISCONNECT_TIMEOUT_MS;
+            Logging.log('info', `setting user.deleteAt for user:`, user, 'where now is:', Date.now());
+            SpaceSimServer.users.update(user);
         }
     }
 
@@ -276,18 +233,16 @@ export class ServerSocketManager {
     }
 
     private _tryReconnectUser(socketId: string, data: SpaceSim.UserData): boolean {
-        const previousConnection = SpaceSimServer.users.selectFirst(data);
+        const previousConnection = SpaceSimServer.users.select(data).first;
         if (previousConnection) {
             Logging.log('info', `known users list updated with user '${JSON.stringify(data)}' who is reconnecting over socket '${socketId}'`);
             // user is reconnecting...
             const updated: SpaceSimServer.UserData = {
                 ...previousConnection,
-                socketId: socketId
+                socketId: socketId,
+                deleteAt: null
             };
             SpaceSimServer.users.update(updated);
-            const timerId = this._disconnectTimers.get(SpaceSimServer.users.getKey(updated));
-            window.clearTimeout(timerId);
-            this._disconnectTimers.delete(SpaceSimServer.users.getKey(updated));
             if (updated.room) {
                 const scene = SpaceSim.game.scene.getScene(updated.room) as BattleRoyaleScene;
                 scene.addPlayerToScene(updated);
@@ -299,26 +254,21 @@ export class ServerSocketManager {
     }
 
     private _tryAddNewUser(socketId: string, data: SpaceSim.UserData): boolean {
-        if (SpaceSimServer.users.count({name: data.name}) > 0) {
+        if (!SpaceSimServer.users.add({
+            ...data,
+            socketId: socketId
+        })) {
             Logging.log('debug', `name already in use so user cannot be added:`, data);
             return false;
         } else {
-            const added = SpaceSimServer.users.add({
-                ...data,
-                socketId: socketId
-            });
-            if (added) {
-                Logging.log('info', `user '${JSON.stringify(data)}' added to known users over socket '${socketId}'`);
-            } else {
-                Logging.log('warn', 'user with same fingerprint and name already exist:', data);
-            }
-            return added;
+            Logging.log('info', `user '${JSON.stringify(data)}' added to known users over socket '${socketId}'`);
+            return true;
         }
     }
 
     private _handleJoinRoomEvent(socketId: string, data: SpaceSim.UserData): void {
         let added: boolean = false;
-        const user = SpaceSimServer.users.get(data);
+        const user = SpaceSimServer.users.select(data).first;
         if (user) {
             Logging.log('debug', `attempting to add user ${JSON.stringify(user)} to a room...`);
             // iterate over rooms and see if any have less than max allowed players
@@ -343,7 +293,7 @@ export class ServerSocketManager {
     }
 
     private _handleRequestMapResponse(socketId: string, data: SpaceSim.UserData): void {
-        const user = SpaceSimServer.users.selectFirst(data);
+        const user = SpaceSimServer.users.select(data).first;
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
@@ -360,7 +310,7 @@ export class ServerSocketManager {
     }
 
     private _handleRequestShipResponse(socketId: string, data: SpaceSim.UserData): void {
-        const user = SpaceSimServer.users.selectFirst(data);
+        const user = SpaceSimServer.users.select(data).first;
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
@@ -372,8 +322,13 @@ export class ServerSocketManager {
                     }
                 }
                 const ship = scene.getShip(user.shipId) ?? scene.createShip(user);
-                Logging.log('debug', `sending ship id ${ship.id} to client ${socketId}`);
-                this.sendSetShipIdResponse(socketId, ship.id);
+                if (ship) {
+                    Logging.log('debug', `sending ship id ${ship.id} to client ${socketId}`);
+                    this.sendSetShipIdResponse(socketId, ship.id);
+                } else {
+                    Logging.log('warn', 'unable to get existing or create new ship for user', {user});
+                    this.sendInvalidRequestEvent(socketId, 'some error occurred when getting existing or creating new ship; please try again');
+                }
             } else {
                 Logging.log('warn', `no scene could be found matching room '${user.room}' so new ship not created`);
                 this.sendInvalidRequestEvent(socketId, 'supplied user is not in a room so is not allowed to request a Ship');
@@ -384,52 +339,30 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleEnableEngineResponse(socketId: string, data: SpaceSim.UserData): void {
+    private _handleEngineOnResponse(socketId: string, data: SpaceSim.UserData, enabled: boolean): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
-            const room = SpaceSimServer.users.selectFirst(data).room;
-            this.broadcastEnableEngineEventToRoom(socketId, room, ship.id);
-            ship.engine.setEnabled(true);
+            const room = SpaceSimServer.users.select(data).first.room;
+            ship.engine.setEnabled(enabled);
+            this.sendEngineOnEventToRoom(room, ship.id, enabled);
         } else {
             this.sendShipDestroyedEventToSocket(socketId);
         }
     }
 
-    private _handleDisableEngineResponse(socketId: string, data: SpaceSim.UserData): void {
+    private _handleWeaponFiringResponse(socketId: string, data: SpaceSim.UserData, firing: boolean): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
-            const room = SpaceSimServer.users.selectFirst(data).room;
-            this.broadcastDisableEngineEventToRoom(socketId, room, ship.id);
-            ship.engine.setEnabled(false);
-        } else {
-            this.sendShipDestroyedEventToSocket(socketId);
-        }
-    }
-
-    private _handleEnableWeaponResponse(socketId: string, data: SpaceSim.UserData): void {
-        const ship = this._getShipFromUserData(data);
-        if (ship) {
-            const room = SpaceSimServer.users.selectFirst(data).room;
-            this.broadcastEnableWeaponEventToRoom(socketId, room, ship.id);
-            ship.weapon.setEnabled(true);
-        } else {
-            this.sendShipDestroyedEventToSocket(socketId);
-        }
-    }
-
-    private _handleDisableWeaponResponse(socketId: string, data: SpaceSim.UserData): void {
-        const ship = this._getShipFromUserData(data);
-        if (ship) {
-            const room = SpaceSimServer.users.selectFirst(data).room;
-            this.broadcastDisableWeaponEventToRoom(socketId, room, ship.id);
-            ship.weapon.setEnabled(false);
+            const room = SpaceSimServer.users.select(data).first.room;
+            ship.weapon.setEnabled(firing);
+            this.sendWeaponFiringEventToRoom(room, ship.id, firing);
         } else {
             this.sendShipDestroyedEventToSocket(socketId);
         }
     }
 
     private _handleShipDestroyedEvent(socketId: string, data: SpaceSim.UserData): void {
-        const user = SpaceSimServer.users.selectFirst(data);
+        const user = SpaceSimServer.users.select(data).first;
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {
@@ -445,10 +378,10 @@ export class ServerSocketManager {
         }
     }
 
-    private _handleSetPlayerAngleEvent(socketId: string, degrees: number, data: SpaceSim.UserData): void {
+    private _handleSetPlayerAngleEvent(socketId: string, data: SpaceSim.UserData, degrees: number): void {
         const ship = this._getShipFromUserData(data);
         if (ship) {
-            const d: number = Phaser.Math.Angle.WrapDegrees(+degrees.toFixed(0));
+            const d: number = Phaser.Math.Angle.WrapDegrees(Number(degrees.toFixed(0)));
             ship.rotationContainer.setAngle(d);
         } else {
             this.sendShipDestroyedEventToSocket(socketId);
@@ -457,7 +390,7 @@ export class ServerSocketManager {
 
     private _getShipFromUserData(data: SpaceSim.UserData): Ship {
         let ship: Ship;
-        const user = SpaceSimServer.users.selectFirst(data);
+        const user = SpaceSimServer.users.select(data).first;
         if (user) {
             const scene = SpaceSimServer.rooms().find(r => r.ROOM_NAME === user.room);
             if (scene) {

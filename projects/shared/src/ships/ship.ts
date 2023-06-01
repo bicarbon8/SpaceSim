@@ -3,7 +3,7 @@ import { Helpers } from "../utilities/helpers";
 import { Engine } from "./attachments/utility/engine";
 import { DamageMetadata } from '../interfaces/damage-metadata';
 import { Weapon } from "./attachments/offence/weapon";
-import { IsConfigurable } from "../interfaces/is-configurable";
+import { HasState } from "../interfaces/has-state";
 import { PhysicsObject } from "../interfaces/physics-object";
 import { BaseScene } from "../scenes/base-scene";
 import { HasId } from "../interfaces/has-id";
@@ -13,7 +13,7 @@ import { WeaponModel } from "./attachments/offence/weapon-model";
 import { EngineModel } from "./attachments/utility/engine-model";
 import { TryCatch } from "../utilities/try-catch";
 
-export type ShipConfig = PhysicsObject & {
+export type ShipState = PhysicsObject & {
     id: string;
     name: string;
     integrity: number;
@@ -29,18 +29,18 @@ export type ShipConfig = PhysicsObject & {
     engineModel: EngineModel;
 };
 
-export type ShipOptions = Partial<ShipConfig> & {
+export type ShipOptions = Partial<ShipState> & {
     engine: Engine | (new (scene: BaseScene) => Engine);
     weapon: Weapon | (new (scene: BaseScene) => Weapon);
 };
 
-export class Ship extends Phaser.GameObjects.Container implements HasId, HasLocation, IsConfigurable<ShipConfig> {
+export class Ship extends Phaser.GameObjects.Container implements HasId, HasLocation, HasState<ShipState> {
     /** ShipOptions */
-    readonly id: string; // UUID
     readonly name: string;
     
     private readonly _lastDamagedBy: Array<DamageMetadata>;
     
+    private _id: string; // UUID
     private _temperature: number = 0; // in Celcius
     private _integrity: number = 0;
     private _remainingFuel: number = 0;
@@ -54,8 +54,11 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
 
     private _rotationContainer: Phaser.GameObjects.Container; // used for rotation
     
-    
-    private _destroyAtTime: number;
+    /**
+     * gets or sets the time in milliseconds that we should
+     * destroy this ship
+     */
+    destroyAtTime: number;
 
     // override property types
     public scene: BaseScene
@@ -63,7 +66,6 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
     
     constructor(scene: BaseScene, options: ShipOptions) {
         super(scene, options.location?.x, options.location?.y);
-        this.id = options.id ?? Phaser.Math.RND.uuid();
         this.name = options.name;
 
         this._lastDamagedBy = new Array<DamageMetadata>();
@@ -74,34 +76,39 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
         this.setEngine(options.engine);
         this.setWeapon(options.weapon);
         
-        this.configure(options);
+        this.setCurrentState(options);
     }
 
-    configure(options: Partial<ShipConfig>): this {
+    get id(): string {
+        return this._id;
+    }
+
+    setCurrentState(state: Partial<ShipState>): this {
         if (this.active) {
-            const loc = options.location ?? Helpers.vector2();
+            this._id = state.id ?? Phaser.Math.RND.uuid();
+            const loc = state.location ?? Helpers.vector2();
             this.setPosition(loc.x, loc.y);
-            const v = options.velocity ?? Helpers.vector2();
+            const v = state.velocity ?? Helpers.vector2();
             this.body.setVelocity(v.x, v.y);
-            const angle = options.angle ?? 0;
+            const angle = state.angle ?? 0;
             this.rotationContainer.setAngle(angle);
-            const newIntegrity = options.integrity ?? SpaceSim.Constants.Ships.MAX_INTEGRITY;
+            const newIntegrity = state.integrity ?? SpaceSim.Constants.Ships.MAX_INTEGRITY;
             const oldIntegrity = this.integrity ?? 0;
             (oldIntegrity > newIntegrity) ? this.subtractIntegrity(oldIntegrity - newIntegrity) : this.addIntegrity(newIntegrity - oldIntegrity);
-            const newFuel = options.remainingFuel ?? SpaceSim.Constants.Ships.MAX_FUEL;
+            const newFuel = state.remainingFuel ?? SpaceSim.Constants.Ships.MAX_FUEL;
             const oldFuel = this.remainingFuel ?? 0;
             (oldFuel > newFuel) ? this.subtractFuel(oldFuel - newFuel) : this.addFuel(newFuel - oldFuel);
-            const newAmmo = options.remainingAmmo ?? SpaceSim.Constants.Ships.Weapons.MAX_AMMO;
+            const newAmmo = state.remainingAmmo ?? SpaceSim.Constants.Ships.Weapons.MAX_AMMO;
             const oldAmmo = this.weapon.remainingAmmo;
             (oldAmmo > newAmmo) ? this.weapon.remainingAmmo = oldAmmo - newAmmo : this.weapon.addAmmo(newAmmo - oldAmmo);
-            const newTemp = options.temperature ?? 0;
+            const newTemp = state.temperature ?? 0;
             const oldTemp = this.temperature;
             (oldTemp > newTemp) ? this.subtractHeat(oldTemp - newTemp) : this.addHeat(newTemp - oldTemp);
         }
         return this;
     }
 
-    get config(): ShipConfig {
+    get currentState(): ShipState {
         return {
             id: this.id,
             location: this.location,
@@ -175,14 +182,6 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
             });
     }
 
-    /**
-     * returns the time in milliseconds that we should
-     * destroy this ship
-     */
-    get destroyAt(): number {
-        return this._destroyAtTime;
-    }
-
     setEngine(engine: Engine | (new (scene: BaseScene) => Engine)): this {
         if (typeof engine === 'function') {
             this._engine = new engine(this.scene);
@@ -219,7 +218,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
      */
     update(time: number, delta: number): void {
         if (this.active) {
-            if (time >= this.destroyAt) {
+            if (time >= this.destroyAtTime) {
                 this.death();
             } else {
                 this._checkOverheatCondition(delta);
@@ -310,14 +309,14 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
      * NOTE: only runs when `update(time, delta)` function is called
      */
     selfDestruct(countdownSeconds: number = 3): void {
-        this._destroyAtTime = this.scene.game.getTime() + (countdownSeconds * 1000);
+        this.destroyAtTime = this.scene.game.getTime() + (countdownSeconds * 1000);
     }
 
     /**
      * cancels the self destruct timer
      */
     cancelSelfDestruct(): void {
-        this._destroyAtTime = undefined;
+        this.destroyAtTime = undefined;
     }
 
     /**
@@ -329,7 +328,7 @@ export class Ship extends Phaser.GameObjects.Container implements HasId, HasLoca
     death(emit: boolean = true): void {
         if (this.active) {
             if (emit) {
-                this.scene.events.emit(SpaceSim.Constants.Events.SHIP_DEATH, this.config);
+                this.scene.events.emit(SpaceSim.Constants.Events.SHIP_DEATH, this.currentState);
             }
 
             TryCatch.run(() => {

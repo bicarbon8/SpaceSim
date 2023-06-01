@@ -1,5 +1,5 @@
 import { SpaceSim } from "../space-sim";
-import { ShipConfig } from "../ships/ship";
+import { ShipState } from "../ships/ship";
 import { ShipSupplyOptions } from "../ships/supplies/ship-supply";
 
 export type ExploderOptions = {
@@ -18,7 +18,7 @@ export class Exploder {
         return this;
     }
 
-    emitSupplies(shipOpts: ShipConfig): Array<ShipSupplyOptions> {
+    emitSupplies(shipOpts: ShipState): Array<ShipSupplyOptions> {
         const supplies = new Array<ShipSupplyOptions>();
         const loc = shipOpts.location;
         let remainingFuel = shipOpts.remainingFuel / 2;

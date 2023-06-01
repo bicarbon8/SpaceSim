@@ -1,4 +1,4 @@
-import { IsConfigurable } from "../../interfaces/is-configurable";
+import { HasState } from "../../interfaces/has-state";
 import { PhysicsObject } from "../../interfaces/physics-object";
 import { HasId } from "../../interfaces/has-id";
 import { SupplyType } from "./supply-type";
@@ -13,10 +13,11 @@ export type ShipSupplyOptions = Partial<PhysicsObject> & {
     readonly supplyType: SupplyType;
 };
 
-export abstract class ShipSupply extends Phaser.GameObjects.Container implements HasId, IsConfigurable<ShipSupplyOptions> {
+export abstract class ShipSupply extends Phaser.GameObjects.Container implements HasId, HasState<ShipSupplyOptions> {
     private _id: string;
     private _amount: number;
     private _type: SupplyType;
+    private readonly _createdAt: number;
 
     // override property types
     public scene: BaseScene
@@ -32,10 +33,11 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         this.body.setCircle(radius);
         this.body.setBounce(SpaceSim.Constants.Ships.Supplies.BOUNCE, SpaceSim.Constants.Ships.Supplies.BOUNCE);
 
-        this.configure(options);
+        this.setCurrentState(options);
+        this._createdAt = Date.now();
     }
 
-    get config(): ShipSupplyOptions {
+    get currentState(): ShipSupplyOptions {
         return {
             id: this.id,
             amount: this.amount,
@@ -51,6 +53,10 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         return this._id;
     }
 
+    get createdAt(): number {
+        return this._createdAt;
+    }
+
     get amount(): number {
         return this._amount;
     }
@@ -63,7 +69,7 @@ export abstract class ShipSupply extends Phaser.GameObjects.Container implements
         return this.body.center;
     }
 
-    configure(config: ShipSupplyOptions): this {
+    setCurrentState(config: ShipSupplyOptions): this {
         this._id = config.id ?? Phaser.Math.RND.uuid();
         this._amount = config.amount ?? 1;
         this._type = config.supplyType;

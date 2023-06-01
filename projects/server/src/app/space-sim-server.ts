@@ -1,7 +1,8 @@
 import { GameServerEngine } from "phaser-game-server-engine";
-import { DataTable, GameLevelOptions, Logging, SpaceSim } from "space-sim-shared";
+import { GameLevelOptions, Logging, SpaceSim } from "space-sim-shared";
 import { BattleRoyaleScene } from "./scenes/battle-royale-scene";
 import { ServerSocketManager } from "./utilities/server-socket-manager";
+import { DynamicDataStore } from "dynamic-data-store";
 
 export class SpaceSimServer extends GameServerEngine {
     constructor() {
@@ -15,13 +16,14 @@ export class SpaceSimServer extends GameServerEngine {
 
 export module SpaceSimServer {
     export var io: ServerSocketManager;
-    export const users = new DataTable<SpaceSimServer.UserData>({indexKeys: ['fingerprint', 'name']});
+    export const users = new DynamicDataStore<SpaceSimServer.UserData>({indicies: ['fingerprint', 'name']});
     export const rooms = (): Array<BattleRoyaleScene> => SpaceSim.game.scene.getScenes(true)
         .map(s => s as BattleRoyaleScene);
     export type UserData = SpaceSim.UserData & {
         socketId?: string;
         room?: string;
         shipId?: string;
+        deleteAt?: number; // leave undefined or null if active
     }
     export module Constants {
         export module Rooms {
