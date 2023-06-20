@@ -5,7 +5,7 @@ export class MachineGun extends Weapon {
     constructor(scene: BaseScene) {
         super(scene, {
             model: 'machinegun',
-            maxAmmo: 200,
+            maxAmmo: 300,
             firingDelay: 200,
             heatPerShot: 1,
             force: 1000,

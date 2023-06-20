@@ -42,7 +42,7 @@ export class TouchController extends InputController {
             // Logging.log('info', `handling aim touch at: ${x}, ${y}; using ${pos.x}, ${pos.y} and angle: ${degrees}`);
             // only update if angle changed more than minimum allowed degrees
             if (!Phaser.Math.Fuzzy.Equal(ship.rotationContainer.angle, degrees, SpaceSim.Constants.Ships.MIN_ROTATION_ANGLE)) {
-                this.parentScene?.events.emit(SpaceSim.Constants.Events.SHIP_ANGLE, degrees);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.SHIP_ANGLE, SpaceSimClient.playerShipId, degrees);
             }
         }
     }
@@ -51,12 +51,12 @@ export class TouchController extends InputController {
         if (this._fireButtonActive) {
             if (!this._weaponEnabled) {
                 this._weaponEnabled = true;
-                this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, true);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, SpaceSimClient.playerShipId, true);
             }
         } else {
             if (this._weaponEnabled) {
                 this._weaponEnabled = false;
-                this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, false);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.WEAPON_FIRING, SpaceSimClient.playerShipId, false);
             }
         }
     }
@@ -65,12 +65,12 @@ export class TouchController extends InputController {
         if (this._thrusterButtonActive) {
             if (!this._engineEnabled) {
                 this._engineEnabled = true;
-                this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, true);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, SpaceSimClient.playerShipId, true);
             }
         } else {
             if (this._engineEnabled) {
                 this._engineEnabled = false;
-                this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, false);
+                this.parentScene?.events.emit(SpaceSim.Constants.Events.ENGINE_ON, SpaceSimClient.playerShipId, false);
             }
         }
     }
