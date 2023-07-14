@@ -155,11 +155,11 @@ export class GameplayHudScene extends Phaser.Scene implements Resizable {
             this._controller = controller;
         }
         this.parentScene.events.on(SpaceSim.Constants.Events.ENGINE_ON, (id: string, enabled: boolean) => {
-            this.parentScene.getShip(id).engine.setEnabled(enabled);
+            this.parentScene.getShip(id)?.engine.setEnabled(enabled);
         }).on(SpaceSim.Constants.Events.WEAPON_FIRING, (id: string, firing: boolean) => {
-            this.parentScene.getShip(id).weapon.setEnabled(firing);
+            this.parentScene.getShip(id)?.weapon.setEnabled(firing);
         }).on(SpaceSim.Constants.Events.SHIP_ANGLE, (id: string, degrees: number) => {
-            this.parentScene.getShip(id).rotationContainer.setAngle(degrees);
+            this.parentScene.getShip(id)?.rotationContainer.setAngle(degrees);
         });
     }
 
