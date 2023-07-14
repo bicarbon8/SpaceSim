@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "webpack",
+    "build": "esbuild ./src/app/space-sim-server.ts --bundle --minify --sourcemap --outdir=dist",
     "build:dev": "npm run clean && npm run build",
     "start": "npm run build && npm run open",
     "start:dev": "npm run build && npm run open:dev",
@@ -37,6 +37,7 @@
     "@types/express": "^4.17.17",
     "@types/jsdom": "^21.1.1",
     "copy-webpack-plugin": "^11.0.0",
+    "esbuild": "^0.18.12",
     "rimraf": "^5.0.1",
     "ts-loader": "^9.4.4",
     "ts-node": "^10.9.1",
